@@ -8,8 +8,18 @@
     <textarea id="textInput" rows="4" cols="50"></textarea><br>
     <button onclick="speakText()">Speak</button>
     <audio id="audioOutput" controls></audio>
-    
-<script>
+
+    <script>
+        function speakText() {
+            const text = document.getElementById('textInput').value;
+            // Assuming 'aiSdk' is provided by the included script
+            aiSdk.textToSpeech(text)
+                .then(audioBlob => {
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    document.getElementById('audioOutput').src = audioUrl;
+                })
+                .catch(error => console.error("Error:", error));
+        }
 import OpenAI from "openai";
 const openai = new OpenAI({
     apiKey: "<19e92147-4ed9-4b64-b40d-3bb0186a112a>",

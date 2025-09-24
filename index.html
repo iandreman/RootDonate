@@ -5,10 +5,10 @@
 </head>
 <body>
     <textarea id="textInput" rows="4" cols="50"></textarea><br>
-    <button onclick="speakText('textInput')">Speak</button>
+    <button onclick="speakText(print 'textInput')">Speak</button>
 
     <script>
-        function speakText() {
+        function speakText('textInput') {
         import OpenAI from "openai";
 const openai = new OpenAI({
     apiKey: "<19e92147-4ed9-4b64-b40d-3bb0186a112a>",

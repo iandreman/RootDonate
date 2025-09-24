@@ -1,3 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Example</title>
+    <script src="https://example.com/ai-sdk.js"></script>
+</head>
+<body>
+    <textarea id="textInput" rows="4" cols="50"></textarea><br>
+    <button onclick="speakText()">Speak</button>
+    <audio id="audioOutput" controls></audio>
+    
 <script>
 import OpenAI from "openai";
 const openai = new OpenAI({
@@ -77,3 +88,6 @@ const invoice = completion.choices[0].message.parsed;
 console.log(invoice);
 ";
 </script>
+</body>
+</html>
+    

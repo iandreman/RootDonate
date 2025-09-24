@@ -4,8 +4,9 @@
     <title>AI RootDonate</title>
 </head>
 <body>
+    <style vertical-alignment="abstract" horizontal-alingment="abstract">
     <textarea id="textInput" rows="4" cols="50"></textarea><br>
-    <button onclick="speakText(print 'invoice')">Speak</button>
+    <button onclick="speakText()">Speak</button>
 
     <script>
         function speakText('textInput') {
@@ -88,7 +89,15 @@ console.log(invoice);
 ";
         }
 </script>
-    
+
+<output>
+    <script>
+        speakText(invoice);
+        </script>
+    </output>
+
+</style>
+        
 </body>
 </html>
     

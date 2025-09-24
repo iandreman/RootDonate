@@ -10,16 +10,7 @@
     <audio id="audioOutput" controls></audio>
 
     <script>
-        function speakText() {
-            const text = document.getElementById('textInput').value;
-            // Assuming 'aiSdk' is provided by the included script
-            aiSdk.textToSpeech(text)
-                .then(audioBlob => {
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    document.getElementById('audioOutput').src = audioUrl;
-                })
-                .catch(error => console.error("Error:", error));
-        }
+        function speakText(
 import OpenAI from "openai";
 const openai = new OpenAI({
     apiKey: "<19e92147-4ed9-4b64-b40d-3bb0186a112a>",
@@ -97,6 +88,16 @@ const completion = await client.beta.chat.completions.parse({
 const invoice = completion.choices[0].message.parsed;
 console.log(invoice);
 ";
+        ) {
+            const text = document.getElementById('textInput').value;
+            // Assuming 'aiSdk' is provided by the included script
+            aiSdk.textToSpeech(text)
+                .then(audioBlob => {
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    document.getElementById('audioOutput').src = audioUrl;
+                })
+                .catch(error => console.error("Error:", error));
+        }
 </script>
 </body>
 </html>

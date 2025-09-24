@@ -85,12 +85,11 @@ const completion = await client.beta.chat.completions.parse({
 const invoice = completion.choices[0].message.parsed;
 console.log(invoice);
 ";
+        
         }
-</script>
-    <output>
-    <script>
-        print
+        <output>
 speakText('invoice');
+        print 'invoice';
     </script>
 </output>
         

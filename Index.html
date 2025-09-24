@@ -1,57 +1,40 @@
-<script>
-document.getElementById("demo").innerHTML = "import OpenAI from "openai";
-import { zodResponseFormat } from "openai/helpers/zod";
-import { z } from "zod";
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Grok AI Integration</title>
+</head>
+<body>
+    <h1>Ask Grok AI</h1>
+    <input type="text" id="userInput" placeholder="Type your question...">
+    <button onclick="askGrok()">Submit</button>
+    <p id="grokResponse"></p>
 
-const CurrencyEnum = z.enum(["USD", "EUR", "GBP"]);
+    <script>
+        async function askGrok() {
+            const userInput = document.getElementById('userInput').value;
+            const responseElement = document.getElementById('grokResponse');
+            responseElement.innerText = 'Loading...';
 
-const LineItemSchema = z.object({
-    description: z.string().describe("Description of the item or service"),
-    quantity: z.number().int().min(1).describe("Number of units"),
-    unit_price: z.number().min(0).describe("Price per unit"),
-});
+            try {
+                // Your server's endpoint
+                const response = await fetch('/api/ask-grok', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: userInput })
+                });
 
-const AddressSchema = z.object({
-    street: z.string().describe("Street address"),
-    city: z.string().describe("City"),
-    postal_code: z.string().describe("Postal/ZIP code"),
-    country: z.string().describe("Country"),
-});
+                if (!response.ok) {
+                    throw new Error('Network response was not ok.');
+                }
 
-const InvoiceSchema = z.object({
-    vendor_name: z.string().describe("Name of the vendor"),
-    vendor_address: AddressSchema.describe("Vendor's address"),
-    invoice_number: z.string().describe("Unique invoice identifier"),
-    invoice_date: z.string().date().describe("Date the invoice was issued"),
-    line_items: z.array(LineItemSchema).describe("List of purchased items/services"),
-    total_amount: z.number().min(0).describe("Total amount due"),
-    currency: CurrencyEnum.describe("Currency of the invoice"),
-});
+                const data = await response.json();
+                responseElement.innerText = data.answer; // Assuming server returns { "answer": "..." }
 
-const client = new OpenAI({
-    apiKey: "<xai-OsM71BwVtW7X7ConF8CDvzd77FvdWPpa55hWY8Vs78hNjnTaYu1A7d65wUdPZd3tDGwyhRaurF2mtJDB>",
-    baseURL: "https://api.x.ai/v1",
-});
-
-const completion = await client.beta.chat.completions.parse({
-    model: "grok-4",
-    messages: [
-    { role: "system", content: "Given a raw invoice, carefully analyze the text and extract the invoice data into JSON format." },
-    { role: "user", content: `
-    Vendor: Acme Corp, 123 Main St, Springfield, IL 62704
-    Invoice Number: INV-2025-001
-    Date: 2025-02-10
-    Items:
-
-    - Widget A, 5 units, $10.00 each
-    - Widget B, 2 units, $15.00 each
-      Total: $80.00 USD
-      ` },
-    ],
-    response_format: zodResponseFormat(InvoiceSchema, "invoice"),
-});
-
-const invoice = completion.choices[0].message.parsed;
-console.log(invoice);
-";
-</script>
+            } catch (error) {
+                console.error('Error:', error);
+                responseElement.innerText = 'Sorry, something went wrong.';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -30,7 +30,7 @@ const stream = await openai.chat.completions.create({
 for await (const chunk of stream) {
     console.log(chunk.choices[0].delta.content);
 }
-document.getElementById("demo").innerHTML = "import OpenAI from "openai";
+document.getElementById("textInput").innerHTML = "import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 

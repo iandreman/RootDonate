@@ -9,7 +9,7 @@
 
 const client = new OpenAI({
     apiKey: "19e92147-4ed9-4b64-b40d-3bb0186a112a",
-    baseURL: "https://api.x.ai/v1",
+    baseURL: "https://cleverbot.com/cleverbotif",
     timeout: 360000, // Override default timeout with longer timeout for reasoning models
 });
 
@@ -28,6 +28,6 @@ const completion = await client.chat.completions.create({
 });
 console.log(completion.choices[0].message);
 </script>
-<iframe name="AI" width="abstract" height="abstract" allowtransparency=true frameborder=1 scrolling=no src="https://api.x.ai/v1"></iframe>
+<iframe name="AI" width="abstract" height="abstract" allowtransparency=true frameborder=1 scrolling=no src="https://cleverbot.com/cleverbotif"></iframe>
 </body>
 </html>

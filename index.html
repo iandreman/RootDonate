@@ -4,10 +4,30 @@
     <title>AI RootDonate</title>
 </head>
 <body>
-<form type="get" action="http://www.cleverbot.com">
-<input size="20" type="text" name="say" value="">
-<input type="submit" value="Say...">
-</form>
+<script>
+    import OpenAI from "openai";
+
+const client = new OpenAI({
+    apiKey: "19e92147-4ed9-4b64-b40d-3bb0186a112a",
+    baseURL: "https://api.x.ai/v1",
+    timeout: 360000, // Override default timeout with longer timeout for reasoning models
+});
+
+const completion = await client.chat.completions.create({
+    model: "grok-4",
+    messages: [
+        {
+            role: "system",
+            content: "You are Grok, a chatbot inspired by the Hitchhiker's Guide to the Galaxy."
+        },
+        {
+            role: "user",
+            content: "What is the meaning of life, the universe, and everything?"
+        },
+    ],
+});
+console.log(completion.choices[0].message);
+</script>
+<iframe name="AI" width="abstract" height="abstract" allowtransparency=true frameborder=1 scrolling=no src="https://api.x.ai/v1"></iframe>
 </body>
 </html>
-    

@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <body>
-<script>
 import openai
 
 # Set up your OpenAI API key
 openai.api_key = "19e92147-4ed9-4b64-b40d-3bb0186a112a"
 
 def generate_joke():
+
     # Use the OpenAI API to get a joke
     response = openai.ChatCompletion.create(
         model="gpt-4",
@@ -16,10 +16,10 @@ def generate_joke():
             {"role": "user", "content": "Tell me a random joke."}
         ]
     )
+    
     # Extract and return the joke
     joke = response['choices'][0]['message']['content']
     return joke
-</script>
 
 # Get a joke and print it
 print("Here's a random joke for you:")

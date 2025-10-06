@@ -1,9 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>AI RootDonate</title>
-</head>
-<body>
 <script>
     import OpenAI from "openai";
 
@@ -146,6 +140,11 @@ if __name__ == "__main__":
             
     document.getElementById("user") == print cb.Ask.console.log(q);
     </script>
-    <textbox name="user" horizontal="100%" verticle="100%"></textbox>
-        </body>
+<!DOCTYPE html>
+<html>
+<body>
+
+<textbox name="user" horizontal="100%" verticle="100%"></textbox>
+
+</body>
 </html>

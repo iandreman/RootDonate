@@ -1,5 +1,4 @@
-<script>
-    import OpenAI from "openai";
+import OpenAI from "openai";
 
 const client = new OpenAI({
     apiKey: "19e92147-4ed9-4b64-b40d-3bb0186a112a",
@@ -137,14 +136,3 @@ def main():
 
 if __name__ == "__main__":
         main()
-            
-    document.getElementById("user") == print cb.Ask.console.log(q);
-    </script>
-<!DOCTYPE html>
-<html>
-<body>
-
-<textbox name="user" horizontal="100%" verticle="100%"></textbox>
-
-</body>
-</html>

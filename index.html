@@ -12,7 +12,7 @@
     <script>
         async function generateJoke() {
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                method: 'POST',
+                method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': '19e92147-4ed9-4b64-b40d-3bb0186a112a'

@@ -26,7 +26,9 @@ const completion = await client.chat.completions.create({
         },
     ],
 });
+    
 console.log(completion.choices[0].message);
+    
 #!/usr/bin/python
 """
 This library lets you open chat session with cleverbot (www.cleverbot.com)
@@ -130,7 +132,7 @@ def main():
         import sys
         cb = Session()
 
-        q = ''
+        q = user
         while q != 'bye':
                 try:
                         q = raw_input("> ")
@@ -141,11 +143,9 @@ def main():
 
 if __name__ == "__main__":
         main()
-            </script>
-    <textbox name="user" horizontal="100%" verticle="100%"></textbox>
-    <script>
-        user = q;
+            
     document.getElementById("user") == print cb.Ask.console.log(q);
     </script>
+    <textbox name="user" horizontal="100%" verticle="100%"></textbox>
         </body>
 </html>

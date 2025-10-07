@@ -76,13 +76,13 @@
         }
 </script>
 </head>
-<body onload="displayDateTime()">
+<body onload="addListener(displayDateTime())">
   <div class="chat-container">
     <div class="chat-header">Assistant</div>
     <div class="chat-messages" id="chat-messages"></div>
     <div class="chat-input">
       <input type="text" id="user-input" placeholder="Type a message...">
-      <button onclick="sendMessage()">Send</button>
+      <button onclick="addListener(sendMessage())">Send</button>
     </div>
   </div>
 

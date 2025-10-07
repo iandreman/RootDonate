@@ -5,6 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Interactive Assistant</title>
   <style>
+          body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            text-align: center;
+            background: #f4f4f9;
+        }
+        h1 { color: #333; }
+        #donor-input {
+            width: 80%;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #6200ea;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        #matches {
+            text-align: left;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            white-space: pre-wrap; /* Preserves formatting from Grok */
+        }
+        .footer { margin-top: 20px; font-size: 14px; color: #666; }
+    </style>
+  <style>
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -119,38 +146,51 @@
       return `You said: "${userMessage}". How can I help you further?`;
     }
   </script>
-  <script>
-  // ai-conductor.js - Grok-powered donation matcher
-async function matchDonation(query) {
-  const apiKey = '19e92147-4ed9-4b64-b40d-3bb0186a112a'; // Swap in yours
-  const prompt = `As a tech donation conductor, match this query to open-source AI/tech projects: "${query}". Suggest 3 GitHub repos with why they fit (keep it concise, fun).`;
-  
-  try {
-    const response = await fetch('https://api.x.ai/v1/chat/completions', {  // xAI Grok endpoint
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${19e92147-4ed9-4b64-b40d-3bb0186a112a}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'grok-3',  // Or grok-4 if you're Premium+
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 200,
-      }),
-    });
-    const data = await response.json();
-    const suggestions = data.choices[0].message.content;
-    document.getElementById('chat-messages').innerHTML = `<pre>${suggestions}</pre>`;  // Render to your HTML
-  } catch (error) {
-    console.log('Conductor hiccup:', error);
-  }
-}
 
-// Hook it to your form
-document.getElementById('user-input').addEventListener('input', (e) => {
-  if (e.target.value.length > 5) matchDonation(e.target.value);
-});
-</script>
+    <h1>RootDonate: AI-Conducted Donations</h1>
+    <p>Type your donation interest (e.g., "fund AI web tools") and let our AI conductor match you to open-source projects!</p>
+    <input type="text" id="donor-input" placeholder="What tech cause do you want to support?">
+    <div id="matches">Enter a cause to see AI suggestions...</div>
+    <div class="footer">Powered by Grok (xAI - Admin Operator) | Open Source @ <a href="https://github.com/iandreman/RootDonate">GitHub</a></div>
+
+    <script>
+        // Grok-powered donation matcher
+        async function matchDonation(query) {
+            const apiKey = '19e92147-4ed9-4b64-b40d-3bb0186a112a'; // Replace with your xAI API key from x.ai/api
+            const prompt = `As a tech donation conductor, match this query to open-source AI/tech projects: "${query}". Suggest 3 GitHub repos with why they fit (keep it concise, fun).`;
+            
+            try {
+                const response = await fetch('https://api.x.ai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${19e92147-4ed9-4b64-b40d-3bb0186a112a}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: 'grok-3', // Free tier model
+                        messages: [{ role: 'user', content: prompt }],
+                        max_tokens: 200,
+                    }),
+                });
+                const data = await response.json();
+                const suggestions = data.choices[0].message.content || 'No matches yet—try another query!';
+                document.getElementById('matches').innerHTML = `<pre>${suggestions}</pre>`;
+            } catch (error) {
+                console.error('Conductor hiccup:', error);
+                document.getElementById('matches').innerHTML = 'Oops, something broke. Check your API key or try again!';
+            }
+        }
+
+        // Real-time input listener
+        document.getElementById('donor-input').addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            if (query.length > 5) { // Wait for meaningful input
+                matchDonation(query);
+            } else {
+                document.getElementById('matches').innerHTML = 'Enter a cause to see AI suggestions...';
+            }
+        });
+    </script>
     <h1>Welcome to Root Donate</h1>
     <p>The current date and time is:</p>
     <p id="datetime"></p>

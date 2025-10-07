@@ -147,11 +147,7 @@
     }
   </script>
 
-    <h1>RootDonate: AI-Conducted Donations</h1>
-    <p>Type your donation interest (e.g., "fund AI web tools") and let our AI conductor match you to open-source projects!</p>
-    <input type="text" id="donor-input" placeholder="What tech cause do you want to support?">
-    <div id="matches">Enter a cause to see AI suggestions...</div>
-    <div class="footer">Powered by Grok (xAI - Admin Operator) | Open Source @ <a href="https://github.com/iandreman/RootDonate">GitHub</a></div>
+    <div id="matches" onload="sendMessage()">Enter a cause to see AI suggestions...</div>
 
     <script>
         // Grok-powered donation matcher
@@ -182,7 +178,7 @@
         }
 
         // Real-time input listener
-        document.getElementById('donor-input').addEventListener('input', (e) => {
+        document.getElementById('user-input').addEventListener('input', (e) => {
             const query = e.target.value.trim();
             if (query.length > 5) { // Wait for meaningful input
                 matchDonation(query);

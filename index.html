@@ -129,7 +129,7 @@ async function matchDonation(query) {
     const response = await fetch('https://api.x.ai/v1/chat/completions', {  // xAI Grok endpoint
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${19e92147-4ed9-4b64-b40d-3bb0186a112a}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -140,7 +140,7 @@ async function matchDonation(query) {
     });
     const data = await response.json();
     const suggestions = data.choices[0].message.content;
-    document.getElementById('matches').innerHTML = `<pre>${suggestions}</pre>`;  // Render to your HTML
+    document.getElementById('chat-messages').innerHTML = `<pre>${suggestions}</pre>`;  // Render to your HTML
   } catch (error) {
     console.log('Conductor hiccup:', error);
   }

@@ -119,6 +119,7 @@
       return `You said: "${userMessage}". How can I help you further?`;
     }
   </script>
+  <script>
   // ai-conductor.js - Grok-powered donation matcher
 async function matchDonation(query) {
   const apiKey = '19e92147-4ed9-4b64-b40d-3bb0186a112a'; // Swap in yours
@@ -146,9 +147,10 @@ async function matchDonation(query) {
 }
 
 // Hook it to your form
-document.getElementById('donor-input').addEventListener('input', (e) => {
+document.getElementById('user-input').addEventListener('input', (e) => {
   if (e.target.value.length > 5) matchDonation(e.target.value);
 });
+</script>
     <h1>Welcome to Root Donate</h1>
     <p>The current date and time is:</p>
     <p id="datetime"></p>

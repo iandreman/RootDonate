@@ -100,6 +100,7 @@
         function displayDateTime() {
             const now = new Date();
             document.getElementById("datetime").innerText = now.toLocaleString();
+            setInterval(displayDateTime, 1000); // Update every second
         }
 </script>
 </head>
@@ -147,7 +148,7 @@
     }
   </script>
 
-    <div id="matches" onload="sendMessage(userMessage)">Enter a cause to see AI suggestions...</div>
+    <div id="matches" onload="sendMessage(now.toLocaleString())">Enter a cause to see AI suggestions...</div>
 
     <script>
         // Grok-powered donation matcher

@@ -143,11 +143,11 @@
 
     function generateResponse(userMessage) {
       // Replace this with an actual API call or logic
-      return `You said: "${userMessage}", "${suggestions}". How can I help you further?`;
+      return `You said: "${userMessage}". How can I help you further?`;
     }
   </script>
 
-    <div id="matches">Enter a cause to see AI suggestions...</div>
+    <div id="matches" onload="sendMessage('${suggestions}')>Enter a cause to see AI suggestions...</div>
 
     <script>
         // Grok-powered donation matcher

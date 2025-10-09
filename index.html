@@ -123,7 +123,7 @@
       if (message) {
         // Display user message
         displayMessage(message, 'user');
-        userInput.value = '';
+        userInput.value = displayDateTime();
 
         // Simulate assistant response
         setTimeout(() => {
@@ -147,7 +147,7 @@
     }
   </script>
 
-    <div id="matches" onload="sendMessage('${suggestions}')>Enter a cause to see AI suggestions...</div>
+    <div id="matches" onload="sendMessage()">Enter a cause to see AI suggestions...</div>
 
     <script>
         // Grok-powered donation matcher

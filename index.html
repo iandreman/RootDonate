@@ -30,8 +30,6 @@
             white-space: pre-wrap; /* Preserves formatting from Grok */
         }
         .footer { margin-top: 20px; font-size: 14px; color: #666; }
-    </style>
-  <style>
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -104,13 +102,13 @@
         setInterval(displayDateTime);
 </script>
 </head>
-<body onload="displayDateTime(${query})">
+<body onload="displayDateTime">
   <div class="chat-container">
     <div class="chat-header">Assistant</div>
     <div class="chat-messages" id="chat-messages"></div>
     <div class="chat-input">
       <input type="text" id="user-input" placeholder="Type a message...">
-      <button onclick="sendMessage(${suggestions})" >Send</button>
+      <button onclick="sendMessage()" >Send</button>
     </div>
   </div>
 
@@ -142,15 +140,9 @@
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
-    function generateResponse(userMessage) {
+    function generateResponse(prompt) {
       // Replace this with an actual API call or logic
-      return `You said: "${userMessage}". How can I help you further?`;
-    }
-  </script>
-
-    <div id="matches">Enter a cause to see AI suggestions...</div>
-
-    <script>
+      return `You said: "${prompt}". How can I help you further?`;
         // Grok-powered donation matcher
         async function matchDonation(query) {
             const apiKey = '19e92147-4ed9-4b64-b40d-3bb0186a112a'; // Replace with your xAI API key from x.ai/api
@@ -187,7 +179,11 @@
                 document.getElementById('user-input').innerHTML = 'Enter a cause to see AI suggestions...';
             }
         });
-    </script>
+    }
+  </script>
+
+    <div id="matches">Enter a cause to see AI suggestions...</div>
+
     <h1>Welcome to Root Donate</h1>
     <p>The current date and time is:</p>
     <p id="datetime"></p>

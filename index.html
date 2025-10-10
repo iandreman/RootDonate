@@ -143,10 +143,13 @@
     function generateResponse(userMessage) {
       // Replace this with an actual API call or logic
       return `You said: "${userMessage}". How can I help you further?`;
+        </script>
+        <script>
+        
         // Grok-powered donation matcher
         async function matchDonation(query) {
             const apiKey = '19e92147-4ed9-4b64-b40d-3bb0186a112a'; // Replace with your xAI API key from x.ai/api
-            const prompt = `As a tech donation conductor, match this query to open-source AI/tech projects: "${userMessage}". Suggest 3 GitHub repos with why they fit (keep it concise, fun).`;
+            const prompt = `As a tech donation conductor, match this query to open-source AI/tech projects: "${query}". Suggest 3 GitHub repos with why they fit (keep it concise, fun).`;
             
             try {
                 const response = await fetch('https://api.x.ai/v1/chat/completions', {
@@ -182,7 +185,7 @@
     }
   </script>
 
-    <div id="matches">Enter a cause to see AI suggestions...</div>
+    <div id="matches" onload="matchDonation(userMessage)">Enter a cause to see AI suggestions...</div>
 
     <h1>Welcome to Root Donate</h1>
     <p>The current date and time is:</p>

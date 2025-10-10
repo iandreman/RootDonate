@@ -30,6 +30,8 @@
             white-space: pre-wrap; /* Preserves formatting from Grok */
         }
         .footer { margin-top: 20px; font-size: 14px; color: #666; }
+    </script>
+    <script>
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -102,7 +104,7 @@
         setInterval(displayDateTime);
 </script>
 </head>
-<body onload="displayDateTime">
+<body onload="displayDateTime()">
   <div class="chat-container">
     <div class="chat-header">Assistant</div>
     <div class="chat-messages" id="chat-messages"></div>

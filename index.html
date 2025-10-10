@@ -4,97 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Interactive Assistant</title>
-  <style>
-          body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 20px auto;
-            text-align: center;
-            background: #f4f4f9;
-        }
-        h1 { color: #333; }
-        #donor-input {
-            width: 80%;
-            padding: 10px;
-            font-size: 16px;
-            border: 2px solid #6200ea;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-        #matches {
-            text-align: left;
-            background: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            white-space: pre-wrap; /* Preserves formatting from Grok */
-        }
-        .footer { margin-top: 20px; font-size: 14px; color: #666; }
-        
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    .chat-container {
-      position: fixed;
-      bottom: 0;
-      right: 20px;
-      width: 300px;
-      background: #f1f1f1;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    }
-    .chat-header {
-      background: #007bff;
-      color: #fff;
-      padding: 10px;
-      text-align: center;
-      font-size: 16px;
-    }
-    .chat-messages {
-      height: 200px;
-      overflow-y: auto;
-      padding: 10px;
-      box-sizing: border-box;
-    }
-    .chat-messages .message {
-      margin: 5px 0;
-      padding: 8px 10px;
-      border-radius: 5px;
-    }
-    .chat-messages .user {
-      background: #007bff;
-      color: #fff;
-      text-align: right;
-    }
-    .chat-messages .assistant {
-      background: #e1e1e1;
-      color: #000;
-    }
-    .chat-input {
-      display: flex;
-      border-top: 1px solid #ccc;
-    }
-    .chat-input input {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      outline: none;
-    }
-    .chat-input button {
-      background: #007bff;
-      color: #fff;
-      border: none;
-      padding: 10px;
-      cursor: pointer;
-    }
-    .chat-input button:hover {
-      background: #0056b3;
-    }
-  </style>
 <script>
         function displayDateTime() {
             const now = new Date();
@@ -109,7 +18,7 @@
     <div class="chat-messages" id="chat-messages"></div>
     <div class="chat-input">
       <input type="text" id="user-input" placeholder="Type a message...">
-      <button onclick="sendMessage()" onload="matchDonation()" >Send</button>
+      <button onclick="sendMessage()" onload="matchDonation()">Send</button>
     </div>
   </div>
 
@@ -186,7 +95,7 @@
     }
   </script>
 
-    <div id="matches" onload="matchDonation()">Enter a cause to see AI suggestions...</div>
+    <div id="matches" onload="matchDonation()"></div>
 
     <h1>Welcome to Root Donate</h1>
     <p>The current date and time is:</p>

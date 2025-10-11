@@ -78,47 +78,6 @@
       }
     }
   </script>
-  <script>
-  // Grok-powered donation matcher
-        async function matchDonation(query) {
-            const apiKey = '19e92147-4ed9-4b64-b40d-3bb0186a112a'; // Replace with your xAI API key from x.ai/api
-            const prompt = `As a tech donation conductor, match this query to open-source AI/tech projects: "${query}". Suggest 3 GitHub repos with why they fit (keep it concise, fun).`;
-            
-            try {
-                const response = await fetch('https://api.x.ai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${19e92147-4ed9-4b64-b40d-3bb0186a112a}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        model: 'grok-3', // Free tier model
-                        messages: [{ role: 'user', content: prompt }],
-                        max_tokens: 200,
-                    }),
-                });
-                const data = await response.json();
-                const suggestions = data.choices[0].message.content || 'No matches yet—try another query!';
-                document.getElementById('matches').innerHTML = `<pre>${suggestions}</pre>`;
-            } catch (error) {
-                console.error('Conductor hiccup:', error);
-                document.getElementById('matches').innerHTML = 'Oops, something broke. Check your API key or try again!';
-            }
-        }
-
-        // Real-time input listener
-        document.getElementById('matches').addEventListener('input', (e) => {
-            const query = e.target.value.trim();
-            if (query.length > 5) { // Wait for meaningful input
-                matchDonation(query);
-            } else {
-                document.getElementById('matches').innerHTML = 'Enter a cause to see AI suggestions...';
-            }
-        });
-    }
-    </script>
-
-    <div id="matches" onload="matchDonation()"></div>
 
     <h1>Welcome to Root Donate</h1>
     <p>The current date and time is:</p>

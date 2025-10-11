@@ -48,16 +48,7 @@
 </script>
 </head>
 <body onload="displayDateTime()">
-  <div class="chatbox">
-    <h2>AI Chatbot</h2>
-    <div class="messages" id="messages"></div>
-    <div class="input-area">
-      <input type="text" id="userInput" placeholder="Type your message..." />
-      <button onclick="sendMessage(displayeDateTime)">Send</button>
-    </div>
-  </div>
-
-  <script>
+    <script>
     function sendMessage() {
       const input = document.getElementById('userInput');
       const messages = document.getElementById('messages');
@@ -72,7 +63,7 @@
       aiMessage.textContent = 'AI: ' + generateAIResponse(userText);
       messages.appendChild(aiMessage);
 
-      input.value = "${query}";
+      input.value = suggestions.value;
       messages.scrollTop = messages.scrollHeight;
     }
 
@@ -133,5 +124,15 @@
     <h1>Welcome to Root Donate</h1>
     <p>The current date and time is:</p>
     <p id="datetime"></p>
+    
+      <div class="chatbox">
+    <h2>AI Chatbot</h2>
+    <div class="messages" id="messages"></div>
+    <div class="input-area">
+      <input type="text" id="userInput" placeholder="Type your message..." />
+      <button onclick="sendMessage(displayeDateTime)">Send</button>
+    </div>
+  </div>
+
 </body>
 </html>

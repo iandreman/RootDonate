@@ -74,8 +74,12 @@
       } else if (text.toLowerCase().includes('weather')) {
         return 'I can’t check the weather right now, but it’s always a good day to code!';
       } else {
-        return 
-        // Grok-powered donation matcher
+        return 'tell me more!"${query}"';
+      }
+    }
+  </script>
+  <script>
+  // Grok-powered donation matcher
         async function matchDonation(query) {
             const apiKey = '19e92147-4ed9-4b64-b40d-3bb0186a112a'; // Replace with your xAI API key from x.ai/api
             const prompt = `As a tech donation conductor, match this query to open-source AI/tech projects: "${query}". Suggest 3 GitHub repos with why they fit (keep it concise, fun).`;
@@ -112,9 +116,7 @@
             }
         });
     }
-      }
-    }
-  </script>
+    </script>
 
     <div id="matches" onload="matchDonation(displayDateTime)"></div>
 

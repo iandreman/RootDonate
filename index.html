@@ -4,6 +4,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Interactive Assistant</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    .chatbox {
+      width: 100%;
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .messages {
+      height: 300px;
+      overflow-y: scroll;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .input-area {
+      display: flex;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px;
+      font-size: 16px;
+    }
+  </style>
 <script>
         function displayDateTime() {
             const now = new Date();
@@ -13,46 +48,45 @@
 </script>
 </head>
 <body onload="displayDateTime()">
-  <div class="chat-container">
-    <div class="chat-header"></div>
-    <div class="chat-messages" id="chat-messages"></div>
-    <div class="chat-input">
-      <button onclick="displayDateTime()" onload="sendMessage(displayDateTime)">Send</button>
+  <div class="chatbox">
+    <h2>AI Chatbot</h2>
+    <div class="messages" id="messages"></div>
+    <div class="input-area">
+      <input type="text" id="userInput" placeholder="Type your message..." />
+      <button onclick="sendMessage(displayeDateTime)">Send</button>
     </div>
   </div>
 
   <script>
-    const messagesContainer = document.getElementById('chat-messages');
-
     function sendMessage() {
-      const userInput = document.getElementById('user-input');
-      const message = userInput.value.trim();
+      const input = document.getElementById('userInput');
+      const messages = document.getElementById('messages');
+      const userText = input.value;
+      if (userText.trim() === '') return;
 
-      if (message) {
-        // Display user message
-        displayMessage(message, 'user');
-        userInput.value = '';
+      const userMessage = document.createElement('div');
+      userMessage.textContent = 'You: ' + userText;
+      messages.appendChild(userMessage);
 
-        // Simulate assistant response
-        setTimeout(() => {
-          const response = generateResponse(message);
-          displayMessage(response, 'assistant');
-        }, 500);
+      const aiMessage = document.createElement('div');
+      aiMessage.textContent = 'AI: ' + generateAIResponse(userText);
+      messages.appendChild(aiMessage);
+
+      input.value = "${query}";
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function generateAIResponse(text) {
+      // Simple mock response logic
+      if (text.toLowerCase().includes('hello')) {
+        return 'Hi there! How can I assist you today?';
+      } else if (text.toLowerCase().includes('weather')) {
+        return 'I can’t check the weather right now, but it’s always a good day to code!';
+      } else {
+        return 'Interesting! Tell me more.';
       }
     }
-
-    function displayMessage(message, sender) {
-      const messageElement = document.createElement('div');
-      messageElement.className = `message ${sender}`;
-      messageElement.textContent = message;
-      messagesContainer.appendChild(messageElement);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-
-    function generateResponse(userMessage) {
-      // Replace this with an actual API call or logic
-      return `You said: "${userMessage}". How can I help you further?`;
-        </script>
+  </script>
         <script>
         
         // Grok-powered donation matcher

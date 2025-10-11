@@ -74,12 +74,7 @@
       } else if (text.toLowerCase().includes('weather')) {
         return 'I can’t check the weather right now, but it’s always a good day to code!';
       } else {
-        return 'Interesting! Tell me more.';
-      }
-    }
-  </script>
-        <script>
-        
+        return 
         // Grok-powered donation matcher
         async function matchDonation(query) {
             const apiKey = '19e92147-4ed9-4b64-b40d-3bb0186a112a'; // Replace with your xAI API key from x.ai/api
@@ -116,6 +111,8 @@
                 document.getElementById('matches').innerHTML = 'Enter a cause to see AI suggestions...';
             }
         });
+    }
+      }
     }
   </script>
 

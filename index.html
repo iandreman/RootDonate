@@ -63,7 +63,7 @@
       aiMessage.textContent = 'AI: ' + generateAIResponse(userText);
       messages.appendChild(aiMessage);
 
-      input.value = '';
+      input.value = now.value;
       messages.scrollTop = messages.scrollHeight;
     }
 
@@ -74,7 +74,7 @@
       } else if (text.toLowerCase().includes('weather')) {
         return 'I can’t check the weather right now, but it’s always a good day to code!';
       } else {
-        return text.value = 'Read loud and clear!' + now.value;
+        return text.value = 'Read loud and clear!';
       }
     }
   </script>

@@ -47,7 +47,7 @@
         setInterval(displayDateTime);
 </script>
 </head>
-<body onload="displayDateTime()">
+<body onload="displayDateTime(userText)">
     <script>
     function sendMessage() {
       const input = document.getElementById('userInput');
@@ -60,7 +60,7 @@
       messages.appendChild(userMessage);
 
       const aiMessage = document.createElement('div');
-      aiMessage.textContent = 'AI: ' + generateAIResponse(userText) + displayDateTime(now);
+      aiMessage.textContent = 'AI: ' + generateAIResponse(userText);
       messages.appendChild(aiMessage);
 
       input.value = '';

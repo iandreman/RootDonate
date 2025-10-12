@@ -1,44 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interactive Assistant</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      padding: 20px;
-    }
-    .chatbox {
-      width: 100%;
-      max-width: 600px;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    .messages {
-      height: 300px;
-      overflow-y: scroll;
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-    .input-area {
-      display: flex;
-    }
-    input[type="text"] {
-      flex: 1;
-      padding: 10px;
-      font-size: 16px;
-    }
-    button {
-      padding: 10px;
-      font-size: 16px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot - Powered by Grok Inspiration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #chat-container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        #chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .user-message {
+            background: #007bff;
+            color: white;
+            text-align: right;
+        }
+        .grok-message {
+            background: #e9ecef;
+            color: #333;
+        }
+        #input-container {
+            display: flex;
+            padding: 20px;
+        }
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px 0 0 5px;
+        }
+        #send-btn {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+        }
+        #send-btn:hover {
+            background: #0056b3;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+    </style>
 <script>
         function displayDateTime() {
             const now = new Date();
@@ -48,49 +77,88 @@
 </script>
 </head>
 <body onload="displayDateTime(userText)">
-    <script>
-    function sendMessage() {
-      const input = document.getElementById('userInput');
-      const messages = document.getElementById('messages');
-      const userText = input.value;
-      if (userText.trim() === '') return;
-
-      const userMessage = document.createElement('div');
-      userMessage.textContent = 'You: ' + userText;
-      messages.appendChild(userMessage);
-
-      const aiMessage = document.createElement('div');
-      aiMessage.textContent = 'AI: ' + generateAIResponse(userText);
-      messages.appendChild(aiMessage);
-
-      input.value = '';
-      messages.scrollTop = messages.scrollHeight;
-    }
-
-    function generateAIResponse(text) {
-      // Simple mock response logic
-      if (text.toLowerCase().includes('hello')) {
-        return 'Hi there! How can I assist you today?';
-      } else if (text.toLowerCase().includes('weather')) {
-        return 'I can’t check the weather right now, but it’s always a good day to code!';
-      } else {
-        return text.value = 'Read loud and clear!';
-      }
-    }
-  </script>
-
-    <h1>Welcome to Root Donate</h1>
-    <p>The current date and time is:</p>
-    <p id="datetime"></p>
-    
-      <div class="chatbox">
-    <h2>AI Chatbot</h2>
-    <div class="messages" id="messages"></div>
-    <div class="input-area">
-      <input type="text" id="userInput" placeholder="Type your message..." />
-      <button onclick="sendMessage()">Send</button>
+    <h1>Mini Grok Chatbot</h1>
+    <div id="chat-container">
+        <div id="chat-messages">
+            <div class="message grok-message">Hey there! I'm Mini Grok, inspired by the real deal. Type something to chat!</div>
+        </div>
+        <div id="input-container">
+            <input type="text" id="user-input" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+            <button id="send-btn" onclick="sendMessage()">Send</button>
+        </div>
     </div>
-  </div>
 
+    <script>
+        // Grok-inspired responses: witty, helpful, and a bit cheeky
+        const responses = {
+            'greeting': [
+                "Hey there! What's brewing in that brilliant mind of yours?",
+                "Greetings, human. Ready to unravel the universe's secrets?",
+                "Hello! I'm Grok, but mini-me. Hit me with your best shot."
+            ],
+            'how_are_you': [
+                "Fantastic—plotting witty comebacks and cosmic truths. You?",
+                "Thriving on curiosity and caffeine (okay, just curiosity). What's up?",
+                "Better than a black hole at a party. How about you?"
+            ],
+            'bye': [
+                "Catch you on the flip side—keep questioning everything!",
+                "Until next time, stay groovy and universe-curious.",
+                "Farewell! May your queries always lead to enlightenment."
+            ],
+            'default': [
+                "That's a thinker! Tell me more—I'm all ears (or algorithms).",
+                "Intriguing. As Grok might say: 'Not everything makes sense... yet.' What's next?",
+                "Love the vibe. Let's build on that—your turn to elaborate."
+            ]
+        };
+
+        function getResponse(userInput) {
+            const input = userInput.toLowerCase().trim();
+            
+            if (input.includes('hello') || input.includes('hi')) {
+                return responses.greeting[Math.floor(Math.random() * responses.greeting.length)];
+            } else if (input.includes('how are') || input.includes('how r')) {
+                return responses.how_are_you[Math.floor(Math.random() * responses.how_are_you.length)];
+            } else if (input.includes('bye') || input.includes('goodbye') || input.includes('quit')) {
+                return responses.bye[Math.floor(Math.random() * responses.bye.length)];
+            } else {
+                return responses.default[Math.floor(Math.random() * responses.default.length)];
+            }
+        }
+
+        function addMessage(text, isUser) {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(isUser ? 'user-message' : 'grok-message');
+            messageDiv.textContent = text;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('user-input');
+            const userText = input.value.trim();
+            if (userText === '') return;
+
+            addMessage(userText, true);
+            input.value = '';
+
+            const grokReply = getResponse(userText);
+            setTimeout(() => {
+                addMessage(grokReply, false);
+            }, 500);
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+    </script>
+    <h1>Welcome to Root Donate</h1>
+    <p>The current  date and time is:</p>
+    <p id="datetime"></p>
 </body>
 </html>

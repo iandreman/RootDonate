@@ -60,10 +60,10 @@
       messages.appendChild(userMessage);
 
       const aiMessage = document.createElement('div');
-      aiMessage.textContent = 'AI: ' + generateAIResponse(userText);
+      aiMessage.textContent = 'AI: ' + generateAIResponse(userText) + displayDateTime(datetime);
       messages.appendChild(aiMessage);
 
-      input.value = now.value;
+      input.value = '';
       messages.scrollTop = messages.scrollHeight;
     }
 

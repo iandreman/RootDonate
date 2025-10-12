@@ -60,7 +60,7 @@
       messages.appendChild(userMessage);
 
       const aiMessage = document.createElement('div');
-      aiMessage.textContent = 'AI: ' + generateAIResponse(userText) + displayDateTime(datetime);
+      aiMessage.textContent = 'AI: ' + generateAIResponse(userText) + displayDateTime(now);
       messages.appendChild(aiMessage);
 
       input.value = '';

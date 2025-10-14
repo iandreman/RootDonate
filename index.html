@@ -80,11 +80,11 @@
     <h1>Root Donate AI Chatbot</h1>
     <div id="chat-container">
         <div id="chat-messages">
-            <div class="message grok-message" onload="displayDateTime()">Hey there! I'm Mini Grok, inspired by the real deal. Type something to chat!</div>
+            <div class="message grok-message" onload="displayDateTime(grokReply)">Hey there! I'm Mini Grok, inspired by the real deal. Type something to chat!</div>
         </div>
         <div id="input-container">
             <input type="text" id="user-input" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
-            <button id="send-btn" onclick="sendMessage(displayDateTime)">Send</button>
+            <button id="send-btn" onclick="sendMessage(grokReply)">Send</button>
         </div>
     </div>
 

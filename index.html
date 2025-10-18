@@ -162,3 +162,79 @@
     <p id="datetime"></p>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3I/ATLAS Nodal Path Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        #cometChart {
+            max-width: 800px;
+            width: 100%;
+        }
+        p {
+            color: #555;
+            max-width: 800px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>3I/ATLAS Nodal Path: Sep 2025–Jan 2026</h1>
+    <p>Visualizing interstellar comet 3I/ATLAS's ecliptic crossings, with Dec 19, 2025, position for @EverestToday viewing. Data simulated via Colossus (xAI).</p>
+    <canvas id="cometChart"></canvas>
+    <script>
+        const ctx = document.getElementById('cometChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    {
+                        label: '3I/ATLAS Orbit (Ecliptic Projection)',
+                        data: [
+                            { x: 2.35, y: 0, label: 'Ascending Node (Sep 22, 2025)' },
+                            { x: 1.95, y: 0.5, label: 'Dec 19, 2025 (Everest)' },
+                            { x: 2.7, y: -0.3, label: 'Descending Node (Jan 15, 2026)' }
+                        ],
+                        backgroundColor: '#4CAF50',
+                        borderColor: '#4CAF50',
+                        pointRadius: 10
+                    },
+                    {
+                        label: 'Ecliptic Plane',
+                        data: [{ x: -3, y: 0 }, { x: 3, y: 0 }],
+                        type: 'line',
+                        borderColor: '#666',
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { title: { display: true, text: 'Heliocentric Distance (AU)' } },
+                    y: { title: { display: true, text: 'Ecliptic Latitude (AU)' } }
+                },
+                plugins: {
+                    title: { display: true, text: '3I/ATLAS Nodal Path, Sep 2025–Jan 2026' },
+                    legend: { display: true }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -165,7 +165,9 @@
                     .on("start", dragstarted)
                     .on("drag", dragged)
                     .on("end", dragended));
-            node.select("title")
+            node.selectAll("title")
+                .data(d => [d])
+                .join("title")
                 .text(d => d.name);
             attachNodeClickHandler(node);
             link = svg.selectAll("line")

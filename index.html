@@ -72,7 +72,7 @@
         let simulation, svg, node, link;
 
         function loadData() {
-            fetch('https://peeringdb.com/api/ix')
+            fetch('https://peeringdb.com/api/ix' || 'info.cern.ch')
                 .then(res => res.json())
                 .then(data => {
                     const ixs = data.data;

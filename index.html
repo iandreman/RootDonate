@@ -76,7 +76,7 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Fetch live worldwide nodes data from Google API Worldwide web
+        // Fetch live worldwide nodes data from PeeringDB API
         let nodesData = [];
         let linksData = [];
         let simulation, svg, node, link;
@@ -104,6 +104,17 @@
                     }
                 })
                 .catch(err => console.error('Error fetching data:', err));
+        }
+
+        function attachNodeClickHandler(nodeSelection) {
+            nodeSelection.on("click", (event, d) => {
+                document.getElementById('nodeDetails').innerHTML = `
+                    <h6>${d.name}</h6>
+                    <p>City: ${d.city}</p>
+                    <p>Country: ${d.country}</p>
+                    <p>Type: ${d.type}</p>
+                `;
+            });
         }
 
         function initGraph() {
@@ -134,14 +145,7 @@
                     .on("end", dragended));
             node.append("title")
                 .text(d => d.name);
-            node.on("click", (event, d) => {
-                document.getElementById('nodeDetails').innerHTML = `
-                    <h6>${d.name}</h6>
-                    <p>City: ${d.city}</p>
-                    <p>Country: ${d.country}</p>
-                    <p>Type: ${d.type}</p>
-                `;
-            });
+            attachNodeClickHandler(node);
             simulation
                 .nodes(nodesData)
                 .on("tick", ticked);
@@ -163,14 +167,7 @@
                     .on("end", dragended));
             node.select("title")
                 .text(d => d.name);
-            node.on("click", (event, d) => {
-                document.getElementById('nodeDetails').innerHTML = `
-                    <h6>${d.name}</h6>
-                    <p>City: ${d.city}</p>
-                    <p>Country: ${d.country}</p>
-                    <p>Type: ${d.type}</p>
-                `;
-            });
+            attachNodeClickHandler(node);
             link = svg.selectAll("line")
                 .data(linksData)
                 .join("line")

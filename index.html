@@ -63,7 +63,7 @@
                     <div class="card-header">Global Metrics</div>
                     <div class="card-body">
                         <ul class="list-unstyled">
-                            <li>Total Nodes: <span id="totalNodes">20</span></li>
+                            <li>Total Nodes: <span id="totalNodes">Loading...</span></li>
                             <li>Active Peers: <span id="totalPeers">150</span></li>
                             <li>Avg Latency: <span id="avgLatency">45ms</span></li>
                         </ul>
@@ -76,7 +76,104 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Sample Worldwide Nodes Data (Replace with API fetch for live data)
-        const nodesData = [ 
-        www
-            
+        // Fetch live worldwide nodes data from PeeringDB API
+        let nodesData = [];
+        let linksData = [];
+        fetch('https://peeringdb.com/api/ix')
+        .then(res => res.json())
+        .then(data => {
+            const ixs = data.data;
+            nodesData = ixs.map((ix, i) => ({
+                id: ix.id,
+                name: ix.name,
+                city: ix.city,
+                country: ix.country,
+                x: Math.random() * 800,
+                y: Math.random() * 600,
+                type: 'IXP'
+            }));
+            linksData = [];
+            document.getElementById('totalNodes').textContent = nodesData.length;
+            initGraph();
+        })
+        .catch(err => console.error('Error fetching data:', err));
+
+        function initGraph() {
+            const svg = d3.select("#graph").append("svg")
+                .attr("width", "100%")
+                .attr("height", "500");
+            const simulation = d3.forceSimulation(nodesData)
+                .force("link", d3.forceLink(linksData).id(d => d.id))
+                .force("charge", d3.forceManyBody().strength(-100))
+                .force("center", d3.forceCenter(400, 250));
+            const link = svg.append("g")
+                .attr("class", "links")
+                .selectAll("line")
+                .data(linksData)
+                .enter().append("line")
+                .attr("stroke", "#999")
+                .attr("stroke-opacity", 0.6);
+            const node = svg.append("g")
+                .attr("class", "nodes")
+                .selectAll("circle")
+                .data(nodesData)
+                .enter().append("circle")
+                .attr("r", 5)
+                .attr("fill", "#69b3a2")
+                .call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended));
+            node.append("title")
+                .text(d => d.name);
+            simulation
+                .nodes(nodesData)
+                .on("tick", ticked);
+            simulation.force("link")
+                .links(linksData);
+            function ticked() {
+                link
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+                node
+                    .attr("cx", d => d.x)
+                    .attr("cy", d => d.y);
+            }
+            function dragstarted(event, d) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            }
+            function dragged(event, d) {
+                d.fx = event.x;
+                d.fy = event.y;
+            }
+            function dragended(event, d) {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }
+            node.on("click", (event, d) => {
+                document.getElementById('nodeDetails').innerHTML = `
+                    <h6>${d.name}</h6>
+                    <p>City: ${d.city}</p>
+                    <p>Country: ${d.country}</p>
+                    <p>Type: ${d.type}</p>
+                `;
+            });
+        }
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            document.body.classList.toggle('dark-theme');
+        });
+        document.querySelector('#searchInput + button').addEventListener('click', () => {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const results = nodesData.filter(n => n.name.toLowerCase().includes(query) || n.city.toLowerCase().includes(query));
+            const list = document.getElementById('resultsList');
+            list.innerHTML = results.map(r => `<li>${r.name} - ${r.city}</li>`).join('');
+            document.getElementById('searchResults').classList.remove('d-none');
+        });
+    </script>
+</body>
+</html>

@@ -72,28 +72,52 @@
         let simulation, svg, node, link;
 
         function loadData() {
-            fetch('https://peeringdb.com/api/ix' || 'info.cern.ch')
+            // Use CORS proxy to bypass PeeringDB's restrictions
+            const proxyUrl = 'https://api.allorigins.win/raw?url=';
+            const targetUrl = encodeURIComponent('https://www.peeringdb.com/api/ix?limit=50');  // Fetch up to 50 IXPs worldwide
+
+            fetch(proxyUrl + targetUrl)
                 .then(res => res.json())
                 .then(data => {
                     const ixs = data.data;
+                    if (!ixs || ixs.length === 0) {
+                        console.warn('No IXP data received—retrying...');
+                        setTimeout(loadData, 2000);  // Retry after 2s if empty
+                        return;
+                    }
                     nodesData = ixs.map((ix, i) => ({
                         id: ix.id,
                         name: ix.name,
-                        city: ix.city,
+                        city: ix.city || 'N/A',
                         country: ix.country,
                         x: Math.random() * 800,
                         y: Math.random() * 600,
                         type: 'IXP'
                     }));
-                    linksData = [];
+                    linksData = [];  // No links for now; could add based on peering data later
                     document.getElementById('totalNodes').textContent = nodesData.length;
+                    console.log(`Loaded ${nodesData.length} nodes successfully!`);
                     if (simulation) {
                         updateGraph();
                     } else {
                         initGraph();
                     }
                 })
-                .catch(err => console.error('Error fetching data:', err));
+                .catch(err => {
+                    console.error('Error fetching data:', err);
+                    // Fallback: Load sample data if fetch fails
+                    nodesData = [
+                        { id: 1, name: 'Sample IXP 1', city: 'London', country: 'GB', x: 200, y: 200, type: 'IXP' },
+                        { id: 2, name: 'Sample IXP 2', city: 'New York', country: 'US', x: 600, y: 300, type: 'IXP' }
+                    ];
+                    linksData = [{ source: 1, target: 2 }];
+                    document.getElementById('totalNodes').textContent = nodesData.length;
+                    if (simulation) {
+                        updateGraph();
+                    } else {
+                        initGraph();
+                    }
+                });
         }
 
         function initGraph() {
@@ -143,7 +167,7 @@
             simulation.nodes(nodesData);
             simulation.alpha(1).restart();
             node = svg.selectAll("circle")
-                .data(nodesData)
+                .data(nodesData, d => d.id)
                 .join("circle")
                 .attr("r", 5)
                 .attr("fill", "#69b3a2")
@@ -162,7 +186,7 @@
                 `;
             });
             link = svg.selectAll("line")
-                .data(linksData)
+                .data(linksData, d => `${d.source.id}-${d.target.id}`)
                 .join("line")
                 .attr("stroke", "#999")
                 .attr("stroke-opacity", 0.6);
@@ -202,14 +226,18 @@
 
         document.querySelector('#searchInput + button').addEventListener('click', () => {
             const query = document.getElementById('searchInput').value.toLowerCase();
-            const results = nodesData.filter(n => n.name.toLowerCase().includes(query) || n.city.toLowerCase().includes(query));
+            const results = nodesData.filter(n => 
+                n.name.toLowerCase().includes(query) || 
+                (n.city || '').toLowerCase().includes(query) ||
+                n.type.toLowerCase().includes(query)
+            );
             const list = document.getElementById('resultsList');
-            list.innerHTML = results.map(r => `<li>${r.name} - ${r.city}</li>`).join('');
+            list.innerHTML = results.map(r => `<li>${r.name} - ${r.city}, ${r.country}</li>`).join('');
             document.getElementById('searchResults').classList.remove('d-none');
         });
 
         loadData();
-        setInterval(loadData, 10000);
+        setInterval(loadData, 30000);  // Refresh every 30s to avoid proxy rate limits
     </script>
 </body>
 </html>

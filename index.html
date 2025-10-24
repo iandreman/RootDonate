@@ -74,7 +74,7 @@
         function loadData() {
             // Use CORS proxy to bypass PeeringDB's restrictions
             const proxyUrl = 'https://api.allorigins.win/raw?url=';
-            const targetUrl = encodeURIComponent('https://www.peeringdb.com/api/ix?limit=50');  // Fetch up to 50 IXPs worldwide
+            const targetUrl = encodeURIComponent('https://www.peeringdb.com/api/ix');  // Fetch up to 50 IXPs worldwide
 
             fetch(proxyUrl + targetUrl)
                 .then(res => res.json())

@@ -71,53 +71,55 @@
         let linksData = [];
         let simulation, svg, node, link;
 
-        function loadData() {
-            // Use CORS proxy to bypass PeeringDB's restrictions
+        async function loadData() {
             const proxyUrl = 'https://api.allorigins.win/raw?url=';
-            const targetUrl = encodeURIComponent('https://www.peeringdb.com/api/ix');  // Fetch IXPs worldwide
-
-            fetch(proxyUrl + targetUrl)
-                .then(res => res.json())
-                .then(data => {
+            const baseUrl = 'https://www.peeringdb.com/api/ix';
+            let allIxs = [];
+            let offset = 0;
+            const limit = 250;
+            try {
+                while (true) {
+                    const targetUrl = encodeURIComponent(`${baseUrl}?limit=${limit}&offset=${offset}`);
+                    const res = await fetch(proxyUrl + targetUrl);
+                    if (!res.ok) throw new Error('Fetch failed');
+                    const data = await res.json();
                     const ixs = data.data;
-                    if (!ixs || ixs.length === 0) {
-                        console.warn('No IXP data received—retrying...');
-                        setTimeout(loadData, 2000);  // Retry after 2s if empty
-                        return;
-                    }
-                    nodesData = ixs.map((ix, i) => ({
-                        id: ix.id,
-                        name: ix.name,
-                        city: ix.city || 'N/A',
-                        country: ix.country,
-                        x: Math.random() * 800,
-                        y: Math.random() * 600,
-                        type: 'IXP'
-                    }));
-                    linksData = [];  // No links for now; could add based on peering data later
-                    document.getElementById('totalNodes').textContent = nodesData.length;
-                    console.log(`Loaded ${nodesData.length} nodes successfully!`);
-                    if (simulation) {
-                        updateGraph();
-                    } else {
-                        initGraph();
-                    }
-                })
-                .catch(err => {
-                    console.error('Error fetching data:', err);
-                    // Fallback: Load sample data if fetch fails
-                    nodesData = [
-                        { id: 1, name: 'Sample IXP 1', city: 'London', country: 'GB', x: 200, y: 200, type: 'IXP' },
-                        { id: 2, name: 'Sample IXP 2', city: 'New York', country: 'US', x: 600, y: 300, type: 'IXP' }
-                    ];
-                    linksData = [{ source: 1, target: 2 }];
-                    document.getElementById('totalNodes').textContent = nodesData.length;
-                    if (simulation) {
-                        updateGraph();
-                    } else {
-                        initGraph();
-                    }
-                });
+                    if (!ixs || ixs.length === 0) break;
+                    allIxs = allIxs.concat(ixs);
+                    offset += limit;
+                }
+                nodesData = allIxs.map((ix, i) => ({
+                    id: ix.id,
+                    name: ix.name,
+                    city: ix.city || 'N/A',
+                    country: ix.country,
+                    x: Math.random() * 800,
+                    y: Math.random() * 600,
+                    type: 'IXP'
+                }));
+                linksData = [];
+                document.getElementById('totalNodes').textContent = nodesData.length;
+                console.log(`Loaded ${nodesData.length} nodes successfully!`);
+                if (simulation) {
+                    updateGraph();
+                } else {
+                    initGraph();
+                }
+            } catch (err) {
+                console.error('Error fetching data:', err);
+                // Fallback: Load sample data if fetch fails
+                nodesData = [
+                    { id: 1, name: 'Sample IXP 1', city: 'London', country: 'GB', x: 200, y: 200, type: 'IXP' },
+                    { id: 2, name: 'Sample IXP 2', city: 'New York', country: 'US', x: 600, y: 300, type: 'IXP' }
+                ];
+                linksData = [{ source: 1, target: 2 }];
+                document.getElementById('totalNodes').textContent = nodesData.length;
+                if (simulation) {
+                    updateGraph();
+                } else {
+                    initGraph();
+                }
+            }
         }
 
         function initGraph() {
@@ -195,9 +197,9 @@
         function ticked() {
             link
                 .attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
+                .attr("x1", d => d.source.y)
                 .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y);
+                .attr("x2", d => d.target.y);
             node
                 .attr("cx", d => d.x)
                 .attr("cy", d => d.y);

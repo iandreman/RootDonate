@@ -3,19 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Root Donate - Dynamic Worldwide Internet Nodes Search</title>
+    <title>Dynamic Worldwide Internet Nodes Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; }
         .dark-theme { background-color: #121212; color: #e0e0e0; }
-        .dark-theme .card { background-color: #1e1e1e; color: #e0e0e0; }
+        .dark-theme .card { background-color: #1e1e1e; color: #e0e0e0; border-color: #333; }
+        .dark-theme #graph { background: #2d2d2d; border-color: #333; }
         #graph { border: 1px solid #dee2e6; height: 500px; background: white; }
-        .dark-theme #graph { background: #2d2d2d; }
         .node { stroke: #fff; stroke-width: 1.5px; }
+        .dark-theme .node { stroke: #333; }
         .node.active { stroke: #007bff; stroke-width: 3px; }
         .link { stroke: #999; stroke-opacity: 0.6; }
+        .dark-theme .link { stroke: #666; }
         .search-results { max-height: 200px; overflow-y: auto; }
+        .loading { text-align: center; padding: 20px; color: #6c757d; }
     </style>
 </head>
 <body>
@@ -28,7 +31,7 @@
                 </div>
                 <div class="input-group mb-3">
                     <input type="text" id="searchInput" class="form-control" placeholder="Search nodes by name, city, or type (e.g., 'London IXP')">
-                    <button class="btn btn-primary" type="button">🔍 Search</button>
+                    <button class="btn btn-primary" type="button" id="searchBtn">🔍 Search</button>
                 </div>
                 <div id="searchResults" class="card mb-3 search-results d-none">
                     <div class="card-body">
@@ -42,7 +45,9 @@
             <div class="col-lg-8">
                 <div class="card">
                     <div class="card-header">Interactive Node Graph</div>
-                    <div id="graph"></div>
+                    <div id="graph">
+                        <div class="loading">Loading graph data...</div>
+                    </div>
                 </div>
             </div>
             <div class="col-lg-4">
@@ -69,23 +74,25 @@
     <script>
         let nodesData = [];
         let linksData = [];
-        let simulation, svg, node, link;
+        let simulation, svg, nodeGroup, linkGroup;
 
         async function loadData() {
+            const graphDiv = document.getElementById('graph');
+            graphDiv.innerHTML = '<div class="loading">Loading graph data...</div>';
             const proxyUrl = 'https://api.allorigins.win/raw?url=';
             const baseUrl = 'https://www.peeringdb.com/api/ix';
             let allIxs = [];
             let offset = 0;
             const limit = 250;
-            const maxNodes = 500;  // Realistic limit for web domain performance
+            const maxNodes = 500;
             try {
                 while (true) {
                     const targetUrl = encodeURIComponent(`${baseUrl}?limit=${limit}&offset=${offset}`);
                     const res = await fetch(proxyUrl + targetUrl);
-                    if (!res.ok) throw new Error('Fetch failed');
+                    if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
                     const data = await res.json();
-                    const ixs = data.data;
-                    if (!ixs || ixs.length === 0) break;
+                    const ixs = data.data || [];
+                    if (ixs.length === 0) break;
                     allIxs = allIxs.concat(ixs);
                     if (allIxs.length >= maxNodes) break;
                     offset += limit;
@@ -93,16 +100,26 @@
                 allIxs = allIxs.slice(0, maxNodes);
                 nodesData = allIxs.map((ix, i) => ({
                     id: ix.id,
-                    name: ix.name,
+                    name: ix.name || 'Unnamed IXP',
                     city: ix.city || 'N/A',
-                    country: ix.country,
+                    country: ix.country || 'N/A',
                     x: Math.random() * 800,
-                    y: Math.random() * 600,
+                    y: Math.random() * 400,
                     type: 'IXP'
                 }));
+                // Generate sample links for visualization (in production, fetch real peering data)
                 linksData = [];
+                if (nodesData.length > 1) {
+                    for (let i = 0; i < Math.min(20, nodesData.length); i++) {
+                        const source = nodesData[i % nodesData.length];
+                        const target = nodesData[(i + 1) % nodesData.length];
+                        if (source.id !== target.id) {
+                            linksData.push({ source: source.id, target: target.id });
+                        }
+                    }
+                }
                 document.getElementById('totalNodes').textContent = nodesData.length;
-                console.log(`Loaded ${nodesData.length} nodes successfully!`);
+                graphDiv.innerHTML = '';
                 if (simulation) {
                     updateGraph();
                 } else {
@@ -110,13 +127,19 @@
                 }
             } catch (err) {
                 console.error('Error fetching data:', err);
-                // Fallback: Load sample data if fetch fails
+                // Fallback: Load sample data
                 nodesData = [
                     { id: 1, name: 'Sample IXP 1', city: 'London', country: 'GB', x: 200, y: 200, type: 'IXP' },
-                    { id: 2, name: 'Sample IXP 2', city: 'New York', country: 'US', x: 600, y: 300, type: 'IXP' }
+                    { id: 2, name: 'Sample IXP 2', city: 'New York', country: 'US', x: 600, y: 300, type: 'IXP' },
+                    { id: 3, name: 'Sample IXP 3', city: 'Tokyo', country: 'JP', x: 400, y: 100, type: 'IXP' }
                 ];
-                linksData = [{ source: 1, target: 2 }];
+                linksData = [
+                    { source: 1, target: 2 },
+                    { source: 2, target: 3 },
+                    { source: 3, target: 1 }
+                ];
                 document.getElementById('totalNodes').textContent = nodesData.length;
+                graphDiv.innerHTML = '';
                 if (simulation) {
                     updateGraph();
                 } else {
@@ -128,61 +151,55 @@
         function initGraph() {
             svg = d3.select("#graph").append("svg")
                 .attr("width", "100%")
-                .attr("height", "500");
+                .attr("height", "500")
+                .attr("viewBox", "0 0 800 500")
+                .attr("preserveAspectRatio", "xMidYMid meet");
+            linkGroup = svg.append("g").attr("class", "links");
+            nodeGroup = svg.append("g").attr("class", "nodes");
+
             simulation = d3.forceSimulation(nodesData)
-                .force("link", d3.forceLink(linksData).id(d => d.id))
-                .force("charge", d3.forceManyBody().strength(-100))
-                .force("center", d3.forceCenter(400, 250));
-            link = svg.append("g")
-                .attr("class", "links")
-                .selectAll("line")
-                .data(linksData)
-                .enter().append("line")
-                .attr("stroke", "#999")
-                .attr("stroke-opacity", 0.6);
-            node = svg.append("g")
-                .attr("class", "nodes")
-                .selectAll("circle")
-                .data(nodesData)
-                .enter().append("circle")
-                .attr("r", 5)
-                .attr("fill", "#69b3a2")
-                .call(d3.drag()
-                    .on("start", dragstarted)
-                    .on("drag", dragged)
-                    .on("end", dragended));
-            node.append("title")
-                .text(d => d.name);
-            node.on("click", (event, d) => {
-                document.getElementById('nodeDetails').innerHTML = `
-                    <h6>${d.name}</h6>
-                    <p>City: ${d.city}</p>
-                    <p>Country: ${d.country}</p>
-                    <p>Type: ${d.type}</p>
-                `;
-            });
-            simulation
-                .nodes(nodesData)
-                .on("tick", ticked);
-            simulation.force("link")
-                .links(linksData);
+                .force("link", d3.forceLink(linksData).id(d => d.id).distance(100))
+                .force("charge", d3.forceManyBody().strength(-200))
+                .force("center", d3.forceCenter(400, 250))
+                .force("collide", d3.forceCollide().radius(10));
+
+            updateElements();
+            simulation.on("tick", ticked);
         }
 
         function updateGraph() {
             simulation.nodes(nodesData);
+            simulation.force("link").links(linksData);
             simulation.alpha(1).restart();
-            node = svg.selectAll("circle")
+            updateElements();
+        }
+
+        function updateElements() {
+            link = linkGroup.selectAll("line")
+                .data(linksData, d => `${Math.min(d.source.id, d.target.id)}-${Math.max(d.source.id, d.target.id)}`)
+                .join("line")
+                .attr("class", "link")
+                .attr("stroke-width", 1);
+
+            node = nodeGroup.selectAll("g")
                 .data(nodesData, d => d.id)
-                .join("circle")
-                .attr("r", 5)
-                .attr("fill", "#69b3a2")
+                .join("g")
+                .attr("class", "node")
                 .call(d3.drag()
                     .on("start", dragstarted)
                     .on("drag", dragged)
                     .on("end", dragended));
-            node.select("title")
-                .text(d => d.name);
+
+            node.selectAll("circle").data(d => [d]).join("circle")
+                .attr("r", 5)
+                .attr("fill", "#69b3a2");
+
+            node.selectAll("title").data(d => [d]).join("title")
+                .text(d => `${d.name} - ${d.city}, ${d.country}`);
+
             node.on("click", (event, d) => {
+                d3.select(event.currentTarget).classed("active", true);
+                setTimeout(() => d3.select(event.currentTarget).classed("active", false), 1000);
                 document.getElementById('nodeDetails').innerHTML = `
                     <h6>${d.name}</h6>
                     <p>City: ${d.city}</p>
@@ -190,22 +207,16 @@
                     <p>Type: ${d.type}</p>
                 `;
             });
-            link = svg.selectAll("line")
-                .data(linksData, d => `${d.source.id}-${d.target.id}`)
-                .join("line")
-                .attr("stroke", "#999")
-                .attr("stroke-opacity", 0.6);
         }
 
         function ticked() {
             link
-                .attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y);
+                .attr("x1", d => d.source.x || 0)
+                .attr("y1", d => d.source.y || 0)
+                .attr("x2", d => d.target.x || 0)
+                .attr("y2", d => d.target.y || 0);
             node
-                .attr("cx", d => d.x)
-                .attr("cy", d => d.y);
+                .attr("transform", d => `translate(${d.x || 0}, ${d.y || 0})`);
         }
 
         function dragstarted(event, d) {
@@ -225,24 +236,61 @@
             d.fy = null;
         }
 
+        // Event listeners
         document.getElementById('themeToggle').addEventListener('click', () => {
             document.body.classList.toggle('dark-theme');
+            const isDark = document.body.classList.contains('dark-theme');
+            document.getElementById('themeToggle').textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
         });
 
-        document.querySelector('#searchInput + button').addEventListener('click', () => {
-            const query = document.getElementById('searchInput').value.toLowerCase();
+        document.getElementById('searchBtn').addEventListener('click', performSearch);
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            if (!query) {
+                document.getElementById('searchResults').classList.add('d-none');
+                return;
+            }
             const results = nodesData.filter(n => 
                 n.name.toLowerCase().includes(query) || 
-                (n.city || '').toLowerCase().includes(query) ||
+                n.city.toLowerCase().includes(query) ||
                 n.type.toLowerCase().includes(query)
             );
             const list = document.getElementById('resultsList');
-            list.innerHTML = results.map(r => `<li>${r.name} - ${r.city}, ${r.country}</li>`).join('');
+            if (results.length === 0) {
+                list.innerHTML = '<li class="text-muted">No matching nodes found.</li>';
+            } else {
+                list.innerHTML = results.slice(0, 20).map(r => 
+                    `<li class="p-1 border-bottom"><a href="#" onclick="selectNodeById(${r.id})">${r.name} - ${r.city}, ${r.country}</a></li>`
+                ).join('');
+            }
             document.getElementById('searchResults').classList.remove('d-none');
-        });
+        }
 
+        function selectNodeById(id) {
+            const nodeData = nodesData.find(n => n.id === id);
+            if (nodeData) {
+                document.getElementById('nodeDetails').innerHTML = `
+                    <h6>${nodeData.name}</h6>
+                    <p>City: ${nodeData.city}</p>
+                    <p>Country: ${nodeData.country}</p>
+                    <p>Type: ${nodeData.type}</p>
+                `;
+                // Scroll to graph and highlight node (simulation handles position)
+                node.filter(d => d.id === id).dispatch("click");
+            }
+            document.getElementById('searchResults').classList.add('d-none');
+            document.getElementById('searchInput').value = '';
+        }
+
+        // Initialize
         loadData();
-        setInterval(loadData, 30000);  // Refresh every 30s to avoid proxy rate limits
+        // Refresh every 5 minutes for production (less aggressive)
+        setInterval(loadData, 300000);
     </script>
 </body>
 </html>
+```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

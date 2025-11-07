@@ -24,9 +24,6 @@
         .dark-theme .search-result-item { border-bottom-color: #333; }
         .dark-theme .search-result-item:hover { background-color: #2a2a2a; }
         .no-results { padding: 8px 12px; color: #6c757d; font-style: italic; }
-        #grokResponse { max-height: 200px; overflow-y: auto; white-space: pre-wrap; }
-        .dark-theme #grokResponse { background-color: #2a2a2a; color: #e0e0e0; }
-        .dark-theme .form-control { background-color: #333; color: #e0e0e0; border-color: #555; }
     </style>
 </head>
 <body>
@@ -75,23 +72,6 @@
                         </ul>
                     </div>
                 </div>
-                <div class="card mt-3">
-                    <div class="card-header">Ask Grok</div>
-                    <div class="card-body">
-                        <div id="apiKeySaved" class="text-success small d-none mb-2">API key saved.</div>
-                        <div class="mb-2">
-                            <label for="apiKeyInput" class="form-label small">xAI API Key:</label>
-                            <input type="password" id="apiKeyInput" class="form-control" placeholder="Enter your xAI API key (get one at https://x.ai/api)">
-                        </div>
-                        <div class="mb-2">
-                            <label for="grokQuestion" class="form-label small">Question:</label>
-                            <textarea id="grokQuestion" class="form-control" rows="3" placeholder="Ask about the selected node or graph..."></textarea>
-                        </div>
-                        <button id="askGrokBtn" class="btn btn-info btn-sm mb-2" disabled>Ask Grok</button>
-                        <div id="grokResponse" class="border rounded p-2 bg-light small d-none"></div>
-                        <div id="grokLoading" class="text-muted small d-none">Thinking...</div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -108,43 +88,6 @@
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(() => func.apply(this, args), delay);
             };
-        }
-
-        // Grok API integration
-        async function askGrok(question, apiKey) {
-            const loading = document.getElementById('grokLoading');
-            const responseDiv = document.getElementById('grokResponse');
-            loading.classList.remove('d-none');
-            responseDiv.classList.add('d-none');
-            try {
-                const res = await fetch('https://api.x.ai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: 'grok-beta',
-                        messages: [
-                            { role: 'system', content: 'You are Grok, a highly intelligent, helpful AI assistant knowledgeable about internet infrastructure, peering, and IXPs.' },
-                            { role: 'user', content: question }
-                        ],
-                        stream: false
-                    })
-                });
-                if (!res.ok) {
-                    throw new Error(`API error: ${res.status}`);
-                }
-                const data = await res.json();
-                const answer = data.choices[0].message.content;
-                responseDiv.textContent = answer;
-                responseDiv.classList.remove('d-none');
-            } catch (err) {
-                responseDiv.innerHTML = `<div class="text-danger">Error: ${err.message}. Check your API key and try again.</div>`;
-                responseDiv.classList.remove('d-none');
-            } finally {
-                loading.classList.add('d-none');
-            }
         }
 
         async function loadData() {
@@ -282,9 +225,6 @@
                 <p>Country: ${d.country}</p>
                 <p>Type: ${d.type}</p>
             `;
-            // Prefill Grok question with node info
-            const defaultQuestion = `Tell me more about ${d.name}, the IXP in ${d.city}, ${d.country}. What is its role in global internet peering?`;
-            document.getElementById('grokQuestion').value = defaultQuestion;
         }
 
         function ticked() {
@@ -377,36 +317,6 @@
             }
         });
 
-        // Grok API key handling
-        const apiKeyInput = document.getElementById('apiKeyInput');
-        const askGrokBtn = document.getElementById('askGrokBtn');
-        const apiKeySaved = document.getElementById('apiKeySaved');
-        const savedKey = localStorage.getItem('xaiApiKey');
-        if (savedKey) {
-            apiKeyInput.value = savedKey;
-            askGrokBtn.disabled = false;
-        }
-
-        apiKeyInput.addEventListener('input', (e) => {
-            const key = e.target.value.trim();
-            if (key) {
-                localStorage.setItem('xaiApiKey', key);
-                apiKeySaved.classList.remove('d-none');
-                setTimeout(() => apiKeySaved.classList.add('d-none'), 2000);
-                askGrokBtn.disabled = false;
-            } else {
-                localStorage.removeItem('xaiApiKey');
-                askGrokBtn.disabled = true;
-            }
-        });
-
-        askGrokBtn.addEventListener('click', async () => {
-            const question = document.getElementById('grokQuestion').value.trim();
-            const apiKey = localStorage.getItem('xaiApiKey');
-            if (!question || !apiKey) return;
-            await askGrok(question, apiKey);
-        });
-
         // Initialize
         loadData();
         // Refresh every 5 minutes for production (less aggressive)
@@ -414,3 +324,4 @@
     </script>
 </body>
 </html>
+```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

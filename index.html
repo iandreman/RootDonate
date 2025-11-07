@@ -117,7 +117,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
+                        'Authorization': `Bearer ${19e92147-4ed9-4b64-b40d-3bb0186a112a}`
                     },
                     body: JSON.stringify({
                         model: 'grok-4',
@@ -377,7 +377,7 @@
         const apiKeyInput = document.getElementById('apiKeyInput');
         const askGrokBtn = document.getElementById('askGrokBtn');
         const apiKeySaved = document.getElementById('apiKeySaved');
-        const savedKey = localStorage.getItem('19e92147-4ed9-4b64-b40d-3bb0186a112a');
+        const savedKey = localStorage.getItem('xaiApiKey');
         if (savedKey) {
             apiKeyInput.value = savedKey;
             askGrokBtn.disabled = false;

@@ -137,7 +137,7 @@
                         fy: y,
                         type: 'IXP'
                     };
-                }).filter(d => d.lat !== 0 || d.lon !== 0); // Filter out invalid geo coords if needed
+                }).filter(d => d.lat !== 0 && d.lon !== 0); // Filter out invalid geo coords (both zero)
 
                 // Generate sample links for visualization (in production, fetch real peering data)
                 linksData = [];
@@ -350,3 +350,4 @@
     </script>
 </body>
 </html>
+```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

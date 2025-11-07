@@ -19,6 +19,14 @@
         .dark-theme .link { stroke: #666; }
         .search-results { max-height: 200px; overflow-y: auto; }
         .loading { text-align: center; padding: 20px; color: #6c757d; }
+        .search-result-item { cursor: pointer; padding: 8px 12px; border-bottom: 1px solid #eee; }
+        .search-result-item:hover { background-color: #f8f9fa; }
+        .dark-theme .search-result-item { border-bottom-color: #333; }
+        .dark-theme .search-result-item:hover { background-color: #2a2a2a; }
+        .no-results { padding: 8px 12px; color: #6c757d; font-style: italic; }
+        #grokResponse { max-height: 200px; overflow-y: auto; white-space: pre-wrap; }
+        .dark-theme #grokResponse { background-color: #2a2a2a; color: #e0e0e0; }
+        .dark-theme .form-control { background-color: #333; color: #e0e0e0; border-color: #555; }
     </style>
 </head>
 <body>
@@ -36,7 +44,7 @@
                 <div id="searchResults" class="card mb-3 search-results d-none">
                     <div class="card-body">
                         <h6>Matching Nodes:</h6>
-                        <ul id="resultsList" class="list-unstyled"></ul>
+                        <ul id="resultsList" class="list-unstyled mb-0"></ul>
                     </div>
                 </div>
             </div>
@@ -67,6 +75,23 @@
                         </ul>
                     </div>
                 </div>
+                <div class="card mt-3">
+                    <div class="card-header">Ask Grok</div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <label for="apiKeyInput" class="form-label small">xAI API Key <a href="https://x.ai/api" target="_blank" class="text-decoration-none">(Get one)</a>:</label>
+                            <input type="password" id="apiKeyInput" class="form-control form-control-sm" placeholder="Enter your xAI API key">
+                        </div>
+                        <div id="apiKeySaved" class="text-success small d-none mb-2">API key saved.</div>
+                        <div class="mb-2">
+                            <label for="grokQuestion" class="form-label small">Question:</label>
+                            <textarea id="grokQuestion" class="form-control" rows="3" placeholder="Ask about the selected node or graph..."></textarea>
+                        </div>
+                        <button id="askGrokBtn" class="btn btn-info btn-sm mb-2" disabled>Ask Grok</button>
+                        <div id="grokResponse" class="border rounded p-2 bg-light small d-none"></div>
+                        <div id="grokLoading" class="text-muted small d-none">Thinking...</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -74,7 +99,53 @@
     <script>
         let nodesData = [];
         let linksData = [];
-        let simulation, svg, nodeGroup, linkGroup;
+        let simulation, svg, nodeGroup, linkGroup, node, link;
+        let searchTimeout;
+
+        // Debounce utility for autocomplete
+        function debounce(func, delay) {
+            return function(...args) {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        // Grok API integration
+        async function askGrok(question, apiKey) {
+            const loading = document.getElementById('grokLoading');
+            const responseDiv = document.getElementById('grokResponse');
+            loading.classList.remove('d-none');
+            responseDiv.classList.add('d-none');
+            try {
+                const res = await fetch('https://api.x.ai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'grok-4',
+                        messages: [
+                            { role: 'system', content: 'You are Grok, a highly intelligent, helpful AI assistant knowledgeable about internet infrastructure, peering, and IXPs.' },
+                            { role: 'user', content: question }
+                        ],
+                        stream: false
+                    })
+                });
+                if (!res.ok) {
+                    throw new Error(`API error: ${res.status}`);
+                }
+                const data = await res.json();
+                const answer = data.choices[0].message.content;
+                responseDiv.textContent = answer;
+                responseDiv.classList.remove('d-none');
+            } catch (err) {
+                responseDiv.innerHTML = `<div class="text-danger">Error: ${err.message}. Check your API key and try again.</div>`;
+                responseDiv.classList.remove('d-none');
+            } finally {
+                loading.classList.add('d-none');
+            }
+        }
 
         async function loadData() {
             const graphDiv = document.getElementById('graph');
@@ -200,13 +271,20 @@
             node.on("click", (event, d) => {
                 d3.select(event.currentTarget).classed("active", true);
                 setTimeout(() => d3.select(event.currentTarget).classed("active", false), 1000);
-                document.getElementById('nodeDetails').innerHTML = `
-                    <h6>${d.name}</h6>
-                    <p>City: ${d.city}</p>
-                    <p>Country: ${d.country}</p>
-                    <p>Type: ${d.type}</p>
-                `;
+                updateNodeDetails(d);
             });
+        }
+
+        function updateNodeDetails(d) {
+            document.getElementById('nodeDetails').innerHTML = `
+                <h6>${d.name}</h6>
+                <p>City: ${d.city}</p>
+                <p>Country: ${d.country}</p>
+                <p>Type: ${d.type}</p>
+            `;
+            // Prefill Grok question with node info
+            const defaultQuestion = `Tell me more about ${d.name}, the IXP in ${d.city}, ${d.country}. What is its role in global internet peering?`;
+            document.getElementById('grokQuestion').value = defaultQuestion;
         }
 
         function ticked() {
@@ -236,55 +314,98 @@
             d.fy = null;
         }
 
-        // Event listeners
+        // Theme toggle
         document.getElementById('themeToggle').addEventListener('click', () => {
             document.body.classList.toggle('dark-theme');
             const isDark = document.body.classList.contains('dark-theme');
             document.getElementById('themeToggle').textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
         });
 
-        document.getElementById('searchBtn').addEventListener('click', performSearch);
-        document.getElementById('searchInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') performSearch();
-        });
-
-        function performSearch() {
-            const query = document.getElementById('searchInput').value.trim().toLowerCase();
-            if (!query) {
+        // Search functionality with autocomplete
+        function performSearch(query = null) {
+            const inputQuery = query || document.getElementById('searchInput').value.trim().toLowerCase();
+            if (!inputQuery) {
                 document.getElementById('searchResults').classList.add('d-none');
                 return;
             }
             const results = nodesData.filter(n => 
-                n.name.toLowerCase().includes(query) || 
-                n.city.toLowerCase().includes(query) ||
-                n.type.toLowerCase().includes(query)
+                n.name.toLowerCase().includes(inputQuery) || 
+                n.city.toLowerCase().includes(inputQuery) ||
+                n.type.toLowerCase().includes(inputQuery)
             );
             const list = document.getElementById('resultsList');
+            const resultsDiv = document.getElementById('searchResults');
             if (results.length === 0) {
-                list.innerHTML = '<li class="text-muted">No matching nodes found.</li>';
+                list.innerHTML = '<li class="no-results">No matching nodes found.</li>';
             } else {
                 list.innerHTML = results.slice(0, 20).map(r => 
-                    `<li class="p-1 border-bottom"><a href="#" onclick="selectNodeById(${r.id})">${r.name} - ${r.city}, ${r.country}</a></li>`
+                    `<li class="search-result-item" onclick="selectNodeById(${r.id})">${r.name} - ${r.city}, ${r.country}</li>`
                 ).join('');
             }
-            document.getElementById('searchResults').classList.remove('d-none');
+            resultsDiv.classList.remove('d-none');
         }
+
+        const debouncedSearch = debounce(performSearch, 300);
+
+        document.getElementById('searchBtn').addEventListener('click', () => performSearch());
+        document.getElementById('searchInput').addEventListener('input', (e) => debouncedSearch(e.target.value));
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+                document.getElementById('searchResults').classList.add('d-none');
+                document.getElementById('searchInput').blur();
+            }
+        });
 
         function selectNodeById(id) {
             const nodeData = nodesData.find(n => n.id === id);
             if (nodeData) {
-                document.getElementById('nodeDetails').innerHTML = `
-                    <h6>${nodeData.name}</h6>
-                    <p>City: ${nodeData.city}</p>
-                    <p>Country: ${nodeData.country}</p>
-                    <p>Type: ${nodeData.type}</p>
-                `;
-                // Scroll to graph and highlight node (simulation handles position)
+                updateNodeDetails(nodeData);
+                // Highlight and simulate click on the node
                 node.filter(d => d.id === id).dispatch("click");
             }
             document.getElementById('searchResults').classList.add('d-none');
             document.getElementById('searchInput').value = '';
         }
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', (e) => {
+            const searchInput = document.getElementById('searchInput');
+            const searchResults = document.getElementById('searchResults');
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.classList.add('d-none');
+            }
+        });
+
+        // Grok API key handling
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        const askGrokBtn = document.getElementById('askGrokBtn');
+        const apiKeySaved = document.getElementById('apiKeySaved');
+        const savedKey = localStorage.getItem('19e92147-4ed9-4b64-b40d-3bb0186a112a');
+        if (savedKey) {
+            apiKeyInput.value = savedKey;
+            askGrokBtn.disabled = false;
+        }
+
+        apiKeyInput.addEventListener('input', (e) => {
+            const key = e.target.value.trim();
+            if (key) {
+                localStorage.setItem('xaiApiKey', key);
+                apiKeySaved.classList.remove('d-none');
+                setTimeout(() => apiKeySaved.classList.add('d-none'), 2000);
+                askGrokBtn.disabled = false;
+            } else {
+                localStorage.removeItem('xaiApiKey');
+                askGrokBtn.disabled = true;
+            }
+        });
+
+        askGrokBtn.addEventListener('click', async () => {
+            const question = document.getElementById('grokQuestion').value.trim();
+            const apiKey = localStorage.getItem('xaiApiKey');
+            if (!question || !apiKey) return;
+            await askGrok(question, apiKey);
+        });
 
         // Initialize
         loadData();

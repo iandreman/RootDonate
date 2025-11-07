@@ -49,7 +49,7 @@
         <div class="row">
             <div class="col-lg-8">
                 <div class="card">
-                    <div class="card-header">Interactive Node Graph</div>
+                    <div class="card-header">Interactive Node Graph (Geographic Layout)</div>
                     <div id="graph">
                         <div class="loading">Loading graph data...</div>
                     </div>
@@ -112,21 +112,39 @@
                     offset += limit;
                 }
                 allIxs = allIxs.slice(0, maxNodes);
-                nodesData = allIxs.map((ix, i) => ({
-                    id: ix.id,
-                    name: ix.name || 'Unnamed IXP',
-                    city: ix.city || 'N/A',
-                    country: ix.country || 'N/A',
-                    x: Math.random() * 800,
-                    y: Math.random() * 400,
-                    type: 'IXP'
-                }));
+
+                // Set up geographic projection
+                const projection = d3.geoMercator()
+                    .scale(120)
+                    .translate([400, 250])
+                    .center([0, 20]); // Centered on Atlantic for better world view
+
+                nodesData = allIxs.map((ix) => {
+                    const lat = ix.latitude || 0;
+                    const lon = ix.longitude || 0;
+                    const geo = [lon, lat];
+                    const [x, y] = projection(geo);
+                    return {
+                        id: ix.id,
+                        name: ix.name || 'Unnamed IXP',
+                        city: ix.city || 'N/A',
+                        country: ix.country || 'N/A',
+                        lat: lat,
+                        lon: lon,
+                        x: x,
+                        y: y,
+                        fx: x, // Fix position geographically
+                        fy: y,
+                        type: 'IXP'
+                    };
+                }).filter(d => d.lat !== 0 || d.lon !== 0); // Filter out invalid geo coords if needed
+
                 // Generate sample links for visualization (in production, fetch real peering data)
                 linksData = [];
                 if (nodesData.length > 1) {
                     for (let i = 0; i < Math.min(20, nodesData.length); i++) {
                         const source = nodesData[i % nodesData.length];
-                        const target = nodesData[(i + 1) % nodesData.length];
+                        const target = nodesData[(i + Math.floor(Math.random() * 5) + 1) % nodesData.length]; // Slightly random for variety
                         if (source.id !== target.id) {
                             linksData.push({ source: source.id, target: target.id });
                         }
@@ -141,12 +159,19 @@
                 }
             } catch (err) {
                 console.error('Error fetching data:', err);
-                // Fallback: Load sample data
+                // Fallback: Load sample data with geographic positions
+                const projection = d3.geoMercator()
+                    .scale(120)
+                    .translate([400, 250])
+                    .center([0, 20]);
                 nodesData = [
-                    { id: 1, name: 'Sample IXP 1', city: 'London', country: 'GB', x: 200, y: 200, type: 'IXP' },
-                    { id: 2, name: 'Sample IXP 2', city: 'New York', country: 'US', x: 600, y: 300, type: 'IXP' },
-                    { id: 3, name: 'Sample IXP 3', city: 'Tokyo', country: 'JP', x: 400, y: 100, type: 'IXP' }
-                ];
+                    { id: 1, name: 'Sample IXP 1', city: 'London', country: 'GB', lat: 51.5074, lon: -0.1278, type: 'IXP' },
+                    { id: 2, name: 'Sample IXP 2', city: 'New York', country: 'US', lat: 40.7128, lon: -74.0060, type: 'IXP' },
+                    { id: 3, name: 'Sample IXP 3', city: 'Tokyo', country: 'JP', lat: 35.6895, lon: 139.6917, type: 'IXP' }
+                ].map(d => {
+                    const [x, y] = projection([d.lon, d.lat]);
+                    return { ...d, x, y, fx: x, fy: y };
+                });
                 linksData = [
                     { source: 1, target: 2 },
                     { source: 2, target: 3 },
@@ -172,10 +197,10 @@
             nodeGroup = svg.append("g").attr("class", "nodes");
 
             simulation = d3.forceSimulation(nodesData)
-                .force("link", d3.forceLink(linksData).id(d => d.id).distance(100))
-                .force("charge", d3.forceManyBody().strength(-200))
-                .force("center", d3.forceCenter(400, 250))
-                .force("collide", d3.forceCollide().radius(10));
+                .force("link", d3.forceLink(linksData).id(d => d.id).distance(100).strength(0.1)) // Weaker links since positions are fixed
+                .force("charge", d3.forceManyBody().strength(-50)) // Weaker charge
+                .force("collide", d3.forceCollide().radius(10).strength(0.5)); // Weaker collision
+                // Removed center force to respect geo positions
 
             updateElements();
             simulation.on("tick", ticked);
@@ -184,7 +209,7 @@
         function updateGraph() {
             simulation.nodes(nodesData);
             simulation.force("link").links(linksData);
-            simulation.alpha(1).restart();
+            simulation.alpha(0.5).restart(); // Lower alpha for subtle adjustments
             updateElements();
         }
 
@@ -209,7 +234,7 @@
                 .attr("fill", "#69b3a2");
 
             node.selectAll("title").data(d => [d]).join("title")
-                .text(d => `${d.name} - ${d.city}, ${d.country}`);
+                .text(d => `${d.name} - ${d.city}, ${d.country} (${d.lat.toFixed(2)}, ${d.lon.toFixed(2)})`);
 
             node.on("click", (event, d) => {
                 d3.select(event.currentTarget).classed("active", true);
@@ -223,6 +248,7 @@
                 <h6>${d.name}</h6>
                 <p>City: ${d.city}</p>
                 <p>Country: ${d.country}</p>
+                <p>Coordinates: ${d.lat.toFixed(4)}, ${d.lon.toFixed(4)}</p>
                 <p>Type: ${d.type}</p>
             `;
         }
@@ -324,4 +350,3 @@
     </script>
 </body>
 </html>
-```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

@@ -104,19 +104,15 @@
         const baseUrl = 'https://www.peeringdb.com/api';
         const apiKey = 'XKDJWVre';  // Replace with your actual API key
 
-        async function loadData() {
-            try {
-                const response = await fetch(`${baseUrl}/ix`, {
-                    headers: {
-                        'Authorization': `Api-Key ${apiKey}`
-                    }
-                });
-                const data = await response.json();
-                createGraph(data.data);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        }
+async function loadData() {
+    try {
+        const response = await fetch(`${baseUrl}/ix`);
+        const data = await response.json();
+        createGraph(data.data);
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+}
 
         function createGraph(ixData) {
             const nodes = ixData.map((ix, i) => ({

@@ -106,7 +106,7 @@
 
 async function loadData() {
     try {
-        const response = await fetch(`${baseUrl}/ix` || '${apiKey}');
+        const response = await fetch(`${baseUrl}/ix`);
         const data = await response.json();
         createGraph(data.data);
     } catch (error) {

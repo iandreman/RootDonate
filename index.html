@@ -53,6 +53,31 @@
             font-size: 1.1rem;
             line-height: 1.6;
         }
+        #stats-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            max-width: 300px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        #stats-panel h3 {
+            margin-top: 0;
+        }
+        #stats-panel button {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
         footer {
             background-color: #2c3e50;
             color: white;
@@ -82,6 +107,10 @@
             #graph-container {
                 height: 60vh;
             }
+            #stats-panel {
+                max-width: 90vw;
+                right: 5px;
+            }
         }
     </style>
 </head>
@@ -91,10 +120,14 @@
     </header>
     <main>
         <p class="description">
-            Explore the interconnected world of internet nodes through this interactive visualization powered by PeeringDB data. Each node represents an Internet Exchange (IX), with connections illustrating the flow of data between them.
+            Explore the interconnected world of internet nodes through this interactive visualization powered by PeeringDB data. Each node represents an Internet Exchange (IX), with connections illustrating the flow of data between them. Click on a node to view detailed statistics.
         </p>
         <div id="graph-container">
             <svg id="graph"></svg>
+        </div>
+        <div id="stats-panel">
+            <div id="stats"></div>
+            <button onclick="document.getElementById('stats-panel').style.display='none'">Close</button>
         </div>
     </main>
     <footer>
@@ -102,30 +135,42 @@
     </footer>
     <script>
         const baseUrl = 'https://www.peeringdb.com/api';
-        const apiKey = 'XKDJWVre';  // Replace with your actual API key
 
-async function loadData() {
-    try {
-        const response = await fetch(`${baseUrl}/ix`);
-        const data = await response.json();
-        createGraph(data.data);
-    } catch (error) {
-        console.error('Error fetching data:', error);
-    }
-}
+        async function loadData() {
+            try {
+                const response = await fetch(`${baseUrl}/ix?limit=100&depth=2`);
+                const data = await response.json();
+                createGraph(data.data);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
 
         function createGraph(ixData) {
             const nodes = ixData.map((ix, i) => ({
                 id: i,
                 name: ix.name,
                 city: ix.city,
-                country: ix.country
+                country: ix.country,
+                net_count: ix.net_count || 0,
+                fac_count: ix.fac_count || 0,
+                url_stats: ix.url_stats,
+                ix_id: ix.id  // Store original ID for detailed fetch
             }));
 
-            // Create sample links for demonstration (e.g., connect to next node)
+            // Generate sample links: chain sequentially for a simple path, plus some random connections
             const links = [];
             for (let i = 0; i < nodes.length - 1; i++) {
                 links.push({ source: i, target: i + 1 });
+            }
+            // Add a few random links for more connectivity
+            for (let i = 0; i < nodes.length; i++) {
+                if (Math.random() < 0.05) {  // ~5% chance per potential pair, limited
+                    const target = Math.floor(Math.random() * nodes.length);
+                    if (target !== i) {
+                        links.push({ source: i, target: target });
+                    }
+                }
             }
 
             const svg = d3.select('#graph');
@@ -136,8 +181,8 @@ async function loadData() {
             svg.attr('width', width).attr('height', height);
 
             const simulation = d3.forceSimulation(nodes)
-                .force('link', d3.forceLink(links).id(d => d.id).distance(50))
-                .force('charge', d3.forceManyBody().strength(-300))
+                .force('link', d3.forceLink(links).id(d => d.id).distance(80))
+                .force('charge', d3.forceManyBody().strength(-500))
                 .force('center', d3.forceCenter(width / 2, height / 2));
 
             const link = svg.append('g')
@@ -153,14 +198,18 @@ async function loadData() {
                 .data(nodes)
                 .enter().append('circle')
                 .attr('class', 'node')
-                .attr('r', 6)
+                .attr('r', d => 4 + Math.sqrt(d.net_count) / 5)  // Size based on net_count
                 .call(d3.drag()
                     .on('start', dragstarted)
                     .on('drag', dragged)
-                    .on('end', dragended));
+                    .on('end', dragended))
+                .on('click', async function(event, d) {
+                    await showStats(d);
+                    document.getElementById('stats-panel').style.display = 'block';
+                });
 
             node.append('title')
-                .text(d => `${d.name}\n${d.city}, ${d.country}`);
+                .text(d => `${d.name}\n${d.city}, ${d.country}\nNetworks: ${d.net_count}\nFacilities: ${d.fac_count}`);
 
             simulation.on('tick', () => {
                 link
@@ -173,6 +222,26 @@ async function loadData() {
                     .attr('cx', d => Math.max(6, Math.min(width - 6, d.x)))
                     .attr('cy', d => Math.max(6, Math.min(height - 6, d.y)));
             });
+
+            async function showStats(d) {
+                try {
+                    const response = await fetch(`${baseUrl}/ix/${d.ix_id}?depth=2`);
+                    const data = await response.json();
+                    const ix = data.data[0] || d;  // Fallback to cached if fetch fails
+                    const statsDiv = document.getElementById('stats');
+                    statsDiv.innerHTML = `
+                        <h3>${ix.name}</h3>
+                        <p><strong>Location:</strong> ${ix.city}, ${ix.country}</p>
+                        <p><strong>Peering Networks:</strong> ${ix.net_count || d.net_count}</p>
+                        <p><strong>Facilities:</strong> ${ix.fac_count || d.fac_count}</p>
+                        ${ix.url_stats ? `<p><a href="${ix.url_stats}" target="_blank" rel="noopener">View Detailed Statistics</a></p>` : ''}
+                        <small>Data from PeeringDB (last updated: ${ix.updated || 'N/A'})</small>
+                    `;
+                } catch (error) {
+                    console.error('Error fetching stats:', error);
+                    document.getElementById('stats').innerHTML = '<p>Error loading statistics.</p>';
+                }
+            }
 
             function dragstarted(event, d) {
                 if (!event.active) simulation.alphaTarget(0.3).restart();

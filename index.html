@@ -385,7 +385,7 @@
         async function loadData() {
             showLoading(true);
             try {
-                const response = await fetch(`${baseUrl}/ix?limit=100&depth=2`);
+                const response = await fetch(`${baseUrl}/ix`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }

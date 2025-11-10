@@ -369,6 +369,7 @@
     </footer>
     <script>
         const baseUrl = 'https://www.peeringdb.com/api';
+        const corsProxy = 'https://corsproxy.io/?';
         let ixData = [];
         let currentSimulation = null;
 
@@ -382,13 +383,19 @@
             document.getElementById('stats-panel').setAttribute('aria-hidden', 'true');
         }
 
+        async function fetchWithProxy(url) {
+            const proxiedUrl = corsProxy + encodeURIComponent(url);
+            const response = await fetch(proxiedUrl);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response;
+        }
+
         async function loadData() {
             showLoading(true);
             try {
-                const response = await fetch(`${baseUrl}/ix`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                const response = await fetchWithProxy(`${baseUrl}/ix`);
                 const data = await response.json();
                 ixData = data.data || [];
                 updateGraph('');
@@ -524,10 +531,7 @@
             const statsDiv = document.getElementById('stats');
             statsDiv.innerHTML = '<p style="text-align: center;"><i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Loading detailed stats...</p>';
             try {
-                const response = await fetch(`${baseUrl}/ix/${d.ix_id}?depth=2`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                const response = await fetchWithProxy(`${baseUrl}/ix/${d.ix_id}?depth=2`);
                 const data = await response.json();
                 const ix = data.data?.[0] || d;
                 statsDiv.innerHTML = `
@@ -615,4 +619,3 @@
     </script>
 </body>
 </html>
-```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

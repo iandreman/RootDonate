@@ -33,6 +33,26 @@
             align-items: center;
             padding: 1rem;
         }
+        #search-container {
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: center;
+        }
+        #search-input {
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 300px;
+            max-width: 100%;
+        }
+        #search-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
         #graph-container {
             width: 100%;
             max-width: 1200px;
@@ -78,6 +98,9 @@
             border-radius: 4px;
             cursor: pointer;
         }
+        #stats-panel button:hover {
+            background: #34495e;
+        }
         footer {
             background-color: #2c3e50;
             color: white;
@@ -111,6 +134,9 @@
                 max-width: 90vw;
                 right: 5px;
             }
+            #search-input {
+                width: 250px;
+            }
         }
     </style>
 </head>
@@ -120,46 +146,65 @@
     </header>
     <main>
         <p class="description">
-            Explore the interconnected world of internet nodes through this interactive visualization powered by PeeringDB data. Each node represents an Internet Exchange (IX), with connections illustrating the flow of data between them. Click on a node to view detailed statistics.
+            Explore the interconnected world of internet nodes through this interactive visualization powered by PeeringDB data. Each node represents an Internet Exchange (IX), with connections illustrating the flow of data between them. Click on a node to view detailed statistics. Use the search box below to filter nodes by name, city, or country.
         </p>
+        <div id="search-container">
+            <input type="text" id="search-input" placeholder="Search by name, city, or country...">
+        </div>
         <div id="graph-container">
-            <svg id="graph">
-            </svg>
+            <svg id="graph"></svg>
         </div>
         <div id="stats-panel">
             <div id="stats"></div>
             <button onclick="document.getElementById('stats-panel').style.display='none'">Close</button>
         </div>
-        <script async src="https://cse.google.com/cse.js?cx=c68b5995476d54b31">
-</script>
-<div class="gcse-search"></div>
     </main>
     <footer>
         <p>&copy; 2025 RootDonate. Data sourced from PeeringDB. 100% uptime.</p>
     </footer>
     <script>
         const baseUrl = 'https://www.peeringdb.com/api';
+        let ixData = []; // Global storage for all IX data
+        let currentSimulation = null; // Track current simulation for potential restarts
 
         async function loadData() {
             try {
                 const response = await fetch(`${baseUrl}/ix?limit=100&depth=2`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const data = await response.json();
-                createGraph(data.data);
+                ixData = data.data || [];
+                updateGraph(''); // Initial render with no filter
             } catch (error) {
                 console.error('Error fetching data:', error);
+                document.querySelector('#graph').innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#e74c3c">Error loading data. Please refresh.</text>';
             }
         }
 
-        function createGraph(ixData) {
-            const nodes = ixData.map((ix, i) => ({
+        function updateGraph(query = '') {
+            const filteredIx = ixData.filter(ix => {
+                const q = query.toLowerCase().trim();
+                if (!q) return true;
+                return ix.name?.toLowerCase().includes(q) ||
+                       ix.city?.toLowerCase().includes(q) ||
+                       ix.country?.toLowerCase().includes(q);
+            });
+
+            if (filteredIx.length === 0) {
+                document.querySelector('#graph').innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#e74c3c">No results found. Try a different search.</text>';
+                return;
+            }
+
+            const nodes = filteredIx.map((ix, i) => ({
                 id: i,
-                name: ix.name,
-                city: ix.city,
-                country: ix.country,
+                name: ix.name || 'Unknown',
+                city: ix.city || 'N/A',
+                country: ix.country || 'N/A',
                 net_count: ix.net_count || 0,
                 fac_count: ix.fac_count || 0,
                 url_stats: ix.url_stats,
-                ix_id: ix.id  // Store original ID for detailed fetch
+                ix_id: ix.id // Store original ID for detailed fetch
             }));
 
             // Generate sample links: chain sequentially for a simple path, plus some random connections
@@ -169,10 +214,10 @@
             }
             // Add a few random links for more connectivity
             for (let i = 0; i < nodes.length; i++) {
-                if (Math.random() < 0.05) {  // ~5% chance per potential pair, limited
+                if (Math.random() < 0.05) { // ~5% chance per potential pair, limited
                     const target = Math.floor(Math.random() * nodes.length);
                     if (target !== i) {
-                        links.push({ source: i, target: target });
+                        links.push({ source: i, target });
                     }
                 }
             }
@@ -182,12 +227,19 @@
             const width = container.clientWidth;
             const height = container.clientHeight;
 
-            svg.attr('width', width).attr('height', height);
+            svg.attr('width', width).attr('height', height)
+               .selectAll('*').remove(); // Clear previous elements
+
+            if (currentSimulation) {
+                currentSimulation.stop(); // Stop previous simulation
+            }
 
             const simulation = d3.forceSimulation(nodes)
                 .force('link', d3.forceLink(links).id(d => d.id).distance(80))
                 .force('charge', d3.forceManyBody().strength(-500))
                 .force('center', d3.forceCenter(width / 2, height / 2));
+
+            currentSimulation = simulation;
 
             const link = svg.append('g')
                 .attr('class', 'links')
@@ -202,7 +254,7 @@
                 .data(nodes)
                 .enter().append('circle')
                 .attr('class', 'node')
-                .attr('r', d => 4 + Math.sqrt(d.net_count) / 5)  // Size based on net_count
+                .attr('r', d => Math.max(4, 4 + Math.sqrt(d.net_count) / 5)) // Ensure minimum radius
                 .call(d3.drag()
                     .on('start', dragstarted)
                     .on('drag', dragged)
@@ -227,45 +279,78 @@
                     .attr('cy', d => Math.max(6, Math.min(height - 6, d.y)));
             });
 
-            async function showStats(d) {
-                try {
-                    const response = await fetch(`${baseUrl}/ix/${d.ix_id}?depth=2`);
-                    const data = await response.json();
-                    const ix = data.data[0] || d;  // Fallback to cached if fetch fails
-                    const statsDiv = document.getElementById('stats');
-                    statsDiv.innerHTML = `
-                        <h3>${ix.name}</h3>
-                        <p><strong>Location:</strong> ${ix.city}, ${ix.country}</p>
-                        <p><strong>Peering Networks:</strong> ${ix.net_count || d.net_count}</p>
-                        <p><strong>Facilities:</strong> ${ix.fac_count || d.fac_count}</p>
-                        ${ix.url_stats ? `<p><a href="${ix.url_stats}" target="_blank" rel="noopener">View Detailed Statistics</a></p>` : ''}
-                        <small>Data from PeeringDB (last updated: ${ix.updated || 'N/A'})</small>
-                    `;
-                } catch (error) {
-                    console.error('Error fetching stats:', error);
-                    document.getElementById('stats').innerHTML = '<p>Error loading statistics.</p>';
+            // Resize handler for responsive updates
+            window.addEventListener('resize', () => {
+                const newWidth = container.clientWidth;
+                const newHeight = container.clientHeight;
+                svg.attr('width', newWidth).attr('height', newHeight);
+                simulation.force('center', d3.forceCenter(newWidth / 2, newHeight / 2));
+                simulation.alpha(0.1).restart();
+            });
+        }
+
+        async function showStats(d) {
+            const statsDiv = document.getElementById('stats');
+            statsDiv.innerHTML = '<p>Loading...</p>'; // Show loading state
+            try {
+                const response = await fetch(`${baseUrl}/ix/${d.ix_id}?depth=2`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-            }
-
-            function dragstarted(event, d) {
-                if (!event.active) simulation.alphaTarget(0.3).restart();
-                d.fx = d.x;
-                d.fy = d.y;
-            }
-
-            function dragged(event, d) {
-                d.fx = event.x;
-                d.fy = event.y;
-            }
-
-            function dragended(event, d) {
-                if (!event.active) simulation.alphaTarget(0);
-                d.fx = null;
-                d.fy = null;
+                const data = await response.json();
+                const ix = data.data?.[0] || d; // Fallback to cached if fetch fails
+                statsDiv.innerHTML = `
+                    <h3>${ix.name}</h3>
+                    <p><strong>Location:</strong> ${ix.city || 'N/A'}, ${ix.country || 'N/A'}</p>
+                    <p><strong>Peering Networks:</strong> ${ix.net_count || d.net_count}</p>
+                    <p><strong>Facilities:</strong> ${ix.fac_count || d.fac_count}</p>
+                    ${ix.url_stats ? `<p><a href="${ix.url_stats}" target="_blank" rel="noopener">View Detailed Statistics</a></p>` : ''}
+                    <small>Data from PeeringDB (last updated: ${ix.updated || 'N/A'})</small>
+                `;
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+                statsDiv.innerHTML = '<p>Error loading statistics. Using cached data.</p>';
+                // Fallback to cached data display
+                statsDiv.innerHTML += `
+                    <h3>${d.name}</h3>
+                    <p><strong>Location:</strong> ${d.city}, ${d.country}</p>
+                    <p><strong>Peering Networks:</strong> ${d.net_count}</p>
+                    <p><strong>Facilities:</strong> ${d.fac_count}</p>
+                `;
             }
         }
 
+        function dragstarted(event, d) {
+            if (!event.active) currentSimulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) currentSimulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+
+        // Search integration
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('search-input');
+            searchInput.addEventListener('input', function(e) {
+                const query = e.target.value;
+                updateGraph(query);
+            });
+            // Initial focus or placeholder enhancement
+            searchInput.placeholder = 'Search by name, city, or country...';
+        });
+
+        // Load data on page load
         loadData();
     </script>
 </body>
 </html>
+```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

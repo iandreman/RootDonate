@@ -3,171 +3,387 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Internet Nodes Visualization - RootDonate</title>
+    <title>RootDonate - Interactive Internet Nodes Visualization</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #3b82f6;
+            --accent-color: #06b6d4;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --border-radius: 0.5rem;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            line-height: 1.6;
         }
+
         header {
-            background-color: #2c3e50;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
-            padding: 1rem;
+            padding: 2rem 1rem;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-lg);
+            position: relative;
         }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        header > * {
+            position: relative;
+            z-index: 1;
+        }
+
         header h1 {
-            margin: 0;
+            margin: 0 0 0.5rem 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        header i {
             font-size: 2rem;
         }
+
         main {
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 1rem;
-        }
-        #search-container {
+            padding: 2rem 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
             width: 100%;
-            max-width: 1200px;
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: center;
         }
-        #search-input {
-            padding: 0.75rem;
-            font-size: 1rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            width: 300px;
-            max-width: 100%;
-        }
-        #search-input:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-        }
-        #graph-container {
-            width: 100%;
-            max-width: 1200px;
-            height: 70vh;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        #graph {
-            width: 100%;
-            height: 100%;
-        }
+
         .description {
             max-width: 800px;
             text-align: center;
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-            line-height: 1.6;
+            margin-bottom: 2rem;
+            font-size: 1.125rem;
+            color: var(--text-muted);
+            line-height: 1.7;
         }
+
+        #search-container {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        #search-input {
+            padding: 1rem 1rem 1rem 3rem;
+            font-size: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            width: 100%;
+            background: var(--card-bg);
+            transition: all 0.2s ease;
+        }
+
+        #search-input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        #search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            z-index: 1;
+        }
+
+        #reset-search {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: none;
+            transition: color 0.2s ease;
+        }
+
+        #reset-search:hover {
+            color: var(--secondary-color);
+        }
+
+        #graph-container {
+            width: 100%;
+            height: 70vh;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background: var(--card-bg);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            position: relative;
+        }
+
+        #graph {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+
+        #graph:active {
+            cursor: grabbing;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--card-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .spinner {
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--secondary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         #stats-panel {
             position: fixed;
-            top: 10px;
-            right: 10px;
-            background: white;
-            padding: 1rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            max-width: 300px;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            max-width: 350px;
+            width: 90vw;
+            max-height: 80vh;
+            overflow-y: auto;
             display: none;
             z-index: 1000;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-lg);
         }
+
         #stats-panel h3 {
             margin-top: 0;
+            color: var(--primary-color);
+            font-size: 1.25rem;
         }
+
+        #stats-panel p {
+            margin: 0.75rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #stats-panel a {
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+
+        #stats-panel a:hover {
+            text-decoration: underline;
+        }
+
         #stats-panel button {
+            width: 100%;
             margin-top: 1rem;
-            padding: 0.5rem 1rem;
-            background: #2c3e50;
+            padding: 0.75rem;
+            background: var(--primary-color);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: var(--border-radius);
             cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s ease;
         }
+
         #stats-panel button:hover {
-            background: #34495e;
+            background: #1e40af;
         }
+
         footer {
-            background-color: #2c3e50;
+            background: var(--primary-color);
             color: white;
             text-align: center;
-            padding: 1rem;
+            padding: 1.5rem;
             margin-top: auto;
         }
+
+        footer p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
         .node {
-            stroke: #fff;
-            stroke-width: 1.5px;
-            fill: #3498db;
+            stroke: var(--card-bg);
+            stroke-width: 2px;
+            fill: var(--secondary-color);
+            transition: all 0.2s ease;
         }
+
         .node:hover {
-            fill: #2980b9;
+            fill: var(--accent-color);
+            stroke-width: 3px;
+            transform: scale(1.1);
         }
+
         .link {
-            stroke: #bdc3c7;
-            stroke-opacity: 0.6;
+            stroke: var(--border-color);
+            stroke-opacity: 0.4;
+            stroke-width: 1px;
+            transition: stroke-opacity 0.2s ease;
         }
+
+        .link:hover {
+            stroke-opacity: 0.7;
+        }
+
+        .error-text {
+            fill: #ef4444;
+            font-size: 1.1rem;
+            text-anchor: middle;
+        }
+
+        .error-subtext {
+            fill: var(--text-muted);
+            font-size: 0.9rem;
+            text-anchor: middle;
+        }
+
         @media (max-width: 768px) {
             header h1 {
-                font-size: 1.5rem;
+                font-size: 2rem;
             }
+
             .description {
                 font-size: 1rem;
+                padding: 0 1rem;
             }
+
             #graph-container {
                 height: 60vh;
             }
+
             #stats-panel {
-                max-width: 90vw;
-                right: 5px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+                top: 10px;
             }
-            #search-input {
-                width: 250px;
+
+            main {
+                padding: 1rem;
             }
+        }
+
+        /* Fade in animation */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>RootDonate - Interactive Internet Nodes Visualization</h1>
+    <header class="fade-in">
+        <h1><i class="fas fa-network-wired"></i> RootDonate - Interactive Internet Nodes Visualization</h1>
     </header>
-    <main>
+    <main class="fade-in">
         <p class="description">
             Explore the interconnected world of internet nodes through this interactive visualization powered by PeeringDB data. Each node represents an Internet Exchange (IX), with connections illustrating the flow of data between them. Click on a node to view detailed statistics. Use the search box below to filter nodes by name, city, or country.
         </p>
         <div id="search-container">
+            <i class="fas fa-search search-icon"></i>
             <input type="text" id="search-input" placeholder="Search by name, city, or country...">
+            <button id="reset-search" title="Clear search"><i class="fas fa-times"></i></button>
         </div>
         <div id="graph-container">
             <svg id="graph"></svg>
+            <div class="loading-overlay" id="loading-overlay" style="display: none;">
+                <div class="spinner"></div>
+            </div>
         </div>
-        <div id="stats-panel">
+        <div id="stats-panel" role="dialog" aria-labelledby="stats-title" aria-hidden="true">
             <div id="stats"></div>
-            <button onclick="document.getElementById('stats-panel').style.display='none'">Close</button>
+            <button onclick="closeStatsPanel()" aria-label="Close stats panel">Close</button>
         </div>
     </main>
-    <footer>
-        <p>&copy; 2025 RootDonate. Data sourced from PeeringDB. 100% uptime.</p>
+    <footer class="fade-in">
+        <p>&copy; 2025 RootDonate. Data sourced from PeeringDB. 100% uptime. <i class="fas fa-shield-alt" style="margin-left: 0.5rem; opacity: 0.8;"></i></p>
     </footer>
     <script>
         const baseUrl = 'https://www.peeringdb.com/api';
-        let ixData = []; // Global storage for all IX data
-        let currentSimulation = null; // Track current simulation for potential restarts
+        let ixData = [];
+        let currentSimulation = null;
+
+        // Utility functions
+        function showLoading(show = true) {
+            document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+        }
+
+        function closeStatsPanel() {
+            document.getElementById('stats-panel').style.display = 'none';
+            document.getElementById('stats-panel').setAttribute('aria-hidden', 'true');
+        }
 
         async function loadData() {
+            showLoading(true);
             try {
                 const response = await fetch(`${baseUrl}/ix?limit=100&depth=2`);
                 if (!response.ok) {
@@ -175,10 +391,24 @@
                 }
                 const data = await response.json();
                 ixData = data.data || [];
-                updateGraph(''); // Initial render with no filter
+                updateGraph('');
             } catch (error) {
                 console.error('Error fetching data:', error);
-                document.querySelector('#graph').innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#e74c3c">Error loading data. Please refresh.</text>';
+                const svg = d3.select('#graph');
+                svg.append('text')
+                    .attr('class', 'error-text')
+                    .attr('x', '50%')
+                    .attr('y', '50%')
+                    .attr('dy', '.35em')
+                    .text('Error loading data from PeeringDB. Please check your connection and refresh the page.');
+                svg.append('text')
+                    .attr('class', 'error-subtext')
+                    .attr('x', '50%')
+                    .attr('y', '55%')
+                    .attr('dy', '.35em')
+                    .text(`(Status: ${error.message.includes('status:') ? error.message.split('status: ')[1] : 'Unknown'})`);
+            } finally {
+                showLoading(false);
             }
         }
 
@@ -191,8 +421,16 @@
                        ix.country?.toLowerCase().includes(q);
             });
 
+            const svg = d3.select('#graph');
+            svg.selectAll('*').remove();
+
             if (filteredIx.length === 0) {
-                document.querySelector('#graph').innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#e74c3c">No results found. Try a different search.</text>';
+                svg.append('text')
+                    .attr('class', 'error-text')
+                    .attr('x', '50%')
+                    .attr('y', '50%')
+                    .attr('dy', '.35em')
+                    .text('No results found. Try a different search.');
                 return;
             }
 
@@ -204,17 +442,15 @@
                 net_count: ix.net_count || 0,
                 fac_count: ix.fac_count || 0,
                 url_stats: ix.url_stats,
-                ix_id: ix.id // Store original ID for detailed fetch
+                ix_id: ix.id
             }));
 
-            // Generate sample links: chain sequentially for a simple path, plus some random connections
             const links = [];
             for (let i = 0; i < nodes.length - 1; i++) {
                 links.push({ source: i, target: i + 1 });
             }
-            // Add a few random links for more connectivity
             for (let i = 0; i < nodes.length; i++) {
-                if (Math.random() < 0.05) { // ~5% chance per potential pair, limited
+                if (Math.random() < 0.05 && nodes.length > 10) {
                     const target = Math.floor(Math.random() * nodes.length);
                     if (target !== i) {
                         links.push({ source: i, target });
@@ -222,22 +458,21 @@
                 }
             }
 
-            const svg = d3.select('#graph');
             const container = document.getElementById('graph-container');
             const width = container.clientWidth;
             const height = container.clientHeight;
 
-            svg.attr('width', width).attr('height', height)
-               .selectAll('*').remove(); // Clear previous elements
+            svg.attr('width', width).attr('height', height);
 
             if (currentSimulation) {
-                currentSimulation.stop(); // Stop previous simulation
+                currentSimulation.stop();
             }
 
             const simulation = d3.forceSimulation(nodes)
-                .force('link', d3.forceLink(links).id(d => d.id).distance(80))
-                .force('charge', d3.forceManyBody().strength(-500))
-                .force('center', d3.forceCenter(width / 2, height / 2));
+                .force('link', d3.forceLink(links).id(d => d.id).distance(100).strength(0.5))
+                .force('charge', d3.forceManyBody().strength(-300))
+                .force('center', d3.forceCenter(width / 2, height / 2))
+                .force('collide', d3.forceCollide().radius(d => Math.max(5, 5 + Math.sqrt(d.net_count) / 5)));
 
             currentSimulation = simulation;
 
@@ -254,14 +489,16 @@
                 .data(nodes)
                 .enter().append('circle')
                 .attr('class', 'node')
-                .attr('r', d => Math.max(4, 4 + Math.sqrt(d.net_count) / 5)) // Ensure minimum radius
+                .attr('r', d => Math.max(5, 5 + Math.sqrt(d.net_count) / 4))
                 .call(d3.drag()
                     .on('start', dragstarted)
                     .on('drag', dragged)
                     .on('end', dragended))
                 .on('click', async function(event, d) {
+                    event.stopPropagation();
                     await showStats(d);
                     document.getElementById('stats-panel').style.display = 'block';
+                    document.getElementById('stats-panel').setAttribute('aria-hidden', 'false');
                 });
 
             node.append('title')
@@ -269,53 +506,47 @@
 
             simulation.on('tick', () => {
                 link
-                    .attr('x1', d => Math.max(6, Math.min(width - 6, d.source.x)))
-                    .attr('y1', d => Math.max(6, Math.min(height - 6, d.source.y)))
-                    .attr('x2', d => Math.max(6, Math.min(width - 6, d.target.x)))
-                    .attr('y2', d => Math.max(6, Math.min(height - 6, d.target.y)));
+                    .attr('x1', d => Math.max(10, Math.min(width - 10, d.source.x)))
+                    .attr('y1', d => Math.max(10, Math.min(height - 10, d.source.y)))
+                    .attr('x2', d => Math.max(10, Math.min(width - 10, d.target.x)))
+                    .attr('y2', d => Math.max(10, Math.min(height - 10, d.target.y)));
 
                 node
-                    .attr('cx', d => Math.max(6, Math.min(width - 6, d.x)))
-                    .attr('cy', d => Math.max(6, Math.min(height - 6, d.y)));
+                    .attr('cx', d => Math.max(10, Math.min(width - 10, d.x)))
+                    .attr('cy', d => Math.max(10, Math.min(height - 10, d.y)));
             });
 
-            // Resize handler for responsive updates
-            window.addEventListener('resize', () => {
-                const newWidth = container.clientWidth;
-                const newHeight = container.clientHeight;
-                svg.attr('width', newWidth).attr('height', newHeight);
-                simulation.force('center', d3.forceCenter(newWidth / 2, newHeight / 2));
-                simulation.alpha(0.1).restart();
-            });
+            // Click outside to close stats
+            svg.on('click', closeStatsPanel);
         }
 
         async function showStats(d) {
             const statsDiv = document.getElementById('stats');
-            statsDiv.innerHTML = '<p>Loading...</p>'; // Show loading state
+            statsDiv.innerHTML = '<p style="text-align: center;"><i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Loading detailed stats...</p>';
             try {
                 const response = await fetch(`${baseUrl}/ix/${d.ix_id}?depth=2`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
-                const ix = data.data?.[0] || d; // Fallback to cached if fetch fails
+                const ix = data.data?.[0] || d;
                 statsDiv.innerHTML = `
-                    <h3>${ix.name}</h3>
-                    <p><strong>Location:</strong> ${ix.city || 'N/A'}, ${ix.country || 'N/A'}</p>
-                    <p><strong>Peering Networks:</strong> ${ix.net_count || d.net_count}</p>
-                    <p><strong>Facilities:</strong> ${ix.fac_count || d.fac_count}</p>
-                    ${ix.url_stats ? `<p><a href="${ix.url_stats}" target="_blank" rel="noopener">View Detailed Statistics</a></p>` : ''}
-                    <small>Data from PeeringDB (last updated: ${ix.updated || 'N/A'})</small>
+                    <h3 id="stats-title"><i class="fas fa-map-marker-alt" style="color: var(--secondary-color); margin-right: 0.5rem;"></i>${ix.name}</h3>
+                    <p><i class="fas fa-location-dot" style="color: var(--accent-color); width: 16px;"></i><strong>Location:</strong> ${ix.city || 'N/A'}, ${ix.country || 'N/A'}</p>
+                    <p><i class="fas fa-sitemap" style="color: var(--secondary-color); width: 16px;"></i><strong>Peering Networks:</strong> ${ix.net_count || d.net_count}</p>
+                    <p><i class="fas fa-building" style="color: var(--accent-color); width: 16px;"></i><strong>Facilities:</strong> ${ix.fac_count || d.fac_count}</p>
+                    ${ix.url_stats ? `<p><i class="fas fa-chart-bar" style="color: var(--primary-color); width: 16px;"></i><a href="${ix.url_stats}" target="_blank" rel="noopener">View Detailed Statistics</a></p>` : ''}
+                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 1rem;"><i class="fas fa-clock" style="margin-right: 0.25rem;"></i>Last updated: ${ix.updated || 'N/A'}</p>
                 `;
             } catch (error) {
                 console.error('Error fetching stats:', error);
-                statsDiv.innerHTML = '<p>Error loading statistics. Using cached data.</p>';
-                // Fallback to cached data display
-                statsDiv.innerHTML += `
-                    <h3>${d.name}</h3>
-                    <p><strong>Location:</strong> ${d.city}, ${d.country}</p>
-                    <p><strong>Peering Networks:</strong> ${d.net_count}</p>
-                    <p><strong>Facilities:</strong> ${d.fac_count}</p>
+                statsDiv.innerHTML = `
+                    <p style="color: #ef4444; font-style: italic; margin-bottom: 1rem;"><i class="fas fa-exclamation-triangle" style="margin-right: 0.5rem;"></i>Error loading detailed statistics. Using available data.</p>
+                    <h3 id="stats-title"><i class="fas fa-map-marker-alt" style="color: var(--secondary-color); margin-right: 0.5rem;"></i>${d.name}</h3>
+                    <p><i class="fas fa-location-dot" style="color: var(--accent-color); width: 16px;"></i><strong>Location:</strong> ${d.city}, ${d.country}</p>
+                    <p><i class="fas fa-sitemap" style="color: var(--secondary-color); width: 16px;"></i><strong>Peering Networks:</strong> ${d.net_count}</p>
+                    <p><i class="fas fa-building" style="color: var(--accent-color); width: 16px;"></i><strong>Facilities:</strong> ${d.fac_count}</p>
+                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 1rem;"><i class="fas fa-info-circle" style="margin-right: 0.25rem;"></i>Cached data (may be incomplete).</p>
                 `;
             }
         }
@@ -337,19 +568,50 @@
             d.fy = null;
         }
 
-        // Search integration
+        // Event listeners
         document.addEventListener('DOMContentLoaded', () => {
             const searchInput = document.getElementById('search-input');
+            const resetButton = document.getElementById('reset-search');
+
             searchInput.addEventListener('input', function(e) {
                 const query = e.target.value;
                 updateGraph(query);
+                resetButton.style.display = query ? 'block' : 'none';
             });
-            // Initial focus or placeholder enhancement
-            searchInput.placeholder = 'Search by name, city, or country...';
-        });
 
-        // Load data on page load
-        loadData();
+            resetButton.addEventListener('click', function() {
+                searchInput.value = '';
+                updateGraph('');
+                resetButton.style.display = 'none';
+                searchInput.focus();
+            });
+
+            // Debounced resize handler
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    if (currentSimulation) {
+                        const container = document.getElementById('graph-container');
+                        const newWidth = container.clientWidth;
+                        const newHeight = container.clientHeight;
+                        d3.select('#graph').attr('width', newWidth).attr('height', newHeight);
+                        currentSimulation.force('center', d3.forceCenter(newWidth / 2, newHeight / 2));
+                        currentSimulation.alpha(0.1).restart();
+                    }
+                }, 250);
+            });
+
+            // Close panel on escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeStatsPanel();
+                }
+            });
+
+            // Initial load
+            loadData();
+        });
     </script>
 </body>
 </html>

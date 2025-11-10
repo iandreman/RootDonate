@@ -395,7 +395,7 @@
         async function loadData() {
             showLoading(true);
             try {
-                const response = await fetchWithProxy(`${baseUrl}/ix`);
+                const response = await fetchWithProxy(`${baseUrl}/ix?limit10`);
                 const data = await response.json();
                 ixData = data.data || [];
                 updateGraph('');

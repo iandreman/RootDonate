@@ -438,6 +438,7 @@
         const RETRY_DELAY_BASE = 1000;
         const MAX_RETRIES = 3;
         let requestTimes = []; // For rate limiting: timestamps of last 40 requests
+        const PAGE_SIZE = 40; // New: Page size for paginated loading
 
         // Utility functions
         function showLoading(show = true) {
@@ -505,8 +506,8 @@
             // Record this request timestamp
             requestTimes.push(now);
 
-            // Existing per-request throttle
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Fixed per-request throttle to respect 40/min (1.5s interval)
+            await new Promise(resolve => setTimeout(resolve, 1500));
 
             const proxiedUrl = corsProxy + encodeURIComponent(url);
             const response = await fetch(proxiedUrl);
@@ -530,17 +531,27 @@
             retryBtn.style.display = 'none';
             
             try {
-                // Load ALL IX data with depth=1 to include facilities
-                const params = ['depth=2'];
-                const queryString = params.join('&');
-                const response = await fetchWithProxy(`${baseUrl}/ix?${queryString}&key=XKDJWVre`);
-                const data = await response.json();
-                allIxData = data.data || [];
-                ixData = allIxData;  // Initially show all
-                
+                allIxData = [];
+                let page = 1;
+                let hasMore = true;
+
+                // Paginated loading: Fetch in pages of 40 to respect rate limits and reduce response size
+                while (hasMore) {
+                    const params = [`depth=2`, `page=${page}`, `page_size=${PAGE_SIZE}`];
+                    const queryString = params.join('&');
+                    const response = await fetchWithProxy(`${baseUrl}/ix?${queryString}&key=XKDJWVre`);
+                    const data = await response.json();
+                    const newData = data.data || [];
+                    allIxData = allIxData.concat(newData);
+                    hasMore = newData.length === PAGE_SIZE;
+                    page++;
+                }
+
                 if (allIxData.length === 0) {
                     throw new Error('No data returned');
                 }
+                
+                ixData = allIxData;  // Initially show all
                 
                 currentSkip = 0;
                 updateCurrentView();
@@ -880,3 +891,4 @@
     </script>
 </body>
 </html>
+```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

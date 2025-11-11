@@ -306,12 +306,19 @@
         .node {
             stroke: var(--card-bg);
             stroke-width: 2px;
-            fill: var(--secondary-color);
             transition: all 0.2s ease;
         }
 
-        .node:hover {
+        .node.ix {
+            fill: var(--secondary-color);
+        }
+
+        .node.fac {
             fill: var(--accent-color);
+        }
+
+        .node:hover {
+            fill: #ef4444;
             stroke-width: 3px;
             transform: scale(1.1);
         }
@@ -391,7 +398,7 @@
     </header>
     <main class="fade-in">
         <p class="description">
-            Explore the interconnected world of internet nodes through this interactive visualization powered by PeeringDB data. Each node represents an Internet Exchange (IX), with connections illustrating the flow of data between them. Click on a node to view detailed statistics. Use the search box below to filter nodes by name, city, or country.
+            Explore the interconnected world of internet nodes through this interactive visualization powered by PeeringDB data. Blue nodes represent Internet Exchanges (IX), green nodes represent Facilities (data centers). Connections illustrate where IXPs are hosted. Click on a node to view detailed statistics. Use the search box below to filter by name, city, or country (searches across IXs and Facilities).
         </p>
         <div id="search-container">
             <i class="fas fa-search search-icon"></i>
@@ -406,7 +413,7 @@
         </div>
         <div id="pagination-controls">
             <span id="batch-info">Batch 1 (Skip: 0)</span>
-            <button id="next-batch-btn"><i class="fas fa-arrow-right"></i> Next Batch (10 Nodes)</button>
+            <button id="next-batch-btn"><i class="fas fa-arrow-right"></i> Next Batch (10 IXs)</button>
             <button id="reset-batch-btn"><i class="fas fa-home"></i> Reset to Start</button>
             <button id="retry-btn" style="display: none;"><i class="fas fa-redo"></i> Retry Load</button>
         </div>
@@ -421,18 +428,17 @@
     <script>
         const baseUrl = 'https://www.peeringdb.com/api';
         const corsProxy = 'https://corsproxy.io/?';
-        let allIxData = [];  // NEW: Global array for all loaded data (for global search)
-        let ixData = [];     // Current view (paginated slice)
+        let allIxData = [];  // Global array for all loaded IX data (with embedded facs)
+        let ixData = [];     // Current view (paginated slice of IXs)
         let currentSimulation = null;
         let refreshInterval = null;
         let currentSkip = 0;
         const BATCH_SIZE = 10;
-        const FULL_LIMIT = 2000;  // NEW: Load all data at once (covers ~1019 IXPs)
         const REFRESH_INTERVAL_MS = 300000; // 5 minutes
         const RETRY_DELAY_BASE = 1000;
         const MAX_RETRIES = 3;
 
-        // Utility functions (unchanged except updateBatchInfo)
+        // Utility functions
         function showLoading(show = true) {
             document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
         }
@@ -440,7 +446,7 @@
         function updateBatchInfo() {
             const batchNum = Math.floor(currentSkip / BATCH_SIZE) + 1;
             const totalBatches = Math.ceil(allIxData.length / BATCH_SIZE);
-            document.getElementById('batch-info').textContent = `Batch ${batchNum} of ${totalBatches} (Skip: ${currentSkip}, Total Nodes: ${allIxData.length})`;
+            document.getElementById('batch-info').textContent = `Batch ${batchNum} of ${totalBatches} (IX Skip: ${currentSkip}, Total IXs: ${allIxData.length})`;
         }
 
         function closeStatsPanel() {
@@ -462,7 +468,7 @@
             updateGraph(document.getElementById('search-input').value || '');
         }
 
-        function updateCurrentView() {  // NEW: Slice full data into current batch
+        function updateCurrentView() {
             const start = currentSkip;
             const end = Math.min(start + BATCH_SIZE, allIxData.length);
             ixData = allIxData.slice(start, end);
@@ -476,7 +482,7 @@
             loadData();
         }
 
-        // Throttled fetch (unchanged)
+        // Throttled fetch
         async function fetchWithProxy(url, retryCount = 0) {
             await new Promise(resolve => setTimeout(resolve, 500));
             const proxiedUrl = corsProxy + encodeURIComponent(url);
@@ -501,8 +507,8 @@
             retryBtn.style.display = 'none';
             
             try {
-                // NEW: Load ALL data at once (no skip, high limit)
-                const params = [`limit=${FULL_LIMIT}`];
+                // Load ALL IX data with depth=1 to include facilities
+                const params = ['depth=1'];
                 const queryString = params.join('&');
                 const response = await fetchWithProxy(`${baseUrl}/ix?${queryString}&key=XKDJWVre`);
                 const data = await response.json();
@@ -514,7 +520,7 @@
                 }
                 
                 currentSkip = 0;
-                updateCurrentView();  // Set first batch
+                updateCurrentView();
                 updateGraph(document.getElementById('search-input').value || '');
                 
                 // Start auto-refresh
@@ -555,25 +561,90 @@
                 clearInterval(refreshInterval);
             }
             refreshInterval = setInterval(() => {
-                loadData();  // Reload full data on refresh
+                loadData();
             }, REFRESH_INTERVAL_MS);
         }
 
-        // MODIFIED: Global search on allIxData if query, else current batch
+        // Build graph nodes and links from filtered IXs and their facilities
+        function buildGraphData(filteredIx) {
+            const nodes = [];
+            const links = [];
+            const ixToId = {};
+            const facToId = {};
+            let nodeId = 0;
+
+            for (const ix of filteredIx) {
+                const ixId = nodeId++;
+                const ixNode = {
+                    id: ixId,
+                    type: 'ix',
+                    name: ix.name || 'Unknown',
+                    city: ix.city || 'N/A',
+                    country: ix.country || 'N/A',
+                    net_count: ix.net_count || 0,
+                    fac_count: ix.fac_count || 0,
+                    ix_id: ix.id
+                };
+                nodes.push(ixNode);
+                ixToId[ix.id] = ixId;
+
+                if (ix.facs && ix.facs.length > 0) {
+                    for (const fac of ix.facs) {
+                        let facId;
+                        if (!(fac.id in facToId)) {
+                            facId = nodeId++;
+                            facToId[fac.id] = facId;
+                            const facNode = {
+                                id: facId,
+                                type: 'fac',
+                                name: fac.name || 'Unknown Facility',
+                                city: fac.city || 'N/A',
+                                country: fac.country || 'N/A',
+                                net_count: fac.net_count || 0,
+                                ix_count: fac.ix_count || 0,
+                                fac_id: fac.id
+                            };
+                            nodes.push(facNode);
+                        } else {
+                            facId = facToId[fac.id];
+                        }
+                        links.push({ source: ixId, target: facId });
+                    }
+                }
+            }
+
+            return { nodes, links };
+        }
+
+        // MODIFIED: Global search on allIxData (IXs and their facs)
         function updateGraph(query = '') {
             let filteredIx;
             const q = query.toLowerCase().trim();
             if (q) {
-                // Search across ALL data
-                filteredIx = allIxData.filter(ix => 
+                // Direct IX matches
+                let matchingIx = allIxData.filter(ix => 
                     ix.name?.toLowerCase().includes(q) ||
                     ix.city?.toLowerCase().includes(q) ||
                     ix.country?.toLowerCase().includes(q)
                 );
-                // Hide pagination when searching (all results shown)
+                // IXs with matching facs
+                let matchingFacIx = allIxData.filter(ix => 
+                    ix.facs?.some(fac => 
+                        fac.name?.toLowerCase().includes(q) ||
+                        fac.city?.toLowerCase().includes(q) ||
+                        fac.country?.toLowerCase().includes(q)
+                    )
+                );
+                // Unique IXs
+                const matchingIxSet = new Set([
+                    ...matchingIx.map(ix => ix.id),
+                    ...matchingFacIx.map(ix => ix.id)
+                ]);
+                filteredIx = allIxData.filter(ix => matchingIxSet.has(ix.id));
+                // Hide pagination when searching
                 document.getElementById('pagination-controls').style.display = 'none';
             } else {
-                // No search: Use current paginated view
+                // No search: Use current paginated view of IXs
                 filteredIx = ixData;
                 document.getElementById('pagination-controls').style.display = 'flex';
             }
@@ -591,29 +662,7 @@
                 return;
             }
 
-            const nodes = filteredIx.map((ix, i) => ({
-                id: i,
-                name: ix.name || 'Unknown',
-                city: ix.city || 'N/A',
-                country: ix.country || 'N/A',
-                net_count: ix.net_count || 0,
-                fac_count: ix.fac_count || 0,
-                url_stats: ix.url_stats,
-                ix_id: ix.id
-            }));
-
-            const links = [];
-            for (let i = 0; i < nodes.length - 1; i++) {
-                links.push({ source: i, target: i + 1 });
-            }
-            for (let i = 0; i < nodes.length; i++) {
-                if (Math.random() < 0.05 && nodes.length > 10) {
-                    const target = Math.floor(Math.random() * nodes.length);
-                    if (target !== i) {
-                        links.push({ source: i, target });
-                    }
-                }
-            }
+            const { nodes, links } = buildGraphData(filteredIx);
 
             const container = document.getElementById('graph-container');
             const width = container.clientWidth;
@@ -629,7 +678,7 @@
                 .force('link', d3.forceLink(links).id(d => d.id).distance(100).strength(0.5))
                 .force('charge', d3.forceManyBody().strength(-300))
                 .force('center', d3.forceCenter(width / 2, height / 2))
-                .force('collide', d3.forceCollide().radius(d => Math.max(5, 5 + Math.sqrt(d.net_count) / 5)));
+                .force('collide', d3.forceCollide().radius(d => Math.max(5, 5 + Math.sqrt(d.net_count || 1) / 5)));
 
             currentSimulation = simulation;
 
@@ -645,8 +694,8 @@
                 .selectAll('circle')
                 .data(nodes)
                 .enter().append('circle')
-                .attr('class', 'node')
-                .attr('r', d => Math.max(5, 5 + Math.sqrt(d.net_count) / 4))
+                .attr('class', d => `node ${d.type}`)
+                .attr('r', d => Math.max(5, 5 + Math.sqrt(d.net_count || 1) / 4))
                 .call(d3.drag()
                     .on('start', dragstarted)
                     .on('drag', dragged)
@@ -659,7 +708,7 @@
                 });
 
             node.append('title')
-                .text(d => `${d.name}\n${d.city}, ${d.country}\nNetworks: ${d.net_count}\nFacilities: ${d.fac_count}`);
+                .text(d => `${d.type.toUpperCase()}: ${d.name}\nLocation: ${d.city}, ${d.country}\nNetworks: ${d.net_count}${d.type === 'ix' ? `\nFacilities: ${d.fac_count}` : `\nIXPs: ${d.ix_count}`}`);
 
             simulation.on('tick', () => {
                 link
@@ -677,36 +726,64 @@
             svg.on('click', closeStatsPanel);
         }
 
-        // showStats (unchanged)
+        // MODIFIED: showStats handles both IX and Fac
         async function showStats(d) {
             const statsDiv = document.getElementById('stats');
-            statsDiv.innerHTML = '<p style="text-align: center;"><i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Loading detailed stats...</p>';
+            const loadingText = d.type === 'ix' ? 
+                '<i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Loading detailed stats...' :
+                '<i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Loading facility details...';
+            statsDiv.innerHTML = `<p style="text-align: center;">${loadingText}</p>`;
+            const endpoint = d.type === 'ix' ? `/ix/${d.ix_id}` : `/fac/${d.fac_id}`;
+            const iconClass = d.type === 'ix' ? 'fa-map-marker-alt' : 'fa-building';
+            const iconColor = d.type === 'ix' ? 'var(--secondary-color)' : 'var(--accent-color)';
             try {
-                const response = await fetchWithProxy(`${baseUrl}/ix/${d.ix_id}?depth=2&key=XKDJWVre`);
+                const response = await fetchWithProxy(`${baseUrl}${endpoint}?depth=2&key=XKDJWVre`);
                 const data = await response.json();
-                const ix = data.data?.[0] || d;
-                statsDiv.innerHTML = `
-                    <h3 id="stats-title"><i class="fas fa-map-marker-alt" style="color: var(--secondary-color); margin-right: 0.5rem;"></i>${ix.name}</h3>
-                    <p><i class="fas fa-location-dot" style="color: var(--accent-color); width: 16px;"></i><strong>Location:</strong> ${ix.city || 'N/A'}, ${ix.country || 'N/A'}</p>
-                    <p><i class="fas fa-sitemap" style="color: var(--secondary-color); width: 16px;"></i><strong>Peering Networks:</strong> ${ix.net_count || d.net_count}</p>
-                    <p><i class="fas fa-building" style="color: var(--accent-color); width: 16px;"></i><strong>Facilities:</strong> ${ix.fac_count || d.fac_count}</p>
-                    ${ix.url_stats ? `<p><i class="fas fa-chart-bar" style="color: var(--primary-color); width: 16px;"></i><a href="${ix.url_stats}" target="_blank" rel="noopener">View Detailed Statistics</a></p>` : ''}
-                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 1rem;"><i class="fas fa-clock" style="margin-right: 0.25rem;"></i>Last updated: ${ix.updated || 'N/A'}</p>
+                const obj = data.data?.[0] || d;
+                let html = `
+                    <h3 id="stats-title"><i class="fas ${iconClass}" style="color: ${iconColor}; margin-right: 0.5rem;"></i>${obj.name}</h3>
+                    <p><i class="fas fa-location-dot" style="color: var(--accent-color); width: 16px;"></i><strong>Location:</strong> ${obj.full_address || obj.address1 || `${obj.city || 'N/A'}, ${obj.country || 'N/A'}`}</p>
                 `;
+                if (d.type === 'ix') {
+                    html += `
+                        <p><i class="fas fa-sitemap" style="color: var(--secondary-color); width: 16px;"></i><strong>Peering Networks:</strong> ${obj.net_count || d.net_count}</p>
+                        <p><i class="fas fa-building" style="color: var(--accent-color); width: 16px;"></i><strong>Facilities:</strong> ${obj.fac_count || d.fac_count}</p>
+                    `;
+                } else {
+                    html += `
+                        <p><i class="fas fa-sitemap" style="color: var(--secondary-color); width: 16px;"></i><strong>Connected Networks:</strong> ${obj.net_count || d.net_count}</p>
+                        <p><i class="fas fa-network-wired" style="color: var(--accent-color); width: 16px;"></i><strong>Connected IXPs:</strong> ${obj.ix_count || d.ix_count}</p>
+                    `;
+                }
+                if (obj.url_stats) {
+                    html += `<p><i class="fas fa-chart-bar" style="color: var(--primary-color); width: 16px;"></i><a href="${obj.url_stats}" target="_blank" rel="noopener">View Detailed Statistics</a></p>`;
+                }
+                html += `<p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 1rem;"><i class="fas fa-clock" style="margin-right: 0.25rem;"></i>Last updated: ${obj.updated || 'N/A'}</p>`;
+                statsDiv.innerHTML = html;
             } catch (error) {
                 console.error('Error fetching stats:', error);
-                statsDiv.innerHTML = `
+                let html = `
                     <p style="color: #ef4444; font-style: italic; margin-bottom: 1rem;"><i class="fas fa-exclamation-triangle" style="margin-right: 0.5rem;"></i>Error loading detailed statistics. Using available data.</p>
-                    <h3 id="stats-title"><i class="fas fa-map-marker-alt" style="color: var(--secondary-color); margin-right: 0.5rem;"></i>${d.name}</h3>
+                    <h3 id="stats-title"><i class="fas ${iconClass}" style="color: ${iconColor}; margin-right: 0.5rem;"></i>${d.name}</h3>
                     <p><i class="fas fa-location-dot" style="color: var(--accent-color); width: 16px;"></i><strong>Location:</strong> ${d.city}, ${d.country}</p>
-                    <p><i class="fas fa-sitemap" style="color: var(--secondary-color); width: 16px;"></i><strong>Peering Networks:</strong> ${d.net_count}</p>
-                    <p><i class="fas fa-building" style="color: var(--accent-color); width: 16px;"></i><strong>Facilities:</strong> ${d.fac_count}</p>
-                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 1rem;"><i class="fas fa-info-circle" style="margin-right: 0.25rem;"></i>Cached data (may be incomplete).</p>
                 `;
+                if (d.type === 'ix') {
+                    html += `
+                        <p><i class="fas fa-sitemap" style="color: var(--secondary-color); width: 16px;"></i><strong>Peering Networks:</strong> ${d.net_count}</p>
+                        <p><i class="fas fa-building" style="color: var(--accent-color); width: 16px;"></i><strong>Facilities:</strong> ${d.fac_count}</p>
+                    `;
+                } else {
+                    html += `
+                        <p><i class="fas fa-sitemap" style="color: var(--secondary-color); width: 16px;"></i><strong>Connected Networks:</strong> ${d.net_count}</p>
+                        <p><i class="fas fa-network-wired" style="color: var(--accent-color); width: 16px;"></i><strong>Connected IXPs:</strong> ${d.ix_count}</p>
+                    `;
+                }
+                html += `<p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 1rem;"><i class="fas fa-info-circle" style="margin-right: 0.25rem;"></i>Cached data (may be incomplete).</p>`;
+                statsDiv.innerHTML = html;
             }
         }
 
-        // Drag functions (unchanged)
+        // Drag functions
         function dragstarted(event, d) {
             if (!event.active) currentSimulation.alphaTarget(0.3).restart();
             d.fx = d.x;
@@ -724,7 +801,7 @@
             d.fy = null;
         }
 
-        // Event listeners (modified for search)
+        // Event listeners
         document.addEventListener('DOMContentLoaded', () => {
             const searchInput = document.getElementById('search-input');
             const resetButton = document.getElementById('reset-search');
@@ -751,7 +828,7 @@
             resetBatchBtn.addEventListener('click', resetBatch);
             retryBtn.addEventListener('click', retryLoad);
 
-            // Debounced resize (unchanged)
+            // Debounced resize
             let resizeTimeout;
             window.addEventListener('resize', () => {
                 clearTimeout(resizeTimeout);
@@ -767,7 +844,7 @@
                 }, 250);
             });
 
-            // Close panel on escape (unchanged)
+            // Close panel on escape
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     closeStatsPanel();

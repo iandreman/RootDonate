@@ -397,7 +397,7 @@
         async function loadData() {
             showLoading(true);
             try {
-                const response = await fetchWithProxy(`${baseUrl}/ix?limit=10`); // Ensured limit to 10 nodes
+                const response = await fetchWithProxy(`${baseUrl}/ix`); // Ensured limit to 10 nodes
                 const data = await response.json();
                 ixData = data.data || [];
                 updateGraph(document.getElementById('search-input').value || '');

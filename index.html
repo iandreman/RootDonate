@@ -491,7 +491,7 @@
                     params.push(`skip=${currentSkip}`);
                 }
                 const queryString = params.join('&');
-                const response = await fetchWithProxy(`${baseUrl}/ix?${queryString}?key=XKDJWVre`);
+                const response = await fetchWithProxy(`${baseUrl}/ix?${queryString}&key=XKDJWVre`);
                 const data = await response.json();
                 ixData = data.data || [];
                 
@@ -666,7 +666,7 @@
             const statsDiv = document.getElementById('stats');
             statsDiv.innerHTML = '<p style="text-align: center;"><i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Loading detailed stats...</p>';
             try {
-                const response = await fetchWithProxy(`${baseUrl}/ix/${d.ix_id}?depth=2`); // Uses throttled fetch
+                const response = await fetchWithProxy(`${baseUrl}/ix/${d.ix_id}?depth=2&key=XKDJWVre`); // Uses throttled fetch
                 const data = await response.json();
                 const ix = data.data?.[0] || d;
                 statsDiv.innerHTML = `

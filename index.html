@@ -508,7 +508,7 @@
             
             try {
                 // Load ALL IX data with depth=1 to include facilities
-                const params = ['depth=1'];
+                const params = ['depth=2'];
                 const queryString = params.join('&');
                 const response = await fetchWithProxy(`${baseUrl}/ix?${queryString}&key=XKDJWVre`);
                 const data = await response.json();

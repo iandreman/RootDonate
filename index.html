@@ -7,6 +7,7 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
+        /* (Unchanged CSS from original - omitted for brevity) */
         :root {
             --primary-color: #1e3a8a;
             --secondary-color: #3b82f6;
@@ -420,23 +421,26 @@
     <script>
         const baseUrl = 'https://www.peeringdb.com/api';
         const corsProxy = 'https://corsproxy.io/?';
-        let ixData = [];
+        let allIxData = [];  // NEW: Global array for all loaded data (for global search)
+        let ixData = [];     // Current view (paginated slice)
         let currentSimulation = null;
         let refreshInterval = null;
         let currentSkip = 0;
         const BATCH_SIZE = 10;
-        const REFRESH_INTERVAL_MS = 300000; // 5 minutes (increased to avoid rate limits)
-        const RETRY_DELAY_BASE = 1000; // Start with 1s backoff
+        const FULL_LIMIT = 100;  // NEW: Load all data at once (covers ~1019 IXPs)
+        const REFRESH_INTERVAL_MS = 300000; // 5 minutes
+        const RETRY_DELAY_BASE = 1000;
         const MAX_RETRIES = 3;
 
-        // Utility functions
+        // Utility functions (unchanged except updateBatchInfo)
         function showLoading(show = true) {
             document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
         }
 
         function updateBatchInfo() {
             const batchNum = Math.floor(currentSkip / BATCH_SIZE) + 1;
-            document.getElementById('batch-info').textContent = `Batch ${batchNum} (Skip: ${currentSkip})`;
+            const totalBatches = Math.ceil(allIxData.length / BATCH_SIZE);
+            document.getElementById('batch-info').textContent = `Batch ${batchNum} of ${totalBatches} (Skip: ${currentSkip}, Total Nodes: ${allIxData.length})`;
         }
 
         function closeStatsPanel() {
@@ -445,13 +449,26 @@
         }
 
         function nextBatch() {
-            currentSkip += BATCH_SIZE;
-            loadData();
+            if (currentSkip + BATCH_SIZE < allIxData.length) {
+                currentSkip += BATCH_SIZE;
+                updateCurrentView();
+                updateGraph(document.getElementById('search-input').value || '');
+            }
         }
 
         function resetBatch() {
             currentSkip = 0;
-            loadData();
+            updateCurrentView();
+            updateGraph(document.getElementById('search-input').value || '');
+        }
+
+        function updateCurrentView() {  // NEW: Slice full data into current batch
+            const start = currentSkip;
+            const end = Math.min(start + BATCH_SIZE, allIxData.length);
+            ixData = allIxData.slice(start, end);
+            updateBatchInfo();
+            const nextBtn = document.getElementById('next-batch-btn');
+            nextBtn.disabled = end >= allIxData.length;
         }
 
         function retryLoad() {
@@ -459,16 +476,14 @@
             loadData();
         }
 
-        // Throttled fetch with exponential backoff for 429
+        // Throttled fetch (unchanged)
         async function fetchWithProxy(url, retryCount = 0) {
-            // Add small delay to throttle
             await new Promise(resolve => setTimeout(resolve, 500));
-
             const proxiedUrl = corsProxy + encodeURIComponent(url);
             const response = await fetch(proxiedUrl);
             
             if (response.status === 429 && retryCount < MAX_RETRIES) {
-                const waitTime = RETRY_DELAY_BASE * Math.pow(2, retryCount); // Exponential: 1s, 2s, 4s
+                const waitTime = RETRY_DELAY_BASE * Math.pow(2, retryCount);
                 console.warn(`Rate limited (429). Retrying in ${waitTime}ms... (Attempt ${retryCount + 1}/${MAX_RETRIES})`);
                 await new Promise(resolve => setTimeout(resolve, waitTime));
                 return fetchWithProxy(url, retryCount + 1);
@@ -486,38 +501,29 @@
             retryBtn.style.display = 'none';
             
             try {
-                let params = [`limit=${BATCH_SIZE}`];
-                if (currentSkip > 0) {
-                    params.push(`skip=${currentSkip}`);
-                }
+                // NEW: Load ALL data at once (no skip, high limit)
+                const params = [`limit=${FULL_LIMIT}`];
                 const queryString = params.join('&');
                 const response = await fetchWithProxy(`${baseUrl}/ix?${queryString}&key=XKDJWVre`);
                 const data = await response.json();
-                ixData = data.data || [];
+                allIxData = data.data || [];
+                ixData = allIxData;  // Initially show all
                 
-                // If no data and not at start, reset to beginning
-                if (ixData.length === 0 && currentSkip > 0) {
-                    currentSkip = 0;
-                    params = [`limit=${BATCH_SIZE}`];
-                    const resetResponse = await fetchWithProxy(`${baseUrl}/ix?${params.join('&')}`);
-                    const resetData = await resetResponse.json();
-                    ixData = resetData.data || [];
+                if (allIxData.length === 0) {
+                    throw new Error('No data returned');
                 }
                 
-                updateBatchInfo();
+                currentSkip = 0;
+                updateCurrentView();  // Set first batch
                 updateGraph(document.getElementById('search-input').value || '');
                 
-                // Disable next button if batch is partial (less than full size)
-                const nextBtn = document.getElementById('next-batch-btn');
-                nextBtn.disabled = ixData.length < BATCH_SIZE;
-                
-                // Start auto-refresh only after successful load
+                // Start auto-refresh
                 startAutoRefresh();
                 
             } catch (error) {
                 console.error('Error fetching data:', error);
                 const svg = d3.select('#graph');
-                svg.selectAll('*').remove(); // Clear previous content before error
+                svg.selectAll('*').remove();
                 svg.append('text')
                     .attr('class', 'error-text')
                     .attr('x', '50%')
@@ -535,7 +541,6 @@
                 retryBtn.onclick = retryLoad;
                 retryBtn.disabled = false;
                 
-                // Stop auto-refresh on error
                 if (refreshInterval) {
                     clearInterval(refreshInterval);
                     refreshInterval = null;
@@ -550,18 +555,28 @@
                 clearInterval(refreshInterval);
             }
             refreshInterval = setInterval(() => {
-                nextBatch(); // Advance to next batch on refresh
+                loadData();  // Reload full data on refresh
             }, REFRESH_INTERVAL_MS);
         }
 
+        // MODIFIED: Global search on allIxData if query, else current batch
         function updateGraph(query = '') {
-            const filteredIx = ixData.filter(ix => {
-                const q = query.toLowerCase().trim();
-                if (!q) return true;
-                return ix.name?.toLowerCase().includes(q) ||
-                       ix.city?.toLowerCase().includes(q) ||
-                       ix.country?.toLowerCase().includes(q);
-            });
+            let filteredIx;
+            const q = query.toLowerCase().trim();
+            if (q) {
+                // Search across ALL data
+                filteredIx = allIxData.filter(ix => 
+                    ix.name?.toLowerCase().includes(q) ||
+                    ix.city?.toLowerCase().includes(q) ||
+                    ix.country?.toLowerCase().includes(q)
+                );
+                // Hide pagination when searching (all results shown)
+                document.getElementById('pagination-controls').style.display = 'none';
+            } else {
+                // No search: Use current paginated view
+                filteredIx = ixData;
+                document.getElementById('pagination-controls').style.display = 'flex';
+            }
 
             const svg = d3.select('#graph');
             svg.selectAll('*').remove();
@@ -662,11 +677,12 @@
             svg.on('click', closeStatsPanel);
         }
 
+        // showStats (unchanged)
         async function showStats(d) {
             const statsDiv = document.getElementById('stats');
             statsDiv.innerHTML = '<p style="text-align: center;"><i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Loading detailed stats...</p>';
             try {
-                const response = await fetchWithProxy(`${baseUrl}/ix/${d.ix_id}?depth=2&key=XKDJWVre`); // Uses throttled fetch
+                const response = await fetchWithProxy(`${baseUrl}/ix/${d.ix_id}?depth=2&key=XKDJWVre`);
                 const data = await response.json();
                 const ix = data.data?.[0] || d;
                 statsDiv.innerHTML = `
@@ -690,6 +706,7 @@
             }
         }
 
+        // Drag functions (unchanged)
         function dragstarted(event, d) {
             if (!event.active) currentSimulation.alphaTarget(0.3).restart();
             d.fx = d.x;
@@ -707,7 +724,7 @@
             d.fy = null;
         }
 
-        // Event listeners
+        // Event listeners (modified for search)
         document.addEventListener('DOMContentLoaded', () => {
             const searchInput = document.getElementById('search-input');
             const resetButton = document.getElementById('reset-search');
@@ -726,13 +743,15 @@
                 updateGraph('');
                 resetButton.style.display = 'none';
                 searchInput.focus();
+                // Show pagination again on reset
+                document.getElementById('pagination-controls').style.display = 'flex';
             });
 
             nextBatchBtn.addEventListener('click', nextBatch);
             resetBatchBtn.addEventListener('click', resetBatch);
             retryBtn.addEventListener('click', retryLoad);
 
-            // Debounced resize handler
+            // Debounced resize (unchanged)
             let resizeTimeout;
             window.addEventListener('resize', () => {
                 clearTimeout(resizeTimeout);
@@ -748,14 +767,14 @@
                 }, 250);
             });
 
-            // Close panel on escape key
+            // Close panel on escape (unchanged)
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     closeStatsPanel();
                 }
             });
 
-            // Initial load (no auto-refresh until success)
+            // Initial load
             loadData();
         });
     </script>

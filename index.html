@@ -437,6 +437,7 @@
         const REFRESH_INTERVAL_MS = 300000; // 5 minutes
         const RETRY_DELAY_BASE = 1000;
         const MAX_RETRIES = 3;
+        let requestTimes = []; // For rate limiting: timestamps of last 40 requests
 
         // Utility functions
         function showLoading(show = true) {
@@ -482,9 +483,31 @@
             loadData();
         }
 
-        // Throttled fetch
+        // Throttled fetch with rate limiting (max 40 requests per 60 seconds)
         async function fetchWithProxy(url, retryCount = 0) {
+            const now = Date.now();
+
+            // Clean up old timestamps (sliding window of 60 seconds)
+            while (requestTimes.length > 0 && now - requestTimes[0] > 60000) {
+                requestTimes.shift();
+            }
+
+            // If at limit, wait for the oldest to expire + buffer
+            if (requestTimes.length >= 40) {
+                const waitUntil = requestTimes[0] + 60000;
+                const waitTime = waitUntil - now + 100; // 100ms buffer
+                console.log(`Approaching rate limit (40/min). Waiting ${Math.round(waitTime / 1000)}s...`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+                // Recurse after wait (clean window will be checked again)
+                return fetchWithProxy(url, retryCount);
+            }
+
+            // Record this request timestamp
+            requestTimes.push(now);
+
+            // Existing per-request throttle
             await new Promise(resolve => setTimeout(resolve, 500));
+
             const proxiedUrl = corsProxy + encodeURIComponent(url);
             const response = await fetch(proxiedUrl);
             
@@ -523,7 +546,7 @@
                 updateCurrentView();
                 updateGraph(document.getElementById('search-input').value || '');
                 
-                // Start auto-refresh
+                // Start auto-refresh (full reload to include any new nodes)
                 startAutoRefresh();
                 
             } catch (error) {

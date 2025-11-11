@@ -171,6 +171,41 @@
             cursor: grabbing;
         }
 
+        #pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        #batch-info {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        #next-batch-btn, #reset-batch-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        #next-batch-btn:hover, #reset-batch-btn:hover {
+            background: #1e40af;
+        }
+
+        #next-batch-btn:disabled {
+            background: var(--border-color);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
         .loading-overlay {
             position: absolute;
             top: 0;
@@ -327,6 +362,15 @@
             main {
                 padding: 1rem;
             }
+
+            #pagination-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            #next-batch-btn, #reset-batch-btn {
+                width: 100%;
+            }
         }
 
         /* Fade in animation */
@@ -359,6 +403,11 @@
                 <div class="spinner"></div>
             </div>
         </div>
+        <div id="pagination-controls">
+            <span id="batch-info">Batch 1 (Skip: 0)</span>
+            <button id="next-batch-btn"><i class="fas fa-arrow-right"></i> Next Batch (10 Nodes)</button>
+            <button id="reset-batch-btn"><i class="fas fa-home"></i> Reset to Start</button>
+        </div>
         <div id="stats-panel" role="dialog" aria-labelledby="stats-title" aria-hidden="true">
             <div id="stats"></div>
             <button onclick="closeStatsPanel()" aria-label="Close stats panel">Close</button>
@@ -373,6 +422,8 @@
         let ixData = [];
         let currentSimulation = null;
         let refreshInterval = null;
+        let currentSkip = 0;
+        const BATCH_SIZE = 10;
         const REFRESH_INTERVAL_MS = 60000; // 1 minute
 
         // Utility functions
@@ -380,9 +431,24 @@
             document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
         }
 
+        function updateBatchInfo() {
+            const batchNum = Math.floor(currentSkip / BATCH_SIZE) + 1;
+            document.getElementById('batch-info').textContent = `Batch ${batchNum} (Skip: ${currentSkip})`;
+        }
+
         function closeStatsPanel() {
             document.getElementById('stats-panel').style.display = 'none';
             document.getElementById('stats-panel').setAttribute('aria-hidden', 'true');
+        }
+
+        function nextBatch() {
+            currentSkip += BATCH_SIZE;
+            loadData();
+        }
+
+        function resetBatch() {
+            currentSkip = 0;
+            loadData();
         }
 
         async function fetchWithProxy(url) {
@@ -397,10 +463,31 @@
         async function loadData() {
             showLoading(true);
             try {
-                const response = await fetchWithProxy(`${baseUrl}/ix?limit=10next_cursor`); // Ensured limit to 10 nodes
+                let params = [`limit=${BATCH_SIZE}`];
+                if (currentSkip > 0) {
+                    params.push(`skip=${currentSkip}`);
+                }
+                const queryString = params.join('&');
+                const response = await fetchWithProxy(`${baseUrl}/ix?${queryString}`);
                 const data = await response.json();
                 ixData = data.data || [];
+                
+                // If no data and not at start, reset to beginning
+                if (ixData.length === 0 && currentSkip > 0) {
+                    currentSkip = 0;
+                    params = [`limit=${BATCH_SIZE}`];
+                    const resetResponse = await fetchWithProxy(`${baseUrl}/ix?${params.join('&')}`);
+                    const resetData = await resetResponse.json();
+                    ixData = resetData.data || [];
+                }
+                
+                updateBatchInfo();
                 updateGraph(document.getElementById('search-input').value || '');
+                
+                // Disable next button if batch is partial (less than full size)
+                const nextBtn = document.getElementById('next-batch-btn');
+                nextBtn.disabled = ixData.length < BATCH_SIZE;
+                
             } catch (error) {
                 console.error('Error fetching data:', error);
                 const svg = d3.select('#graph');
@@ -427,7 +514,7 @@
                 clearInterval(refreshInterval);
             }
             refreshInterval = setInterval(() => {
-                loadData(); // Refresh nodes data every minute
+                nextBatch(); // Advance to next batch on refresh
             }, REFRESH_INTERVAL_MS);
         }
 
@@ -588,6 +675,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             const searchInput = document.getElementById('search-input');
             const resetButton = document.getElementById('reset-search');
+            const nextBatchBtn = document.getElementById('next-batch-btn');
+            const resetBatchBtn = document.getElementById('reset-batch-btn');
 
             searchInput.addEventListener('input', function(e) {
                 const query = e.target.value;
@@ -601,6 +690,9 @@
                 resetButton.style.display = 'none';
                 searchInput.focus();
             });
+
+            nextBatchBtn.addEventListener('click', nextBatch);
+            resetBatchBtn.addEventListener('click', resetBatch);
 
             // Debounced resize handler
             let resizeTimeout;

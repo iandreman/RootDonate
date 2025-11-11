@@ -427,7 +427,7 @@
         let refreshInterval = null;
         let currentSkip = 0;
         const BATCH_SIZE = 10;
-        const FULL_LIMIT = 2000;  // NEW: Load all data at once (covers ~1019 IXPs)
+        const FULL_LIMIT = 40;  // NEW: Load all data at once (covers ~1019 IXPs)
         const REFRESH_INTERVAL_MS = 300000; // 5 minutes
         const RETRY_DELAY_BASE = 1000;
         const MAX_RETRIES = 3;
@@ -502,7 +502,7 @@
             
             try {
                 // NEW: Load ALL data at once (no skip, high limit)
-                const params = [`limit=${FULL_LIMIT++}`];
+                const params = [`limit=${AllIxData}`];
                 const queryString = params.join('&');
                 const response = await fetchWithProxy(`${baseUrl}/ix?${queryString}&key=XKDJWVre`);
                 const data = await response.json();

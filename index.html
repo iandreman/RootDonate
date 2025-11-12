@@ -537,7 +537,7 @@
                 while (hasMore) {
                     const params = [`depth=2`, `page=${page}`, `page_size=${PAGE_SIZE}`];
                     const queryString = params.join('&');
-                    const response = await fetchWithProxy(`${baseUrl}/ix?${queryString}&key=XKDJWVre`);
+                    const response = await fetchWithProxy(`${baseUrl}/ix?${queryString}&limit=40&key=XKDJWVre`);
                     const data = await response.json();
                     const newData = data.data || [];
                     allIxData = allIxData.concat(newData);

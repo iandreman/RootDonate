@@ -424,7 +424,7 @@
         <p>&copy; 2025 RootDonate. Data sourced from PeeringDB. 100% uptime. <i class="fas fa-shield-alt" style="margin-left: 0.5rem; opacity: 0.8;"></i></p>
     </footer>
     <script>
-        const baseUrl = 'https://www.peeringdb.com/api';
+        const baseUrl = 'https://www.peeringdb.com/api&limit=40&key=XKDJWVre';
         const corsProxy = 'https://corsproxy.io/?';
         let allIxData = [];  // Global array for all loaded IX data (with embedded facs)
         let ixData = [];     // Current view (paginated slice of IXs)
@@ -585,6 +585,7 @@
                 }
             } finally {
                 showLoading(false);
+                startAutoRefresh();
             }
         }
 
@@ -769,7 +770,7 @@
             const iconClass = d.type === 'ix' ? 'fa-map-marker-alt' : 'fa-building';
             const iconColor = d.type === 'ix' ? 'var(--secondary-color)' : 'var(--accent-color)';
             try {
-                const response = await fetchWithProxy(`${baseUrl}${endpoint}?depth=2&key=XKDJWVre`);
+                const response = await fetchWithProxy(`${baseUrl}${endpoint}&limit=40?depth=2&key=XKDJWVre`);
                 const data = await response.json();
                 const obj = data.data?.[0] || d;
                 let html = `
@@ -784,7 +785,7 @@
                     // Fetch and handle IP prefixes with fallback
                     let ipHtml = '';
                     try {
-                        const netixEndpoint = `/ix/${d.ix_id}/netixlan?depth=1&key=XKDJWVre`;
+                        const netixEndpoint = `/ix/${d.ix_id}/netixlan?depth=1&limit=40&key=XKDJWVre`;
                         const netixResponse = await fetchWithProxy(`${baseUrl}${netixEndpoint}`);
                         const netixData = await netixResponse.json();
                         const netixLans = netixData.data || [];
@@ -802,7 +803,7 @@
                     // Fallback to sample connected networks' prefixes if no LAN prefixes
                     if (!ipHtml) {
                         try {
-                            const netEndpoint = `/ix/${d.ix_id}/net?depth=2&page_size=3&key=XKDJWVre`;
+                            const netEndpoint = `/ix/${d.ix_id}/net?depth=2&page_size=3&limit=40&key=XKDJWVre`;
                             const netResponse = await fetchWithProxy(`${baseUrl}${netEndpoint}`);
                             const netData = await netResponse.json();
                             const nets = netData.data || [];

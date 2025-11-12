@@ -760,7 +760,7 @@
             svg.on('click', closeStatsPanel);
         }
 
-        // MODIFIED: showStats handles both IX and Fac, now includes IP prefixes for IX nodes
+        // MODIFIED: Improved IP prefix handling with corrected field names (ipaddr4/ipaddr6) and fallback to sample connected networks' prefixes
         async function showStats(d) {
             const statsDiv = document.getElementById('stats');
             const loadingText = d.type === 'ix' ? 
@@ -783,24 +783,59 @@
                         <p><i class="fas fa-sitemap" style="color: var(--secondary-color); width: 16px;"></i><strong>Peering Networks:</strong> ${obj.net_count || d.net_count}</p>
                         <p><i class="fas fa-building" style="color: var(--accent-color); width: 16px;"></i><strong>Facilities:</strong> ${obj.fac_count || d.fac_count}</p>
                     `;
-                    // Fetch IP prefixes for IX
+                    // Fetch and handle IP prefixes with fallback
+                    let ipHtml = '';
                     try {
                         const netixEndpoint = `/ix/${d.ix_id}/netixlan?depth=1&key=XKDJWVre`;
                         const netixResponse = await fetchWithProxy(`${baseUrl}${netixEndpoint}`);
                         const netixData = await netixResponse.json();
                         const netixLans = netixData.data || [];
-                        const ipv4Prefixes = [...new Set(netixLans.filter(lan => lan.ipaddr).map(lan => lan.ipaddr))];
-                        const ipv6Prefixes = [...new Set(netixLans.flatMap(lan => lan.ipaddrs?.v6addr || []))];
+                        const ipv4Prefixes = [...new Set(netixLans.filter(lan => lan.ipaddr4).map(lan => lan.ipaddr4))];
+                        const ipv6Prefixes = [...new Set(netixLans.filter(lan => lan.ipaddr6).map(lan => lan.ipaddr6))];
                         if (ipv4Prefixes.length > 0) {
-                            html += `<p><i class="fas fa-globe-americas" style="color: var(--secondary-color); width: 16px;"></i><strong>IPv4 Prefixes:</strong> ${ipv4Prefixes.join(', ')}</p>`;
+                            ipHtml += `<p><i class="fas fa-globe-americas" style="color: var(--secondary-color); width: 16px;"></i><strong>IPv4 LAN Prefixes:</strong> ${ipv4Prefixes.join(', ')}</p>`;
                         }
                         if (ipv6Prefixes.length > 0) {
-                            html += `<p><i class="fas fa-globe" style="color: var(--secondary-color); width: 16px;"></i><strong>IPv6 Prefixes:</strong> ${ipv6Prefixes.join(', ')}</p>`;
+                            ipHtml += `<p><i class="fas fa-globe" style="color: var(--secondary-color); width: 16px;"></i><strong>IPv6 LAN Prefixes:</strong> ${ipv6Prefixes.join(', ')}</p>`;
                         }
                     } catch (ipError) {
-                        console.error('Error fetching IP prefixes:', ipError);
-                        html += `<p style="color: var(--text-muted); font-size: 0.875rem;"><i class="fas fa-info-circle" style="margin-right: 0.25rem;"></i>IP prefixes unavailable.</p>`;
+                        console.error('Error fetching IX LAN prefixes:', ipError);
                     }
+                    // Fallback to sample connected networks' prefixes if no LAN prefixes
+                    if (!ipHtml) {
+                        try {
+                            const netEndpoint = `/ix/${d.ix_id}/net?depth=2&page_size=3&key=XKDJWVre`;
+                            const netResponse = await fetchWithProxy(`${baseUrl}${netEndpoint}`);
+                            const netData = await netResponse.json();
+                            const nets = netData.data || [];
+                            let sampleIpv4 = [];
+                            let sampleIpv6 = [];
+                            for (const net of nets) {
+                                if (net.prefixes && net.prefixes.length > 0) {
+                                    const netV4 = net.prefixes.filter(p => p.prefix && !p.prefix.includes(':')).slice(0, 2).map(p => p.prefix);
+                                    const netV6 = net.prefixes.filter(p => p.prefix && p.prefix.includes(':')).slice(0, 2).map(p => p.prefix);
+                                    sampleIpv4.push(...netV4);
+                                    sampleIpv6.push(...netV6);
+                                    if (sampleIpv4.length >= 5 || sampleIpv6.length >= 5) break;
+                                }
+                            }
+                            sampleIpv4 = [...new Set(sampleIpv4)].slice(0, 5);
+                            sampleIpv6 = [...new Set(sampleIpv6)].slice(0, 5);
+                            if (sampleIpv4.length > 0) {
+                                ipHtml += `<p><i class="fas fa-globe-americas" style="color: var(--secondary-color); width: 16px;"></i><strong>Sample IPv4 Prefixes (from connected networks):</strong> ${sampleIpv4.join(', ')}</p>`;
+                            }
+                            if (sampleIpv6.length > 0) {
+                                ipHtml += `<p><i class="fas fa-globe" style="color: var(--secondary-color); width: 16px;"></i><strong>Sample IPv6 Prefixes (from connected networks):</strong> ${sampleIpv6.join(', ')}</p>`;
+                            }
+                        } catch (fallbackError) {
+                            console.error('Error fetching sample network prefixes:', fallbackError);
+                        }
+                    }
+                    // If still no prefixes, show unavailable message
+                    if (!ipHtml) {
+                        ipHtml = `<p style="color: var(--text-muted); font-size: 0.875rem;"><i class="fas fa-info-circle" style="margin-right: 0.25rem;"></i>IP prefixes unavailable at this time.</p>`;
+                    }
+                    html += ipHtml;
                 } else {
                     html += `
                         <p><i class="fas fa-sitemap" style="color: var(--secondary-color); width: 16px;"></i><strong>Connected Networks:</strong> ${obj.net_count || d.net_count}</p>
@@ -909,4 +944,3 @@
     </script>
 </body>
 </html>
-```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

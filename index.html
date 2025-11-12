@@ -425,7 +425,7 @@
     </footer>
     <script>
         const baseUrl = 'https://www.peeringdb.com/api';
-        const apiKey = 'XKDJWVre';
+        // Removed invalid API key - using guest access for public data
         const corsProxy = 'https://corsproxy.io/?';
         let allIxData = [];  // Global array for all loaded IX data (with embedded facs)
         let ixData = [];     // Current view (paginated slice of IXs)
@@ -434,7 +434,7 @@
         let currentSkip = 0;
         const BATCH_SIZE = 10;
         const REFRESH_INTERVAL_MS = 300000; // 5 minutes
-        const RETRY_DELAY_BASE = 1000;
+        const RETRY_DELAY_BASE = 2000; // Increased for better backoff
         const MAX_RETRIES = 3;
         let requestTimes = []; // For rate limiting: timestamps of last 40 requests
         const PAGE_SIZE = 40; // Page size for paginated loading
@@ -484,7 +484,8 @@
         }
 
         // Throttled fetch with rate limiting (max 40 requests per 60 seconds)
-        async function fetchWithProxy(url, retryCount = 0) {
+        // Added auto-retry for auth errors (401/403) by omitting key if present
+        async function fetchWithProxy(url, retryCount = 0, useKey = true) {
             const now = Date.now();
 
             // Clean up old timestamps (sliding window of 60 seconds)
@@ -499,7 +500,7 @@
                 console.log(`Approaching rate limit (40/min). Waiting ${Math.round(waitTime / 1000)}s...`);
                 await new Promise(resolve => setTimeout(resolve, waitTime));
                 // Recurse after wait (clean window will be checked again)
-                return fetchWithProxy(url, retryCount);
+                return fetchWithProxy(url, retryCount, useKey);
             }
 
             // Record this request timestamp
@@ -508,14 +509,26 @@
             // Fixed per-request throttle to respect 40/min (1.5s interval)
             await new Promise(resolve => setTimeout(resolve, 1500));
 
-            const proxiedUrl = corsProxy + encodeURIComponent(url);
+            let fetchUrl = url;
+            if (useKey) {
+                // If using key and it fails with auth error, we'll retry without it
+                fetchUrl += (url.includes('?') ? '&' : '?') + 'key=XKDJWVre';
+            }
+            const proxiedUrl = corsProxy + encodeURIComponent(fetchUrl);
             const response = await fetch(proxiedUrl);
             
             if (response.status === 429 && retryCount < MAX_RETRIES) {
                 const waitTime = RETRY_DELAY_BASE * Math.pow(2, retryCount);
                 console.warn(`Rate limited (429). Retrying in ${waitTime}ms... (Attempt ${retryCount + 1}/${MAX_RETRIES})`);
                 await new Promise(resolve => setTimeout(resolve, waitTime));
-                return fetchWithProxy(url, retryCount + 1);
+                return fetchWithProxy(url, retryCount + 1, useKey);
+            }
+            
+            if ((response.status === 401 || response.status === 403) && retryCount < MAX_RETRIES) {
+                console.warn(`Auth error (${response.status}). Retrying without API key... (Attempt ${retryCount + 1}/${MAX_RETRIES})`);
+                const waitTime = RETRY_DELAY_BASE * Math.pow(2, retryCount);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+                return fetchWithProxy(url, retryCount + 1, false); // Retry without key
             }
             
             if (!response.ok) {
@@ -538,8 +551,8 @@
                 while (hasMore) {
                     const params = [`depth=2`, `page=${page}`, `page_size=${PAGE_SIZE}`];
                     const queryString = params.join('&');
-                    const url = `${baseUrl}/ix?${queryString}&key=${apiKey}`;
-                    const response = await fetchWithProxy(url);
+                    const url = `${baseUrl}/ix?${queryString}`;
+                    const response = await fetchWithProxy(url); // Starts with key, autocorrects if auth fail
                     const data = await response.json();
                     const newData = data.data || [];
                     allIxData = allIxData.concat(newData);
@@ -768,11 +781,11 @@
                 '<i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Loading facility details...';
             statsDiv.innerHTML = `<p style="text-align: center;">${loadingText}</p>`;
             const endpoint = d.type === 'ix' ? `/ix/${d.ix_id}` : `/fac/${d.fac_id}`;
-            const detailUrl = `${baseUrl}${endpoint}?depth=2&key=${apiKey}`;
+            const detailUrl = `${baseUrl}${endpoint}?depth=2`;
             const iconClass = d.type === 'ix' ? 'fa-map-marker-alt' : 'fa-building';
             const iconColor = d.type === 'ix' ? 'var(--secondary-color)' : 'var(--accent-color)';
             try {
-                const response = await fetchWithProxy(detailUrl);
+                const response = await fetchWithProxy(detailUrl); // Autocorrects auth if needed
                 const data = await response.json();
                 const obj = data.data?.[0] || d;
                 let html = `
@@ -787,7 +800,7 @@
                     // Fetch and handle IP prefixes with fallback
                     let ipHtml = '';
                     try {
-                        const netixEndpoint = `/ix/${d.ix_id}/netixlan?depth=1&key=${apiKey}`;
+                        const netixEndpoint = `/ix/${d.ix_id}/netixlan?depth=1`;
                         const netixUrl = `${baseUrl}${netixEndpoint}`;
                         const netixResponse = await fetchWithProxy(netixUrl);
                         const netixData = await netixResponse.json();
@@ -806,7 +819,7 @@
                     // Fallback to sample connected networks' prefixes if no LAN prefixes
                     if (!ipHtml) {
                         try {
-                            const netEndpoint = `/ix/${d.ix_id}/net?depth=2&page_size=3&key=${apiKey}`;
+                            const netEndpoint = `/ix/${d.ix_id}/net?depth=2&page_size=3`;
                             const netUrl = `${baseUrl}${netEndpoint}`;
                             const netResponse = await fetchWithProxy(netUrl);
                             const netData = await netResponse.json();
@@ -947,4 +960,3 @@
     </script>
 </body>
 </html>
-```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

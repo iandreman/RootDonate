@@ -7,7 +7,6 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* (Unchanged CSS from original - omitted for brevity) */
         :root {
             --primary-color: #1e3a8a;
             --secondary-color: #3b82f6;
@@ -381,7 +380,6 @@
             }
         }
 
-        /* Fade in animation */
         .fade-in {
             animation: fadeIn 0.5s ease-in;
         }
@@ -438,7 +436,7 @@
         const RETRY_DELAY_BASE = 1000;
         const MAX_RETRIES = 3;
         let requestTimes = []; // For rate limiting: timestamps of last 40 requests
-        const PAGE_SIZE = 40; // New: Page size for paginated loading
+        const PAGE_SIZE = 40; // Page size for paginated loading
 
         // Utility functions
         function showLoading(show = true) {
@@ -650,7 +648,7 @@
             return { nodes, links };
         }
 
-        // MODIFIED: Global search on allIxData (IXs and their facs)
+        // Global search on allIxData (IXs and their facs)
         function updateGraph(query = '') {
             let filteredIx;
             const q = query.toLowerCase().trim();
@@ -760,7 +758,7 @@
             svg.on('click', closeStatsPanel);
         }
 
-        // MODIFIED: Improved IP prefix handling with corrected field names (ipaddr4/ipaddr6) and fallback to sample connected networks' prefixes
+        // Improved IP prefix handling with corrected field names (ipaddr4/ipaddr6) and fallback to sample connected networks' prefixes
         async function showStats(d) {
             const statsDiv = document.getElementById('stats');
             const loadingText = d.type === 'ix' ? 
@@ -811,13 +809,13 @@
                             let sampleIpv4 = [];
                             let sampleIpv6 = [];
                             for (const net of nets) {
-                                if (net.prefixes && net.prefixes.length > 0) {
-                                    const netV4 = net.prefixes.filter(p => p.prefix && !p.prefix.includes(':')).slice(0, 2).map(p => p.prefix);
-                                    const netV6 = net.prefixes.filter(p => p.prefix && p.prefix.includes(':')).slice(0, 2).map(p => p.prefix);
-                                    sampleIpv4.push(...netV4);
-                                    sampleIpv6.push(...netV6);
-                                    if (sampleIpv4.length >= 5 || sampleIpv6.length >= 5) break;
-                                }
+                                const prefixes4 = net.info?.prefixes4 || [];
+                                const prefixes6 = net.info?.prefixes6 || [];
+                                const netV4 = prefixes4.slice(0, 2);
+                                const netV6 = prefixes6.slice(0, 2);
+                                sampleIpv4.push(...netV4);
+                                sampleIpv6.push(...netV6);
+                                if (sampleIpv4.length >= 5 || sampleIpv6.length >= 5) break;
                             }
                             sampleIpv4 = [...new Set(sampleIpv4)].slice(0, 5);
                             sampleIpv6 = [...new Set(sampleIpv6)].slice(0, 5);

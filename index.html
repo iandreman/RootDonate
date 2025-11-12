@@ -245,7 +245,7 @@
         <p>&copy; 2025 RootDonate. Data from PeeringDB (100% uptime).</p>
     </footer>
     <script>
-        const baseUrl = 'https://www.peeringdb.com/api';
+        const baseUrl = 'https://www.peeringdb.com/api&limit=40';
         const corsProxy = 'https://corsproxy.io/?';
         let allIxData = [];
         let currentSimulation = null;
@@ -281,7 +281,7 @@
 
                 while (loaded < MAX_IXS) {
                     const params = [`depth=2`, `page=${page}`, `page_size=${PAGE_SIZE}`];
-                    const url = `${baseUrl}/ix?${params.join('&')}`;
+                    const url = `${baseUrl}/ix?${params.join('&')}&limit=40`;
                     const data = await fetchData(url);
                     const newData = data.data || [];
                     allIxData = allIxData.concat(newData.slice(0, MAX_IXS - loaded));

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RootDonate - Interactive Internet Nodes Visualization</title>
+    <title>RootDonate - Minimal Internet Nodes Visualization</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -16,25 +16,18 @@
             --text-color: #1e293b;
             --text-muted: #64748b;
             --border-color: #e2e8f0;
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
             --border-radius: 0.5rem;
-        }
-
-        * {
-            box-sizing: border-box;
         }
 
         body {
             margin: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            line-height: 1.6;
         }
 
         header {
@@ -42,64 +35,35 @@
             color: white;
             padding: 2rem 1rem;
             text-align: center;
-            box-shadow: var(--shadow-lg);
-            position: relative;
-        }
-
-        header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-            opacity: 0.3;
-        }
-
-        header > * {
-            position: relative;
-            z-index: 1;
+            box-shadow: var(--shadow-md);
         }
 
         header h1 {
-            margin: 0 0 0.5rem 0;
+            margin: 0;
             font-size: 2.5rem;
-            font-weight: 700;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
         }
 
-        header i {
-            font-size: 2rem;
-        }
-
         main {
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             padding: 2rem 1rem;
             max-width: 1400px;
             margin: 0 auto;
-            width: 100%;
         }
 
         .description {
             max-width: 800px;
             text-align: center;
             margin-bottom: 2rem;
-            font-size: 1.125rem;
             color: var(--text-muted);
-            line-height: 1.7;
         }
 
         #search-container {
-            width: 100%;
             max-width: 600px;
-            margin-bottom: 2rem;
+            margin: 0 auto 2rem;
             position: relative;
         }
 
@@ -110,17 +74,11 @@
             border-radius: var(--border-radius);
             width: 100%;
             background: var(--card-bg);
-            transition: all 0.2s ease;
         }
 
         #search-input:focus {
             outline: none;
             border-color: var(--secondary-color);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        #search-input::placeholder {
-            color: var(--text-muted);
         }
 
         .search-icon {
@@ -129,25 +87,6 @@
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-muted);
-            z-index: 1;
-        }
-
-        #reset-search {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 1.2rem;
-            display: none;
-            transition: color 0.2s ease;
-        }
-
-        #reset-search:hover {
-            color: var(--secondary-color);
         }
 
         #graph-container {
@@ -158,7 +97,6 @@
             background: var(--card-bg);
             box-shadow: var(--shadow-md);
             overflow: hidden;
-            position: relative;
         }
 
         #graph {
@@ -171,41 +109,6 @@
             cursor: grabbing;
         }
 
-        #pagination-controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 1rem;
-            margin-top: 1rem;
-            flex-wrap: wrap;
-        }
-
-        #batch-info {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
-
-        #next-batch-btn, #reset-batch-btn, #retry-btn {
-            padding: 0.75rem 1.5rem;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-weight: 500;
-            transition: background 0.2s ease;
-        }
-
-        #next-batch-btn:hover, #reset-batch-btn:hover, #retry-btn:hover {
-            background: #1e40af;
-        }
-
-        #next-batch-btn:disabled, #retry-btn:disabled {
-            background: var(--border-color);
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
         .loading-overlay {
             position: absolute;
             top: 0;
@@ -216,7 +119,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 10;
         }
 
         .spinner {
@@ -233,79 +135,9 @@
             100% { transform: rotate(360deg); }
         }
 
-        #stats-panel {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--card-bg);
-            padding: 1.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-            max-width: 350px;
-            width: 90vw;
-            max-height: 80vh;
-            overflow-y: auto;
-            display: none;
-            z-index: 1000;
-            box-shadow: var(--shadow-lg);
-        }
-
-        #stats-panel h3 {
-            margin-top: 0;
-            color: var(--primary-color);
-            font-size: 1.25rem;
-        }
-
-        #stats-panel p {
-            margin: 0.75rem 0;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        #stats-panel a {
-            color: var(--secondary-color);
-            text-decoration: none;
-        }
-
-        #stats-panel a:hover {
-            text-decoration: underline;
-        }
-
-        #stats-panel button {
-            width: 100%;
-            margin-top: 1rem;
-            padding: 0.75rem;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-weight: 500;
-            transition: background 0.2s ease;
-        }
-
-        #stats-panel button:hover {
-            background: #1e40af;
-        }
-
-        footer {
-            background: var(--primary-color);
-            color: white;
-            text-align: center;
-            padding: 1.5rem;
-            margin-top: auto;
-        }
-
-        footer p {
-            margin: 0;
-            opacity: 0.9;
-        }
-
         .node {
             stroke: var(--card-bg);
             stroke-width: 2px;
-            transition: all 0.2s ease;
         }
 
         .node.ix {
@@ -317,302 +149,110 @@
         }
 
         .node:hover {
-            fill: #ef4444;
             stroke-width: 3px;
-            transform: scale(1.1);
         }
 
         .link {
             stroke: var(--border-color);
             stroke-opacity: 0.4;
             stroke-width: 1px;
-            transition: stroke-opacity 0.2s ease;
         }
 
-        .link:hover {
-            stroke-opacity: 0.7;
-        }
-
-        .error-text {
-            fill: #ef4444;
-            font-size: 1.1rem;
-            text-anchor: middle;
-        }
-
-        .error-subtext {
-            fill: var(--text-muted);
-            font-size: 0.9rem;
-            text-anchor: middle;
+        footer {
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
         }
 
         @media (max-width: 768px) {
-            header h1 {
-                font-size: 2rem;
-            }
-
-            .description {
-                font-size: 1rem;
-                padding: 0 1rem;
-            }
-
             #graph-container {
                 height: 60vh;
             }
-
-            #stats-panel {
-                right: 10px;
-                left: 10px;
-                max-width: none;
-                top: 10px;
-            }
-
-            main {
-                padding: 1rem;
-            }
-
-            #pagination-controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            #next-batch-btn, #reset-batch-btn, #retry-btn {
-                width: 100%;
-            }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-    <header class="fade-in">
-        <h1><i class="fas fa-network-wired"></i> RootDonate - Interactive Internet Nodes Visualization</h1>
+    <header>
+        <h1><i class="fas fa-network-wired"></i> RootDonate - Minimal Viz</h1>
     </header>
-    <main class="fade-in">
+    <main>
         <p class="description">
-            Explore the interconnected world of internet nodes through this interactive visualization powered by PeeringDB data. Blue nodes represent Internet Exchanges (IX), green nodes represent Facilities (data centers). Connections illustrate where IXPs are hosted. Click on a node to view detailed statistics. Use the search box below to filter by name, city, or country (searches across IXs and Facilities).
+            Minimal version: Loads first 200 IXs and their facilities. Search and interact with nodes.
         </p>
         <div id="search-container">
             <i class="fas fa-search search-icon"></i>
             <input type="text" id="search-input" placeholder="Search by name, city, or country...">
-            <button id="reset-search" title="Clear search"><i class="fas fa-times"></i></button>
         </div>
         <div id="graph-container">
             <svg id="graph"></svg>
-            <div class="loading-overlay" id="loading-overlay" style="display: none;">
+            <div class="loading-overlay" id="loading-overlay">
                 <div class="spinner"></div>
             </div>
         </div>
-        <div id="pagination-controls">
-            <span id="batch-info">Batch 1 (Skip: 0)</span>
-            <button id="next-batch-btn"><i class="fas fa-arrow-right"></i> Next Batch (10 IXs)</button>
-            <button id="reset-batch-btn"><i class="fas fa-home"></i> Reset to Start</button>
-            <button id="retry-btn" style="display: none;"><i class="fas fa-redo"></i> Retry Load</button>
-        </div>
-        <div id="stats-panel" role="dialog" aria-labelledby="stats-title" aria-hidden="true">
-            <div id="stats"></div>
-            <button onclick="closeStatsPanel()" aria-label="Close stats panel">Close</button>
-        </div>
     </main>
-    <footer class="fade-in">
-        <p>&copy; 2025 RootDonate. Data sourced from PeeringDB. 100% uptime. <i class="fas fa-shield-alt" style="margin-left: 0.5rem; opacity: 0.8;"></i></p>
+    <footer>
+        <p>&copy; 2025 RootDonate. Data from PeeringDB (first 200 IXs).</p>
     </footer>
     <script>
         const baseUrl = 'https://www.peeringdb.com/api';
-        // Removed invalid API key - using guest access for public data
         const corsProxy = 'https://corsproxy.io/?';
-        let allIxData = [];  // Global array for all loaded IX data (with embedded facs)
-        let ixData = [];     // Current view (paginated slice of IXs)
+        let allIxData = [];
         let currentSimulation = null;
-        let refreshInterval = null;
-        let currentSkip = 0;
-        const BATCH_SIZE = 10;
-        const REFRESH_INTERVAL_MS = 300000; // 5 minutes
-        const RETRY_DELAY_BASE = 2000; // Increased for better backoff
-        const MAX_RETRIES = 3;
-        let requestTimes = []; // For rate limiting: timestamps of last 40 requests
-        const PAGE_SIZE = 40; // Page size for paginated loading
+        const PAGE_SIZE = 100; // Larger pages to reduce requests
+        const MAX_IXS = 200; // Load only first 200 to avoid limits
+        const THROTTLE_MS = 2000; // Slower throttle for safety
 
-        // Utility functions
         function showLoading(show = true) {
             document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
         }
 
-        function updateBatchInfo() {
-            const batchNum = Math.floor(currentSkip / BATCH_SIZE) + 1;
-            const totalBatches = Math.ceil(allIxData.length / BATCH_SIZE);
-            document.getElementById('batch-info').textContent = `Batch ${batchNum} of ${totalBatches} (IX Skip: ${currentSkip}, Total IXs: ${allIxData.length})`;
-        }
-
-        function closeStatsPanel() {
-            document.getElementById('stats-panel').style.display = 'none';
-            document.getElementById('stats-panel').setAttribute('aria-hidden', 'true');
-        }
-
-        function nextBatch() {
-            if (currentSkip + BATCH_SIZE < allIxData.length) {
-                currentSkip += BATCH_SIZE;
-                updateCurrentView();
-                updateGraph(document.getElementById('search-input').value || '');
-            }
-        }
-
-        function resetBatch() {
-            currentSkip = 0;
-            updateCurrentView();
-            updateGraph(document.getElementById('search-input').value || '');
-        }
-
-        function updateCurrentView() {
-            const start = currentSkip;
-            const end = Math.min(start + BATCH_SIZE, allIxData.length);
-            ixData = allIxData.slice(start, end);
-            updateBatchInfo();
-            const nextBtn = document.getElementById('next-batch-btn');
-            nextBtn.disabled = end >= allIxData.length;
-        }
-
-        function retryLoad() {
-            document.getElementById('retry-btn').style.display = 'none';
-            loadData();
-        }
-
-        // Throttled fetch with rate limiting (max 40 requests per 60 seconds)
-        // Added auto-retry for auth errors (401/403) by omitting key if present
-        async function fetchWithProxy(url, retryCount = 0, useKey = true) {
-            const now = Date.now();
-
-            // Clean up old timestamps (sliding window of 60 seconds)
-            while (requestTimes.length > 0 && now - requestTimes[0] > 60000) {
-                requestTimes.shift();
-            }
-
-            // If at limit, wait for the oldest to expire + buffer
-            if (requestTimes.length >= 40) {
-                const waitUntil = requestTimes[0] + 60000;
-                const waitTime = waitUntil - now + 100; // 100ms buffer
-                console.log(`Approaching rate limit (40/min). Waiting ${Math.round(waitTime / 1000)}s...`);
-                await new Promise(resolve => setTimeout(resolve, waitTime));
-                // Recurse after wait (clean window will be checked again)
-                return fetchWithProxy(url, retryCount, useKey);
-            }
-
-            // Record this request timestamp
-            requestTimes.push(now);
-
-            // Fixed per-request throttle to respect 40/min (1.5s interval)
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            let fetchUrl = url;
-            if (useKey) {
-                // If using key and it fails with auth error, we'll retry without it
-                fetchUrl += (url.includes('?') ? '&' : '?') + 'key=XKDJWVre';
-            }
-            const proxiedUrl = corsProxy + encodeURIComponent(fetchUrl);
+        async function fetchData(url) {
+            await new Promise(resolve => setTimeout(resolve, THROTTLE_MS)); // Throttle
+            const proxiedUrl = corsProxy + encodeURIComponent(url);
             const response = await fetch(proxiedUrl);
-            
-            if (response.status === 429 && retryCount < MAX_RETRIES) {
-                const waitTime = RETRY_DELAY_BASE * Math.pow(2, retryCount);
-                console.warn(`Rate limited (429). Retrying in ${waitTime}ms... (Attempt ${retryCount + 1}/${MAX_RETRIES})`);
-                await new Promise(resolve => setTimeout(resolve, waitTime));
-                return fetchWithProxy(url, retryCount + 1, useKey);
-            }
-            
-            if ((response.status === 401 || response.status === 403) && retryCount < MAX_RETRIES) {
-                console.warn(`Auth error (${response.status}). Retrying without API key... (Attempt ${retryCount + 1}/${MAX_RETRIES})`);
-                const waitTime = RETRY_DELAY_BASE * Math.pow(2, retryCount);
-                await new Promise(resolve => setTimeout(resolve, waitTime));
-                return fetchWithProxy(url, retryCount + 1, false); // Retry without key
-            }
-            
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                if (response.status === 429) {
+                    console.warn('Rate limited, waiting longer...');
+                    await new Promise(resolve => setTimeout(resolve, 60000));
+                    return fetchData(url);
+                }
+                throw new Error(`HTTP ${response.status}`);
             }
-            return response;
+            return response.json();
         }
 
         async function loadData() {
             showLoading(true);
-            const retryBtn = document.getElementById('retry-btn');
-            retryBtn.style.display = 'none';
-            
             try {
                 allIxData = [];
+                let loaded = 0;
                 let page = 1;
-                let hasMore = true;
 
-                // Paginated loading: Fetch in pages of 40 to respect rate limits and reduce response size
-                while (hasMore) {
+                while (loaded < MAX_IXS) {
                     const params = [`depth=2`, `page=${page}`, `page_size=${PAGE_SIZE}`];
-                    const queryString = params.join('&');
-                    const url = `${baseUrl}/ix?${queryString}`;
-                    const response = await fetchWithProxy(url); // Starts with key, autocorrects if auth fail
-                    const data = await response.json();
+                    const url = `${baseUrl}/ix?${params.join('&')}`;
+                    const data = await fetchData(url);
                     const newData = data.data || [];
-                    allIxData = allIxData.concat(newData);
-                    hasMore = newData.length === PAGE_SIZE;
+                    allIxData = allIxData.concat(newData.slice(0, MAX_IXS - loaded));
+                    loaded += newData.length;
+                    if (newData.length < PAGE_SIZE) break;
                     page++;
                 }
 
-                if (allIxData.length === 0) {
-                    throw new Error('No data returned');
-                }
-                
-                ixData = allIxData;  // Initially show all
-                
-                currentSkip = 0;
-                updateCurrentView();
+                if (allIxData.length === 0) throw new Error('No data');
+
                 updateGraph(document.getElementById('search-input').value || '');
-                
-                // Start auto-refresh (full reload to include any new nodes)
-                startAutoRefresh();
-                
             } catch (error) {
-                console.error('Error fetching data:', error);
-                const svg = d3.select('#graph');
-                svg.selectAll('*').remove();
-                svg.append('text')
-                    .attr('class', 'error-text')
-                    .attr('x', '50%')
-                    .attr('y', '50%')
-                    .attr('dy', '.35em')
-                    .text(error.message.includes('429') ? 'Rate limit hit (429). Retrying automatically...' : 'Error loading data. Check connection or API limits.');
-                svg.append('text')
-                    .attr('class', 'error-subtext')
-                    .attr('x', '50%')
-                    .attr('y', '55%')
-                    .attr('dy', '.35em')
-                    .text('If stuck, click Retry below.');
-                
-                retryBtn.style.display = 'inline-block';
-                retryBtn.onclick = retryLoad;
-                retryBtn.disabled = false;
-                
-                if (refreshInterval) {
-                    clearInterval(refreshInterval);
-                    refreshInterval = null;
-                }
+                console.error(error);
+                d3.select('#graph').append('text')
+                    .attr('x', '50%').attr('y', '50%').attr('text-anchor', 'middle')
+                    .text('Error loading data. Check console.');
             } finally {
                 showLoading(false);
             }
         }
 
-        function startAutoRefresh() {
-            if (refreshInterval) {
-                clearInterval(refreshInterval);
-            }
-            refreshInterval = setInterval(() => {
-                loadData();
-            }, REFRESH_INTERVAL_MS);
-        }
-
-        // Build graph nodes and links from filtered IXs and their facilities
         function buildGraphData(filteredIx) {
             const nodes = [];
             const links = [];
@@ -622,38 +262,34 @@
 
             for (const ix of filteredIx) {
                 const ixId = nodeId++;
-                const ixNode = {
+                nodes.push({
                     id: ixId,
                     type: 'ix',
-                    name: ix.name || 'Unknown',
-                    city: ix.city || 'N/A',
-                    country: ix.country || 'N/A',
-                    net_count: ix.net_count || 0,
-                    fac_count: ix.fac_count || 0,
+                    name: ix.name,
+                    city: ix.city,
+                    country: ix.country,
+                    net_count: ix.net_count,
+                    fac_count: ix.fac_count,
                     ix_id: ix.id
-                };
-                nodes.push(ixNode);
+                });
                 ixToId[ix.id] = ixId;
 
                 if (ix.facs && ix.facs.length > 0) {
                     for (const fac of ix.facs) {
-                        let facId;
-                        if (!(fac.id in facToId)) {
+                        let facId = facToId[fac.id];
+                        if (!facId) {
                             facId = nodeId++;
                             facToId[fac.id] = facId;
-                            const facNode = {
+                            nodes.push({
                                 id: facId,
                                 type: 'fac',
-                                name: fac.name || 'Unknown Facility',
-                                city: fac.city || 'N/A',
-                                country: fac.country || 'N/A',
-                                net_count: fac.net_count || 0,
-                                ix_count: fac.ix_count || 0,
+                                name: fac.name,
+                                city: fac.city,
+                                country: fac.country,
+                                net_count: fac.net_count,
+                                ix_count: fac.ix_count,
                                 fac_id: fac.id
-                            };
-                            nodes.push(facNode);
-                        } else {
-                            facId = facToId[fac.id];
+                            });
                         }
                         links.push({ source: ixId, target: facId });
                     }
@@ -663,37 +299,20 @@
             return { nodes, links };
         }
 
-        // Global search on allIxData (IXs and their facs)
         function updateGraph(query = '') {
-            let filteredIx;
-            const q = query.toLowerCase().trim();
-            if (q) {
-                // Direct IX matches
-                let matchingIx = allIxData.filter(ix => 
+            let filteredIx = allIxData;
+            if (query) {
+                const q = query.toLowerCase().trim();
+                filteredIx = allIxData.filter(ix =>
                     ix.name?.toLowerCase().includes(q) ||
                     ix.city?.toLowerCase().includes(q) ||
-                    ix.country?.toLowerCase().includes(q)
-                );
-                // IXs with matching facs
-                let matchingFacIx = allIxData.filter(ix => 
-                    ix.facs?.some(fac => 
+                    ix.country?.toLowerCase().includes(q) ||
+                    ix.facs?.some(fac =>
                         fac.name?.toLowerCase().includes(q) ||
                         fac.city?.toLowerCase().includes(q) ||
                         fac.country?.toLowerCase().includes(q)
                     )
                 );
-                // Unique IXs
-                const matchingIxSet = new Set([
-                    ...matchingIx.map(ix => ix.id),
-                    ...matchingFacIx.map(ix => ix.id)
-                ]);
-                filteredIx = allIxData.filter(ix => matchingIxSet.has(ix.id));
-                // Hide pagination when searching
-                document.getElementById('pagination-controls').style.display = 'none';
-            } else {
-                // No search: Use current paginated view of IXs
-                filteredIx = ixData;
-                document.getElementById('pagination-controls').style.display = 'flex';
             }
 
             const svg = d3.select('#graph');
@@ -701,260 +320,66 @@
 
             if (filteredIx.length === 0) {
                 svg.append('text')
-                    .attr('class', 'error-text')
-                    .attr('x', '50%')
-                    .attr('y', '50%')
-                    .attr('dy', '.35em')
-                    .text('No results found. Try a different search.');
+                    .attr('x', '50%').attr('y', '50%').attr('text-anchor', 'middle')
+                    .text('No results');
                 return;
             }
 
             const { nodes, links } = buildGraphData(filteredIx);
-
-            const container = document.getElementById('graph-container');
-            const width = container.clientWidth;
-            const height = container.clientHeight;
-
+            const width = document.getElementById('graph-container').clientWidth;
+            const height = document.getElementById('graph-container').clientHeight;
             svg.attr('width', width).attr('height', height);
 
-            if (currentSimulation) {
-                currentSimulation.stop();
-            }
+            if (currentSimulation) currentSimulation.stop();
 
             const simulation = d3.forceSimulation(nodes)
-                .force('link', d3.forceLink(links).id(d => d.id).distance(100).strength(0.5))
+                .force('link', d3.forceLink(links).id(d => d.id).distance(100))
                 .force('charge', d3.forceManyBody().strength(-300))
                 .force('center', d3.forceCenter(width / 2, height / 2))
-                .force('collide', d3.forceCollide().radius(d => Math.max(5, 5 + Math.sqrt(d.net_count || 1) / 5)));
+                .force('collide', d3.forceCollide(15));
 
             currentSimulation = simulation;
 
-            const link = svg.append('g')
-                .attr('class', 'links')
-                .selectAll('line')
-                .data(links)
-                .enter().append('line')
-                .attr('class', 'link');
+            const link = svg.append('g').selectAll('line').data(links).enter().append('line').attr('class', 'link');
 
-            const node = svg.append('g')
-                .attr('class', 'nodes')
-                .selectAll('circle')
-                .data(nodes)
-                .enter().append('circle')
+            const node = svg.append('g').selectAll('circle').data(nodes).enter().append('circle')
                 .attr('class', d => `node ${d.type}`)
                 .attr('r', d => Math.max(5, 5 + Math.sqrt(d.net_count || 1) / 4))
                 .call(d3.drag()
-                    .on('start', dragstarted)
-                    .on('drag', dragged)
-                    .on('end', dragended))
-                .on('click', async function(event, d) {
-                    event.stopPropagation();
-                    await showStats(d);
-                    document.getElementById('stats-panel').style.display = 'block';
-                    document.getElementById('stats-panel').setAttribute('aria-hidden', 'false');
-                });
-
-            node.append('title')
-                .text(d => `${d.type.toUpperCase()}: ${d.name}\nLocation: ${d.city}, ${d.country}\nNetworks: ${d.net_count}${d.type === 'ix' ? `\nFacilities: ${d.fac_count}` : `\nIXPs: ${d.ix_count}`}`);
+                    .on('start', (event, d) => {
+                        if (!event.active) simulation.alphaTarget(0.3).restart();
+                        d.fx = d.x; d.fy = d.y;
+                    })
+                    .on('drag', (event, d) => { d.fx = event.x; d.fy = event.y; })
+                    .on('end', (event, d) => {
+                        if (!event.active) simulation.alphaTarget(0);
+                        d.fx = null; d.fy = null;
+                    }))
+                .append('title')
+                .text(d => `${d.type.toUpperCase()}: ${d.name}\n${d.city}, ${d.country}\nNetworks: ${d.net_count}`);
 
             simulation.on('tick', () => {
                 link
-                    .attr('x1', d => Math.max(10, Math.min(width - 10, d.source.x)))
-                    .attr('y1', d => Math.max(10, Math.min(height - 10, d.source.y)))
-                    .attr('x2', d => Math.max(10, Math.min(width - 10, d.target.x)))
-                    .attr('y2', d => Math.max(10, Math.min(height - 10, d.target.y)));
-
+                    .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
                 node
-                    .attr('cx', d => Math.max(10, Math.min(width - 10, d.x)))
-                    .attr('cy', d => Math.max(10, Math.min(height - 10, d.y)));
+                    .attr('cx', d => d.x).attr('cy', d => d.y);
             });
-
-            // Click outside to close stats
-            svg.on('click', closeStatsPanel);
         }
 
-        // Improved IP prefix handling with corrected field names (ipaddr4/ipaddr6) and fallback to sample connected networks' prefixes
-        async function showStats(d) {
-            const statsDiv = document.getElementById('stats');
-            const loadingText = d.type === 'ix' ? 
-                '<i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Loading detailed stats...' :
-                '<i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Loading facility details...';
-            statsDiv.innerHTML = `<p style="text-align: center;">${loadingText}</p>`;
-            const endpoint = d.type === 'ix' ? `/ix/${d.ix_id}` : `/fac/${d.fac_id}`;
-            const detailUrl = `${baseUrl}${endpoint}?depth=2`;
-            const iconClass = d.type === 'ix' ? 'fa-map-marker-alt' : 'fa-building';
-            const iconColor = d.type === 'ix' ? 'var(--secondary-color)' : 'var(--accent-color)';
-            try {
-                const response = await fetchWithProxy(detailUrl); // Autocorrects auth if needed
-                const data = await response.json();
-                const obj = data.data?.[0] || d;
-                let html = `
-                    <h3 id="stats-title"><i class="fas ${iconClass}" style="color: ${iconColor}; margin-right: 0.5rem;"></i>${obj.name}</h3>
-                    <p><i class="fas fa-location-dot" style="color: var(--accent-color); width: 16px;"></i><strong>Location:</strong> ${obj.full_address || obj.address1 || `${obj.city || 'N/A'}, ${obj.country || 'N/A'}`}</p>
-                `;
-                if (d.type === 'ix') {
-                    html += `
-                        <p><i class="fas fa-sitemap" style="color: var(--secondary-color); width: 16px;"></i><strong>Peering Networks:</strong> ${obj.net_count || d.net_count}</p>
-                        <p><i class="fas fa-building" style="color: var(--accent-color); width: 16px;"></i><strong>Facilities:</strong> ${obj.fac_count || d.fac_count}</p>
-                    `;
-                    // Fetch and handle IP prefixes with fallback
-                    let ipHtml = '';
-                    try {
-                        const netixEndpoint = `/ix/${d.ix_id}/netixlan?depth=1`;
-                        const netixUrl = `${baseUrl}${netixEndpoint}`;
-                        const netixResponse = await fetchWithProxy(netixUrl);
-                        const netixData = await netixResponse.json();
-                        const netixLans = netixData.data || [];
-                        const ipv4Prefixes = [...new Set(netixLans.filter(lan => lan.ipaddr4).map(lan => lan.ipaddr4))];
-                        const ipv6Prefixes = [...new Set(netixLans.filter(lan => lan.ipaddr6).map(lan => lan.ipaddr6))];
-                        if (ipv4Prefixes.length > 0) {
-                            ipHtml += `<p><i class="fas fa-globe-americas" style="color: var(--secondary-color); width: 16px;"></i><strong>IPv4 LAN Prefixes:</strong> ${ipv4Prefixes.join(', ')}</p>`;
-                        }
-                        if (ipv6Prefixes.length > 0) {
-                            ipHtml += `<p><i class="fas fa-globe" style="color: var(--secondary-color); width: 16px;"></i><strong>IPv6 LAN Prefixes:</strong> ${ipv6Prefixes.join(', ')}</p>`;
-                        }
-                    } catch (ipError) {
-                        console.error('Error fetching IX LAN prefixes:', ipError);
-                    }
-                    // Fallback to sample connected networks' prefixes if no LAN prefixes
-                    if (!ipHtml) {
-                        try {
-                            const netEndpoint = `/ix/${d.ix_id}/net?depth=2&page_size=3`;
-                            const netUrl = `${baseUrl}${netEndpoint}`;
-                            const netResponse = await fetchWithProxy(netUrl);
-                            const netData = await netResponse.json();
-                            const nets = netData.data || [];
-                            let sampleIpv4 = [];
-                            let sampleIpv6 = [];
-                            for (const net of nets) {
-                                const prefixes4 = net.info?.prefixes4 || [];
-                                const prefixes6 = net.info?.prefixes6 || [];
-                                const netV4 = prefixes4.slice(0, 2);
-                                const netV6 = prefixes6.slice(0, 2);
-                                sampleIpv4.push(...netV4);
-                                sampleIpv6.push(...netV6);
-                                if (sampleIpv4.length >= 5 || sampleIpv6.length >= 5) break;
-                            }
-                            sampleIpv4 = [...new Set(sampleIpv4)].slice(0, 5);
-                            sampleIpv6 = [...new Set(sampleIpv6)].slice(0, 5);
-                            if (sampleIpv4.length > 0) {
-                                ipHtml += `<p><i class="fas fa-globe-americas" style="color: var(--secondary-color); width: 16px;"></i><strong>Sample IPv4 Prefixes (from connected networks):</strong> ${sampleIpv4.join(', ')}</p>`;
-                            }
-                            if (sampleIpv6.length > 0) {
-                                ipHtml += `<p><i class="fas fa-globe" style="color: var(--secondary-color); width: 16px;"></i><strong>Sample IPv6 Prefixes (from connected networks):</strong> ${sampleIpv6.join(', ')}</p>`;
-                            }
-                        } catch (fallbackError) {
-                            console.error('Error fetching sample network prefixes:', fallbackError);
-                        }
-                    }
-                    // If still no prefixes, show unavailable message
-                    if (!ipHtml) {
-                        ipHtml = `<p style="color: var(--text-muted); font-size: 0.875rem;"><i class="fas fa-info-circle" style="margin-right: 0.25rem;"></i>IP prefixes unavailable at this time.</p>`;
-                    }
-                    html += ipHtml;
-                } else {
-                    html += `
-                        <p><i class="fas fa-sitemap" style="color: var(--secondary-color); width: 16px;"></i><strong>Connected Networks:</strong> ${obj.net_count || d.net_count}</p>
-                        <p><i class="fas fa-network-wired" style="color: var(--accent-color); width: 16px;"></i><strong>Connected IXPs:</strong> ${obj.ix_count || d.ix_count}</p>
-                    `;
-                }
-                if (obj.url_stats) {
-                    html += `<p><i class="fas fa-chart-bar" style="color: var(--primary-color); width: 16px;"></i><a href="${obj.url_stats}" target="_blank" rel="noopener">View Detailed Statistics</a></p>`;
-                }
-                html += `<p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 1rem;"><i class="fas fa-clock" style="margin-right: 0.25rem;"></i>Last updated: ${obj.updated || 'N/A'}</p>`;
-                statsDiv.innerHTML = html;
-            } catch (error) {
-                console.error('Error fetching stats:', error);
-                let html = `
-                    <p style="color: #ef4444; font-style: italic; margin-bottom: 1rem;"><i class="fas fa-exclamation-triangle" style="margin-right: 0.5rem;"></i>Error loading detailed statistics. Using available data.</p>
-                    <h3 id="stats-title"><i class="fas ${iconClass}" style="color: ${iconColor}; margin-right: 0.5rem;"></i>${d.name}</h3>
-                    <p><i class="fas fa-location-dot" style="color: var(--accent-color); width: 16px;"></i><strong>Location:</strong> ${d.city}, ${d.country}</p>
-                `;
-                if (d.type === 'ix') {
-                    html += `
-                        <p><i class="fas fa-sitemap" style="color: var(--secondary-color); width: 16px;"></i><strong>Peering Networks:</strong> ${d.net_count}</p>
-                        <p><i class="fas fa-building" style="color: var(--accent-color); width: 16px;"></i><strong>Facilities:</strong> ${d.fac_count}</p>
-                    `;
-                } else {
-                    html += `
-                        <p><i class="fas fa-sitemap" style="color: var(--secondary-color); width: 16px;"></i><strong>Connected Networks:</strong> ${d.net_count}</p>
-                        <p><i class="fas fa-network-wired" style="color: var(--accent-color); width: 16px;"></i><strong>Connected IXPs:</strong> ${d.ix_count}</p>
-                    `;
-                }
-                html += `<p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 1rem;"><i class="fas fa-info-circle" style="margin-right: 0.25rem;"></i>Cached data (may be incomplete).</p>`;
-                statsDiv.innerHTML = html;
-            }
-        }
-
-        // Drag functions
-        function dragstarted(event, d) {
-            if (!event.active) currentSimulation.alphaTarget(0.3).restart();
-            d.fx = d.x;
-            d.fy = d.y;
-        }
-
-        function dragged(event, d) {
-            d.fx = event.x;
-            d.fy = event.y;
-        }
-
-        function dragended(event, d) {
-            if (!event.active) currentSimulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
-        }
-
-        // Event listeners
         document.addEventListener('DOMContentLoaded', () => {
             const searchInput = document.getElementById('search-input');
-            const resetButton = document.getElementById('reset-search');
-            const nextBatchBtn = document.getElementById('next-batch-btn');
-            const resetBatchBtn = document.getElementById('reset-batch-btn');
-            const retryBtn = document.getElementById('retry-btn');
+            searchInput.addEventListener('input', (e) => updateGraph(e.target.value));
 
-            searchInput.addEventListener('input', function(e) {
-                const query = e.target.value;
-                updateGraph(query);
-                resetButton.style.display = query ? 'block' : 'none';
-            });
-
-            resetButton.addEventListener('click', function() {
-                searchInput.value = '';
-                updateGraph('');
-                resetButton.style.display = 'none';
-                searchInput.focus();
-                // Show pagination again on reset
-                document.getElementById('pagination-controls').style.display = 'flex';
-            });
-
-            nextBatchBtn.addEventListener('click', nextBatch);
-            resetBatchBtn.addEventListener('click', resetBatch);
-            retryBtn.addEventListener('click', retryLoad);
-
-            // Debounced resize
-            let resizeTimeout;
             window.addEventListener('resize', () => {
-                clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(() => {
-                    if (currentSimulation) {
-                        const container = document.getElementById('graph-container');
-                        const newWidth = container.clientWidth;
-                        const newHeight = container.clientHeight;
-                        d3.select('#graph').attr('width', newWidth).attr('height', newHeight);
-                        currentSimulation.force('center', d3.forceCenter(newWidth / 2, newHeight / 2));
-                        currentSimulation.alpha(0.1).restart();
-                    }
-                }, 250);
-            });
-
-            // Close panel on escape
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    closeStatsPanel();
+                if (currentSimulation) {
+                    const width = document.getElementById('graph-container').clientWidth;
+                    const height = document.getElementById('graph-container').clientHeight;
+                    d3.select('#graph').attr('width', width).attr('height', height);
+                    currentSimulation.force('center', d3.forceCenter(width / 2, height / 2)).alpha(0.1).restart();
                 }
             });
 
-            // Initial load
             loadData();
         });
     </script>

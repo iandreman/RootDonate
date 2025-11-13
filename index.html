@@ -250,7 +250,6 @@
         let allIxData = [];
         let currentSimulation = null;
         const PAGE_SIZE = 40;
-        const MAX_IXS = 200;
         const THROTTLE_MS = 2000;
 
         function showLoading(show = true) {
@@ -279,12 +278,12 @@
                 let loaded = 0;
                 let page = 1;
 
-                while (loaded < MAX_IXS) {
+                while (loaded) {
                     const params = [`depth=2`, `page=${page}`, `page_size=${PAGE_SIZE}`];
                     const url = `${baseUrl}/ix?${params.join('&')}`;
                     const data = await fetchData(url);
                     const newData = data.data || [];
-                    allIxData = allIxData.concat(newData.slice(0, MAX_IXS - loaded));
+                    allIxData = allIxData.concat(newData.slice(0, loaded));
                     loaded += newData.length;
                     if (newData.length < PAGE_SIZE) break;
                     page++;

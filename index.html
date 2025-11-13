@@ -275,17 +275,16 @@
             showLoading(true);
             try {
                 allIxData = [];
-                let loaded = 0;
                 let page = 1;
+                let hasMore = true;
 
-                while (loaded) {
+                while (hasMore) {
                     const params = [`depth=2`, `page=${page}`, `page_size=${PAGE_SIZE}`];
                     const url = `${baseUrl}/ix?${params.join('&')}`;
                     const data = await fetchData(url);
                     const newData = data.data || [];
-                    allIxData = allIxData.concat(newData.slice(0, loaded));
-                    loaded += newData.length;
-                    if (newData.length < PAGE_SIZE) break;
+                    allIxData = allIxData.concat(newData);
+                    hasMore = newData.length === PAGE_SIZE;
                     page++;
                 }
 

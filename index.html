@@ -190,6 +190,21 @@
             stroke-width: 1px;
         }
 
+        .node-label {
+            fill: var(--text-color);
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-anchor: middle;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .node.ix:hover + .node-label,
+        .node.fac:hover + .node-label {
+            opacity: 1;
+        }
+
         .error-text {
             fill: var(--text-color);
             font-size: 1.1rem;
@@ -220,6 +235,10 @@
 
             main {
                 padding: 1rem;
+            }
+
+            .node-label {
+                font-size: 0.7rem;
             }
         }
     </style>
@@ -427,6 +446,16 @@
                         d.fy = null;
                     }));
 
+            // Add node labels for statistics (visible on hover for larger nodes)
+            const labelGroup = svg.append('g')
+                .attr('class', 'labels')
+                .selectAll('text')
+                .data(nodes.filter(d => d.net_count > 10)) // Show labels only for nodes with significant stats
+                .enter().append('text')
+                .attr('class', 'node-label')
+                .text(d => `${d.net_count}`)
+                .attr('dy', d => -Math.max(5, 5 + Math.sqrt(d.net_count || 1) / 4) - 4);
+
             nodeGroup.append('title')
                 .text(d => `${d.type.toUpperCase()}: ${d.name}\nLocation: ${d.city}, ${d.country}\nNetworks: ${d.net_count}${d.type === 'ix' ? `\nFacilities: ${d.fac_count}` : `\nIXPs: ${d.ix_count}`}`);
 
@@ -440,6 +469,10 @@
                 nodeGroup
                     .attr('cx', d => Math.max(10, Math.min(width - 10, d.x)))
                     .attr('cy', d => Math.max(10, Math.min(height - 10, d.y)));
+
+                labelGroup
+                    .attr('x', d => Math.max(10, Math.min(width - 10, d.x)))
+                    .attr('y', d => Math.max(10, Math.min(height - 10, d.y)));
             });
         }
 
@@ -480,3 +513,4 @@
     </script>
 </body>
 </html>
+```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

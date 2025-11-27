@@ -1,241 +1,374 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RootDonate - Real Global Internet Nodes Map (2025)</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RootDonate • Global Internet Infrastructure Map 2025</title>
+
+  <!-- D3.js v7 -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
   <style>
     :root {
-      --primary: #1e3a8a;
-      --secondary: #3b82f6;
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
       --accent: #06b6d4;
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --text: #1e293b;
-      --muted: #64748b;
-      --border: #e2e8f0;
+      --border: #334155;
+      --hover: #60a5fa;
     }
-    body { margin:0; font-family:Inter,system-ui,sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; min-height:100vh; }
-    header { background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; padding:2rem 1rem; text-align:center; }
-    header h1 { margin:0; font-size:2.5rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; }
-    main { flex:1; padding:2rem 1rem; max-width:1400px; margin:auto; width:100%; }
-    #search-container { max-width:600px; margin:0 auto 2rem; position:relative; }
-    #search-input { width:100%; padding:1rem 1rem 1rem 3rem; font-size:1rem; border:2px solid var(--border); border-radius:0.5rem; background:var(--card); }
-    #search-input:focus { outline:none; border-color:var(--secondary); }
-    .search-icon { position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--muted); }
-    #reset-search { position:absolute; right:1rem; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1.2rem; color:var(--muted); display:none; }
-    #graph-container { position:relative; width:100%; height:75vh; border:1px solid var(--border); border-radius:0.5rem; background:var(--card); overflow:hidden; }
-    .node { cursor:pointer; stroke:#fff; stroke-width:2px; transition:all .2s; }
-    .node.ix { fill:var(--secondary); }
-    .node.fac { fill:var(--accent); }
-    .node:hover { stroke:var(--secondary); stroke-width:6px; }
-    .link { stroke:var(--border); stroke-opacity:0.4; stroke-width:1.5px; }
-    .label { font-size:11px; font-weight:600; text-anchor:middle; pointer-events:none; opacity:0; transition:opacity .3s; fill:var(--text); }
-    .node:hover + .label, .label:hover { opacity:1; }
-    .loading-overlay { position:absolute; inset:0; background:var(--card); opacity:0.95; display:flex; align-items:center; justify-content:center; z-index:10; }
-    .spinner { border:5px solid var(--border); border-top:5px solid var(--secondary); border-radius:50%; width:60px; height:60px; animation:s 1s linear infinite; }
-    @keyframes s { to { transform:rotate(360deg); } }
-    footer { background:var(--primary); color:white; text-align:center; padding:1.5rem; font-size:0.9rem; }
-    @media (max-width:768px) { #graph-container { height:60vh; } header h1 { font-size:2rem; } }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.6;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1e3a8a, #1e40af);
+      color: white;
+      padding: 2.5rem 1rem;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    header p {
+      margin: 0.5rem 0 0;
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    main {
+      flex: 1;
+      padding: 2rem 1rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    #controls {
+      max-width: 600px;
+      margin: 0 auto 2rem;
+      position: relative;
+    }
+
+    #search {
+      width: 100%;
+      padding: 1rem 1rem 1rem 3rem;
+      font-size: 1.1rem;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: var(--card);
+      color: var(--text);
+      transition: all 0.3s ease;
+    }
+
+    #search:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    #clear-search {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.3rem;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    #clear-search.visible { opacity: 1; }
+
+    #graph-container {
+      position: relative;
+      width: 100%;
+      height: 75vh;
+      min-height: 600px;
+      background: var(--card);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    svg { width: 100%; height: 100%; }
+
+    .link {
+      stroke: #475569;
+      stroke-opacity: 0.4;
+      stroke-width: 1.8px;
+      transition: stroke-opacity 0.3s;
+    }
+
+    .node {
+      cursor: pointer;
+      stroke: #fff;
+      stroke-width: 2.5px;
+      transition: all 0.3s ease;
+    }
+
+    .node.ix { fill: var(--primary); }
+    .node.fac { fill: var(--accent); }
+
+    .node:hover {
+      stroke: var(--hover) !important;
+      stroke-width: 6px !important;
+      filter: brightness(1.3);
+    }
+
+    .label {
+      font-size: 11px;
+      font-weight: 600;
+      text-anchor: middle;
+      fill: white;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+
+    .legend {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(30, 41, 59, 0.9);
+      padding: 1rem;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .legend-color {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      background: #0f172a;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 768px) {
+      header h1 { font-size: 2rem; }
+      #graph-container { height: 60vh; }
+      .legend { position: static; margin: 1rem auto; width: fit-content; }
+    }
   </style>
 </head>
 <body>
+
   <header>
-    <h1><i class="fas fa-network-wired"></i> RootDonate – Real Internet Map 2025</h1>
+    <h1>RootDonate</h1>
+    <p>Global Internet Exchange Points & Carrier Hotels • 2025</p>
   </header>
 
   <main>
-    <div id="search-container">
+    <div id="controls">
       <i class="fas fa-search search-icon"></i>
-      <input type="text" id="search-input" placeholder="Search by name, city, country (e.g. Frankfurt, Equinix, AMS-IX...)">
-      <button id="reset-search" title="Clear"><i class="fas fa-times"></i></button>
+      <input type="text" id="search" placeholder="Search city, country, IXP or facility (e.g. Frankfurt, Ashburn, Equinix...)"/>
+      <button id="clear-search" aria-label="Clear search">×</button>
     </div>
 
     <div id="graph-container">
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-color" style="background:#3b82f6"></div>
+          <span>Internet Exchange (IXP)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background:#06b6d4"></div>
+          <span>Carrier Hotel / Facility</span>
+        </div>
+      </div>
       <svg id="graph"></svg>
-      <div class="loading-overlay" id="loading"><div class="spinner"></div></div>
     </div>
   </main>
 
   <footer>
-    <p>© 2025 RootDonate • 100+ real IXPs & facilities • 200+ real peering links • 100% offline • Data sourced from PeeringDB & global reports</p>
+    <p>© 2025 RootDonate • Real-world peering data • 100% offline • Built with D3.js</p>
   </footer>
 
   <script>
-    // ================================================================
-    // REAL DATA – Major global IXPs + carrier hotels (2025, sourced from PeeringDB, Wikipedia, Internet Society Pulse)
-    // ================================================================
-    const data = {
-      "nodes": [
-        {"id": "AMS-IX", "name": "AMS-IX", "city": "Amsterdam", "country": "Netherlands", "type": "ix"},
-        {"id": "DE-CIX Frankfurt", "name": "DE-CIX Frankfurt", "city": "Frankfurt", "country": "Germany", "type": "ix"},
-        {"id": "LINX LON1", "name": "LINX LON1", "city": "London", "country": "UK", "type": "ix"},
-        {"id": "France-IX Paris", "name": "France-IX Paris", "city": "Paris", "country": "France", "type": "ix"},
-        {"id": "Equinix Ashburn", "name": "Equinix Ashburn", "city": "Ashburn", "country": "USA", "type": "fac"},
-        {"id": "Equinix Frankfurt", "name": "Equinix Frankfurt", "city": "Frankfurt", "country": "Germany", "type": "fac"},
-        {"id": "Equinix Amsterdam", "name": "Equinix Amsterdam", "city": "Amsterdam", "country": "Netherlands", "type": "fac"},
-        {"id": "Equinix London Slough", "name": "Equinix LD8 Slough", "city": "London", "country": "UK", "type": "fac"},
-        {"id": "Digital Realty ATL1", "name": "Digital Realty Atlanta", "city": "Atlanta", "country": "USA", "type": "fac"},
-        {"id": "CoreSite VA3", "name": "CoreSite Any2 Ashburn", "city": "Ashburn", "country": "USA", "type": "ix"},
-        {"id": "NYIIX", "name": "NYIIX New York", "city": "New York", "country": "USA", "type": "ix"},
-        {"id": "Equinix Singapore", "name": "Equinix Singapore", "city": "Singapore", "country": "Singapore", "type": "fac"},
-        {"id": "SGIX", "name": "SGIX", "city": "Singapore", "country": "Singapore", "type": "ix"},
-        {"id": "JPIX", "name": "JPIX Tokyo", "city": "Tokyo", "country": "Japan", "type": "ix"},
-        {"id": "Equinix Tokyo", "name": "Equinix Tokyo", "city": "Tokyo", "country": "Japan", "type": "fac"},
-        {"id": "BBIX Tokyo", "name": "BBIX Tokyo", "city": "Tokyo", "country": "Japan", "type": "ix"},
-        {"id": "HKIX", "name": "HKIX", "city": "Hong Kong", "country": "Hong Kong", "type": "ix"},
-        {"id": "Equinix Hong Kong", "name": "Equinix Hong Kong", "city": "Hong Kong", "country": "Hong Kong", "type": "fac"},
-        {"id": "IX Australia Sydney", "name": "IX Australia Sydney", "city": "Sydney", "country": "Australia", "type": "ix"},
-        {"id": "Equinix Sydney", "name": "Equinix Sydney", "city": "Sydney", "country": "Australia", "type": "fac"},
-        {"id": "DE-CIX Madrid", "name": "DE-CIX Madrid", "city": "Madrid", "country": "Spain", "type": "ix"},
-        {"id": "ESPANIX", "name": "ESPANIX Madrid", "city": "Madrid", "country": "Spain", "type": "ix"},
-        {"id": "NIX.CZ", "name": "NIX.CZ Prague", "city": "Prague", "country": "Czechia", "type": "ix"},
-        {"id": "VIX", "name": "VIX Vienna", "city": "Vienna", "country": "Austria", "type": "ix"},
-        {"id": "MIX Milan", "name": "MIX Milan", "city": "Milan", "country": "Italy", "type": "ix"},
-        {"id": "NL-ix", "name": "NL-ix Amsterdam", "city": "Amsterdam", "country": "Netherlands", "type": "ix"},
-        {"id": "Netnod Stockholm", "name": "Netnod Stockholm", "city": "Stockholm", "country": "Sweden", "type": "ix"},
-        {"id": "IX.br Sao Paulo", "name": "IX.br Sao Paulo", "city": "Sao Paulo", "country": "Brazil", "type": "ix"},
-        {"id": "FL-IX Miami", "name": "FL-IX Miami", "city": "Miami", "country": "USA", "type": "ix"},
-        {"id": "Equinix Miami", "name": "Equinix Miami", "city": "Miami", "country": "USA", "type": "fac"},
-        {"id": "TorIX Toronto", "name": "TorIX Toronto", "city": "Toronto", "country": "Canada", "type": "ix"},
-        {"id": "Equinix Chicago", "name": "Equinix Chicago", "city": "Chicago", "country": "USA", "type": "fac"},
-        {"id": "SeattleIX", "name": "SeattleIX", "city": "Seattle", "country": "USA", "type": "ix"},
-        {"id": "Equinix Seattle", "name": "Equinix Seattle", "city": "Seattle", "country": "USA", "type": "fac"},
-        {"id": "DE-CIX New York", "name": "DE-CIX New York", "city": "New York", "country": "USA", "type": "ix"},
-        {"id": "DE-CIX Dallas", "name": "DE-CIX Dallas", "city": "Dallas", "country": "USA", "type": "ix"},
-        {"id": "CoreSite LA1", "name": "CoreSite One Wilshire LA", "city": "Los Angeles", "country": "USA", "type": "fac"},
-        {"id": "KleyReX Frankfurt", "name": "KleyReX Frankfurt", "city": "Frankfurt", "country": "Germany", "type": "ix"},
-        {"id": "BCIX Berlin", "name": "BCIX Berlin", "city": "Berlin", "country": "Germany", "type": "ix"},
-        {"id": "ECIX Frankfurt", "name": "ECIX Frankfurt", "city": "Frankfurt", "country": "Germany", "type": "ix"},
-        {"id": "LONAP London", "name": "LONAP London", "city": "London", "country": "UK", "type": "ix"},
-        {"id": "Digital Realty Chicago", "name": "Digital Realty 350 E Cermak Chicago", "city": "Chicago", "country": "USA", "type": "fac"},
-        {"id": "Netrality Houston", "name": "Netrality 1102 Grand Houston", "city": "Houston", "country": "USA", "type": "fac"},
-        {"id": "Telehouse LA", "name": "Telehouse America LA", "city": "Los Angeles", "country": "USA", "type": "fac"},
-        {"id": "QTS Chicago", "name": "QTS Chicago", "city": "Chicago", "country": "USA", "type": "fac"},
-        {"id": "Equinix NY4", "name": "Equinix NY4 New York", "city": "New York", "country": "USA", "type": "fac"},
-        {"id": "Digital Realty London", "name": "Digital Realty London", "city": "London", "country": "UK", "type": "fac"},
-        {"id": "CoreSite DE3 Denver", "name": "CoreSite Denver", "city": "Denver", "country": "USA", "type": "fac"},
-        {"id": "IX-Denver", "name": "IX-Denver", "city": "Denver", "country": "USA", "type": "ix"},
-        {"id": "Sthix Stockholm", "name": "Sthix Stockholm", "city": "Stockholm", "country": "Sweden", "type": "ix"},
-        {"id": "MEX-IX Mexico City", "name": "MEX-IX Mexico City", "city": "Mexico City", "country": "Mexico", "type": "ix"},
-        {"id": "NARRA1 Manila", "name": "NARRA1 Manila", "city": "Manila", "country": "Philippines", "type": "fac"},
-        {"id": "EPIX Manila", "name": "EPIX Manila", "city": "Manila", "country": "Philippines", "type": "ix"}
+    // =============================================
+    // Real Internet Infrastructure Data (2025)
+    // =============================================
+    const graphData = {
+      nodes: [
+        {id:"AMS-IX",name:"AMS-IX",city:"Amsterdam",country:"Netherlands",type:"ix"},
+        {id:"DE-CIX-FRA",name:"DE-CIX Frankfurt",city:"Frankfurt",country:"Germany",type:"ix"},
+        {id:"LINX-LON1",name:"LINX LON1",city:"London",country:"UK",type:"ix"},
+        {id:"FranceIX-Paris",name:"France-IX Paris",city:"Paris",country:"France",type:"ix"},
+        {id:"Equinix-ASH",name:"Equinix Ashburn",city:"Ashburn, VA",country:"USA",type:"fac"},
+        {id:"Equinix-FRA",name:"Equinix Frankfurt",city:"Frankfurt",country:"Germany",type:"fac"},
+        {id:"Equinix-AMS",name:"Equinix Amsterdam",city:"Amsterdam",country:"Netherlands",type:"fac"},
+        {id:"Equinix-LD8",name:"Equinix LD8",city:"Slough/London",country:"UK",type:"fac"},
+        {id:"CoreSite-VA3",name:"CoreSite Any2 Ashburn",city:"Ashburn, VA",country:"USA",type:"ix"},
+        {id:"NYIIX-NYC",name:"NYIIX New York",city:"New York",country:"USA",type:"ix"},
+        {id:"Equinix-SG",name:"Equinix Singapore",city:"Singapore",country:"Singapore",type:"fac"},
+        {id:"SGIX",name:"SGIX",city:"Singapore",country:"Singapore",type:"ix"},
+        {id:"JPIX-TYO",name:"JPIX Tokyo",city:"Tokyo",country:"Japan",type:"ix"},
+        {id:"Equinix-TYO",name:"Equinix Tokyo",city:"Tokyo",country:"Japan",type:"fac"},
+        {id:"HKIX",name:"HKIX",city:"Hong Kong",country:"Hong Kong",type:"ix"},
+        {id:"Equinix-HK",name:"Equinix Hong Kong",city:"Hong Kong",country:"Hong Kong",type:"fac"},
+        {id:"IX-AU-SYD",name:"IX Australia Sydney",city:"Sydney",country:"Australia",type:"ix"},
+        {id:"Equinix-SYD",name:"Equinix Sydney",city:"Sydney",country:"Australia",type:"fac"},
+        {id:"IXbr-SP",name:"IX.br São Paulo",city:"São Paulo",country:"Brazil",type:"ix"},
+        {id:"FL-IX",name:"FL-IX Miami",city:"Miami",country:"USA",type:"ix"},
+        {id:"Equinix-MIA",name:"Equinix Miami",city:"Miami",country:"USA",type:"fac"},
+        {id:"TorIX",name:"Toronto IX",city:"Toronto",country:"Canada",type:"ix"},
+        {id:"Equinix-CHI",name:"Equinix Chicago",city:"Chicago",country:"USA",type:"fac"},
+        {id:"SeattleIX",name:"Seattle IX",city:"Seattle",country:"USA",type:"ix"},
+        {id:"DE-CIX-NYC",name:"DE-CIX New York",city:"New York",country:"USA",type:"ix"},
+        {id:"DE-CIX-DAL",name:"DE-CIX Dallas",city:"Dallas",country:"USA",type:"ix"},
+        {id:"CoreSite-LA1",name:"CoreSite One Wilshire",city:"Los Angeles",country:"USA",type:"fac"},
+        {id:"KleyReX",name:"KleyReX Frankfurt",city:"Frankfurt",country:"Germany",type:"ix"},
+        {id:"NL-ix",name:"NL-ix",city:"Amsterdam",country:"Netherlands",type:"ix"},
+        {id:"Netnod",name:"Netnod Stockholm",city:"Stockholm",country:"Sweden",type:"ix"},
+        {id:"LONAP",name:"LONAP London",city:"London",country:"UK",type:"ix"},
+        {id:"MIX-IT",name:"MIX Milan",city:"Milan",country:"Italy",type:"ix"},
+        {id:"VIX",name:"Vienna IX",city:"Vienna",country:"Austria",type:"ix"}
+        // Add more as needed — fully scalable
       ],
-      "links": [
-        // Real peering links based on PeeringDB data: IXPs connect to co-located facilities, facilities host multiple IXPs, transatlantic/EU/Asia links
-        {"source": "AMS-IX", "target": "Equinix Amsterdam"},
-        {"source": "AMS-IX", "target": "DE-CIX Frankfurt"},
-        {"source": "AMS-IX", "target": "LINX LON1"},
-        {"source": "AMS-IX", "target": "NL-ix"},
-        {"source": "DE-CIX Frankfurt", "target": "Equinix Frankfurt"},
-        {"source": "DE-CIX Frankfurt", "target": "KleyReX Frankfurt"},
-        {"source": "DE-CIX Frankfurt", "target": "ECIX Frankfurt"},
-        {"source": "DE-CIX Frankfurt", "target": "LINX LON1"},
-        {"source": "DE-CIX Frankfurt", "target": "France-IX Paris"},
-        {"source": "DE-CIX Frankfurt", "target": "Equinix Ashburn"},
-        {"source": "DE-CIX Frankfurt", "target": "BCIX Berlin"},
-        {"source": "LINX LON1", "target": "Equinix London Slough"},
-        {"source": "LINX LON1", "target": "Digital Realty London"},
-        {"source": "LINX LON1", "target": "LONAP London"},
-        {"source": "LINX LON1", "target": "Equinix Ashburn"},
-        {"source": "France-IX Paris", "target": "Equinix Ashburn"},
-        {"source": "Equinix Ashburn", "target": "CoreSite VA3"},
-        {"source": "Equinix Ashburn", "target": "NYIIX"},
-        {"source": "Equinix Ashburn", "target": "DE-CIX New York"},
-        {"source": "Equinix Ashburn", "target": "FL-IX Miami"},
-        {"source": "CoreSite VA3", "target": "Equinix Ashburn"},
-        {"source": "NYIIX", "target": "Equinix NY4"},
-        {"source": "DE-CIX New York", "target": "Equinix NY4"},
-        {"source": "SGIX", "target": "Equinix Singapore"},
-        {"source": "JPIX", "target": "Equinix Tokyo"},
-        {"source": "BBIX Tokyo", "target": "Equinix Tokyo"},
-        {"source": "HKIX", "target": "Equinix Hong Kong"},
-        {"source": "IX Australia Sydney", "target": "Equinix Sydney"},
-        {"source": "DE-CIX Madrid", "target": "ESPANIX"},
-        {"source": "NIX.CZ", "target": "VIX"},
-        {"source": "MIX Milan", "target": "DE-CIX Frankfurt"},
-        {"source": "Netnod Stockholm", "target": "Sthix Stockholm"},
-        {"source": "IX.br Sao Paulo", "target": "Equinix Miami"},
-        {"source": "FL-IX Miami", "target": "Equinix Miami"},
-        {"source": "TorIX Toronto", "target": "Equinix Ashburn"},
-        {"source": "Equinix Chicago", "target": "Digital Realty Chicago"},
-        {"source": "Equinix Chicago", "target": "QTS Chicago"},
-        {"source": "SeattleIX", "target": "Equinix Seattle"},
-        {"source": "DE-CIX Dallas", "target": "Equinix Ashburn"},
-        {"source": "CoreSite LA1", "target": "Telehouse LA"},
-        {"source": "IX-Denver", "target": "CoreSite DE3 Denver"},
-        {"source": "MEX-IX Mexico City", "target": "Equinix Miami"},
-        {"source": "EPIX Manila", "target": "NARRA1 Manila"},
-        {"source": "Equinix Singapore", "target": "Equinix Tokyo"},
-        {"source": "Equinix Hong Kong", "target": "Equinix Singapore"},
-        {"source": "Equinix Sydney", "target": "Equinix Singapore"},
-        {"source": "Netnod Stockholm", "target": "AMS-IX"},
-        {"source": "VIX", "target": "DE-CIX Frankfurt"},
-        {"source": "LONAP London", "target": "LINX LON1"},
-        {"source": "Digital Realty ATL1", "target": "Equinix Ashburn"},
-        {"source": "Netrality Houston", "target": "DE-CIX Dallas"}
+      links: [
+        {source:"AMS-IX",target:"Equinix-AMS"},
+        {source:"AMS-IX",target:"DE-CIX-FRA"},
+        {source:"AMS-IX",target:"LINX-LON1"},
+        {source:"AMS-IX",target:"NL-ix"},
+        {source:"DE-CIX-FRA",target:"Equinix-FRA"},
+        {source:"DE-CIX-FRA",target:"KleyReX"},
+        {source:"DE-CIX-FRA",target:"LINX-LON1"},
+        {source:"DE-CIX-FRA",target:"Equinix-ASH"},
+        {source:"LINX-LON1",target:"Equinix-LD8"},
+        {source:"LINX-LON1",target:"LONAP"},
+        {source:"LINX-LON1",target:"Equinix-ASH"},
+        {source:"Equinix-ASH",target:"CoreSite-VA3"},
+        {source:"Equinix-ASH",target:"NYIIX-NYC"},
+        {source:"Equinix-ASH",target:"DE-CIX-NYC"},
+        {source:"Equinix-ASH",target:"FL-IX"},
+        {source:"SGIX",target:"Equinix-SG"},
+        {source:"JPIX-TYO",target:"Equinix-TYO"},
+        {source:"HKIX",target:"Equinix-HK"},
+        {source:"IX-AU-SYD",target:"Equinix-SYD"},
+        {source:"Equinix-SG",target:"Equinix-TYO"},
+        {source:"Equinix-SG",target:"Equinix-HK"},
+        {source:"Equinix-HK",target:"Equinix-TYO"},
+        {source:"FL-IX",target:"IXbr-SP"},
+        {source:"TorIX",target:"Equinix-ASH"},
+        {source:"SeattleIX",target:"Equinix-ASH"},
+        {source:"CoreSite-LA1",target:"Equinix-ASH"}
       ]
     };
 
-    // ================================================================
-    // D3 code (enhanced for larger datasets)
-    // ================================================================
+    // =============================================
+    // D3 Graph Setup
+    // =============================================
     const width = 1200;
     const height = 800;
 
     const svg = d3.select("#graph")
-      .attr("viewBox", [0, 0, width, height]);
+      .attr("viewBox", [0, 0, width, height])
+      .attr("preserveAspectRatio", "xMidYMid meet");
 
     const gLinks = svg.append("g").attr("class", "links");
     const gNodes = svg.append("g").attr("class", "nodes");
     const gLabels = svg.append("g").attr("class", "labels");
 
-    const simulation = d3.forceSimulation(data.nodes)
-      .force("link", d3.forceLink(data.links).id(d => d.id).distance(140))
-      .force("charge", d3.forceManyBody().strength(-600))
+    const simulation = d3.forceSimulation(graphData.nodes)
+      .force("link", d3.forceLink(graphData.links).id(d => d.id).distance(180))
+      .force("charge", d3.forceManyBody().strength(-800))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collision", d3.forceCollide().radius(25));
+      .force("collision", d3.forceCollide().radius(30));
 
-    function update(filteredNodes = data.nodes, filteredLinks = data.links) {
+    function render() {
       // Links
       const link = gLinks.selectAll("line")
-        .data(filteredLinks, d => `${d.source.id || d.source}-${d.target.id || d.target}`);
+        .data(graphData.links, d => `${d.source}-${d.target}`);
+
       link.enter().append("line")
-        .attr("class", "link")
-        .merge(link)
-        .attr("stroke-opacity", d => d.hidden ? 0 : 0.4);
+        .attr("class", "link");
+
       link.exit().remove();
 
       // Nodes
       const node = gNodes.selectAll("circle")
-        .data(filteredNodes, d => d.id);
+        .data(graphData.nodes, d => d.id);
+
       const nodeEnter = node.enter().append("circle")
         .attr("class", d => `node ${d.type}`)
-        .attr("r", d => d.type === "ix" ? 14 : 12)
-        .call(d3.drag()
-          .on("start", dragstarted)
-          .on("drag", dragged)
-          .on("end", dragended));
+        .attr("r", d => d.type === "ix" ? 15 : 13)
+        .call(drag(simulation))
+        .on("mouseover", function(event, d) {
+          d3.select(this).raise();
+          d3.select(this.parentNode).select("text.label").style("opacity", 1);
+        })
+        .on("mouseout", function() {
+          d3.select(this.parentNode).select("text.label").style("opacity", 0);
+        });
+
       nodeEnter.append("title")
         .text(d => `${d.name}\n${d.city}, ${d.country}`);
-      node.merge(nodeEnter)
-        .attr("opacity", d => d.hidden ? 0 : 1);
+
+      node.merge(nodeEnter);
       node.exit().remove();
 
       // Labels
       const label = gLabels.selectAll("text")
-        .data(filteredNodes, d => d.id);
+        .data(graphData.nodes, d => d.id);
+
       label.enter().append("text")
         .attr("class", "label")
         .text(d => d.name)
-        .merge(label)
-        .attr("opacity", d => d.hidden ? 0 : 0);
+        .style("opacity", 0);
+
       label.exit().remove();
 
-      simulation.nodes(filteredNodes);
-      simulation.force("link").links(filteredLinks);
+      simulation.nodes(graphData.nodes);
+      simulation.force("link").links(graphData.links);
       simulation.on("tick", ticked);
       simulation.alpha(1).restart();
     }
@@ -253,75 +386,71 @@
 
       gLabels.selectAll("text")
         .attr("x", d => d.x)
-        .attr("y", d => d.y - 20);
+        .attr("y", d => d.y - 25);
     }
 
-    function dragstarted(event, d) {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
-      d.fx = d.x;
-      d.fy = d.y;
-    }
-    function dragged(event, d) {
-      d.fx = event.x;
-      d.fy = event.y;
-    }
-    function dragended(event, d) {
-      if (!event.active) simulation.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
-    }
-
-    // Search & Filter
-    const searchInput = document.getElementById("search-input");
-    const resetBtn = document.getElementById("reset-search");
-
-    function filterGraph(term) {
-      term = term.trim().toLowerCase();
-      if (!term) {
-        data.nodes.forEach(n => n.hidden = false);
-        data.links.forEach(l => l.hidden = false);
-        return update(data.nodes, data.links);
+    function drag(simulation) {
+      function dragstarted(event) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        event.subject.fx = event.subject.x;
+        event.subject.fy = event.subject.y;
       }
-      const matched = new Set();
-      data.nodes.forEach(n => {
-        const match = n.name.toLowerCase().includes(term) ||
-                      n.city.toLowerCase().includes(term) ||
-                      n.country.toLowerCase().includes(term);
-        n.hidden = !match;
-        if (match) matched.add(n.id);
-      });
-      data.links.forEach(l => {
-        const s = typeof l.source === "object" ? l.source.id : l.source;
-        const t = typeof l.target === "object" ? l.target.id : l.target;
-        l.hidden = !(matched.has(s) && matched.has(t));
-      });
-      const filteredNodes = data.nodes.filter(n => !n.hidden);
-      const filteredLinks = data.links.filter(l => !l.hidden);
-      update(filteredNodes, filteredLinks);
+
+      function dragged(event) {
+        event.subject.fx = event.x;
+        event.subject.fy = event.y;
+      }
+
+      function dragended(event) {
+        if (!event.active) simulation.alphaTarget(0);
+        event.subject.fx = null;
+        event.subject.fy = null;
+      }
+
+      return d3.drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended);
     }
 
-    searchInput.addEventListener("input", e => {
-      const term = e.target.value;
-      resetBtn.style.display = term ? "block" : "none";
-      filterGraph(term);
+    // =============================================
+    // Search Functionality
+    // =============================================
+    const searchInput = document.getElementById("search");
+    const clearBtn = document.getElementById("clear-search");
+
+    searchInput.addEventListener("input", () => {
+      const term = searchInput.value.toLowerCase().trim();
+      clearBtn.classList.toggle("visible", term.length > 0);
+
+      graphData.nodes.forEach(node => {
+        const matches = node.name.toLowerCase().includes(term) ||
+                       node.city.toLowerCase().includes(term) ||
+                       node.country.toLowerCase().includes(term);
+        node.hidden = !matches;
+      });
+
+      graphData.links.forEach(link => {
+        const source = typeof link.source === "object" ? link.source : graphData.nodes.find(n => n.id === link.source);
+        const target = typeof link.target === "object" ? link.target : graphData.nodes.find(n => n.id === link.target);
+        link.hidden = source?.hidden || target?.hidden;
+      });
+
+      render();
     });
 
-    resetBtn.addEventListener("click", () => {
+    clearBtn.addEventListener("click", () => {
       searchInput.value = "";
-      resetBtn.style.display = "none";
-      filterGraph("");
+      clearBtn.classList.remove("visible");
+      graphData.nodes.forEach(n => n.hidden = false);
+      graphData.links.forEach(l => l.hidden = false);
+      render();
     });
 
-    // Hover to show labels
-    gNodes.on("mouseenter", function(event, d) {
-      d3.select(this.parentNode).select("text.label").style("opacity", 1);
-    }).on("mouseleave", function() {
-      d3.select(this.parentNode).select("text.label").style("opacity", 0);
-    });
-
-    // Hide loading & start
-    document.getElementById("loading").style.display = "none";
-    update();
+    // =============================================
+    // Init
+    // =============================================
+    render();
   </script>
 </body>
 </html>

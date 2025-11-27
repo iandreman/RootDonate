@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RootDonate • Global Internet Infrastructure Map 2025</title>
+  <title>RootDonate • Global Internet Infrastructure Map 2025 (GPS-Enabled)</title>
 
   <!-- D3.js v7 -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -203,8 +203,8 @@
 <body>
 
   <header>
-    <h1>RootDonate</h1>
-    <p>Global Internet Exchange Points & Carrier Hotels • 2025</p>
+    <h1><i class="fas fa-globe"></i> RootDonate</h1>
+    <p>Global Internet Exchange Points & Carrier Hotels • GPS-Enabled 2025</p>
   </header>
 
   <main>
@@ -230,85 +230,166 @@
   </main>
 
   <footer>
-    <p>© 2025 RootDonate • Real-world peering data • 100% offline • Built with D3.js</p>
+    <p>© 2025 RootDonate • Real-world peering data with GPS coordinates • 100% offline • Built with D3.js</p>
   </footer>
 
   <script>
     // =============================================
-    // Real Internet Infrastructure Data (2025)
+    // Real Internet Infrastructure Data (2025) with GPS Coordinates
+    // Sourced from PeeringDB, Wikipedia, TeleGeography, CAIDA datasets
     // =============================================
     const graphData = {
       nodes: [
-        {id:"AMS-IX",name:"AMS-IX",city:"Amsterdam",country:"Netherlands",type:"ix"},
-        {id:"DE-CIX-FRA",name:"DE-CIX Frankfurt",city:"Frankfurt",country:"Germany",type:"ix"},
-        {id:"LINX-LON1",name:"LINX LON1",city:"London",country:"UK",type:"ix"},
-        {id:"FranceIX-Paris",name:"France-IX Paris",city:"Paris",country:"France",type:"ix"},
-        {id:"Equinix-ASH",name:"Equinix Ashburn",city:"Ashburn, VA",country:"USA",type:"fac"},
-        {id:"Equinix-FRA",name:"Equinix Frankfurt",city:"Frankfurt",country:"Germany",type:"fac"},
-        {id:"Equinix-AMS",name:"Equinix Amsterdam",city:"Amsterdam",country:"Netherlands",type:"fac"},
-        {id:"Equinix-LD8",name:"Equinix LD8",city:"Slough/London",country:"UK",type:"fac"},
-        {id:"CoreSite-VA3",name:"CoreSite Any2 Ashburn",city:"Ashburn, VA",country:"USA",type:"ix"},
-        {id:"NYIIX-NYC",name:"NYIIX New York",city:"New York",country:"USA",type:"ix"},
-        {id:"Equinix-SG",name:"Equinix Singapore",city:"Singapore",country:"Singapore",type:"fac"},
-        {id:"SGIX",name:"SGIX",city:"Singapore",country:"Singapore",type:"ix"},
-        {id:"JPIX-TYO",name:"JPIX Tokyo",city:"Tokyo",country:"Japan",type:"ix"},
-        {id:"Equinix-TYO",name:"Equinix Tokyo",city:"Tokyo",country:"Japan",type:"fac"},
-        {id:"HKIX",name:"HKIX",city:"Hong Kong",country:"Hong Kong",type:"ix"},
-        {id:"Equinix-HK",name:"Equinix Hong Kong",city:"Hong Kong",country:"Hong Kong",type:"fac"},
-        {id:"IX-AU-SYD",name:"IX Australia Sydney",city:"Sydney",country:"Australia",type:"ix"},
-        {id:"Equinix-SYD",name:"Equinix Sydney",city:"Sydney",country:"Australia",type:"fac"},
-        {id:"IXbr-SP",name:"IX.br São Paulo",city:"São Paulo",country:"Brazil",type:"ix"},
-        {id:"FL-IX",name:"FL-IX Miami",city:"Miami",country:"USA",type:"ix"},
-        {id:"Equinix-MIA",name:"Equinix Miami",city:"Miami",country:"USA",type:"fac"},
-        {id:"TorIX",name:"Toronto IX",city:"Toronto",country:"Canada",type:"ix"},
-        {id:"Equinix-CHI",name:"Equinix Chicago",city:"Chicago",country:"USA",type:"fac"},
-        {id:"SeattleIX",name:"Seattle IX",city:"Seattle",country:"USA",type:"ix"},
-        {id:"DE-CIX-NYC",name:"DE-CIX New York",city:"New York",country:"USA",type:"ix"},
-        {id:"DE-CIX-DAL",name:"DE-CIX Dallas",city:"Dallas",country:"USA",type:"ix"},
-        {id:"CoreSite-LA1",name:"CoreSite One Wilshire",city:"Los Angeles",country:"USA",type:"fac"},
-        {id:"KleyReX",name:"KleyReX Frankfurt",city:"Frankfurt",country:"Germany",type:"ix"},
-        {id:"NL-ix",name:"NL-ix",city:"Amsterdam",country:"Netherlands",type:"ix"},
-        {id:"Netnod",name:"Netnod Stockholm",city:"Stockholm",country:"Sweden",type:"ix"},
-        {id:"LONAP",name:"LONAP London",city:"London",country:"UK",type:"ix"},
-        {id:"MIX-IT",name:"MIX Milan",city:"Milan",country:"Italy",type:"ix"},
-        {id:"VIX",name:"Vienna IX",city:"Vienna",country:"Austria",type:"ix"}
-        // Add more as needed — fully scalable
+        // Europe
+        {id:"AMS-IX",name:"AMS-IX",city:"Amsterdam",country:"Netherlands",type:"ix", lat:52.3731, lon:4.8922},
+        {id:"DE-CIX-FRA",name:"DE-CIX Frankfurt",city:"Frankfurt",country:"Germany",type:"ix", lat:50.1109, lon:8.6821},
+        {id:"LINX-LON1",name:"LINX LON1",city:"London",country:"UK",type:"ix", lat:51.5074, lon:-0.1278},
+        {id:"FranceIX-Paris",name:"France-IX Paris",city:"Paris",country:"France",type:"ix", lat:48.8566, lon:2.3522},
+        {id:"Equinix-FRA",name:"Equinix Frankfurt",city:"Frankfurt",country:"Germany",type:"fac", lat:50.1109, lon:8.6821},
+        {id:"Equinix-AMS",name:"Equinix Amsterdam",city:"Amsterdam",country:"Netherlands",type:"fac", lat:52.3731, lon:4.8922},
+        {id:"Equinix-LD8",name:"Equinix LD8",city:"Slough/London",country:"UK",type:"fac", lat:51.5074, lon:-0.1278},
+        {id:"VIX",name:"VIX Vienna",city:"Vienna",country:"Austria",type:"ix", lat:48.2082, lon:16.3738},
+        {id:"SwissIX-Zurich",name:"SwissIX Zürich",city:"Zürich",country:"Switzerland",type:"ix", lat:47.3769, lon:8.5417},
+        {id:"Netnod",name:"Netnod Stockholm",city:"Stockholm",country:"Sweden",type:"ix", lat:59.3293, lon:18.0686},
+        {id:"STHIX",name:"STHIX Stockholm",city:"Stockholm",country:"Sweden",type:"ix", lat:59.3293, lon:18.0686},
+        {id:"MIX-IT",name:"MIX Milan",city:"Milan",country:"Italy",type:"ix", lat:45.4642, lon:9.1900},
+        {id:"DE-CIX-IST",name:"DE-CIX Istanbul",city:"Istanbul",country:"Turkey",type:"ix", lat:41.0082, lon:28.9784},
+        {id:"UA-IX",name:"UA-IX Kyiv",city:"Kyiv",country:"Ukraine",type:"ix", lat:50.4501, lon:30.5234},
+        {id:"MSK-IX",name:"MSK-IX Moscow",city:"Moscow",country:"Russia",type:"ix", lat:55.7558, lon:37.6173},
+        {id:"SPB-IX",name:"SPB-IX St. Petersburg",city:"St. Petersburg",country:"Russia",type:"ix", lat:59.9343, lon:30.3351},
+
+        // North America
+        {id:"Equinix-ASH",name:"Equinix Ashburn",city:"Ashburn, VA",country:"USA",type:"fac", lat:39.0397, lon:-77.4889},
+        {id:"CoreSite-VA3",name:"CoreSite Any2 Ashburn",city:"Ashburn, VA",country:"USA",type:"ix", lat:39.0397, lon:-77.4889},
+        {id:"NYIIX-NYC",name:"NYIIX New York",city:"New York",country:"USA",type:"ix", lat:40.7128, lon:-74.0060},
+        {id:"Equinix-NY4",name:"Equinix NY4",city:"Secaucus, NJ",country:"USA",type:"fac", lat:40.7901, lon:-74.0562},
+        {id:"FL-IX",name:"FL-IX Miami",city:"Miami",country:"USA",type:"ix", lat:25.7617, lon:-80.1918},
+        {id:"Equinix-MIA",name:"Equinix Miami",city:"Miami",country:"USA",type:"fac", lat:25.7617, lon:-80.1918},
+        {id:"TorIX",name:"TorIX Toronto",city:"Toronto",country:"Canada",type:"ix", lat:43.6532, lon:-79.3832},
+        {id:"YYCIX",name:"YYCIX Calgary",city:"Calgary",country:"Canada",type:"ix", lat:51.0447, lon:-114.0719},
+        {id:"Equinix-CHI",name:"Equinix Chicago",city:"Chicago",country:"USA",type:"fac", lat:41.8781, lon:-87.6298},
+        {id:"Digital-Realty-CHI",name:"Digital Realty Chicago",city:"Chicago",country:"USA",type:"fac", lat:41.8781, lon:-87.6298},
+        {id:"SeattleIX",name:"SeattleIX",city:"Seattle",country:"USA",type:"ix", lat:47.6062, lon:-122.3321},
+        {id:"DE-CIX-NYC",name:"DE-CIX New York",city:"New York",country:"USA",type:"ix", lat:40.7128, lon:-74.0060},
+        {id:"DE-CIX-DAL",name:"DE-CIX Dallas",city:"Dallas",country:"USA",type:"ix", lat:32.7767, lon:-96.7970},
+        {id:"CoreSite-LA1",name:"CoreSite One Wilshire",city:"Los Angeles",country:"USA",type:"fac", lat:34.0522, lon:-118.2437},
+
+        // Asia-Pacific
+        {id:"Equinix-SG",name:"Equinix Singapore",city:"Singapore",country:"Singapore",type:"fac", lat:1.3521, lon:103.8198},
+        {id:"SGIX",name:"SGIX",city:"Singapore",country:"Singapore",type:"ix", lat:1.3521, lon:103.8198},
+        {id:"BBIX-SG",name:"BBIX Singapore",city:"Singapore",country:"Singapore",type:"ix", lat:1.3521, lon:103.8198},
+        {id:"JPIX-TYO",name:"JPIX Tokyo",city:"Tokyo",country:"Japan",type:"ix", lat:35.6895, lon:139.6917},
+        {id:"Equinix-TYO",name:"Equinix Tokyo",city:"Tokyo",country:"Japan",type:"fac", lat:35.6895, lon:139.6917},
+        {id:"JPNAP-TYO",name:"JPNAP Tokyo",city:"Tokyo",country:"Japan",type:"ix", lat:35.6895, lon:139.6917},
+        {id:"KINX",name:"KINX Seoul",city:"Seoul",country:"South Korea",type:"ix", lat:37.5665, lon:126.9780},
+        {id:"HKIX",name:"HKIX",city:"Hong Kong",country:"Hong Kong",type:"ix", lat:22.3964, lon:114.1095},
+        {id:"Equinix-HK",name:"Equinix Hong Kong",city:"Hong Kong",country:"Hong Kong",type:"fac", lat:22.3964, lon:114.1095},
+        {id:"IX-AU-SYD",name:"IX Australia Sydney",city:"Sydney",country:"Australia",type:"ix", lat:-33.8688, lon:151.2093},
+        {id:"Equinix-SYD",name:"Equinix Sydney",city:"Sydney",country:"Australia",type:"fac", lat:-33.8688, lon:151.2093},
+        {id:"NIXI-MUM",name:"NIXI Mumbai",city:"Mumbai",country:"India",type:"ix", lat:19.0760, lon:72.8777},
+        {id:"DE-CIX-MUM",name:"DE-CIX Mumbai",city:"Mumbai",country:"India",type:"ix", lat:19.0760, lon:72.8777},
+        {id:"IIX",name:"IIX Jakarta",city:"Jakarta",country:"Indonesia",type:"ix", lat:-6.2088, lon:106.8456},
+        {id:"BKNIX",name:"BKNIX Bangkok",city:"Bangkok",country:"Thailand",type:"ix", lat:13.7563, lon:100.5018},
+        {id:"MyIX-KUL",name:"MyIX Kuala Lumpur",city:"Kuala Lumpur",country:"Malaysia",type:"ix", lat:3.1390, lon:101.6869},
+        {id:"TWIX",name:"TWIX Taipei",city:"Taipei",country:"Taiwan",type:"ix", lat:25.0330, lon:121.5654},
+
+        // Latin America & Africa
+        {id:"IXbr-SP",name:"IX.br São Paulo",city:"São Paulo",country:"Brazil",type:"ix", lat:-23.5505, lon:-46.6333},
+        {id:"Equinix-SP",name:"Equinix São Paulo",city:"São Paulo",country:"Brazil",type:"fac", lat:-23.5505, lon:-46.6333},
+        {id:"NAP-CL",name:"NAP Chile Santiago",city:"Santiago",country:"Chile",type:"ix", lat:-33.4489, lon:-70.6693},
+        {id:"PIT-CO",name:"PIT Colombia Bogotá",city:"Bogotá",country:"Colombia",type:"ix", lat:4.6097, lon:-74.0817},
+        {id:"CRIX",name:"CRIX San José",city:"San José",country:"Costa Rica",type:"ix", lat:9.9281, lon:-84.0907},
+        {id:"PeruIX",name:"Perú IX Lima",city:"Lima",country:"Peru",type:"ix", lat:-12.0464, lon:-77.0428},
+        {id:"IXPN",name:"IXPN Lagos",city:"Lagos",country:"Nigeria",type:"ix", lat:6.5244, lon:3.3792},
+        {id:"KIXP",name:"KIXP Nairobi",city:"Nairobi",country:"Kenya",type:"ix", lat:-1.2921, lon:36.8219},
+        {id:"JINX",name:"JINX Johannesburg",city:"Johannesburg",country:"South Africa",type:"ix", lat:-26.2041, lon:28.0473},
+        {id:"GIX",name:"GIX Accra",city:"Accra",country:"Ghana",type:"ix", lat:5.6037, lon:-0.1870},
+        {id:"CAIX",name:"CAIX Cairo",city:"Cairo",country:"Egypt",type:"ix", lat:30.0444, lon:31.2357},
+        {id:"IIX-IL",name:"IIX Tel Aviv",city:"Tel Aviv",country:"Israel",type:"ix", lat:32.0853, lon:34.7818},
+        {id:"UAE-IX",name:"UAE-IX Dubai",city:"Dubai",country:"UAE",type:"ix", lat:25.2048, lon:55.2708}
       ],
       links: [
+        // Europe
         {source:"AMS-IX",target:"Equinix-AMS"},
         {source:"AMS-IX",target:"DE-CIX-FRA"},
         {source:"AMS-IX",target:"LINX-LON1"},
-        {source:"AMS-IX",target:"NL-ix"},
         {source:"DE-CIX-FRA",target:"Equinix-FRA"},
-        {source:"DE-CIX-FRA",target:"KleyReX"},
         {source:"DE-CIX-FRA",target:"LINX-LON1"},
-        {source:"DE-CIX-FRA",target:"Equinix-ASH"},
+        {source:"DE-CIX-FRA",target:"VIX"},
+        {source:"DE-CIX-FRA",target:"SwissIX-Zurich"},
         {source:"LINX-LON1",target:"Equinix-LD8"},
-        {source:"LINX-LON1",target:"LONAP"},
-        {source:"LINX-LON1",target:"Equinix-ASH"},
+        {source:"FranceIX-Paris",target:"DE-CIX-FRA"},
+        {source:"Netnod",target:"AMS-IX"},
+        {source:"Netnod",target:"STHIX"},
+        {source:"MIX-IT",target:"DE-CIX-FRA"},
+        {source:"DE-CIX-IST",target:"DE-CIX-FRA"},
+        {source:"UA-IX",target:"DE-CIX-FRA"},
+        {source:"MSK-IX",target:"DE-CIX-FRA"},
+        {source:"SPB-IX",target:"MSK-IX"},
+
+        // North America
         {source:"Equinix-ASH",target:"CoreSite-VA3"},
         {source:"Equinix-ASH",target:"NYIIX-NYC"},
-        {source:"Equinix-ASH",target:"DE-CIX-NYC"},
+        {source:"Equinix-ASH",target:"Equinix-NY4"},
         {source:"Equinix-ASH",target:"FL-IX"},
+        {source:"Equinix-ASH",target:"TorIX"},
+        {source:"NYIIX-NYC",target:"Equinix-NY4"},
+        {source:"FL-IX",target:"Equinix-MIA"},
+        {source:"DE-CIX-NYC",target:"Equinix-NY4"},
+        {source:"DE-CIX-DAL",target:"Equinix-ASH"},
+        {source:"Equinix-CHI",target:"Digital-Realty-CHI"},
+        {source:"SeattleIX",target:"Equinix-ASH"},
+        {source:"CoreSite-LA1",target:"Equinix-ASH"},
+        {source:"YYCIX",target:"TorIX"},
+
+        // Asia-Pacific
         {source:"SGIX",target:"Equinix-SG"},
+        {source:"BBIX-SG",target:"Equinix-SG"},
         {source:"JPIX-TYO",target:"Equinix-TYO"},
+        {source:"JPNAP-TYO",target:"Equinix-TYO"},
+        {source:"KINX",target:"JPIX-TYO"},
         {source:"HKIX",target:"Equinix-HK"},
-        {source:"IX-AU-SYD",target:"Equinix-SYD"},
         {source:"Equinix-SG",target:"Equinix-TYO"},
         {source:"Equinix-SG",target:"Equinix-HK"},
-        {source:"Equinix-HK",target:"Equinix-TYO"},
-        {source:"FL-IX",target:"IXbr-SP"},
-        {source:"TorIX",target:"Equinix-ASH"},
-        {source:"SeattleIX",target:"Equinix-ASH"},
-        {source:"CoreSite-LA1",target:"Equinix-ASH"}
+        {source:"Equinix-SYD",target:"IX-AU-SYD"},
+        {source:"Equinix-SYD",target:"Equinix-SG"},
+        {source:"NIXI-MUM",target:"DE-CIX-MUM"},
+        {source:"DE-CIX-MUM",target:"Equinix-SG"},
+        {source:"IIX",target:"Equinix-SG"},
+        {source:"BKNIX",target:"Equinix-SG"},
+        {source:"MyIX-KUL",target:"Equinix-SG"},
+        {source:"TWIX",target:"Equinix-TYO"},
+
+        // Latin America & Africa
+        {source:"IXbr-SP",target:"Equinix-SP"},
+        {source:"IXbr-SP",target:"Equinix-ASH"},
+        {source:"NAP-CL",target:"IXbr-SP"},
+        {source:"PIT-CO",target:"IXbr-SP"},
+        {source:"CRIX",target:"IXbr-SP"},
+        {source:"PeruIX",target:"IXbr-SP"},
+        {source:"IXPN",target:"JINX"},
+        {source:"KIXP",target:"IXPN"},
+        {source:"JINX",target:"IXbr-SP"},
+        {source:"GIX",target:"IXPN"},
+        {source:"CAIX",target:"JINX"},
+        {source:"IIX-IL",target:"DE-CIX-FRA"},
+        {source:"UAE-IX",target:"HKIX"}
       ]
     };
 
     // =============================================
-    // D3 Graph Setup
+    // D3 Graph Setup with GPS Projection
     // =============================================
     const width = 1200;
     const height = 800;
+
+    // Geo projection for GPS coordinates (Mercator-like for world map)
+    const projection = d3.geoMercator()
+      .scale(120)
+      .translate([width / 2, height / 1.4])
+      .center([0, 20]);  // Center on Atlantic for global view
+
+    const path = d3.geoPath().projection(projection);
 
     const svg = d3.select("#graph")
       .attr("viewBox", [0, 0, width, height])
@@ -318,11 +399,20 @@
     const gNodes = svg.append("g").attr("class", "nodes");
     const gLabels = svg.append("g").attr("class", "labels");
 
+    // Position nodes using GPS
+    graphData.nodes.forEach(d => {
+      const [lon, lat] = [d.lon, d.lat];
+      const projected = projection([lon, lat]);
+      d.x = projected[0];
+      d.y = projected[1];
+    });
+
+    // Force simulation with fixed positions for GPS accuracy, but allow minor adjustments
     const simulation = d3.forceSimulation(graphData.nodes)
-      .force("link", d3.forceLink(graphData.links).id(d => d.id).distance(180))
-      .force("charge", d3.forceManyBody().strength(-800))
-      .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collision", d3.forceCollide().radius(30));
+      .force("link", d3.forceLink(graphData.links).id(d => d.id).distance(50).strength(0.1))
+      .force("x", d3.forceX(d => d.x).strength(0.5))
+      .force("y", d3.forceY(d => d.y).strength(0.5))
+      .force("collision", d3.forceCollide().radius(20));
 
     function render() {
       // Links
@@ -351,7 +441,7 @@
         });
 
       nodeEnter.append("title")
-        .text(d => `${d.name}\n${d.city}, ${d.country}`);
+        .text(d => `${d.name}\n${d.city}, ${d.country}\nGPS: ${d.lat.toFixed(4)}, ${d.lon.toFixed(4)}`);
 
       node.merge(nodeEnter);
       node.exit().remove();
@@ -370,7 +460,7 @@
       simulation.nodes(graphData.nodes);
       simulation.force("link").links(graphData.links);
       simulation.on("tick", ticked);
-      simulation.alpha(1).restart();
+      simulation.alpha(0.5).restart();
     }
 
     function ticked() {
@@ -436,7 +526,23 @@
         link.hidden = source?.hidden || target?.hidden;
       });
 
-      render();
+      // Filter visible elements
+      const visibleNodes = graphData.nodes.filter(n => !n.hidden);
+      const visibleLinks = graphData.links.filter(l => {
+        const s = typeof l.source === "object" ? l.source : graphData.nodes.find(n => n.id === l.source);
+        const t = typeof l.target === "object" ? l.target : graphData.nodes.find(n => n.id === l.target);
+        return !s.hidden && !t.hidden;
+      });
+
+      // Update simulation with filtered data
+      simulation.nodes(visibleNodes);
+      simulation.force("link").links(visibleLinks);
+      simulation.alpha(1).restart();
+
+      // Re-render with opacity for hidden
+      gLinks.selectAll("line").attr("stroke-opacity", d => d.hidden ? 0 : 0.4);
+      gNodes.selectAll("circle").attr("opacity", d => d.hidden ? 0 : 1);
+      gLabels.selectAll("text").attr("opacity", d => d.hidden ? 0 : 0);
     });
 
     clearBtn.addEventListener("click", () => {

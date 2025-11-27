@@ -1,67 +1,242 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RootDonate - Internet Nodes Map</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #1e3a8a;
-            --secondary-color: #3b82f6;
-            --accent-color: #06b6d4;
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-color: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --border-radius: 0.5rem;
-        }
-        body { margin:0; font-family:Inter,sans-serif; background:var(--bg-color); color:var(--text-color); display:flex; flex-direction:column; min-height:100vh; line-height:1.6; }
-        header { background:linear-gradient(135deg,var(--primary-color),var(--secondary-color)); color:white; padding:2rem 1rem; text-align:center; box-shadow:var(--shadow-md); }
-        header h1 { margin:0; font-size:2.5rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; }
-        main { flex:1; padding:2rem 1rem; max-width:1400px; margin:0 auto; width:100%; }
-        #search-container { max-width:600px; margin:0 auto 2rem; position:relative; }
-        #search-input { padding:1rem 1rem 1rem 3rem; font-size:1rem; border:2px solid var(--border-color); border-radius:var(--border-radius); width:100%; background:var(--card-bg); }
-        #search-input:focus { outline:none; border-color:var(--secondary-color); }
-        .search-icon { position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--text-muted); }
-        #reset-search { position:absolute; right:1rem; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.2rem; display:none; }
-        #graph-container { width:100%; height:70vh; border:1px solid var(--border-color); border-radius:var(--border-radius); background:var(--card-bg); box-shadow:var(--shadow-md); overflow:hidden; position:relative; }
-        .node { stroke:#fff; stroke-width:2px; transition:stroke-width .2s; }
-        .node.ix { fill:var(--secondary-color); }
-        .node.fac { fill:var(--accent-color); }
-        .node:hover { stroke-width:4px; }
-        .link { stroke:var(--border-color); stroke-opacity:0.4; stroke-width:1.5px; }
-        .node-label { fill:var(--text-color); font-size:0.8rem; font-weight:bold; text-anchor:middle; pointer-events:none; opacity:0; transition:opacity .2s; }
-        .node:hover ~ .node-label, .node-label:hover { opacity:1; }
-        .loading-overlay { position:absolute; inset:0; background:var(--card-bg); display:flex; align-items:center; justify-content:center; z-index:10; }
-        .spinner { border:4px solid var(--border-color); border-top:4px solid var(--secondary-color); border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite; }
-        @keyframes spin { to { transform:rotate(360deg); } }
-        footer { background:var(--primary-color); color:white; text-align:center; padding:1.5rem; }
-        @media (max-width:768px) { header h1{font-size:2rem;} #graph-container{height:60vh;} }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RootDonate - Internet Nodes Map</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --secondary: #3b82f6;
+      --accent: #06b6d4;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+    }
+    body { margin:0; font-family:Inter,system-ui,sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; min-height:100vh; }
+    header { background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; padding:2rem 1rem; text-align:center; }
+    header h1 { margin:0; font-size:2.5rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; }
+    main { flex:1; padding:2rem 1rem; max-width:1400px; margin:auto; width:100%; }
+    #search-container { max-width:600px; margin:0 auto 2rem; position:relative; }
+    #search-input { width:100%; padding:1rem 1rem 1rem 3rem; font-size:1rem; border:2px solid var(--border); border-radius:0.5rem; background:var(--card); }
+    #search-input:focus { outline:none; border-color:var(--secondary); }
+    .search-icon { position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--muted); }
+    #reset-search { position:absolute; right:1rem; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1.2rem; color:var(--muted); display:none; }
+    #graph-container { position:relative; width:100%; height:75vh; border:1px solid var(--border); border-radius:0.5rem; background:var(--card); overflow:hidden; }
+    .node { cursor:pointer; stroke:#fff; stroke-width:2px; transition:all .2s; }
+    .node.ix { fill:var(--secondary); }
+    .node.fac { fill:var(--accent); }
+    .node:hover { stroke-width:5px; }
+    .link { stroke:var(--border); stroke-opacity:0.4; stroke-width:1.5px; }
+    .label { font-size:11px; font-weight:600; text-anchor:middle; pointer-events:none; opacity:0; transition:opacity .2s; fill:var(--text); }
+    .node:hover + .label, .label:hover { opacity:1; }
+    .loading-overlay { position:absolute; inset:0; background:var(--card); opacity:0.95; display:flex; align-items:center; justify-content:center; z-index:10; }
+    .spinner { border:5px solid var(--border); border-top:5px solid var(--secondary); border-radius:50%; width:50px; height:50px; animation:s 1s linear infinite; }
+    @keyframes s { to { transform:rotate(360deg); } }
+    footer { background:var(--primary); color:white; text-align:center; padding:1.5rem; font-size:0.9rem; }
+    @media (max-width:768px) { #graph-container { height:60vh; } header h1 { font-size:2rem; } }
+  </style>
 </head>
 <body>
-    <header>
-        <h1><i class="fas fa-network-wired"></i> RootDonate</h1>
-    </header>
-    <main>
-        <div id="search-container">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" id="search-input" placeholder="Search by name, city, or country...">
-            <button id="reset-search" title="Clear"><i class="fas fa-times"></i></button>
-        </div>
-        <div id="graph-container">
-            <svg id="graph"></svg>
-            <div class="loading-overlay" id="loading"><div class="spinner"></div></div>
-        </div>
-    </main>
-    <footer>
-        <p>© 2025 RootDonate • All Internet Exchange & Facility data embedded • Instant & Offline</p>
-    </footer>
+  <header>
+    <h1><i class="fas fa-network-wired"></i> RootDonate</h1>
+  </header>
 
-    <script>
-        // === ALL DATA EMBEDDED HERE (compressed then decoded) ===
-        const compressedData = "eJyVWFtz2saV/Rr7K5QECoGkJBUmK5KzJNeZx/aX2F+5t8T+Frb5+84jE0qk1K0Zkkv44+6nK5AEy5CEqKX+/D6/PX3qV7/4+Ee3+OGHH77//e9/7t3/3HPPPXfc8b/97W9/+9vf/vb3v/3tb3/729/+9re//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/vb3/7+97+//e1vf/v
+  <main>
+    <div id="search-container">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" id="search-input" placeholder="Search by name, city, country...">
+      <button id="reset-search" title="Clear"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div id="graph-container">
+      <svg id="graph"></svg>
+      <div class="loading-overlay" id="loading"><div class="spinner"></div></div>
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2025 RootDonate • All Internet Exchange & Facility data embedded • Instant & Offline</p>
+  </footer>
+
+  <script>
+    // ------------------------------------------------------------------
+    // REAL embedded data (small sample – replace with your full data)
+    // ------------------------------------------------------------------
+    const rawData = {
+      nodes: [
+        {id: "AMS-IX", name: "AMS-IX", city: "Amsterdam", country: "Netherlands", type: "ix"},
+        {id: "DE-CIX Frankfurt", name: "DE-CIX", city: "Frankfurt", country: "Germany", type: "ix"},
+        {id: "LINX", name: "LINX", city: "London", country: "UK", type: "ix"},
+        {id: "Equinix Ashburn", name: "Equinix IX", city: "Ashburn", country: "USA", type: "fac"},
+        {id: "Digital Realty ATL", name: "Digital Realty", city: "Atlanta", country: "USA", type: "fac"}
+      ],
+      links: [
+        {source: "AMS-IX", target: "DE-CIX Frankfurt"},
+        {source: "AMS-IX", target: "LINX"},
+        {source: "DE-CIX Frankfurt", target: "Equinix Ashburn"},
+        {source: "LINX", target: "Equinix Ashburn"},
+        {source: "Equinix Ashburn", target: "Digital Realty ATL"}
+      ]
+    };
+
+    // If you have real compressed data, you can keep the decompression:
+    /*
+    const compressedData = "your-real-base64-or-gzip-here";
+    async function getData() {
+      const decompressed = await decompress(compressedData); // your own decompress function
+      return JSON.parse(decompressed);
+    }
+    */
+    // For now we just use rawData directly.
+
+    const data = rawData;
+
+    // ------------------------------------------------------------------
+    // D3 Setup
+    // ------------------------------------------------------------------
+    const width = 1200;
+    const height = 800;
+
+    const svg = d3.select("#graph")
+      .attr("viewBox", [0, 0, width, height]);
+
+    const gLinks = svg.append("g").attr("class", "links");
+    const gNodes = svg.append("g").attr("class", "nodes");
+    const gLabels = svg.append("g").attr("class", "labels");
+
+    const simulation = d3.forceSimulation()
+      .force("link", d3.forceLink().id(d => d.id).distance(120))
+      .force("charge", d3.forceManyBody().strength(-400))
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("collision", d3.forceCollide().radius(20));
+
+    // ------------------------------------------------------------------
+    // Render
+    // ------------------------------------------------------------------
+    function update() {
+      const link = gLinks.selectAll("line")
+        .data(data.links, d => `${d.source}-${d.target}`);
+      link.enter().append("line")
+        .attr("class", "link");
+      link.exit().remove();
+
+      const node = gNodes.selectAll("circle")
+        .data(data.nodes, d => d.id);
+      const nodeEnter = node.enter().append("circle")
+        .attr("class", d => `node ${d.type}`)
+        .attr("r", 12)
+        .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
+      nodeEnter.append("title").text(d => `${d.name}\n${d.city}, ${d.country}`);
+      node.merge(nodeEnter);
+      node.exit().remove();
+
+      const label = gLabels.selectAll("text")
+        .data(data.nodes, d => d.id);
+      const labelEnter = label.enter().append("text")
+        .attr("class", "label")
+        .text(d => d.name);
+      label.merge(labelEnter);
+      label.exit().remove();
+
+      simulation.nodes(data.nodes);
+      simulation.force("link").links(data.links);
+      simulation.on("tick", ticked);
+      simulation.alpha(1).restart();
+    }
+
+    function ticked() {
+      gLinks.selectAll("line")
+        .attr("x1", d => d.source.x)
+        .attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x)
+        .attr("y2", d => d.target.y);
+
+      gNodes.selectAll("circle")
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y);
+
+      gLabels.selectAll("text")
+        .attr("x", d => d.x)
+        .attr("y", d => d.y - 18);
+    }
+
+    // Drag handlers
+    function dragstarted(event, d) {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x; d.fy = d.y;
+    }
+    function dragged(event, d) {
+      d.fx = event.x; d.fy = event.y;
+    }
+    function dragended(event, d) {
+      if (!event.active) simulation.alphaTarget(0);
+      d.fx = null; d.fy = null;
+    }
+
+    // ------------------------------------------------------------------
+    // Search functionality
+    // ------------------------------------------------------------------
+    const searchInput = document.getElementById("search-input");
+    const resetBtn = document.getElementById("reset-search");
+
+    function filterGraph(term) {
+      term = term.trim().toLowerCase();
+      const matchedIds = new Set();
+
+      data.nodes.forEach(n => {
+        const match = n.name.toLowerCase().includes(term) ||
+                      n.city.toLowerCase().includes(term) ||
+                      n.country.toLowerCase().includes(term);
+        n.hidden = !match;
+        if (match) matchedIds.add(n.id);
+      });
+
+      data.links.forEach(l => {
+        const s = typeof l.source === "object" ? l.source.id : l.source;
+        const t = typeof l.target === "object" ? l.target.id : l.target;
+        l.hidden = !(matchedIds.has(s) && matchedIds.has(t));
+      });
+
+      // Re-bind with current (possibly filtered) data
+      update();
+    }
+
+    searchInput.addEventListener("input", e => {
+      const term = e.target.value;
+      resetBtn.style.display = term ? "block" : "none";
+      filterGraph(term);
+    });
+
+    resetBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      resetBtn.style.display = "none";
+      data.nodes.forEach(n => n.hidden = false);
+      data.links.forEach(l => l.hidden = false);
+      update();
+    });
+
+    // ------------------------------------------------------------------
+    // Initial load
+    // ------------------------------------------------------------------
+    document.getElementById("loading").style.display = "none";
+    update();
+
+    // Hover to show labels
+    gNodes.selectAll("circle")
+      .on("mouseenter", function() {
+        d3.select(this.parentNode).select("text.label").style("opacity", 1);
+      })
+      .on("mouseleave", function() {
+        d3.select(this.parentNode).select("text.label").style("opacity", 0);
+      });
+  </script>
+</body>
+</html>

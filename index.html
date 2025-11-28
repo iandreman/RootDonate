@@ -143,11 +143,49 @@
   </header>
 
   <main>
-    <div id="controls">
-      <i class="fas fa-search search-icon"></i>
-      <input type="text" id="search" placeholder="Search city, country, IXP... (e.g. Frankfurt, Singapore, Ashburn)"/>
-      <button id="clear-search" aria-label="Clear">×</button>
-    </div>
+    <!-- ==== REPLACE THIS ENTIRE CONTROLS BLOCK ==== -->
+<div id="controls">
+  <i class="fas fa-search search-icon"></i>
+  <input type="text" id="search" placeholder="Search map (offline) or Google (online)"/>
+  <button id="clear-search" aria-label="Clear">×</button>
+  
+  <!-- New Google button (only appears when online) -->
+  <button id="google-search" title="Search selection on Google" style="display:none; position:absolute; right:3rem; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--primary); font-size:1.4rem; cursor:pointer;">
+    <i class="fas fa-external-link-alt"></i>
+  </button>
+</div>
+<!-- ============================================= -->
+
+<!-- Add this tiny script just before the closing </body> tag -->
+<script>
+// Enhanced search: local + Google fallback
+const search = document.getElementById("search");
+const googleBtn = document.getElementById("google-search");
+
+// Show Google button only when online
+if (navigator.onLine) {
+  googleBtn.style.display = "block";
+}
+
+// Press Enter → if online, open Google, else just local filter
+search.addEventListener("keypress", e => {
+  if (e.key === "Enter" && search.value.trim() && navigator.onLine) {
+    const query = search.value.trim();
+    window.open(`https://www.google.com/search?q=${encodeURIComponent("internet exchange " + query + " IXP OR carrier hotel OR datacenter")}`, "_blank");
+    search.value = "";
+    clear.click();
+  } else {
+    filter(); // your existing local filter function
+  }
+});
+
+// Click the Google icon → search current term
+googleBtn.addEventListener("click", () => {
+  if (search.value.trim()) {
+    window.open(`https://www.google.com/search?q=${encodeURIComponent("internet infrastructure " + search.value.trim())}`, "_blank");
+  }
+});
+</script>
 
     <div id="graph-container">
       <div class="zoom-controls">

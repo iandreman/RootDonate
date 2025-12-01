@@ -4,98 +4,51 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RootDonate • The Apple Maps of the Internet</title>
-  <meta name="description" content="The most beautiful real-time map of the global Internet backbone. Pure. Minimal. Perfect. Forever.">
+  <meta name="description" content="The most beautiful real-time map of the global Internet backbone — now with real IPs.">
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
-  
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-polyline-decorator@1.6.0/dist/leaflet.polylineDecorator.min.js"></script>
-  <script src="https://unpkg.com/leaflet-geometryutil"></script>
 
   <style>
-    :root {
-      --primary: #0a84ff;
-      --green: #30d158;
-      --red: #ff453a;
-      --glow: 0 0 20px rgba(10,132,255,0.6);
-    }
+    :root { --primary:#0a84ff; --green:#30d158; --glow:0 0 20px rgba(10,132,255,0.6); }
     *,*::before,*::after { box-sizing:border-box; }
-    body,html { margin:0; padding:0; height:100%; overflow:hidden; background:#000; color:#fff; font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif; }
-    #map { width:100%; height:100%; background:#000; }
+    body,html { margin:0;padding:0;height:100%;overflow:hidden;background:#000;color:#fff;font-family:-apple-system,system-ui,sans-serif; }
+    #map { width:100%;height:100%;background:#000; }
 
-    .header {
-      position:absolute; top:0; left:0; right:0; padding:2.4rem 1.5rem 1.6rem; text-align:center; z-index:1000;
-      background:linear-gradient(to bottom, rgba(0,0,0,0.92), transparent); backdrop-filter:blur(32px);
-      pointer-events:none;
-    }
-    .header h1 {
-      margin:0; font-size:3.2rem; font-weight:900; letter-spacing:-1.2px;
-      background:linear-gradient(90deg, #0a84ff, #30d158);
-      -webkit-background-clip:text; background-clip:text;
-      color:transparent; display:inline-block;
-    }
-    .header p { margin:0.6rem 0 0; font-size:1.35rem; font-weight:600; opacity:0.92; }
+    .header { position:absolute;top:0;left:0;right:0;padding:2.6rem 1.5rem 1.8rem;text-align:center;z-index:1000;
+      background:linear-gradient(to bottom,rgba(0,0,0,0.94),transparent);backdrop-filter:blur(36px);pointer-events:none; }
+    .header h1 { margin:0;font-size:3.4rem;font-weight:900;letter-spacing:-1.4px;
+      background:linear-gradient(90deg,#0a84ff,#30d158);-webkit-background-clip:text;background-clip:text;color:transparent; }
+    .header p { margin:0.7rem 0 0;font-size:1.38rem;font-weight:600;opacity:0.94; }
 
-    .controls {
-      position:absolute; top:140px; left:50%; transform:translateX(-50%); z-index:1000;
-      background:rgba(28,28,30,0.96); backdrop-filter:blur(40px); border-radius:24px;
-      padding:1.1rem 1.4rem; display:flex; gap:1.2rem; align-items:center;
-      box-shadow:0 24px 60px rgba(0,0,0,0.7); border:1px solid rgba(255,255,255,0.09);
-    }
-    #search {
-      padding:1.1rem 1.6rem; width:440px; border:none; border-radius:20px;
-      background:rgba(255,255,255,0.15); color:white; font-size:1.15rem; font-weight:500;
-      transition:all 0.35s cubic-bezier(0.2,0.8,0.2,1);
-    }
-    #search:focus { outline:none; background:rgba(255,255,255,0.24); transform:scale(1.04); box-shadow:var(--glow); }
+    .controls { position:absolute;top:146px;left:50%;transform:translateX(-50%);z-index:1000;
+      background:rgba(28,28,30,0.97);backdrop-filter:blur(44px);border-radius:26px;padding:1.2rem 1.5rem;
+      display:flex;gap:1.3rem;align-items:center;box-shadow:0 28px 70px rgba(0,0,0,0.8);border:1px solid rgba(255,255,255,0.1); }
+    #search { padding:1.2rem 1.8rem;width:460px;border:none;border-radius:22px;background:rgba(255,255,255,0.16);color:white;font-size:1.18rem;font-weight:500;
+      transition:all 0.38s cubic-bezier(0.2,0.8,0.2,1); }
+    #search:focus { outline:none;background:rgba(255,255,255,0.26);transform:scale(1.045);box-shadow:var(--glow); }
 
-    button {
-      background:var(--primary); color:white; border:none; padding:1.1rem 1.8rem;
-      border-radius:20px; cursor:pointer; font-weight:700; font-size:1.05rem;
-      transition:all 0.3s cubic-bezier(0.2,0.8,0.4,1);
-      box-shadow:0 8px 20px rgba(10,132,255,0.4);
-    }
-    button:hover { transform:translateY(-3px) scale(1.07); box-shadow:0 16px 32px rgba(10,132,255,0.5); }
-    button:active { transform:translateY(1px); }
+    button { background:var(--primary);color:white;border:none;padding:1.2rem 2rem;border-radius:22px;cursor:pointer;font-weight:700;
+      transition:all 0.32s cubic-bezier(0.2,0.8,0.4,1);box-shadow:0 10px 24px rgba(10,132,255,0.45); }
+    button:hover { transform:translateY(-4px) scale(1.08);box-shadow:0 20px 40px rgba(10,132,255,0.55); }
 
-    .legend {
-      position:absolute; top:140px; right:20px; z-index:1000;
-      background:rgba(28,28,30,0.96); backdrop-filter:blur(32px); border-radius:20px;
-      padding:1.4rem 1.6rem; font-size:0.98rem; min-width:280px;
-      border:1px solid rgba(255,255,255,0.08); box-shadow:0 20px 50px rgba(0,0,0,0.6);
-    }
-    .legend-item {
-      display:flex; align-items:center; gap:16px; margin:14px 0; font-weight:600;
-    }
-    .legend-color {
-      width:22px; height:22px; border-radius:50%; box-shadow:0 4px 12px rgba(0,0,0,0.5);
-    }
+    .legend { position:absolute;top:146px;right:22px;z-index:1000;background:rgba(28,28,30,0.97);backdrop-filter:blur(36px);
+      border-radius:22px;padding:1.5rem 1.7rem;font-size:1rem;min-width:300px;border:1px solid rgba(255,255,255,0.09);
+      box-shadow:0 24px 60px rgba(0,0,0,0.7); }
+    .legend-item { display:flex;align-items:center;gap:18px;margin:16px 0;font-weight:600; }
+    .legend-color { width:24px;height:24px;border-radius:50%;box-shadow:0 5px 14px rgba(0,0,0,0.5); }
 
-    .status {
-      position:absolute; bottom:24px; left:24px; z-index:1000;
-      background:rgba(0,0,0,0.8); color:#fff; padding:0.9rem 1.4rem; border-radius:16px;
-      font-size:0.98rem; font-weight:700; backdrop-filter:blur(20px);
-      border-left:6px solid var(--green);
-      box-shadow:0 12px 30px rgba(0,0,0,0.5);
-    }
+    .status { position:absolute;bottom:26px;left:26px;z-index:1000;background:rgba(0,0,0,0.85);padding:1rem 1.5rem;border-radius:18px;
+      font-size:1rem;font-weight:700;backdrop-filter:blur(22px);border-left:7px solid var(--green);box-shadow:0 14px 36px rgba(0,0,0,0.6); }
 
-    footer {
-      position:absolute; bottom:0; left:0; right:0; padding:16px;
-      text-align:center; background:rgba(0,0,0,0.88); backdrop-filter:blur(16px);
-      font-size:0.88rem; color:rgba(255,255,255,0.7); z-index:1000;
-      font-weight:500;
-    }
+    footer { position:absolute;bottom:0;left:0;right:0;padding:18px;text-align:center;background:rgba(0,0,0,0.92);
+      backdrop-filter:blur(18px);font-size:0.9rem;color:rgba(255,255,255,0.75);font-weight:500;z-index:1000; }
 
     .pulse { animation:pulse 4s infinite; }
-    @keyframes pulse { 0%,100% { opacity:0.95; transform:scale(1); } 50% { opacity:1; transform:scale(1.25); box-shadow:var(--glow); } }
+    @keyframes pulse { 0%,100% { opacity:0.96;transform:scale(1); } 50% { opacity:1;transform:scale(1.28);box-shadow:var(--glow); } }
 
-    @media (max-width:768px) {
-      .header h1 { font-size:2.6rem; }
-      .controls { flex-direction:column; width:92%; top:120px; padding:1rem; }
-      #search { width:100%; }
-      .legend { top:auto; bottom:100px; left:50%; transform:translateX(-50%); right:auto; width:92%; }
-    }
+    .ip { font-family:Menlo,Monaco,Consolas,monospace;font-size:0.92em;background:rgba(255,255,255,0.1);padding:4px 9px;border-radius:8px;margin-top:8px;display:inline-block; }
   </style>
 </head>
 <body>
@@ -104,42 +57,32 @@
 
   <div class="header">
     <h1>RootDonate</h1>
-    <p>The Apple Maps of the Internet • 2025</p>
+    <p>The Apple Maps of the Internet • Now with Real IPs • 2025</p>
   </div>
 
   <div class="controls">
-    <input type="text" id="search" placeholder="Search IXP, city, ASN, datacenter…" autocomplete="off">
-    <button id="locate"><i class="fa-solid fa-location-crosshairs"></i> Locate Me</button>
+    <input type="text" id="search" placeholder="Search IXP, city, ASN, IP, datacenter…" autocomplete="off">
+    <button id="locate">Locate Me</button>
     <button id="cables">Submarine Cables</button>
   </div>
 
   <div class="legend">
     <div class="legend-item"><div class="legend-color" style="background:#0a84ff"></div> Internet Exchange (IXP)</div>
-    <div class="legend-item"><div class="legend-color" style="background:#32d74b"></div> Carrier Hotel / Datacenter</div>
-    <div class="legend-item"><div class="legend-color" style="background:#30d158"></div> Live Traffic Flow</div>
-    <div class="legend-item"><div class="legend-color" style="background:#ff453a"></div> Outage / Degraded</div>
+    <div class="legend-item"><div class="legend-color" style="background:#32d74b"></div> Carrier Hotel</div>
+    <div class="legend-item"><div class="legend-color" style="background:#30d158"></div> Live Traffic</div>
+    <div class="legend-item"><div class="legend-color" style="background:#ff453a"></div> Outage</div>
   </div>
 
-  <div class="status">Status: <span id="status-text">Live • Real-time Global View</span></div>
-
-  <footer>© 2025 RootDonate • Built with love for the Internet • Forever Free</footer>
+  <div class="status">Status: <span id="status-text">Live • Real IPs • Global Backbone</span></div>
+  <footer>© 2025 RootDonate • The most beautiful Internet map ever made • With love & IPs</footer>
 
   <script>
-    // Map init
     const map = L.map('map', {
-      zoomControl: false,
-      minZoom: 2.3,
-      maxZoom: 11,
-      zoomSnap: 0.5,
-      zoomDelta: 0.75,
-      wheelPxPerZoomLevel: 120,
-      fadeAnimation: true
+      zoomControl: false, minZoom: 2.3, maxZoom: 11, zoomSnap: 0.5, zoomDelta: 0.75, wheelPxPerZoomLevel: 120
     }).setView([20, 0], 2.7);
 
     L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
-      attribution: '',
-      subdomains: 'abcd',
-      maxZoom: 20
+      attribution: '', maxZoom: 20
     }).addTo(map);
 
     L.control.zoom({ position: 'topright' }).addTo(map);
@@ -148,20 +91,19 @@
     const cablesLayer = L.layerGroup();
     let cablesVisible = false;
 
-    // Major nodes
     const nodes = [
-      {name:"DE-CIX Frankfurt",lat:50.1155,lon:8.6842,type:"ix",peak:"15+ Tbps",asn:"6695"},
-      {name:"AMS-IX Amsterdam",lat:52.3740,lon:4.8897,type:"fix",peak:"11+ Tbps",asn:"1200"},
-      {name:"LINX London",lat:51.5155,lon:-0.0922,type:"fix",peak:"7+ Tbps",asn:"5459"},
-      {name:"Equinix Ashburn",lat:39.0437,lon:-77.4874,type:"fac",desc:"Internet Capital of the World"},
-      {name:"IX.br São Paulo",lat:-23.5505,lon:-46.6333,type:"fix",peak:"20+ Tbps"},
-      {name:"FL-IX Miami",lat:25.7617,lon:-80.1918,type:"fix",peak:"3+ Tbps"},
-      {name:"JPIX Tokyo",lat:35.6895,lon:139.6917,type:"fix"},
-      {name:"Equinix Singapore",lat:1.3214,lon:103.8445,type:"fac"},
-      {name:"HKIX Hong Kong",lat:22.3964,lon:114.1095,type:"fix"},
-      {name:"MSK-IX Moscow",lat:55.7558,lon:37.6173,type:"fix"},
-      {name:"NYIIX New York",lat:40.7128,lon:-74.0060,type:"fix"},
-      {name:"BBIX Tokyo",lat:35.6762,lon:139.6503,type:"fix"}
+      {name:"DE-CIX Frankfurt", lat:50.1155, lon:8.6842, type:"fix", peak:"15+ Tbps", ip4:"80.81.192.0", ip6:"2001:7f8::", asn:"6695"},
+      {name:"AMS-IX Amsterdam", lat:52.3740, lon:4.8897, type:"fix", peak:"11+ Tbps", ip4:"195.69.144.0", ip6:"2001:7f8:1::", asn:"1200"},
+      {name:"LINX LON1 London", lat:51.5155, lon:-0.0922, type:"fix", peak:"7+ Tbps", ip4:"195.66.224.0", ip6:"2001:7f8:4::", asn:"5459"},
+      {name:"Equinix Ashburn", lat:39.0437, lon:-77.4874, type:"fac", desc:"Internet Capital", ip4:"206.126.236.0", ip6:"2001:504:1a::"},
+      {name:"IX.br São Paulo PTT", lat:-23.5505, lon:-46.6333, type:"fix", peak:"20+ Tbps", ip4:"187.16.216.0", ip6:"2001:12f8::", asn:"22548"},
+      {name:"FL-IX Miami", lat:25.7617, lon:-80.1918, type:"fix", peak:"4+ Tbps", ip4:"206.41.104.0", ip6:"2001:504:40::"},
+      {name:"JPIX Tokyo", lat:35.6895, lon:139.6917, type:"fix", ip4:"210.171.224.0", ip6:"2001:7fa:7::"},
+      {name:"Equinix Singapore", lat:1.3214, lon:103.8445, type:"fac", ip4:"27.111.228.0", ip6:"2001:de8:7::"},
+      {name:"HKIX Hong Kong", lat:22.3964, lon:114.1095, type:"fix", ip4:"202.12.28.0", ip6:"2001:7fa:0::"},
+      {name:"MSK-IX Moscow", lat:55.7558, lon:37.6173, type:"fix", ip4:"195.208.208.0", ip6:"2001:7f8:20::"},
+      {name:"NYIIX New York", lat:40.7128, lon:-74.0060, type:"fix", ip4:"198.32.160.0", ip6:"2001:504:1::"},
+      {name:"BBIX Tokyo", lat:35.6762, lon:139.6503, type:"fix", ip4:"218.100.8.0", ip6:"2001:de8:c::"}
     ];
 
     const markers = [];
@@ -169,78 +111,64 @@
     nodes.forEach(n => {
       const isIXP = n.type === "fix";
       const color = isIXP ? "#0a84ff" : "#32d74b";
-      const radius = isIXP ? 22 : 20;
+      const radius = isIXP ? 24 : 22;
 
       const m = L.circleMarker([n.lat, n.lon], {
-        radius,
-        fillColor: color,
-        color: "#fff",
-        weight: 5,
-        opacity: 1,
-        fillOpacity: 0.96
+        radius, fillColor: color, color: "#fff", weight: 5, opacity: 1, fillOpacity: 0.96
       }).addTo(ixps);
 
       m.bindPopup(`
-        <div style="font-family:system-ui;padding:4px 0;">
-          <b style="font-size:1.5em;font-weight:900;">${n.name}</b><br>
-          ${n.asn ? `<small style="opacity:0.7">ASN ${n.asn}</small><br>` : ""}
-          ${n.peak ? `<b>Peak Traffic:</b> ${n.peak}<br>` : ""}
-          <i style="opacity:0.85">${n.desc || (isIXP ? "Major Internet Exchange" : "Global Carrier Hotel")}</i>
+        <div style="font-family:system-ui;line-height:1.5;">
+          <b style="font-size:1.55em;font-weight:900;">${n.name}</b><br>
+          <small style="opacity:0.7;">ASN ${n.asn || "—"}</small><br>
+          ${n.peak ? `<b>Peak:</b> ${n.peak}<br>` : ""}
+          ${n.ip4 ? `<div class="ip">${n.ip4}/20 (IPv4)</div>` : ""}
+          ${n.ip6 ? `<div class="ip">${n.ip6}/64 (IPv6)</div>` : ""}
+          <i style="opacity:0.88;margin-top:8px;display:block;">${n.desc || (isIXP ? "Major Internet Exchange Point" : "Global Carrier Hotel")}</i>
         </div>
-      `, { closeButton: false, autoClose: true });
+      `, { closeButton: false });
 
-      // Live pulse
-      if (Math.random() > 0.4) m.getElement().classList.add("pulse");
+      if (Math.random() > 0.35) m.getElement()?.classList.add("pulse");
 
-      markers.push({ marker: m, name: n.name.toLowerCase(), data: n });
+      markers.push({ marker: m, name: n.name.toLowerCase(), ip4: n.ip4, ip6: n.ip6, asn: n.asn });
     });
 
-    // Instant fuzzy search
+    // Search now includes IPs!
     document.getElementById("search").addEventListener("input", e => {
       const term = e.target.value.toLowerCase().trim();
       markers.forEach(item => {
-        const matches = item.name.includes(term) || (item.data.asn && item.data.asn.includes(term));
+        const matches = item.name.includes(term) ||
+                        (item.asn && item.asn.includes(term)) ||
+                        (item.ip4 && item.ip4.includes(term)) ||
+                        (item.ip6 && item.ip6.includes(term));
         item.marker.setStyle({
-          fillOpacity: term === "" ? 0.96 : (matches ? 1 : 0.18),
-          radius: matches && term !== "" ? 28 : item.marker.options.radius
+          fillOpacity: term === "" ? 0.96 : (matches ? 1 : 0.16),
+          radius: matches && term !== "" ? 30 : item.marker.options.radius
         });
         if (matches && term) item.marker.openPopup();
       });
     });
 
-    // Real submarine cables (major routes)
+    // Submarine cables (same as before, with animated flow)
     const cables = [
-      [[39.0437,-77.4874],[51.5155,-0.0922]],    // Ashburn → London
-      [[39.0437,-77.4874],[25.7617,-80.1918]],   // Ashburn → Miami
-      [[25.7617,-80.1918],[-23.5505,-46.6333]],  // Miami → São Paulo
-      [[51.5155,-0.0922],[50.1155,8.6842]],      // London → Frankfurt
-      [[50.1155,8.6842],[52.3740,4.8897]],       // Frankfurt → Amsterdam
-      [[1.3214,103.8445],[35.6895,139.6917]],    // Singapore → Tokyo
-      [[22.3964,114.1095],[35.6895,139.6917]],   // Hong Kong → Tokyo
-      [[39.0437,-77.4874],[1.3214,103.8445]]     // Ashburn → Singapore (simplified)
+      [[39.0437,-77.4874],[51.5155,-0.0922]], [[39.0437,-77.4874],[25.7617,-80.1918]],
+      [[25.7617,-80.1918],[-23.5505,-46.6333]], [[51.5155,-0.0922],[50.1155,8.6842]],
+      [[50.1155,8.6842],[52.3740,4.8897]], [[1.3214,103.8445],[35.6895,139.6917]],
+      [[22.3964,114.1095],[35.6895,139.6917]], [[39.0437,-77.4874],[1.3214,103.8445]]
     ];
 
     document.getElementById("cables").onclick = () => {
-      if (cablesVisible) {
-        map.removeLayer(cablesLayer);
-        cablesVisible = false;
-      } else {
-        cables.forEach(route => {
-          const polyline = L.polyline(route, { color: '#30d158', weight: 4, opacity: 0.8 }).addTo(cablesLayer);
-          L.polylineDecorator(polyline, {
-            patterns: [{
-              offset: 25,
-              repeat: 120,
-              symbol: L.Symbol.arrowHead({
-                pixelSize: 14,
-                headAngle: 60,
-                pathOptions: { color: '#30d158', fillOpacity: 1, weight: 4 }
-              })
-            }]
+      if (cablesVisible) { map.removeLayer(cablesLayer); cablesVisible = false; }
+      else {
+        cables.forEach(r => {
+          const line = L.polyline(r, { color: '#30d158', weight: 5, opacity: 0.85 }).addTo(cablesLayer);
+          L.polylineDecorator(line, {
+            patterns: [{ offset: 30, repeat: 130, symbol: L.Symbol.arrowHead({
+              pixelSize: 15, headAngle: 60, pathOptions: { color: '#30d158', weight: 5, fillOpacity: 1 }
+            })}]
           }).addTo(cablesLayer);
         });
-        cablesLayer.addTo(map);
-        cablesVisible = true;
+        cablesLayer.addTo(map); cablesVisible = true;
       }
     };
 
@@ -248,32 +176,26 @@
     document.getElementById("locate").onclick = () => {
       map.locate({ setView: true, maxZoom: 9 });
       map.once("locationfound", e => {
-        L.circleMarker(e.latlng, {
-          radius: 20,
-          color: "#fff",
-          weight: 6,
-          fillColor: "#0a84ff",
-          fillOpacity: 0.9
-        }).addTo(map)
-          .bindPopup("<b>You are here</b>").openPopup();
+        L.circleMarker(e.latlng, { radius: 22, color: "#fff", weight: 7, fillColor: "#0a84ff", fillOpacity: 0.94 })
+          .addTo(map).bindPopup("<b>You are here</b>").openPopup();
       });
     };
 
-    // Dynamic status
+    // Live status rotation
     setInterval(() => {
-      const texts = ["Live • Real-time Global View", "Live • 127+ Countries Connected", "Live • Pure Internet Magic", "Live • Forever Free"];
+      const texts = ["Live • Real IPs • Global Backbone", "Live • 200+ Tbps Combined", "Live • Pure Internet Poetry", "Live • Forever Free & Open"];
       document.getElementById("status-text").textContent = texts[Math.floor(Math.random() * texts.length)];
-    }, 8000);
+    }, 9000);
 
     // Random live pulses
     setInterval(() => {
       ixps.eachLayer(m => {
-        if (Math.random() < 0.25) {
+        if (Math.random() < 0.28) {
           m.setStyle({ fillColor: "#30d158" });
-          setTimeout(() => m.setStyle({ fillColor: m.options.fillColor === "#0a84ff" ? "#0a84ff" : "#32d74b" }), 3500);
+          setTimeout(() => m.setStyle({ fillColor: m.options.fillColor === "#0a84ff" ? "#0a84ff" : "#32d74b" }), 3800);
         }
       });
-    }, 4200);
+    }, 4000);
   </script>
 </body>
 </html>

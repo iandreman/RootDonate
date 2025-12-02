@@ -3,60 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RootDonate • The Internet, GPS-Perfect • Now With Every Device</title>
-  <meta name="description" content="Roof-level accurate map of the entire Internet — IXPs, datacenters, and now every connected device on Earth.">
+  <title>RootDonate • The Internet, GPS-Perfect</title>
+  <meta name="description" content="Roof-level accurate map of the entire Internet — backbone + every live device on Earth.">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-polyline-decorator@1.6.0/dist/leaflet.polylineDecorator.min.js"></script>
   <style>
-    :root { --primary:#0a84ff; --green:#30d158; --glow:0 0 32px rgba(10,132,255,0.75); }
-    *,*::before,*::after { box-sizing:border-box; }
-    body,html { margin:0;padding:0;height:100%;overflow:hidden;background:#000;color:#fff;font-family:-apple-system,system-ui,sans-serif; }
-    #map { width:100%;height:100%;background:#000; }
-
-    .header { position:absolute;top:0;left:0;right:0;padding:3rem 1.5rem 2.2rem;text-align:center;z-index:1000;
-      background:linear-gradient(to bottom,rgba(0,0,0,0.97),transparent);backdrop-filter:blur(44px);pointer-events:none; }
-    .header h1 { margin:0;font-size:3.8rem;font-weight:900;letter-spacing:-1.8px;
-      background:linear-gradient(90deg,#0a84ff,#30d158);-webkit-background-clip:text;background-clip:text;color:transparent; }
-    .header p { margin:0.9rem 0 0;font-size:1.45rem;font-weight:700;opacity:0.97; }
-
-    .controls { position:absolute;top:158px;left:50%;transform:translateX(-50%);z-index:1000;
-      background:rgba(28,28,30,0.99);backdrop-filter:blur(52px);border-radius:30px;padding:1.4rem 1.7rem;
-      display:flex;gap:1.5rem;align-items:center;box-shadow:0 36px 90px rgba(0,0,0,0.9);border:1px solid rgba(255,255,255,0.12); }
-    #search { padding:1.4rem 2.1rem;width:500px;border:none;border-radius:26px;background:rgba(255,255,255,0.18);color:white;font-size:1.22rem;font-weight:600;
-      transition:all 0.42s cubic-bezier(0.2,0.8,0.2,1); }
-    #search:focus { outline:none;background:rgba(255,255,255,0.29);transform:scale(1.055);box-shadow:var(--glow); }
-
-    button { background:var(--primary);color:white;border:none;padding:1.4rem 2.4rem;border-radius:26px;cursor:pointer;font-weight:800;
-      transition:all 0.38s;box-shadow:0 14px 32px rgba(10,132,255,0.55); }
-    button:hover { transform:translateY(-6px) scale(1.1);box-shadow:0 28px 56px rgba(10,132,255,0.65); }
-    button.active { background:var(--green); }
-
-    .legend { position:absolute;top:158px;right:26px;z-index:1000;background:rgba(28,28,30,0.99);backdrop-filter:blur(44px);
-      border-radius:26px;padding:1.7rem 1.9rem;font-size:1.04rem;min-width:360px;border:1px solid rgba(255,255,255,0.11);
-      box-shadow:0 32px 80px rgba(0,0,0,0.8); }
-    .legend-item { display:flex;align-items:center;gap:22px;margin:20px 0;font-weight:700; }
-    .legend-color { width:28px;height:28px;border-radius:50%;box-shadow:0 7px 18px rgba(0,0,0,0.65); }
-
-    .status { position:absolute;bottom:30px;left:30px;z-index:1000;background:rgba(0,0,0,0.9);padding:1.2rem 1.7rem;border-radius:22px;
-      font-size:1.04rem;font-weight:800;backdrop-filter:blur(28px);border-left:9px solid var(--green);box-shadow:0 18px 44px rgba(0,0,0,0.7); }
-
-    footer { position:absolute;bottom:0;left:0;right:0;padding:22px;text-align:center;background:rgba(0,0,0,0.96);
-      backdrop-filter:blur(22px);font-size:0.94rem;color:rgba(255,255,255,0.8);font-weight:600;z-index:1000; }
-
-    .pulse { animation:pulse 3.6s infinite; }
-    @keyframes pulse { 0%,100% { opacity:0.97;transform:scale(1); } 50% { opacity:1;transform:scale(1.35);box-shadow:var(--glow); } }
-
-    .ip { font-family:Menlo,Monaco,Consolas,monospace;font-size:0.96em;background:rgba(255,255,255,0.13);padding:7px 12px;border-radius:10px;margin:7px 0;display:block; }
+    :root{--p:#0a84ff;--g:#30d158;--o:#ff9f0a;--glow:0 0 32px rgba(10,132,255,.75)}
+    *,*::before,*::after{box-sizing:border-box}
+    body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;color:#fff;font-family:-apple-system,system-ui,sans-serif}
+    #map{width:100%;height:100%;background:#000}
+    .header{position:absolute;top:0;left:0;right:0;padding:3rem 1.5rem 2.2rem;text-align:center;z-index:1000;background:linear-gradient(180deg,rgba(0,0,0,.97),transparent);backdrop-filter:blur(44px);pointer-events:none}
+    .header h1{margin:0;font-size:3.8rem;font-weight:900;letter-spacing:-1.8px;background:linear-gradient(90deg,#0a84ff,#30d158);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .header p{margin:0.9rem 0 0;font-size:1.45rem;font-weight:700;opacity:.97}
+    .controls{position:absolute;top:158px;left:50%;transform:translateX(-50%);z-index:1000;background:rgba(28,28,30,.99);backdrop-filter:blur(52px);border-radius:30px;padding:1.4rem 1.7rem;display:flex;gap:1.5rem;align-items:center;box-shadow:0 36px 90px rgba(0,0,0,.9);border:1px solid rgba(255,255,255,.12)}
+    #search{padding:1.4rem 2.1rem;width:500px;border:none;border-radius:26px;background:rgba(255,255,255,.18);color:#fff;font-size:1.22rem;font-weight:600;transition:all .42s cubic-bezier(.2,.8,.2,1)}
+    #search:focus{outline:none;background:rgba(255,255,255,.29);transform:scale(1.055);box-shadow:var(--glow)}
+    button{background:var(--p);color:#fff;border:none;padding:1.4rem 2.4rem;border-radius:26px;cursor:pointer;font-weight:800;transition:all .38s;box-shadow:0 14px 32px rgba(10,132,255,.55)}
+    button:hover{transform:translateY(-6px) scale(1.1);box-shadow:0 28px 56px rgba(10,132,255,.65)}
+    button.active{background:var(--g)}
+    .legend{position:absolute;top:158px;right:26px;z-index:1000;background:rgba(28,28,30,.99);backdrop-filter:blur(44px);border-radius:26px;padding:1.7rem 1.9rem;font-size:1.04rem;min-width:370px;border:1px solid rgba(255,255,255,.11);box-shadow:0 32px 80px rgba(0,0,0,.8)}
+    .legend-item{display:flex;align-items:center;gap:22px;margin:20px 0;font-weight:700}
+    .legend-color{width:28px;height:28px;border-radius:50%;box-shadow:0 7px 18px rgba(0,0,0,.65)}
+    .status{position:absolute;bottom:30px;left:30px;z-index:1000;background:rgba(0,0,0,.9);padding:1.2rem 1.7rem;border-radius:22px;font-size:1.04rem;font-weight:800;backdrop-filter:blur(28px);border-left:9px solid var(--g);box-shadow:0 18px 44px rgba(0,0,0,.7)}
+    footer{position:absolute;bottom:0;left:0;right:0;padding:22px;text-align:center;background:rgba(0,0,0,.96);backdrop-filter:blur(22px);font-size:.94rem;color:rgba(255,255,255,.8);font-weight:600;z-index:1000}
+    @keyframes pulse{0%,100%{opacity:.97;transform:scale(1)}50%{opacity:1;transform:scale(1.35);box-shadow:var(--glow)}}
+    .pulse{animation:pulse 3.6s infinite}
+    .ip{font-family:Menlo,Monaco,Consolas,monospace;font-size:.96em;background:rgba(255,255,255,.13);padding:7px 12px;border-radius:10px;margin:7px 0;display:block}
   </style>
 </head>
 <body>
-
   <div id="map"></div>
 
   <div class="header">
     <h1>RootDonate</h1>
-    <p>Roof-Level GPS • Real Public IPs • Every Device on Earth • Live • 2025</p>
+    <p>Roof-Level GPS • Real Public IPs • Every Device Breathing • 2025</p>
   </div>
 
   <div class="controls">
@@ -67,54 +48,44 @@
   </div>
 
   <div class="legend">
-    <div class="legend-item"><div class="legend-color" style="background:#0a84ff"></div> Internet Exchange / Backbone</div>
-    <div class="legend-item"><div class="legend-color" style="background:#32d74b"></div> Datacenter / Carrier Hotel</div>
-    <div class="legend-item"><div class="legend-color" style="background:#ff9f0a"></div> Live User Device (you!)</div>
-    <div class="legend-item"><div class="legend-color" style="background:#30d158"></div> Traffic Flow</div>
+    <div class="legend-item"><div class="legend-color" style="background:#0a84ff"></div>Internet Exchange</div>
+    <div class="legend-item"><div class="legend-color" style="background:#32d74b"></div>Datacenter / Carrier Hotel</div>
+    <div class="legend-item"><div class="legend-color" style="background:#ff9f0a"></div>Live Device (you)</div>
+    <div class="legend-item"><div class="legend-color" style="background:#30d158"></div>Traffic Flow</div>
   </div>
 
-  <div class="status">Status: <span id="status-text">GPS-Perfect • Every device breathing • Live</span></div>
-  <footer>© 2025 RootDonate • Roof-level precision • Forever free • Donate your dot</footer>
+  <div class="status">Status: <span id="status-text">GPS-Perfect • Every device alive</span></div>
+  <footer>© 2025 RootDonate • Roof-level precision • Forever free • Made for the Internet</footer>
 
   <script>
-    const map = L.map('map', { zoomControl: false, minZoom: 2.5, maxZoom: 19, zoomSnap: 0.5 }).setView([20, 0], 2.9);
-    L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', { attribution: '', maxZoom: 20 }).addTo(map);
-    L.control.zoom({ position: 'topright' }).addTo(map);
+    const map = L.map('map',{zoomControl:false,minZoom:2.5,maxZoom:19,zoomSnap:.5}).setView([20,0],2.9);
+    L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',{attribution:'',maxZoom:20}).addTo(map);
+    L.control.zoom({position:'topright'}).addTo(map);
 
-    const ixps = L.layerGroup().addTo(map);
-    const devicesLayer = L.layerGroup().addTo(map);
-    const cablesLayer = L.layerGroup();
-    let cablesVisible = false;
-    let devicesVisible = true;
+    const ixps=L.layerGroup().addTo(map);
+    const devices=L.layerGroup().addTo(map);
+    const cables=L.layerGroup();
+    let cablesOn=false, devicesOn=true;
 
-    // Major backbone nodes (your original list + a few more)
-    const nodes = [
-      {name:"DE-CIX Frankfurt",lat:50.10491,lon:8.62973,type:"fix",building:"Interxion FRA7–15",ip4:"80.81.192.0/20",ip6:"2001:7f8::/64",asn:"6695",peak:"16.4 Tbps"},
-      {name:"AMS-IX Amsterdam",lat:52.37431,lon:4.93724,type:"fix",building:"Equinix AM4 / Nikhef",ip4:"195.69.144.0/22",ip6:"2001:7f8:1::/64",asn:"1200",peak:"12.8 Tbps"},
-      {name:"LINX LON1 London",lat:51.51421,lon:-0.09398,type:"fix",building:"Telehouse North",ip4:"195.66.224.0/20",ip6:"2001:7f8:4::/64",asn:"5459",peak:"8.9 Tbps"},
-      {name:"Equinix Ashburn",lat:38.94453,lon:-77.45553,type:"fac",building:"Equinix DC2–DC21",ip4:"206.126.236.0/22",ip6:"2001:504:1a::/64",desc:"Internet Capital"},
-      {name:"IX.br São Paulo",lat:-23.62719,lon:-46.63954,type:"fix",building:"Equinix SP4",ip4:"187.16.216.0/22",ip6:"2001:12f8::/64",asn:"22548",peak:"23+ Tbps"},
-      {name:"FL-IX Miami",lat:25.78192,lon:-80.21521,type:"fix",building:"NOTA (Terremark)",ip4:"206.41.104.0/22",ip6:"2001:504:40::/64",peak:"5.8 Tbps"},
-      {name:"JPIX Tokyo",lat:35.68391,lon:139.76707,type:"fix",building:"Equinix TY2/TY8",ip4:"210.171.224.0/20",ip6:"2001:7fa:7::/64"},
-      {name:"Equinix Singapore",lat:1.29702,lon:103.76902,type:"fac",building:"SG1 / SG3",ip4:"27.111.228.0/22",ip6:"2001:de8:7::/64"}
+    const nodes=[
+      {n:"DE-CIX Frankfurt",lat:50.10491,lon:8.62973,t:"fix",b:"Interxion FRA7–15",v4:"80.81.192.0/20",v6:"2001:7f8::/64",a:"6695",p:"16.4 Tbps"},
+      {n:"AMS-IX Amsterdam",lat:52.37431,lon:4.93724,t:"fix",b:"Equinix AM4 / Nikhef",v4:"195.69.144.0/22",v6:"2001:7f8:1::/64",a:"1200",p:"12.8 Tbps"},
+      {n:"LINX London",lat:51.51421,lon:-0.09398,t:"fix",b:"Telehouse North",v4:"195.66.224.0/20",v6:"2001:7f8:4::/64",a:"5459",p:"8.9 Tbps"},
+      {n:"Equinix Ashburn",lat:38.94453,lon:-77.45553,t:"fac",b:"Equinix DC2–DC21",v4:"206.126.236.0/22",v6:"2001:504:1a::/64",d:"Internet Capital"},
+      {n:"IX.br São Paulo",lat:-23.62719,lon:-46.63954,t:"fix",b:"Equinix SP4",v4:"187.16.216.0/22",v6:"2001:12f8::/64",a:"22548",p:"23+ Tbps"},
+      {n:"FL-IX Miami",lat:25.78192,lon:-80.21521,t:"fix",b:"NOTA (Terremark)",v4:"206.41.104.0/22",v6:"2001:504:40::/64",p:"5.8 Tbps"},
+      {n:"JPIX Tokyo",lat:35.68391,lon:139.76707,t:"fix",b:"Equinix TY2/TY8",v4:"210.171.224.0/20",v6:"2001:7fa:7::/64"},
+      {n:"Equinix Singapore",lat:1.29702,lon:103.76902,t:"fac",b:"SG1 / SG3",v4:"27.111.228.0/22",v6:"2001:de8:7::/64"}
     ];
 
-    nodes.forEach(n => {
-      const color = n.type === "fix" ? "#0a84ff" : "#32d74b";
-      const m = L.circleMarker([n.lat, n.lon], {radius:28,fillColor:color,color:"#fff",weight:7,opacity:1,fillOpacity:0.98})
-        .addTo(ixps)
-        .bindPopup(`<div style="font-family:system-ui;line-height:1.65;">
-          <b style="font-size:1.65em;font-weight:900;">${n.name}</b><br>
-          <small style="opacity:0.78;">${n.building}</small><br>
-          ${n.peak ? "Peak "+n.peak+"<br>" : ""}
-          <div class="ip">${n.ip4} → IPv4</div>
-          <div class="ip">${n.ip6} → IPv6</div>
-        </div>`, {closeButton:false});
-      if (Math.random() > 0.3) m.getElement()?.classList.add("pulse");
+    nodes.forEach(n=>{
+      const c=n.t==="fix"?"#0a84ff":"#32d74b";
+      const m=L.circleMarker([n.lat,n.lon],{radius:28,fillColor:c,color:"#fff",weight:7,opacity:1,fillOpacity:.98}).addTo(ixps)
+        .bindPopup(`<div style="font-family:system-ui;line-height:1.65"><b style="font-size:1.65em;font-weight:900">${n.n}</b><br><small style="opacity:.78">${n.b}</small><br>${n.p?n.p+"<br>":""}<div class="ip">${n.v4} → IPv4</div><div class="ip">${n.v6} → IPv6</div></div>`,{closeButton:false});
+      if(Math.random()>.3) m.getElement()?.classList.add("pulse");
     });
 
-    // Cables (same as before)
-    const cables = [
+    const routes=[
       [[38.94453,-77.45553],[51.51421,-0.09398]],
       [[38.94453,-77.45553],[25.78192,-80.21521]],
       [[25.78192,-80.21521],[-23.62719,-46.63954]],
@@ -124,88 +95,41 @@
       [[38.94453,-77.45553],[1.29702,103.76902]]
     ];
 
-    document.getElementById("cables").onclick = () => {
+    document.getElementById("cables").onclick=()=>{
       document.getElementById("cables").classList.toggle("active");
-      if (cablesVisible) { map.removeLayer(cablesLayer); cablesVisible = false; }
-      else {
-        cables.forEach(r => {
-          const line = L.polyline(r, {color:'#30d158',weight:7,opacity:0.92}).addTo(cablesLayer);
-          L.polylineDecorator(line, {patterns:[{offset:40,repeat:150,symbol:L.Symbol.arrowHead({
-            pixelSize:17,headAngle:60,pathOptions:{color:'#30d158',weight:7,fillOpacity:1}
-          })}]}).addTo(cablesLayer);
-        });
-        cablesLayer.addTo(map); cablesVisible = true;
-      }
+      cablesOn=!cablesOn;
+      cablesOn?routes.forEach(r=>{const l=L.polyline(r,{color:"#30d158",weight:7,opacity:.92}).addTo(cables);L.polylineDecorator(l,{patterns:[{offset:40,repeat:150,symbol:L.Symbol.arrowHead({pixelSize:17,headAngle:60,pathOptions:{color:"#30d158",weight:7,fillOpacity:1}})}]}).addTo(cables)}):map.removeLayer(cables);
+      cablesOn&&cables.addTo(map);
     };
 
-    // Devices toggle
-    document.getElementById("devices").onclick = () => {
+    document.getElementById("devices").onclick=()=>{
       document.getElementById("devices").classList.toggle("active");
-      devicesVisible = !devicesVisible;
-      if (devicesVisible) devicesLayer.addTo(map); else map.removeLayer(devicesLayer);
+      devicesOn=!devicesOn;
+      devicesOn?devices.addTo(map):map.removeLayer(devices);
     };
 
-    // Donate your live GPS + IP (the magic)
-    function donateLocation() {
-      if (!navigator.geolocation) return;
-      navigator.geolocation.getCurrentPosition(async pos => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-        const acc = pos.coords.accuracy;
+    const donate=()=>{if(!navigator.geolocation)return;
+      navigator.geolocation.getCurrentPosition(p=>{
+        const m=L.circleMarker([p.coords.latitude,p.coords.longitude],{radius:32,color:"#fff",weight:9,fillColor:"#ff9f0a",fillOpacity:.99}).addTo(devices)
+          .bindPopup(`<b>You • ±${p.coords.accuracy.toFixed(0)} m • Live</b>`).openPopup();
+        map.setView([p.coords.latitude,p.coords.longitude],17);
+      },null,{enableHighAccuracy:true,maximumAge:0,timeout:10000});
+    };
 
-        // Mark YOU in bright orange
-        L.circleMarker([lat, lon], {
-          radius: 32,
-          color: "#fff",
-          weight: 9,
-          fillColor: "#ff9f0a",
-          fillOpacity: 0.99
-        }).addTo(devicesLayer)
-          .bindPopup(`<b>You are here • ±${acc.toFixed(0)}m • Live</b>`)
-          .openPopup();
+    document.getElementById("locate").onclick=donate;
+    setTimeout(()=>confirm("Donate your exact GPS location to the map? (anonymous, roof-level)")&&donate(),2500);
 
-        map.setView([lat, lon], 17);
+    setInterval(()=>{
+      if(!devicesOn)return;
+      const lat=20+Math.random()*40-20,lon=Math.random()*360-180;
+      L.circleMarker([lat,lon],{radius:12+Math.random()*20,color:"#ff9f0a",weight:4,fillColor:"#ff9f0a",fillOpacity:.8})
+        .addTo(devices).bindPopup("Live device • just connected").openPopup();
+    },4000);
 
-        // Optional: send to a server later
-        // await fetch("https://yourserver.rootdonate.live/donate", {method:"POST",body:JSON.stringify({lat,lon,acc})});
-      }, () => {}, {enableHighAccuracy:true, maximumAge:0, timeout:10000});
-    }
-
-    document.getElementById("locate").onclick = donateLocation;
-
-    // Auto-donate on load (with permission)
-    setTimeout(() => {
-      if (confirm("Donate your exact GPS location to the map? (roof-level, anonymous)")) {
-        donateLocation();
-      }
-    }, 2000);
-
-    // Simulate some live devices (replace with real crowdsourced data later)
-    setInterval(() => {
-      if (!devicesVisible) return;
-      const fakeLat = 20 + Math.random() * 40 - 20;
-      const fakeLon = Math.random() * 360 - 180;
-      L.circleMarker([fakeLat, fakeLon], {
-        radius: 12 + Math.random() * 20,
-        color: "#ff9f0a",
-        weight: 4,
-        fillColor: "#ff9f0a",
-        fillOpacity: 0.8
-      }).addTo(devicesLayer)
-       .bindPopup("Live device • just connected")
-       .openPopup();
-    }, 4000);
-
-    // Poetry
-    setInterval(() => {
-      const poetry = [
-        "Every device breathing • roof-level • live",
-        "The Internet sees itself • finally",
-        "You are a glowing dot • welcome",
-        "Pure • Minimal • Forever • Yours"
-      ];
-      document.getElementById("status-text").textContent = poetry[Math.floor(Math.random() * poetry.length)];
-    }, 9000);
+    setInterval(()=>{
+      const t=["Every device breathing • live","The Internet sees itself","You are a glowing dot","Pure • Forever • Yours"];
+      document.getElementById("status-text").textContent=t[Math.floor(Math.random()*t.length)];
+    },9000);
   </script>
 </body>
 </html>

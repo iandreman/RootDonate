@@ -3,69 +3,134 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RootDonate • A Peaceful Art Project</title>
-  <meta name="description" content="A beautiful, real-time art project showing people connected across the world. Independent and forever free.">
+  <title>RootDonate • We Are All Here</title>
+  <meta name="description" content="A quiet work of art about being human on the same internet.">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
-    :root{--blue:#0a84ff;--green:#30d158;--orange:#ff9f0a;--red:#ff375f}
+    :root{--blue:#0a84ff;--green:#30d158;--orange:#ff9f0a;--soft:#ffffff0d}
     body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;color:#fff;font-family:-apple-system,system-ui,sans-serif}
-    #map{width:100%;height:100%;background:#000}
-    .header{position:absolute;top:0;left:0;right:0;padding:3rem 1.5rem 2rem;text-align:center;z-index:1000;background:linear-gradient(180deg,rgba(0,0,0,.95),transparent);backdrop-filter:blur(40px)}
-    h1{margin:0;font-size:3.8rem;font-weight:900;background:linear-gradient(90deg,var(--blue),var(--green));-webkit-background-clip:text;background-clip:text;color:transparent}
-    .subtitle{margin:1rem 0 0;font-size:1.45rem;opacity:.95}
-    .notice{position:absolute;top:150px;left:50%;transform:translateX(-50%);background:rgba(28,28,30,.98);backdrop-filter:blur(30px);padding:2rem 2.5rem;border-radius:28px;max-width:90%;text-align:center;z-index:999;border:1px solid rgba(255,255,255,.15);box-shadow:0 20px 60px rgba(0,0,0,.7)}
-    .notice h2{font-size:2rem;margin:0 0 .8rem;color:var(--orange);font-weight:800}
-    .notice p{font-size:1.25rem;line-height:1.7;margin:1rem 0}
-    .status{position:absolute;bottom:30px;left:30px;z-index:1000;background:rgba(0,0,0,.9);padding:1.2rem 1.8rem;border-radius:22px;font-size:1.05rem;font-weight:700;backdrop-filter:blur(28px);border-left:8px solid var(--green)}
-    footer{position:absolute;bottom:0;left:0;right:0;padding:20px;text-align:center;background:rgba(0,0,0,.95);backdrop-filter:blur(20px);font-size:.95rem;color:rgba(255,255,255,.8);z-index:1000}
+    #map{width:100%;height:100%;background:#000;filter:brightness(0.9) contrast(1.1)}
+    
+    .header{
+      position:absolute;top:0;left:0;right:0;padding:3rem 2rem 2rem;
+      text-align:center;z-index:10;background:linear-gradient(180deg,rgba(0,0,0,.9),transparent);
+      backdrop-filter:blur(30px);pointer-events:none
+    }
+    h1{
+      margin:0;font-size:4.2rem;font-weight:900;letter-spacing:-2px;
+      background:linear-gradient(90deg,var(--blue),var(--green),var(--orange));
+      -webkit-background-clip:text;background-clip:text;color:transparent;
+      text-shadow:0 0 40px rgba(10,132,255,.4)
+    }
+    .poem{
+      margin:1.6rem 0 0;font-size:1.5rem;font-weight:300;opacity:.88;
+      line-height:1.7;letter-spacing:0.5px
+    }
+
+    .canvas{
+      position:absolute;inset:0;z-index:1;pointer-events:none;
+      background:transparent
+    }
+
+    footer{
+      position:absolute;bottom:0;left:0;right:0;padding:18px;
+      text-align:center;background:rgba(0,0,0,.7);backdrop-filter:blur(20px);
+      font-size:.9rem;opacity:.7;z-index:10;letter-spacing:0.4px
+    }
   </style>
 </head>
 <body>
 
   <div id="map"></div>
+  <canvas class="canvas" id="canvas"></canvas>
 
   <div class="header">
     <h1>RootDonate</h1>
-    <p class="subtitle">A peaceful art project showing humans connected across the internet</p>
+    <div class="poem" id="poem">
+      We are all here • together<br>
+      One planet • one quiet network<br>
+      Breathing the same invisible light
+    </div>
   </div>
 
   <footer>
-    RootDonate • 2025 • Independent art project • Not affiliated with xAI, Grok, or Optimism
+    A living artwork • 2025 • No affiliation with xAI, Grok, or Optimism • Forever free
   </footer>
 
   <script>
-    // Simple, beautiful static map — no tracking, no location requests
-    const map = L.map('map', { zoomControl: true, minZoom: 2.5, maxZoom: 19 }).setView([20, 0], 3);
+    const map = L.map('map', {
+      zoomControl:false, minZoom:2.5, maxZoom:19, fadeAnimation:true, zoomAnimation:true
+    }).setView([20, 0], 2.8);
 
     L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
-      attribution: '',
-      maxZoom: 20
+      attribution:'', maxZoom:20
     }).addTo(map);
 
-    // A few gentle static dots for beauty
-    const points = [[50.11,8.68],[52.37,4.94],[51.51,-0.09],[38.94,-77.46],[-23.63,-46.64],[25.78,-80.22],[35.68,139.77],[1.30,103.77]];
-    points.forEach(p => {
-      L.circleMarker(p, {
-        radius: 18,
-        fillColor: "#ff9f0a",
-        color: "#fff",
-        weight: 4,
-        fillOpacity: 0.85
+    // Gentle breathing dots
+    const dots = [
+      [50.11,8.68],[52.37,4.94],[51.51,-0.09],[38.94,-77.46],
+      [-23.63,-46.64],[25.78,-80.22],[35.68,139.77],[1.30,103.77],
+      [35.6762,139.6503],[40.7128,-74.0060],[48.8566,2.3522]
+    ];
+
+    dots.forEach(p => {
+      const m = L.circleMarker(p, {
+        radius:22, fillColor:"#ff9f0a", color:"#ffffff44", weight:2,
+        fillOpacity:0.6
       }).addTo(map);
+      
+      // breathing animation
+      setInterval(() => {
+        const now = Date.now() / 4000;
+        const pulse = 0.6 + 0.4 * Math.sin(now);
+        m.setStyle({fillOpacity:pulse, radius:22 + 8*pulse});
+      }, 50);
     });
 
-    // Kind rotating messages
-    const messages = [
+    // Canvas stars / soft particles
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles = [];
+    for(let i=0;i<180;i++){
+      particles.push({
+        x:Math.random()*canvas.width,
+        y:Math.random()*canvas.height,
+        r:Math.random()*1.5+0.5,
+        speed:0.1+Math.random()*0.3
+      });
+    }
+
+    function draw(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      particles.forEach(p=>{
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle = `rgba(255,255,255,${0.2+Math.random()*0.3})`;
+        ctx.fill();
+        p.x += p.speed;
+        if(p.x>canvas.width) p.x=0;
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    // Slowly rotating poetry
+    const lines = [
       "We are all here • together",
-      "One planet • one network",
-      "Thank you for being part of this",
-      "The internet is made of people"
+      "One planet • one quiet network",
+      "Breathing the same invisible light",
+      "Thank you for existing right now",
+      "The internet is made of people",
+      "You are not alone • never were"
     ];
     let i = 0;
     setInterval(() => {
-      document.querySelector('.subtitle').textContent = messages[i++ % messages.length];
-    }, 12000);
+      document.getElementById('poem').innerHTML = lines[i++ % lines.length];
+    }, 11000);
   </script>
 </body>
 </html>

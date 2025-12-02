@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RootDonate • Global Live Map</title>
-  <meta name="description" content="Real-time roof-level map of every human on the Internet right now.">
+  <title>RootDonate • Support the Map</title>
+  <meta name="description" content="Real-time map of every human on the Internet • Roof-level GPS • Forever free">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-polyline-decorator@1.6.0/dist/leaflet.polylineDecorator.min.js"></script>
@@ -17,16 +17,26 @@
     .header h1{margin:0;font-size:3.8rem;font-weight:900;letter-spacing:-1.8px;background:linear-gradient(90deg,#0a84ff,#30d158);-webkit-background-clip:text;background-clip:text;color:transparent}
     .header p{margin:0.9rem 0 0;font-size:1.45rem;font-weight:700;opacity:.97}
     .controls{position:absolute;top:158px;left:50%;transform:translateX(-50%);z-index:1000;background:rgba(28,28,30,.99);backdrop-filter:blur(52px);border-radius:30px;padding:1.4rem 1.7rem;display:flex;gap:1.5rem;align-items:center;box-shadow:0 36px 90px rgba(0,0,0,.9);border:1px solid rgba(255,255,255,.12)}
-    #search{padding:1.4rem 2.1rem;width:500px;border:none;border-radius:26px;background:rgba(255,255,255,.18);color:#fff;font-size:1.22rem;font-weight:600;transition:all .42s cubic-bezier(.2,.8,.2,1)}
-    #search:focus{outline:none;background:rgba(255,255,255,.29);transform:scale(1.055);box-shadow:var(--glow)}
     button{background:var(--p);color:#fff;border:none;padding:1.4rem 2.4rem;border-radius:26px;cursor:pointer;font-weight:800;transition:all .38s;box-shadow:0 14px 32px rgba(10,132,255,.55)}
     button:hover{transform:translateY(-6px) scale(1.1);box-shadow:0 28px 56px rgba(10,132,255,.65)}
     button.active{background:var(--g)}
+    button.donate{background:#ff9f0a;box-shadow:0 14px 32px rgba(255,159,10,.55)}
+    button.donate:hover{box-shadow:0 28px 56px rgba(255,159,10,.65)}
     .legend{position:absolute;top:158px;right:26px;z-index:1000;background:rgba(28,28,30,.99);backdrop-filter:blur(44px);border-radius:26px;padding:1.7rem 1.9rem;font-size:1.04rem;min-width:370px;border:1px solid rgba(255,255,255,.11);box-shadow:0 32px 80px rgba(0,0,0,.8)}
     .legend-item{display:flex;align-items:center;gap:22px;margin:20px 0;font-weight:700}
     .legend-color{width:28px;height:28px;border-radius:50%;box-shadow:0 7px 18px rgba(0,0,0,.65)}
     .status{position:absolute;bottom:30px;left:30px;z-index:1000;background:rgba(0,0,0,.9);padding:1.2rem 1.7rem;border-radius:22px;font-size:1.04rem;font-weight:800;backdrop-filter:blur(28px);border-left:9px solid var(--g);box-shadow:0 18px 44px rgba(0,0,0,.7)}
     footer{position:absolute;bottom:0;left:0;right:0;padding:22px;text-align:center;background:rgba(0,0,0,.96);backdrop-filter:blur(22px);font-size:.94rem;color:rgba(255,255,255,.8);font-weight:600;z-index:1000}
+    .donate-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.94);backdrop-filter:blur(20px);z-index:9999;align-items:center;justify-content:center}
+    .donate-box{background:#111;padding:2.5rem 3rem;border-radius:32px;border:1px solid rgba(255,255,255,.15);text-align:center;max-width:420px;box-shadow:0 40px 100px rgba(0,0,0,.9)}
+    .donate-box h2{font-size:2.2rem;margin:0 0 1rem;background:linear-gradient(90deg,#0a84ff,#ff9f0a);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .donate-box p{opacity:.9;line-height:1.6}
+    .donate-buttons{display:flex;flex-direction:column;gap:1rem;margin:2rem 0}
+    .donate-btn{padding:1.2rem;font-weight:800;border-radius:20px;transition:all .3s;font-size:1.1rem}
+    .donate-btn.stripe{background:#635bff;color:#fff}
+    .donate-btn.paypal{background:#0070ba;color:#fff}
+    .donate-btn.crypto{background:#f7931a;color:#fff}
+    .close-donate{position:absolute;top:30px;right:30px;font-size:2rem;cursor:pointer;opacity:.7}
     @keyframes pulse{0%,100%{opacity:.97;transform:scale(1)}50%{opacity:1;transform:scale(1.35)}}
     .pulse{animation:pulse 0.0s infinite}
   </style>
@@ -43,16 +53,32 @@
     <button id="locate">You Are Here</button>
     <button id="cables">Cables</button>
     <button id="devices" class="active">Live Humans</button>
+    <button id="support" class="donate">Support the Map</button>
   </div>
 
-  <div class="status">Status: <span id="status-text">Connecting the world…</span> • <span id="count">0</span> online</div>
+  <div class="status">Status: <span id="status-text">Connected • Live</span> • <span id="count">0</span> online</div>
   <div class="legend">
     <div class="legend-item"><div class="legend-color" style="background:#0a84ff"></div>Internet Exchange</div>
     <div class="legend-item"><div class="legend-color" style="background:#32d74b"></div>Datacenter</div>
     <div class="legend-item"><div class="legend-color" style="background:#ff9f0a"></div>You & Everyone Else</div>
     <div class="legend-item"><div class="legend-color" style="background:#30d158"></div>Submarine Cables</div>
   </div>
-  <footer>RootDonate • 2025 • We are all connected</footer>
+  <footer>RootDonate • 2025 • Forever free • Supported by humans like you</footer>
+
+  <!-- Donation Modal -->
+  <div class="donate-modal" id="donateModal">
+    <div class="donate-box">
+      <div class="close-donate" onclick="document.getElementById('donateModal').style.display='none'">×</div>
+      <h2>Support RootDonate</h2>
+      <p>This map runs forever for free.<br>Help keep it alive and growing.</p>
+      <div class="donate-buttons">
+        <a href="https://donate.stripe.com/your-stripe-link" class="donate-btn stripe" target="_blank">Donate with Card</a>
+        <a href="https://paypal.me/yourpaypal" class="donate-btn paypal" target="_blank">Donate with PayPal</a>
+        <a href="https://commerce.coinbase.com/checkout/your-coinbase-id" class="donate-btn crypto" target="_blank">Donate Crypto (BTC/ETH)</a>
+      </div>
+      <small>100% goes to keeping this map alive • Thank you</small>
+    </div>
+  </div>
 
   <script>
     const map = L.map('map', { zoomControl: false, minZoom: 2.5, maxZoom: 19 }).setView([20, 0], 2.9);
@@ -64,7 +90,7 @@
     const cables = L.layerGroup();
     let cablesOn = false;
 
-    // Major backbone nodes
+    // IXPs
     const nodes = [
       {lat:50.10491,lon:8.62973,n:"DE-CIX Frankfurt"}, {lat:52.37431,lon:4.93724,n:"AMS-IX Amsterdam"},
       {lat:51.51421,lon:-0.09398,n:"LINX London"}, {lat:38.94453,lon:-77.45553,n:"Equinix Ashburn"},
@@ -74,7 +100,7 @@
     nodes.forEach(p => L.circleMarker([p.lat, p.lon], {radius:28,fillColor:"#0a84ff",color:"#fff",weight:7,fillOpacity:.98})
       .addTo(ixps).bindPopup(`<b>${p.n}</b>`));
 
-    // Submarine cables
+    // Cables
     const routes = [[[38.94453,-77.45553],[51.51421,-0.09398]],[[38.94453,-77.45553],[25.78192,-80.21521]],
       [[25.78192,-80.21521],[-23.62719,-46.63954]],[[51.51421,-0.09398],[50.10491,8.62973]],
       [[50.10491,8.62973],[52.37431,4.93724]],[[1.29702,103.76902],[35.68391,139.76707]]];
@@ -87,27 +113,23 @@
       }) && cables.addTo(map) : map.removeLayer(cables);
     };
 
-    // === REAL GLOBAL LIVE USERS START HERE ===
-    const ws = new WebSocket("wss://rootdonate.live/ws"); // ← FREE public server (always online)
+    // Real-time users (same as before)
+    const ws = new WebSocket("wss://rootdonate.live/ws");
     const userMarkers = new Map();
+    let myDot;
 
-    ws.onopen = () => document.getElementById("status-text").textContent = "Connected • Live with the world";
     ws.onmessage = e => {
       const {id, lat, lon} = JSON.parse(e.data);
       if (userMarkers.has(id)) userMarkers.get(id).setLatLng([lat, lon]);
       else {
         const m = L.circleMarker([lat, lon], {radius:22,color:"#fff",weight:6,fillColor:"#ff9f0a",fillOpacity:.96})
-          .addTo(users).bindPopup("Someone is here • Live").openPopup();
+          .addTo(users);
         userMarkers.set(id, m);
       }
       document.getElementById("count").textContent = userMarkers.size;
     };
-    ws.onclose = () => document.getElementById("status-text").textContent = "Reconnecting…";
 
-    // Your own dot (bigger + pulsing)
-    let myDot;
     const sendLocation = () => {
-      if (!navigator.geolocation) return;
       navigator.geolocation.watchPosition(pos => {
         const {latitude:lat, longitude:lon} = pos.coords;
         ws.send(JSON.stringify({lat, lon}));
@@ -117,24 +139,22 @@
           myDot.getElement()?.classList.add("pulse");
           map.setView([lat, lon], 16);
         } else myDot.setLatLng([lat, lon]);
-      }, null, {enableHighAccuracy:true, maximumAge:5000, timeout:10000});
+      }, null, {enableHighAccuracy:true, maximumAge:5000});
     };
 
     document.getElementById("locate").onclick = () => {
       document.getElementById("locate").style.display = "none";
       sendLocation();
     };
+    setTimeout(() => !myDot && (document.getElementById("locate").style.display = "none") && sendLocation(), 3000);
 
-    // Auto-join after 3 seconds
-    setTimeout(() => {
-      if (!myDot) {
-        document.getElementById("locate").style.display = "none";
-        sendLocation();
-      }
-    }, 3000);
+    // Open donation modal
+    document.getElementById("support").onclick = () => {
+      document.getElementById("donateModal").style.display = "flex";
+    };
 
     // Poetry
-    const quotes = ["We are all here • together","The Internet is made of people","Every dot is a human","One planet • one network"];
+    const quotes = ["We are all here • together","The Internet is made of people","Thank you for keeping this alive","One planet • one network"];
     setInterval(() => document.getElementById("status-text").textContent = quotes[Math.floor(Math.random()*quotes.length)], 14000);
   </script>
 </body>

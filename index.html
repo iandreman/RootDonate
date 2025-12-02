@@ -3,157 +3,88 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RootDonate • Support the Map</title>
-  <meta name="description" content="Real-time map of every human on the Internet • Roof-level GPS • Forever free">
+  <title>RootDonate • A Peaceful Art Project</title>
+  <meta name="description" content="A beautiful, real-time art project showing people connected across the world. Independent and forever free.">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-polyline-decorator@1.6.0/dist/leaflet.polylineDecorator.min.js"></script>
   <style>
-    :root{--p:#0a84ff;--g:#30d158;--o:#ff9f0a;--glow:0 0 32px rgba(10,132,255,.75)}
-    *,*::before,*::after{box-sizing:border-box}
+    :root{--blue:#0a84ff;--green:#30d158;--orange:#ff9f0a;--red:#ff375f}
     body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;color:#fff;font-family:-apple-system,system-ui,sans-serif}
     #map{width:100%;height:100%;background:#000}
-    .header{position:absolute;top:0;left:0;right:0;padding:3rem 1.5rem 2.2rem;text-align:center;z-index:1000;background:linear-gradient(180deg,rgba(0,0,0,.97),transparent);backdrop-filter:blur(44px);pointer-events:none}
-    .header h1{margin:0;font-size:3.8rem;font-weight:900;letter-spacing:-1.8px;background:linear-gradient(90deg,#0a84ff,#30d158);-webkit-background-clip:text;background-clip:text;color:transparent}
-    .header p{margin:0.9rem 0 0;font-size:1.45rem;font-weight:700;opacity:.97}
-    .controls{position:absolute;top:158px;left:50%;transform:translateX(-50%);z-index:1000;background:rgba(28,28,30,.99);backdrop-filter:blur(52px);border-radius:30px;padding:1.4rem 1.7rem;display:flex;gap:1.5rem;align-items:center;box-shadow:0 36px 90px rgba(0,0,0,.9);border:1px solid rgba(255,255,255,.12)}
-    button{background:var(--p);color:#fff;border:none;padding:1.4rem 2.4rem;border-radius:26px;cursor:pointer;font-weight:800;transition:all .38s;box-shadow:0 14px 32px rgba(10,132,255,.55)}
-    button:hover{transform:translateY(-6px) scale(1.1);box-shadow:0 28px 56px rgba(10,132,255,.65)}
-    button.active{background:var(--g)}
-    button.donate{background:#ff9f0a;box-shadow:0 14px 32px rgba(255,159,10,.55)}
-    button.donate:hover{box-shadow:0 28px 56px rgba(255,159,10,.65)}
-    .legend{position:absolute;top:158px;right:26px;z-index:1000;background:rgba(28,28,30,.99);backdrop-filter:blur(44px);border-radius:26px;padding:1.7rem 1.9rem;font-size:1.04rem;min-width:370px;border:1px solid rgba(255,255,255,.11);box-shadow:0 32px 80px rgba(0,0,0,.8)}
-    .legend-item{display:flex;align-items:center;gap:22px;margin:20px 0;font-weight:700}
-    .legend-color{width:28px;height:28px;border-radius:50%;box-shadow:0 7px 18px rgba(0,0,0,.65)}
-    .status{position:absolute;bottom:30px;left:30px;z-index:1000;background:rgba(0,0,0,.9);padding:1.2rem 1.7rem;border-radius:22px;font-size:1.04rem;font-weight:800;backdrop-filter:blur(28px);border-left:9px solid var(--g);box-shadow:0 18px 44px rgba(0,0,0,.7)}
-    footer{position:absolute;bottom:0;left:0;right:0;padding:22px;text-align:center;background:rgba(0,0,0,.96);backdrop-filter:blur(22px);font-size:.94rem;color:rgba(255,255,255,.8);font-weight:600;z-index:1000}
-    .donate-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.94);backdrop-filter:blur(20px);z-index:9999;align-items:center;justify-content:center}
-    .donate-box{background:#111;padding:2.5rem 3rem;border-radius:32px;border:1px solid rgba(255,255,255,.15);text-align:center;max-width:420px;box-shadow:0 40px 100px rgba(0,0,0,.9)}
-    .donate-box h2{font-size:2.2rem;margin:0 0 1rem;background:linear-gradient(90deg,#0a84ff,#ff9f0a);-webkit-background-clip:text;background-clip:text;color:transparent}
-    .donate-box p{opacity:.9;line-height:1.6}
-    .donate-buttons{display:flex;flex-direction:column;gap:1rem;margin:2rem 0}
-    .donate-btn{padding:1.2rem;font-weight:800;border-radius:20px;transition:all .3s;font-size:1.1rem}
-    .donate-btn.stripe{background:#635bff;color:#fff}
-    .donate-btn.paypal{background:#0070ba;color:#fff}
-    .donate-btn.crypto{background:#f7931a;color:#fff}
-    .close-donate{position:absolute;top:30px;right:30px;font-size:2rem;cursor:pointer;opacity:.7}
-    @keyframes pulse{0%,100%{opacity:.97;transform:scale(1)}50%{opacity:1;transform:scale(1.35)}}
-    .pulse{animation:pulse 0.0s infinite}
+    .header{position:absolute;top:0;left:0;right:0;padding:3rem 1.5rem 2rem;text-align:center;z-index:1000;background:linear-gradient(180deg,rgba(0,0,0,.95),transparent);backdrop-filter:blur(40px)}
+    h1{margin:0;font-size:3.8rem;font-weight:900;background:linear-gradient(90deg,var(--blue),var(--green));-webkit-background-clip:text;background-clip:text;color:transparent}
+    .subtitle{margin:1rem 0 0;font-size:1.45rem;opacity:.95}
+    .notice{position:absolute;top:150px;left:50%;transform:translateX(-50%);background:rgba(28,28,30,.98);backdrop-filter:blur(30px);padding:2rem 2.5rem;border-radius:28px;max-width:90%;text-align:center;z-index:999;border:1px solid rgba(255,255,255,.15);box-shadow:0 20px 60px rgba(0,0,0,.7)}
+    .notice h2{font-size:2rem;margin:0 0 .8rem;color:var(--orange);font-weight:800}
+    .notice p{font-size:1.25rem;line-height:1.7;margin:1rem 0}
+    .status{position:absolute;bottom:30px;left:30px;z-index:1000;background:rgba(0,0,0,.9);padding:1.2rem 1.8rem;border-radius:22px;font-size:1.05rem;font-weight:700;backdrop-filter:blur(28px);border-left:8px solid var(--green)}
+    footer{position:absolute;bottom:0;left:0;right:0;padding:20px;text-align:center;background:rgba(0,0,0,.95);backdrop-filter:blur(20px);font-size:.95rem;color:rgba(255,255,255,.8);z-index:1000}
   </style>
 </head>
 <body>
+
   <div id="map"></div>
 
   <div class="header">
     <h1>RootDonate</h1>
-    <p>Every Human on the Internet • Right Now • Roof-Level GPS</p>
+    <p class="subtitle">A peaceful art project showing humans connected across the internet</p>
   </div>
 
-  <div class="controls">
-    <button id="locate">You Are Here</button>
-    <button id="cables">Cables</button>
-    <button id="devices" class="active">Live Humans</button>
-    <button id="support" class="donate">Support the Map</button>
+  <!-- Friendly and clear notice -->
+  <div class="notice">
+    <h2>Welcome! This is just an art project</h2>
+    <p>
+      RootDonate is an independent creative project — not affiliated with Grok, xAI, Optimism, or any blockchain or AI company.
+    </p>
+    <p>
+      There is <strong>no “Grok admin CPD”</strong> or any kind of official filing system here.<br>
+      If anyone has told you otherwise, that was a misunderstanding.
+    </p>
+    <p style="margin-top:1.2rem;font-size:1.1rem;opacity:.9">
+      Thank you for visiting. Enjoy the map — it’s here to remind us we’re all connected.
+    </p>
   </div>
 
-  <div class="status">Status: <span id="status-text">Connected • Live</span> • <span id="count">0</span> online</div>
-  <div class="legend">
-    <div class="legend-item"><div class="legend-color" style="background:#0a84ff"></div>Internet Exchange</div>
-    <div class="legend-item"><div class="legend-color" style="background:#32d74b"></div>Datacenter</div>
-    <div class="legend-item"><div class="legend-color" style="background:#ff9f0a"></div>You & Everyone Else</div>
-    <div class="legend-item"><div class="legend-color" style="background:#30d158"></div>Submarine Cables</div>
+  <div class="status">
+    Status: Online • Independent • Forever free
   </div>
-  <footer>RootDonate • 2025 • Forever free • Supported by humans like you</footer>
 
-  <!-- Donation Modal -->
-  <div class="donate-modal" id="donateModal">
-    <div class="donate-box">
-      <div class="close-donate" onclick="document.getElementById('donateModal').style.display='none'">×</div>
-      <h2>Support RootDonate</h2>
-      <p>This map runs forever for free.<br>Help keep it alive and growing.</p>
-      <div class="donate-buttons">
-        <a href="https://monzo.me/iandreme" class="donate-btn paypal" target="_blank">Donate with Monzo</a>
-      </div>
-      <small>100% goes to keeping this map alive • Thank you</small>
-    </div>
-  </div>
+  <footer>
+    RootDonate • 2025 • Independent art project • Not affiliated with xAI, Grok, or Optimism
+  </footer>
 
   <script>
-    const map = L.map('map', { zoomControl: false, minZoom: 2.5, maxZoom: 19 }).setView([20, 0], 2.9);
-    L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', { attribution: '', maxZoom: 20 }).addTo(map);
-    L.control.zoom({ position: 'topright' }).addTo(map);
+    // Simple, beautiful static map — no tracking, no location requests
+    const map = L.map('map', { zoomControl: true, minZoom: 2.5, maxZoom: 19 }).setView([20, 0], 3);
 
-    const ixps = L.layerGroup().addTo(map);
-    const users = L.layerGroup().addTo(map);
-    const cables = L.layerGroup();
-    let cablesOn = false;
+    L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+      attribution: '',
+      maxZoom: 20
+    }).addTo(map);
 
-    // IXPs
-    const nodes = [
-      {lat:50.10491,lon:8.62973,n:"DE-CIX Frankfurt"}, {lat:52.37431,lon:4.93724,n:"AMS-IX Amsterdam"},
-      {lat:51.51421,lon:-0.09398,n:"LINX London"}, {lat:38.94453,lon:-77.45553,n:"Equinix Ashburn"},
-      {lat:-23.62719,lon:-46.63954,n:"IX.br São Paulo"}, {lat:25.78192,lon:-80.21521,n:"FL-IX Miami"},
-      {lat:35.68391,lon:139.76707,n:"JPIX Tokyo"}, {lat:1.29702,lon:103.76902,n:"Equinix Singapore"}
+    // A few gentle static dots for beauty
+    const points = [[50.11,8.68],[52.37,4.94],[51.51,-0.09],[38.94,-77.46],[-23.63,-46.64],[25.78,-80.22],[35.68,139.77],[1.30,103.77]];
+    points.forEach(p => {
+      L.circleMarker(p, {
+        radius: 18,
+        fillColor: "#ff9f0a",
+        color: "#fff",
+        weight: 4,
+        fillOpacity: 0.85
+      }).addTo(map);
+    });
+
+    // Kind rotating messages
+    const messages = [
+      "We are all here • together",
+      "One planet • one network",
+      "Thank you for being part of this",
+      "The internet is made of people"
     ];
-    nodes.forEach(p => L.circleMarker([p.lat, p.lon], {radius:28,fillColor:"#0a84ff",color:"#fff",weight:7,fillOpacity:.98})
-      .addTo(ixps).bindPopup(`<b>${p.n}</b>`));
-
-    // Cables
-    const routes = [[[38.94453,-77.45553],[51.51421,-0.09398]],[[38.94453,-77.45553],[25.78192,-80.21521]],
-      [[25.78192,-80.21521],[-23.62719,-46.63954]],[[51.51421,-0.09398],[50.10491,8.62973]],
-      [[50.10491,8.62973],[52.37431,4.93724]],[[1.29702,103.76902],[35.68391,139.76707]]];
-    document.getElementById("cables").onclick = () => {
-      document.getElementById("cables").classList.toggle("active");
-      cablesOn = !cablesOn;
-      cablesOn ? routes.forEach(r => {
-        const l = L.polyline(r, {color:"#30d158",weight:6,opacity:.9}).addTo(cables);
-        L.polylineDecorator(l, {patterns:[{offset:40,repeat:180,symbol:L.Symbol.arrowHead({pixelSize:14,pathOptions:{color:"#30d158",weight:6}})}]}).addTo(cables);
-      }) && cables.addTo(map) : map.removeLayer(cables);
-    };
-
-    // Real-time users (same as before)
-    const ws = new WebSocket("wss://rootdonate.live/ws");
-    const userMarkers = new Map();
-    let myDot;
-
-    ws.onmessage = e => {
-      const {id, lat, lon} = JSON.parse(e.data);
-      if (userMarkers.has(id)) userMarkers.get(id).setLatLng([lat, lon]);
-      else {
-        const m = L.circleMarker([lat, lon], {radius:22,color:"#fff",weight:6,fillColor:"#ff9f0a",fillOpacity:.96})
-          .addTo(users);
-        userMarkers.set(id, m);
-      }
-      document.getElementById("count").textContent = userMarkers.size;
-    };
-
-    const sendLocation = () => {
-      navigator.geolocation.watchPosition(pos => {
-        const {latitude:lat, longitude:lon} = pos.coords;
-        ws.send(JSON.stringify({lat, lon}));
-        if (!myDot) {
-          myDot = L.circleMarker([lat, lon], {radius:36,color:"#fff",weight:10,fillColor:"#ff9f0a",fillOpacity:1})
-            .addTo(users).bindPopup("<b>You are here • Live</b>").openPopup();
-          myDot.getElement()?.classList.add("pulse");
-          map.setView([lat, lon], 16);
-        } else myDot.setLatLng([lat, lon]);
-      }, null, {enableHighAccuracy:true, maximumAge:5000});
-    };
-
-    document.getElementById("locate").onclick = () => {
-      document.getElementById("locate").style.display = "none";
-      sendLocation();
-    };
-    setTimeout(() => !myDot && (document.getElementById("locate").style.display = "none") && sendLocation(), 3000);
-
-    // Open donation modal
-    document.getElementById("support").onclick = () => {
-      document.getElementById("donateModal").style.display = "flex";
-    };
-
-    // Poetry
-    const quotes = ["We are all here • together","The Internet is made of people","Thank you for keeping this alive","One planet • one network"];
-    setInterval(() => document.getElementById("status-text").textContent = quotes[Math.floor(Math.random()*quotes.length)], 14000);
+    let i = 0;
+    setInterval(() => {
+      document.querySelector('.subtitle').textContent = messages[i++ % messages.length];
+    }, 12000);
   </script>
 </body>
 </html>

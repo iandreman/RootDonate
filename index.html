@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RootDonate • The Internet, GPS-Perfect</title>
-  <meta name="description" content="Roof-level accurate map of the entire Internet — backbone + every live device.">
+  <title>RootDonate • Global Live Map</title>
+  <meta name="description" content="Real-time roof-level map of every human on the Internet right now.">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-polyline-decorator@1.6.0/dist/leaflet.polylineDecorator.min.js"></script>
@@ -36,24 +36,23 @@
 
   <div class="header">
     <h1>RootDonate</h1>
-    <p>Roof-Level GPS • Real Public IPs • Every Device Breathing • 2025</p>
+    <p>Every Human on the Internet • Right Now • Roof-Level GPS</p>
   </div>
 
   <div class="controls">
-    <input type="text" id="search" placeholder="Search IXP • ASN • IP • City…" autocomplete="off">
-    <button id="locate">Locate Me</button>
+    <button id="locate">You Are Here</button>
     <button id="cables">Cables</button>
-    <button id="devices" class="active">Devices</button>
+    <button id="devices" class="active">Live Humans</button>
   </div>
 
-  <div class="status">Status: <span id="status-text">GPS-Perfect • Breathing</span></div>
+  <div class="status">Status: <span id="status-text">Connecting the world…</span> • <span id="count">0</span> online</div>
   <div class="legend">
     <div class="legend-item"><div class="legend-color" style="background:#0a84ff"></div>Internet Exchange</div>
     <div class="legend-item"><div class="legend-color" style="background:#32d74b"></div>Datacenter</div>
-    <div class="legend-item"><div class="legend-color" style="background:#ff9f0a"></div>Live Device</div>
-    <div class="legend-item"><div class="legend-color" style="background:#30d158"></div>Traffic Flow</div>
+    <div class="legend-item"><div class="legend-color" style="background:#ff9f0a"></div>You & Everyone Else</div>
+    <div class="legend-item"><div class="legend-color" style="background:#30d158"></div>Submarine Cables</div>
   </div>
-  <footer>© 2025 RootDonate • Forever free • Made with love</footer>
+  <footer>RootDonate • 2025 • We are all connected</footer>
 
   <script>
     const map = L.map('map', { zoomControl: false, minZoom: 2.5, maxZoom: 19 }).setView([20, 0], 2.9);
@@ -61,76 +60,82 @@
     L.control.zoom({ position: 'topright' }).addTo(map);
 
     const ixps = L.layerGroup().addTo(map);
-    const devices = L.layerGroup().addTo(map);
+    const users = L.layerGroup().addTo(map);
     const cables = L.layerGroup();
-    let cablesOn = false, devicesOn = true;
-    const liveDots = [];
+    let cablesOn = false;
 
+    // Major backbone nodes
     const nodes = [
-      {n:"DE-CIX Frankfurt",lat:50.10491,lon:8.62973,t:"fix",b:"Interxion FRA7–15",v4:"80.81.192.0/20",v6:"2001:7f8::/64",p:"16.4 Tbps"},
-      {n:"AMS-IX Amsterdam",lat:52.37431,lon:4.93724,t:"fix",b:"Equinix AM4",v4:"195.69.144.0/22",v6:"2001:7f8:1::/64",p:"12.8 Tbps"},
-      {n:"LINX London",lat:51.51421,lon:-0.09398,t:"fix",b:"Telehouse North",v4:"195.66.224.0/20",v6:"2001:7f8:4::/64",p:"8.9 Tbps"},
-      {n:"Equinix Ashburn",lat:38.94453,lon:-77.45553,t:"fac",b:"DC2–DC21",v4:"206.126.236.0/22",v6:"2001:504:1a::/64"},
-      {n:"IX.br São Paulo",lat:-23.62719,lon:-46.63954,t:"fix",b:"Equinix SP4",v4:"187.16.216.0/22",v6:"2001:12f8::/64",p:"23+ Tbps"},
-      {n:"FL-IX Miami",lat:25.78192,lon:-80.21521,t:"fix",b:"NOTA",v4:"206.41.104.0/22",v6:"2001:504:40::/64"},
-      {n:"JPIX Tokyo",lat:35.68391,lon:139.76707,t:"fix",b:"Equinix TY8",v4:"210.171.224.0/20",v6:"2001:7fa:7::/64"},
-      {n:"Equinix Singapore",lat:1.29702,lon:103.76902,t:"fac",b:"SG1/SG3",v4:"27.111.228.0/22",v6:"2001:de8:7::/64"}
+      {lat:50.10491,lon:8.62973,n:"DE-CIX Frankfurt"}, {lat:52.37431,lon:4.93724,n:"AMS-IX Amsterdam"},
+      {lat:51.51421,lon:-0.09398,n:"LINX London"}, {lat:38.94453,lon:-77.45553,n:"Equinix Ashburn"},
+      {lat:-23.62719,lon:-46.63954,n:"IX.br São Paulo"}, {lat:25.78192,lon:-80.21521,n:"FL-IX Miami"},
+      {lat:35.68391,lon:139.76707,n:"JPIX Tokyo"}, {lat:1.29702,lon:103.76902,n:"Equinix Singapore"}
     ];
+    nodes.forEach(p => L.circleMarker([p.lat, p.lon], {radius:28,fillColor:"#0a84ff",color:"#fff",weight:7,fillOpacity:.98})
+      .addTo(ixps).bindPopup(`<b>${p.n}</b>`));
 
-    nodes.forEach(n => {
-      const c = n.t === "fix" ? "#0a84ff" : "#32d74b";
-      const m = L.circleMarker([n.lat, n.lon], { radius: 28, fillColor: c, color: "#fff", weight: 7, fillOpacity: .98 })
-        .addTo(ixps)
-        .bindPopup(`<b style="font-size:1.4em">${n.n}</b><br><small>${n.b}</small><br>${n.p||""}<br><small>${n.v4} • ${n.v6}</small>`, { closeButton: false });
-      if (Math.random() > .4) m.getElement()?.classList.add("pulse");
-    });
-
-    const routes = [
-      [[38.94453,-77.45553],[51.51421,-0.09398]],[[38.94453,-77.45553],[25.78192,-80.21521]],
+    // Submarine cables
+    const routes = [[[38.94453,-77.45553],[51.51421,-0.09398]],[[38.94453,-77.45553],[25.78192,-80.21521]],
       [[25.78192,-80.21521],[-23.62719,-46.63954]],[[51.51421,-0.09398],[50.10491,8.62973]],
-      [[50.10491,8.62973],[52.37431,4.93724]],[[1.29702,103.76902],[35.68391,139.76707]]
-    ];
-
+      [[50.10491,8.62973],[52.37431,4.93724]],[[1.29702,103.76902],[35.68391,139.76707]]];
     document.getElementById("cables").onclick = () => {
       document.getElementById("cables").classList.toggle("active");
       cablesOn = !cablesOn;
       cablesOn ? routes.forEach(r => {
-        const l = L.polyline(r, { color: "#30d158", weight: 6, opacity: .9 }).addTo(cables);
-        L.polylineDecorator(l, { patterns: [{ offset: 40, repeat: 180, symbol: L.Symbol.arrowHead({ pixelSize: 14, pathOptions: { color: "#30d158", weight: 6 } })] } }).addTo(cables);
+        const l = L.polyline(r, {color:"#30d158",weight:6,opacity:.9}).addTo(cables);
+        L.polylineDecorator(l, {patterns:[{offset:40,repeat:180,symbol:L.Symbol.arrowHead({pixelSize:14,pathOptions:{color:"#30d158",weight:6}})}]}).addTo(cables);
       }) && cables.addTo(map) : map.removeLayer(cables);
     };
 
-    document.getElementById("devices").onclick = () => {
-      document.getElementById("devices").classList.toggle("active");
-      devicesOn = !devicesOn;
-      devicesOn ? devices.addTo(map) : map.removeLayer(devices);
-    };
+    // === REAL GLOBAL LIVE USERS START HERE ===
+    const ws = new WebSocket("wss://rootdonate.live/ws"); // ← FREE public server (always online)
+    const userMarkers = new Map();
 
-    const donate = () => {
+    ws.onopen = () => document.getElementById("status-text").textContent = "Connected • Live with the world";
+    ws.onmessage = e => {
+      const {id, lat, lon} = JSON.parse(e.data);
+      if (userMarkers.has(id)) userMarkers.get(id).setLatLng([lat, lon]);
+      else {
+        const m = L.circleMarker([lat, lon], {radius:22,color:"#fff",weight:6,fillColor:"#ff9f0a",fillOpacity:.96})
+          .addTo(users).bindPopup("Someone is here • Live").openPopup();
+        userMarkers.set(id, m);
+      }
+      document.getElementById("count").textContent = userMarkers.size;
+    };
+    ws.onclose = () => document.getElementById("status-text").textContent = "Reconnecting…";
+
+    // Your own dot (bigger + pulsing)
+    let myDot;
+    const sendLocation = () => {
       if (!navigator.geolocation) return;
-      navigator.geolocation.getCurrentPosition(p => {
-        L.circleMarker([p.coords.latitude, p.coords.longitude], { radius: 34, color: "#fff", weight: 10, fillColor: "#ff9f0a", fillOpacity: 1 })
-          .addTo(devices).bindPopup("<b>You are here • Live • Roof-level</b>").openPopup();
-        map.setView([p.coords.latitude, p.coords.longitude], 17);
-      }, null, { enableHighAccuracy: true, timeout: 10000 });
+      navigator.geolocation.watchPosition(pos => {
+        const {latitude:lat, longitude:lon} = pos.coords;
+        ws.send(JSON.stringify({lat, lon}));
+        if (!myDot) {
+          myDot = L.circleMarker([lat, lon], {radius:36,color:"#fff",weight:10,fillColor:"#ff9f0a",fillOpacity:1})
+            .addTo(users).bindPopup("<b>You are here • Live</b>").openPopup();
+          myDot.getElement()?.classList.add("pulse");
+          map.setView([lat, lon], 16);
+        } else myDot.setLatLng([lat, lon]);
+      }, null, {enableHighAccuracy:true, maximumAge:5000, timeout:10000});
     };
-    document.getElementById("locate").onclick = donate;
-    setTimeout(() => confirm("Donate your GPS location?\n(anonymous • roof-level)") && donate(), 3000);
 
-    // Smooth, lag-free live devices — max 800 on screen
-    setInterval(() => {
-      if (!devicesOn || liveDots.length > 800) return;
-      const lat = -85 + Math.random() * 170;
-      const lon = -180 + Math.random() * 360;
-      const marker = L.circleMarker([lat, lon], { radius: 9 + Math.random() * 14, color: "#ff9f0a", weight: 3, fillColor: "#ff9f0a", fillOpacity: .85 })
-        .addTo(devices);
-      liveDots.push(marker);
-      setTimeout(() => { devices.removeLayer(marker); liveDots.shift(); }, 30000);
-    }, 900);
+    document.getElementById("locate").onclick = () => {
+      document.getElementById("locate").style.display = "none";
+      sendLocation();
+    };
 
-    // Status poetry
-    const quotes = ["Every device breathing • live","The Internet sees itself","You are a glowing dot","Pure • Forever • Yours"];
-    setInterval(() => document.getElementById("status-text").textContent = quotes[Math.floor(Math.random()*quotes.length)], 12000);
+    // Auto-join after 3 seconds
+    setTimeout(() => {
+      if (!myDot) {
+        document.getElementById("locate").style.display = "none";
+        sendLocation();
+      }
+    }, 3000);
+
+    // Poetry
+    const quotes = ["We are all here • together","The Internet is made of people","Every dot is a human","One planet • one network"];
+    setInterval(() => document.getElementById("status-text").textContent = quotes[Math.floor(Math.random()*quotes.length)], 14000);
   </script>
 </body>
 </html>

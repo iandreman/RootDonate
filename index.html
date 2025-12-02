@@ -131,23 +131,7 @@
 
     document.getElementById("locate").onclick = donate;
     setTimeout(() => confirm("Donate your exact GPS location to the map?\n(anonymous • roof-level precision)") && donate(), 3000);
-
-    // Simulated live devices (real ones coming soon)
-    setInterval(() => {
-      if (!devicesOn) return;
-      const lat = 20 + Math.random() * 40 - 20;
-      const lon = Math.random() * 360 - 180;
-      L.circleMarker([lat, lon], { radius: 12 + Math.random() * 20, color: "#ff9f0a", weight: 4, fillColor: "#ff9f0a", fillOpacity: .85 })
-        .addTo(devices)
-        .bindPopup("Live device • just connected")
-        .openPopup();
-    }, 3800);
-
-    // Status poetry
-    setInterval(() => {
-      const t = ["Every device breathing • live", "The Internet sees itself", "You are a glowing dot", "Pure • Forever • Yours"];
-      document.getElementById("status-text").textContent = t[Math.floor(Math.random() * t.length)];
-    }, 11000);
+    
   </script>
 </body>
 </html>

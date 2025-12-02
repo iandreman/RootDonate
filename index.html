@@ -47,14 +47,13 @@
     <button id="devices" class="active">Devices</button>
   </div>
 
+  <div class="status">Status: <span id="status-text">GPS-Perfect • Every device alive</span></div>
   <div class="legend">
     <div class="legend-item"><div class="legend-color" style="background:#0a84ff"></div>Internet Exchange</div>
     <div class="legend-item"><div class="legend-color" style="background:#32d74b"></div>Datacenter / Carrier Hotel</div>
     <div class="legend-item"><div class="legend-color" style="background:#ff9f0a"></div>Live Device (you)</div>
     <div class="legend-item"><div class="legend-color" style="background:#30d158"></div>Traffic Flow</div>
   </div>
-
-  <div class="status">Status: <span id="status-text">GPS-Perfect • Every device alive</span></div>
   <footer>© 2025 RootDonate • Roof-level precision • Forever free • Made for the Internet</footer>
 
   <script>
@@ -124,12 +123,12 @@
       const lat=20+Math.random()*40-20,lon=Math.random()*360-180;
       L.circleMarker([lat,lon],{radius:12+Math.random()*20,color:"#ff9f0a",weight:4,fillColor:"#ff9f0a",fillOpacity:.8})
         .addTo(devices).bindPopup("Live device • just connected").openPopup();
-    },4000);
+    },0);
 
     setInterval(()=>{
       const t=["Every device breathing • live","The Internet sees itself","You are a glowing dot","Pure • Forever • Yours"];
       document.getElementById("status-text").textContent=t[Math.floor(Math.random()*t.length)];
-    },9000);
+    },0);
   </script>
 </body>
 </html>

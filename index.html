@@ -57,34 +57,35 @@
   <footer>© 2025 RootDonate • Roof-level precision • Forever free • Made for the Internet</footer>
 
   <script>
-    const map = L.map('map',{zoomControl:false,minZoom:2.5,maxZoom:19,zoomSnap:.5}).setView([20,0],2.9);
-    L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',{attribution:'',maxZoom:20}).addTo(map);
-    L.control.zoom({position:'topright'}).addTo(map);
+    const map = L.map('map', { zoomControl: false, minZoom: 2.5, maxZoom: 19, zoomSnap: .5 }).setView([20, 0], 2.9);
+    L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', { attribution: '', maxZoom: 20 }).addTo(map);
+    L.control.zoom({ position: 'topright' }).addTo(map);
 
-    const ixps=L.layerGroup().addTo(map);
-    const devices=L.layerGroup().addTo(map);
-    const cables=L.layerGroup();
-    let cablesOn=false, devicesOn=true;
+    const ixps = L.layerGroup().addTo(map);
+    const devices = L.layerGroup().addTo(map);
+    const cables = L.layerGroup();
+    let cablesOn = false, devicesOn = true;
 
-    const nodes=[
-      {n:"DE-CIX Frankfurt",lat:50.10491,lon:8.62973,t:"fix",b:"Interxion FRA7–15",v4:"80.81.192.0/20",v6:"2001:7f8::/64",a:"6695",p:"16.4 Tbps"},
-      {n:"AMS-IX Amsterdam",lat:52.37431,lon:4.93724,t:"fix",b:"Equinix AM4 / Nikhef",v4:"195.69.144.0/22",v6:"2001:7f8:1::/64",a:"1200",p:"12.8 Tbps"},
-      {n:"LINX London",lat:51.51421,lon:-0.09398,t:"fix",b:"Telehouse North",v4:"195.66.224.0/20",v6:"2001:7f8:4::/64",a:"5459",p:"8.9 Tbps"},
+    const nodes = [
+      {n:"DE-CIX Frankfurt",lat:50.10491,lon:8.62973,t:"fix",b:"Interxion FRA7–15",v4:"80.81.192.0/20",v6:"2001:7f8::/64",p:"16.4 Tbps"},
+      {n:"AMS-IX Amsterdam",lat:52.37431,lon:4.93724,t:"fix",b:"Equinix AM4 / Nikhef",v4:"195.69.144.0/22",v6:"2001:7f8:1::/64",p:"12.8 Tbps"},
+      {n:"LINX London",lat:51.51421,lon:-0.09398,t:"fix",b:"Telehouse North",v4:"195.66.224.0/20",v6:"2001:7f8:4::/64",p:"8.9 Tbps"},
       {n:"Equinix Ashburn",lat:38.94453,lon:-77.45553,t:"fac",b:"Equinix DC2–DC21",v4:"206.126.236.0/22",v6:"2001:504:1a::/64",d:"Internet Capital"},
-      {n:"IX.br São Paulo",lat:-23.62719,lon:-46.63954,t:"fix",b:"Equinix SP4",v4:"187.16.216.0/22",v6:"2001:12f8::/64",a:"22548",p:"23+ Tbps"},
+      {n:"IX.br São Paulo",lat:-23.62719,lon:-46.63954,t:"fix",b:"Equinix SP4",v4:"187.16.216.0/22",v6:"2001:12f8::/64",p:"23+ Tbps"},
       {n:"FL-IX Miami",lat:25.78192,lon:-80.21521,t:"fix",b:"NOTA (Terremark)",v4:"206.41.104.0/22",v6:"2001:504:40::/64",p:"5.8 Tbps"},
       {n:"JPIX Tokyo",lat:35.68391,lon:139.76707,t:"fix",b:"Equinix TY2/TY8",v4:"210.171.224.0/20",v6:"2001:7fa:7::/64"},
       {n:"Equinix Singapore",lat:1.29702,lon:103.76902,t:"fac",b:"SG1 / SG3",v4:"27.111.228.0/22",v6:"2001:de8:7::/64"}
     ];
 
-    nodes.forEach(n=>{
-      const c=n.t==="fix"?"#0a84ff":"#32d74b";
-      const m=L.circleMarker([n.lat,n.lon],{radius:28,fillColor:c,color:"#fff",weight:7,opacity:1,fillOpacity:.98}).addTo(ixps)
-        .bindPopup(`<div style="font-family:system-ui;line-height:1.65"><b style="font-size:1.65em;font-weight:900">${n.n}</b><br><small style="opacity:.78">${n.b}</small><br>${n.p?n.p+"<br>":""}<div class="ip">${n.v4} → IPv4</div><div class="ip">${n.v6} → IPv6</div></div>`,{closeButton:false});
-      if(Math.random()>.3) m.getElement()?.classList.add("pulse");
+    nodes.forEach(n => {
+      const c = n.t === "fix" ? "#0a84ff" : "#32d74b";
+      const m = L.circleMarker([n.lat, n.lon], { radius: 28, fillColor: c, color: "#fff", weight: 7, opacity: 1, fillOpacity: .98 })
+        .addTo(ixps)
+        .bindPopup(`<div style="font-family:system-ui;line-height:1.65"><b style="font-size:1.65em;font-weight:900">${n.n}</b><br><small style="opacity:.78">${n.b}</small><br>${n.p?'Peak '+n.p:'Major hub'}<br><div class="ip">${n.v4} → IPv4</div><div class="ip">${n.v6} → IPv6</div></div>`, { closeButton: false });
+      if (Math.random() > .3) m.getElement()?.classList.add("pulse");
     });
 
-    const routes=[
+    const routes = [
       [[38.94453,-77.45553],[51.51421,-0.09398]],
       [[38.94453,-77.45553],[25.78192,-80.21521]],
       [[25.78192,-80.21521],[-23.62719,-46.63954]],
@@ -94,41 +95,59 @@
       [[38.94453,-77.45553],[1.29702,103.76902]]
     ];
 
-    document.getElementById("cables").onclick=()=>{
+    document.getElementById("cables").onclick = () => {
       document.getElementById("cables").classList.toggle("active");
-      cablesOn=!cablesOn;
-      cablesOn?routes.forEach(r=>{const l=L.polyline(r,{color:"#30d158",weight:7,opacity:.92}).addTo(cables);L.polylineDecorator(l,{patterns:[{offset:40,repeat:150,symbol:L.Symbol.arrowHead({pixelSize:17,headAngle:60,pathOptions:{color:"#30d158",weight:7,fillOpacity:1}})}]}).addTo(cables)}):map.removeLayer(cables);
-      cablesOn&&cables.addTo(map);
+      cablesOn = !cablesOn;
+      if (cablesOn) {
+        routes.forEach(r => {
+          const line = L.polyline(r, { color: "#30d158", weight: 7, opacity: .92 }).addTo(cables);
+          L.polylineDecorator(line, { patterns: [{ offset: 40, repeat: 150, symbol: L.Symbol.arrowHead({ pixelSize: 17, headAngle: 60, pathOptions: { color: "#30d158", weight: 7, fillOpacity: 1 } })] } }).addTo(cables);
+        });
+        cables.addTo(map);
+      } else {
+        map.removeLayer(cables);
+      }
     };
 
-    document.getElementById("devices").onclick=()=>{
+    document.getElementById("devices").onclick = () => {
       document.getElementById("devices").classList.toggle("active");
-      devicesOn=!devicesOn;
-      devicesOn?devices.addTo(map):map.removeLayer(devices);
+      devicesOn = !devicesOn;
+      devicesOn ? devices.addTo(map) : map.removeLayer(devices);
     };
 
-    const donate=()=>{if(!navigator.geolocation)return;
-      navigator.geolocation.getCurrentPosition(p=>{
-        const m=L.circleMarker([p.coords.latitude,p.coords.longitude],{radius:32,color:"#fff",weight:9,fillColor:"#ff9f0a",fillOpacity:.99}).addTo(devices)
-          .bindPopup(`<b>You • ±${p.coords.accuracy.toFixed(0)} m • Live</b>`).openPopup();
-        map.setView([p.coords.latitude,p.coords.longitude],17);
-      },null,{enableHighAccuracy:true,maximumAge:0,timeout:10000});
+    const donate = () => {
+      if (!navigator.geolocation) return alert("Geolocation not supported");
+      navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        const acc = pos.coords.accuracy;
+        L.circleMarker([lat, lon], { radius: 32, color: "#fff", weight: 9, fillColor: "#ff9f0a", fillOpacity: .99 })
+          .addTo(devices)
+          .bindPopup(`<b>You are here • ±${acc.toFixed(0)} m • Live</b>`)
+          .openPopup();
+        map.setView([lat, lon], 17);
+      }, () => alert("Location denied"), { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
     };
 
-    document.getElementById("locate").onclick=donate;
-    setTimeout(()=>confirm("Donate your exact GPS location to the map? (anonymous, roof-level)")&&donate(),2500);
+    document.getElementById("locate").onclick = donate;
+    setTimeout(() => confirm("Donate your exact GPS location to the map?\n(anonymous • roof-level precision)") && donate(), 3000);
 
-    setInterval(()=>{
-      if(!devicesOn)return;
-      const lat=20+Math.random()*40-20,lon=Math.random()*360-180;
-      L.circleMarker([lat,lon],{radius:12+Math.random()*20,color:"#ff9f0a",weight:4,fillColor:"#ff9f0a",fillOpacity:.8})
-        .addTo(devices).bindPopup("Live device • just connected").openPopup();
-    },0);
+    // Simulated live devices (real ones coming soon)
+    setInterval(() => {
+      if (!devicesOn) return;
+      const lat = 20 + Math.random() * 40 - 20;
+      const lon = Math.random() * 360 - 180;
+      L.circleMarker([lat, lon], { radius: 12 + Math.random() * 20, color: "#ff9f0a", weight: 4, fillColor: "#ff9f0a", fillOpacity: .85 })
+        .addTo(devices)
+        .bindPopup("Live device • just connected")
+        .openPopup();
+    }, 3800);
 
-    setInterval(()=>{
-      const t=["Every device breathing • live","The Internet sees itself","You are a glowing dot","Pure • Forever • Yours"];
-      document.getElementById("status-text").textContent=t[Math.floor(Math.random()*t.length)];
-    },0);
+    // Status poetry
+    setInterval(() => {
+      const t = ["Every device breathing • live", "The Internet sees itself", "You are a glowing dot", "Pure • Forever • Yours"];
+      document.getElementById("status-text").textContent = t[Math.floor(Math.random() * t.length)];
+    }, 11000);
   </script>
 </body>
 </html>

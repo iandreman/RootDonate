@@ -421,10 +421,14 @@ Examples:
 
   // Bonus: placeholder changes gently
   const placeholders = [
-    "Ask Grok anything… (e.g. Paris, home, where is love?)",
-    "Where do you want to go today?",
-    "Type a place… or a feeling",
-    "We are all here • where are you?"
+    BACKEND = 'https://weareallhere.deno.dev';
+    map = L.map('map', {
+    zoomControl: false,
+    minZoom: 2.5,
+    maxZoom: 18,
+    worldCopyJump: true,
+    attributionControl: false
+  }).setView([20, 0], 2.8);
   ];
   let i = 0;
   setInterval(() => {

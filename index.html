@@ -87,11 +87,6 @@
     </div>
   </div>
 
-  <div id="ai-search-container">
-    <input type="text" id="ai-search" placeholder="Ask Grok anything… (e.g. Paris, home, where is love?)" autocomplete="off">
-    <div id="ai-response"></div>
-  </div>
-
   <footer>
     <span id="counter">Connecting the world...</span> • 2025 • Forever free
   </footer>
@@ -195,118 +190,6 @@
     loadVisitors();
     setInterval(loadVisitors, 5*60*1000);
     updateCounter();
-
-    // ————————————————————————
-    // AI MAP SEARCH (updated for auth and latest model)
-    // ————————————————————————
-    const searchInput = document.getElementById('ai-search');
-    const responseDiv = document.getElementById('ai-response');
-    let currentRequest = null;
-
-    // REPLACE WITH YOUR ACTUAL API KEY FROM console.x.ai
-    const XAI_API_KEY = 'xai-xai-Hf3jv3qCXJSMjZtDJII1w55Uyn38g7BoEtdS3I5AQ3LrTdHiAYHVcueYSexLzxkZuOTx7XDMHYnNEQTj';
-
-    searchInput.addEventListener('keypress', async e => {
-      if (e.key !== 'Enter' || !searchInput.value.trim()) return;
-
-      const query = searchInput.value.trim().toLowerCase();
-      responseDiv.innerHTML = 'Grok is listening…';
-      responseDiv.classList.add('visible');
-
-      if (currentRequest) currentRequest.abort();
-      const controller = new AbortController();
-      currentRequest = controller;
-
-      // Fast built-in commands
-      if (query === 'home' && userLocation) {
-        responseDiv.innerHTML = 'Coming home…';
-        map.flyTo(userLocation, 6, {duration: 4});
-        searchInput.value = '';
-        return;
-      }
-      if (['everyone','all','world','where is everyone'].some(w => query.includes(w))) {
-        responseDiv.innerHTML = 'Here we all are… breathing together';
-        map.flyTo([20, 0], 2.8, {duration: 4});
-        searchInput.value = '';
-        return;
-      }
-
-      try {
-        const res = await fetch('https://api.x.ai/v1/chat/completions', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${XAI_API_KEY}`,  // Updated: Added auth header
-            'X-Client': 'grok-web-free'  // Optional: Keeps original client hint
-          },
-          body: JSON.stringify({
-            model: 'grok-4',  // Updated: Use newer model (fallback to 'grok-beta' if unavailable)
-            temperature: 0.9,
-            max_tokens: 250,  // Slightly increased for better responses
-            messages: [
-              { role: 'system', content: `You are a poetic cartographer. Reply ONLY with valid JSON:
-{ "action": "fly" | "zoom" | "say", "lat": number, "lon": number, "zoom": 2-14, "message": "short poetic text" }
-
-Examples:
-- Paris → { "action":"fly", "lat":48.8566, "lon":2.3522, "zoom":11, "message":"City of light" }
-- ocean → { "action":"fly", "lat":0, "lon":-160, "zoom":3, "message":"The great quiet" }
-- i'm lonely → { "action":"say", "message":"You are never alone here" }
-
-Always ensure lat/lon are real coordinates if flying. Keep messages under 100 chars.` },
-              { role: 'user', content: query }
-            ]
-          }),
-          signal: controller.signal
-        });
-
-        if (!res.ok) throw new Error('sleep');
-
-        const text = (await res.json()).choices[0].message.content;
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : text);
-
-        if (parsed.action === 'fly' && parsed.lat != null && parsed.lon != null) {
-          responseDiv.innerHTML = parsed.message || 'There…';
-          map.flyTo([parsed.lat, parsed.lon], parsed.zoom || 9, {duration: 3.8});
-        } else if (parsed.action === 'zoom') {
-          responseDiv.innerHTML = parsed.message || 'Breathing…';
-          map.flyTo(map.getCenter(), parsed.zoom, {duration: 3});
-        } else {
-          responseDiv.innerHTML = parsed.message || 'We are all here • together';
-        }
-
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          // Updated: More specific error handling (e.g., for 401 auth issues)
-          if (res && res.status === 401) {
-            responseDiv.innerHTML = 'Whisper needs a key to unlock the winds... Check API auth.';
-          } else {
-            responseDiv.innerHTML = 'The wind is quiet tonight… try again softly';
-          }
-        }
-      } finally {
-        currentRequest = null;
-      }
-    });
-
-    searchInput.addEventListener('input', () => {
-      if (!searchInput.value.trim()) {
-        responseDiv.classList.remove('visible');
-        responseDiv.innerHTML = '';
-      }
-    });
-
-    // Gentle rotating placeholder
-    const placeholders = [
-      "Ask Grok anything… (e.g. Tokyo, home, where is love?)",
-      "Where do you want to go today?",
-      "Type a place… or a feeling",
-      "We are all here • where are you?"
-    ];
-    let i = 0;
-    setInterval(() => {
-      searchInput.placeholder = placeholders[i = (i + 1) % placeholders.length];
-    }, 7000);
   </script>
 </body>
 </html>

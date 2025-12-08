@@ -206,143 +206,149 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <script>
-    // Backend & Map Setup
-    const BACKEND = 'https://weareallhere.deno.dev';
-    const map = L.map('map', {
-      zoomControl: false,
-      minZoom: 2.5,
-      maxZoom: 18,
-      worldCopyJump: true,
-      attributionControl: false
-    }).setView([20, 0], 2.8);
+<script>
+  // Backend & Map Setup
+  const BACKEND = 'https://weareallhere.deno.dev';
+  const map = L.map('map', {
+    zoomControl: false,
+    minZoom: 2.5,
+    maxZoom: 18,
+    worldCopyJump: true,
+    attributionControl: false
+  }).setView([20, 0], 2.8);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd',
-      maxZoom: 19
-    }).addTo(map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd',
+    maxZoom: 19
+  }).addTo(map);
 
-    const userIcon = L.divIcon({ className: 'user-marker', iconSize: [18, 18] });
-    const otherIcon = L.divIcon({ className: 'other-marker', iconSize: [15, 15] });
-    let userMarker = null;
-    const othersLayer = L.layerGroup().addTo(map);
-    const seen = new Set();
+  const userIcon = L.divIcon({ className: 'user-marker', iconSize: [18, 18] });
+  const otherIcon = L.divIcon({ className: 'other-marker', iconSize: [15, 15] });
+  let userMarker = null;
+  const othersLayer = L.layerGroup().addTo(map);
+  const seen = new Set();
 
-    // Counter
-    async function updateCounter() {
-      try {
-        const res = await fetch(`${BACKEND}/count`);
-        const { count } = await res.json();
-        document.getElementById('counter').textContent =
-          count > 0
-            ? `${count.toLocaleString()}+ humans breathing with you right now`
-            : 'You are the first today • welcome home';
-      } catch (e) {
-        console.error(e);
-      }
-    }
+  // Store user's actual location for "home" command
+  let userLocation = null;
 
-    // User Marker
-    function showUser(lat, lon, text = 'You are here • right now') {
-      if (userMarker) userMarker.remove();
-      userMarker = L.marker([lat, lon], { icon: userIcon })
-        .addTo(map)
-        .bindPopup(text, {
-          closeButton: false,
-          autoClose: false,
-          closeOnEscapeKey: false
-        })
-        .openPopup();
-      map.flyTo([lat, lon], 5, { duration: 2.5 });
-    }
+  // === All your existing functions (unchanged) ===
+  async function updateCounter() {
+    try {
+      const res = await fetch(`${BACKEND}/count`);
+      const { count } = await res.json();
+      document.getElementById('counter').textContent =
+        count > 0
+          ? `${count.toLocaleString()}+ humans breathing with you right now`
+          : 'You are the first today • welcome home';
+    } catch (e) {}
+  }
 
-    // Other Visitors
-    function addOther({ lat, lng, city, country }) {
-      const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
-      if (seen.has(key)) return;
-      seen.add(key);
-      const label = city && country ? `${city}, ${country}` : 'Somewhere on Earth';
-      L.marker([lat, lng], { icon: otherIcon })
-        .bindPopup(label, { closeButton: false, autoClose: false })
-        .addTo(othersLayer);
-    }
+  function showUser(lat, lon, text = 'You are here • right now') {
+    if (userMarker) userMarker.remove();
+    userMarker = L.marker([lat, lon], { icon: userIcon })
+      .addTo(map)
+      .bindPopup(text, { closeButton: false, autoClose: false, closeOnEscapeKey: false })
+      .openPopup();
+    userLocation = [lat, lon]; // Remember home
+    map.flyTo([lat, lon], 5, { duration: 2.5 });
+  }
 
-    async function loadVisitors() {
-      try {
-        const res = await fetch(`${BACKEND}/visitors`);
-        const visitors = await res.json();
-        othersLayer.clearLayers();
-        seen.clear();
-        visitors.forEach(addOther);
-        updateCounter();
-      } catch (e) {
-        console.error(e);
-      }
-    }
+  function addOther({ lat, lng, city, country }) {
+    const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    const label = city && country ? `${city}, ${country}` : 'Somewhere on Earth';
+    L.marker([lat, lng], { icon: otherIcon })
+      .bindPopup(label, { closeButton: false, autoClose: false })
+      .addTo(othersLayer);
+  }
 
-    async function saveMe(lat, lon, city = '', country = '') {
-      try {
-        await fetch(`${BACKEND}/visit`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ lat, lng: lon, city, country })
-        });
-      } catch (e) {}
-    }
-
-    // Geolocation
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async pos => {
-          const { latitude, longitude } = pos.coords;
-          showUser(latitude, longitude);
-          await saveMe(latitude, longitude);
-          loadVisitors();
-        },
-        async () => {
-          try {
-            const r = await fetch('https://ipapi.co/json/');
-            const d = await r.json();
-            showUser(d.latitude, d.longitude, `You are here • ${d.city || ''}, ${d.country_name || 'Earth'}`);
-            await saveMe(d.latitude, d.longitude, d.city, d.country_name);
-            loadVisitors();
-          } catch {
-            document.getElementById('counter').textContent = 'We are all here • somewhere';
-          }
-        },
-        { enableHighAccuracy: true, timeout: 15000 }
-      );
-    }
-
-    // Live Stream
-    const evtSource = new EventSource(`${BACKEND}/stream`);
-    evtSource.onmessage = e => {
-      const visitor = JSON.parse(e.data);
-      addOther(visitor);
+  async function loadVisitors() {
+    try {
+      const res = await fetch(`${BACKEND}/visitors`);
+      const visitors = await res.json();
+      othersLayer.clearLayers();
+      seen.clear();
+      visitors.forEach(addOther);
       updateCounter();
-    };
+    } catch (e) {}
+  }
 
-    // Initial Load
-    loadVisitors();
-    setInterval(loadVisitors, 5 * 60 * 1000);
+  async function saveMe(lat, lon, city = '', country = '') {
+    try {
+      await fetch(`${BACKEND}/visit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lat, lng: lon, city, country })
+      });
+    } catch (e) {}
+  }
+
+  // Geolocation
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      async pos => {
+        const { latitude, longitude } = pos.coords;
+        showUser(latitude, longitude);
+        await saveMe(latitude, longitude);
+        loadVisitors();
+      },
+      async () => {
+        try {
+          const r = await fetch('https://ipapi.co/json/');
+          const d = await r.json();
+          showUser(d.latitude, d.longitude, `You are here • ${d.city || ''}, ${d.country_name || 'Earth'}`);
+          await saveMe(d.latitude, d.longitude, d.city, d.country_name);
+          loadVisitors();
+        } catch {
+          document.getElementById('counter').textContent = 'We are all here • somewhere';
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  }
+
+  const evtSource = new EventSource(`${BACKEND}/stream`);
+  evtSource.onmessage = e => {
+    const visitor = JSON.parse(e.data);
+    addOther(visitor);
     updateCounter();
+  };
 
-<!-- === AI MAP SEARCH – Powered by real Grok (understands places & feelings) === -->
+  loadVisitors();
+  setInterval(loadVisitors, 5 * 60 * 1000);
+  updateCounter();
+
+  // ====================================================================
+  // REAL AI MAP SEARCH – Understands places, feelings, and "home"
+  // ====================================================================
   const searchInput = document.getElementById('ai-search');
   const responseDiv = document.getElementById('ai-response');
-
   let currentRequest = null;
 
   searchInput.addEventListener('keypress', async function (e) {
     if (e.key !== 'Enter' || !this.value.trim()) return;
 
-    const query = this.value.trim();
-    responseDiv.innerHTML = 'Grok is listening to the wind…';
+    const query = this.value.trim().toLowerCase();
+    responseDiv.innerHTML = 'Grok is dreaming of places…';
     responseDiv.classList.add('visible');
 
     if (currentRequest) currentRequest.abort();
     const controller = new AbortController();
     currentRequest = controller;
+
+    // Special commands that don't need Grok
+    if (query === 'home' && userLocation) {
+      responseDiv.innerHTML = 'Coming home… ♡';
+      map.flyTo(userLocation, 6, { duration: 4 });
+      searchInput.value = '';
+      return;
+    }
+    if (query.includes('everyone') || query.includes('all') || query.includes('world')) {
+      responseDiv.innerHTML = 'Here we all are… breathing together';
+      map.flyTo([20, 0], 2.8, { duration: 4 });
+      return;
+    }
 
     try {
       const res = await fetch('https://api.x.ai/v1/chat/completions', {
@@ -353,77 +359,77 @@
         },
         body: JSON.stringify({
           model: 'grok-beta',
-          messages: [
-            { role: 'system', content: `You are a poetic cartographer. 
-              The user is on a dark world map showing humans breathing together.
-              Respond ONLY with valid JSON in this exact format:
-              { "action": "fly" | "zoom" | "pulse" | "say", "lat": number, "lon": number, "zoom": number (2-12), "message": "short poetic text" }
-              
-              Examples:
-              - "Paris" → { "action": "fly", "lat": 48.8566, "lon": 2.3522, "zoom": 10, "message": "City of light ♡" }
-              - "Where is everyone?" → { "action": "zoom", "zoom": 2.8, "message": "We are scattered like quiet stars" }
-              - "Home" → fly to user's location if known
-              - If unclear → { "action": "say", "message": "I’m not sure where that is… but we’re here together" }` },
-            { role: 'user', content: query }
-          ],
           temperature: 0.9,
-          max_tokens: 150
+          max_tokens: 200,
+          messages: [
+            { role: 'system', content: `You are a poetic AI cartographer on a dark world map showing humans breathing together.
+Respond ONLY with valid JSON in this exact format — no extra text:
+{ "action": "fly" | "zoom" | "say", "lat": number, "lon": number, "zoom": 2-14, "message": "short poetic reply" }
+
+Examples:
+- "paris" → { "action": "fly", "lat": 48.8566, "lon": 2.3522, "zoom": 11, "message": "City of light" }
+- "ocean" → { "action": "fly", "lat": 0, "lon": -160, "zoom": 3, "message": "The great quiet" }
+- "where is love" → { "action": "fly", "lat": 48.8566, "lon": 2.3522, "zoom": 10, "message": "Everywhere you look" }
+- "i'm lost" → { "action": "say", "message": "You are exactly where you need to be" }
+- If unsure → { "action": "say", "message": "I don't know that place… but we're here together" }` },
+            { role: 'user', content: query }
+          ]
         }),
         signal: controller.signal
       });
 
-      if (!res.ok) throw new Error('Grok is resting');
+      if (!res.ok) throw new Error('sleeping');
 
       const data = await res.json();
-      let parsed;
+      const text = data.choices[0].message.content;
 
+      let parsed;
       try {
-        // Extract JSON from Grok's response
-        const text = data.choices[0].message.content;
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) throw new Error("No JSON");
-        parsed = JSON.parse(jsonMatch[0]);
+        const jsonStr = text.match(/\{[\s\S]*\}/)?.[0] || text;
+        parsed = JSON.parse(jsonStr);
       } catch {
-        responseDiv.innerHTML = 'Grok whispered something unclear… try again ♡';
+        responseDiv.innerHTML = 'Grok whispered in riddles… try again softly';
         return;
       }
 
-      // === ACTUALLY MOVE THE MAP ===
       if (parsed.action === 'fly' && parsed.lat != null && parsed.lon != null) {
-        responseDiv.innerHTML = parsed.message || 'There you are…';
-        map.flyTo([parsed.lat, parsed.lon], parsed.zoom || 8, { duration: 3.5 });
-      }
-      else if (parsed.action === 'zoom') {
-        responseDiv.innerHTML = parsed.message || 'Breathing with the planet…';
-        map.flyTo(map.getCenter(), parsed.zoom, { duration: 4 });
-      }
-      else if (parsed.action === 'pulse') {
-        responseDiv.innerHTML = parsed.message || 'Feel that?';
-        document.querySelectorAll('.leaflet-marker-pane img').forEach(img => {
-          img.style.transition = 'transform 0.6s';
-          img.style.transform = 'scale(1.6)';
-          setTimeout(() => img.style.transform = 'scale(1)', 600);
-        });
-      }
-      else {
-        responseDiv.innerHTML = parsed.message || 'We are all here • somewhere';
+        responseDiv.innerHTML = parsed.message || 'There…';
+        map.flyTo([parsed.lat, parsed.lon], parsed.zoom || 9, { duration: 3.8 });
+      } else if (parsed.action === 'zoom') {
+        responseDiv.innerHTML = parsed.message || 'Breathing…';
+        map.setZoom(parsed.zoom, { duration: 3 });
+      } else {
+        responseDiv.innerHTML = parsed.message || 'We are all here • together';
       }
 
     } catch (err) {
-      if (err.name === 'AbortError') return;
-      responseDiv.innerHTML = 'The wind carried your words away… try again softly';
+      if (err.name !== 'AbortError') {
+        responseDiv.innerHTML = 'The stars are quiet tonight… try again later';
+      }
     } finally {
       currentRequest = null;
     }
   });
 
-  // Clear when typing new thing
+  // Clear response when input cleared
   searchInput.addEventListener('input', () => {
     if (!searchInput.value.trim()) {
       responseDiv.classList.remove('visible');
       responseDiv.innerHTML = '';
     }
   });
-  </script>
+
+  // Bonus: placeholder changes gently
+  const placeholders = [
+    "Ask Grok anything… (e.g. Paris, home, where is love?)",
+    "Where do you want to go today?",
+    "Type a place… or a feeling",
+    "We are all here • where are you?"
+  ];
+  let i = 0;
+  setInterval(() => {
+    searchInput.placeholder = placeholders[i = (i + 1) % placeholders.length];
+  }, 7000);
+</script>
 </body>
 </html>

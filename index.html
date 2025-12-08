@@ -327,33 +327,103 @@
     setInterval(loadVisitors, 5 * 60 * 1000);
     updateCounter();
 
-    // === AI Search with Grok (via public proxy) ===
-    const searchInput = document.getElementById('ai-search');
-    const responseDiv = document.getElementById('ai-response');
+<!-- === AI MAP SEARCH – Powered by real Grok (understands places & feelings) === -->
+  const searchInput = document.getElementById('ai-search');
+  const responseDiv = document.getElementById('ai-response');
 
-    searchInput.addEventListener('keypress', async function (e) {
-      if (e.key === 'Enter' && this.value.trim()) {
-        const query = this.value.trim();
-        responseDiv.textContent = 'Thinking…';
-        responseDiv.classList.add('visible');
+  let currentRequest = null;
 
-        try {
-          const res = await fetch(`https://grok.x.ai/api/chat?q=${encodeURIComponent(query)}`);
-          const data = await res.json();
-          const answer = data.choices?.[0]?.message?.content || data.answer || 'No answer received.';
-          responseDiv.textContent = answer.trim();
-        } catch (err) {
-          responseDiv.textContent = 'Grok is dreaming right now… try again in a moment.';
-        }
+  searchInput.addEventListener('keypress', async function (e) {
+    if (e.key !== 'Enter' || !this.value.trim()) return;
+
+    const query = this.value.trim();
+    responseDiv.innerHTML = 'Grok is listening to the wind…';
+    responseDiv.classList.add('visible');
+
+    if (currentRequest) currentRequest.abort();
+    const controller = new AbortController();
+    currentRequest = controller;
+
+    try {
+      const res = await fetch('https://api.x.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Client': 'grok-web-free'
+        },
+        body: JSON.stringify({
+          model: 'grok-beta',
+          messages: [
+            { role: 'system', content: `You are a poetic cartographer. 
+              The user is on a dark world map showing humans breathing together.
+              Respond ONLY with valid JSON in this exact format:
+              { "action": "fly" | "zoom" | "pulse" | "say", "lat": number, "lon": number, "zoom": number (2-12), "message": "short poetic text" }
+              
+              Examples:
+              - "Paris" → { "action": "fly", "lat": 48.8566, "lon": 2.3522, "zoom": 10, "message": "City of light ♡" }
+              - "Where is everyone?" → { "action": "zoom", "zoom": 2.8, "message": "We are scattered like quiet stars" }
+              - "Home" → fly to user's location if known
+              - If unclear → { "action": "say", "message": "I’m not sure where that is… but we’re here together" }` },
+            { role: 'user', content: query }
+          ],
+          temperature: 0.9,
+          max_tokens: 150
+        }),
+        signal: controller.signal
+      });
+
+      if (!res.ok) throw new Error('Grok is resting');
+
+      const data = await res.json();
+      let parsed;
+
+      try {
+        // Extract JSON from Grok's response
+        const text = data.choices[0].message.content;
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error("No JSON");
+        parsed = JSON.parse(jsonMatch[0]);
+      } catch {
+        responseDiv.innerHTML = 'Grok whispered something unclear… try again ♡';
+        return;
       }
-    });
 
-    // Clear response when input is empty
-    searchInput.addEventListener('input', () => {
-      if (!searchInput.value.trim()) {
-        responseDiv.classList.remove('visible');
+      // === ACTUALLY MOVE THE MAP ===
+      if (parsed.action === 'fly' && parsed.lat != null && parsed.lon != null) {
+        responseDiv.innerHTML = parsed.message || 'There you are…';
+        map.flyTo([parsed.lat, parsed.lon], parsed.zoom || 8, { duration: 3.5 });
       }
-    });
+      else if (parsed.action === 'zoom') {
+        responseDiv.innerHTML = parsed.message || 'Breathing with the planet…';
+        map.flyTo(map.getCenter(), parsed.zoom, { duration: 4 });
+      }
+      else if (parsed.action === 'pulse') {
+        responseDiv.innerHTML = parsed.message || 'Feel that?';
+        document.querySelectorAll('.leaflet-marker-pane img').forEach(img => {
+          img.style.transition = 'transform 0.6s';
+          img.style.transform = 'scale(1.6)';
+          setTimeout(() => img.style.transform = 'scale(1)', 600);
+        });
+      }
+      else {
+        responseDiv.innerHTML = parsed.message || 'We are all here • somewhere';
+      }
+
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      responseDiv.innerHTML = 'The wind carried your words away… try again softly';
+    } finally {
+      currentRequest = null;
+    }
+  });
+
+  // Clear when typing new thing
+  searchInput.addEventListener('input', () => {
+    if (!searchInput.value.trim()) {
+      responseDiv.classList.remove('visible');
+      responseDiv.innerHTML = '';
+    }
+  });
   </script>
 </body>
 </html>

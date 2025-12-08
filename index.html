@@ -1,49 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RootDonate • We Are All Here</title>
-  <meta name="description" content="A quiet work of art about being human on the same internet.">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <meta name="description" content="A quiet work of art about being human on the same internet." />
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    :root{--blue:#0a84ff;--green:#30d158;--orange:#ff9f0a;--soft:#ffffff0d}
-    body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;color:#fff;font-family:-apple-system,system-ui,sans-serif}
-    #map{width:100%;height:100%;background:#000;filter:brightness(0.9) contrast(1.1)}
-
-    .header{
-      position:absolute;top:0;left:0;right:0;padding:3rem 2rem 2rem;
-      text-align:center;z-index:10;background:linear-gradient(180deg,rgba(0,0,0,.9),transparent);
-      backdrop-filter:blur(30px);pointer-events:none
+    :root {
+      --blue: #0a84ff;
+      --green: #30d158;
+      --orange: #ff9f0a;
+      --soft: #ffffff0d;
     }
-    h1{
-      margin:0;font-size:4.2rem;font-weight:900;letter-spacing:-2px;
-      background:linear-gradient(90deg,var(--blue),var(--green),var(--orange));
-      -webkit-background-clip:text;background-clip:text;color:transparent;
-      text-shadow:0 0 40px rgba(10,132,255,.4)
+    * { box-sizing: border-box; }
+    body, html {
+      margin: 0; padding: 0; height: 100%; overflow: hidden;
+      background: #000; color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
-    .poem{
-      margin:1.6rem 0 0;font-size:1.5rem;font-weight:300;opacity:.88;
-      line-height:1.7;letter-spacing:0.5px
+    #map {
+      width: 100%; height: 100%;
+      background: #000;
+      filter: brightness(0.92) contrast(1.12);
     }
 
-    .canvas{
-      position:absolute;inset:0;z-index:1;pointer-events:none;
-      background:transparent
+    .header {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      padding: 3rem 2rem 2rem;
+      text-align: center;
+      z-index: 1000;
+      background: linear-gradient(180deg, rgba(0,0,0,0.9), transparent);
+      backdrop-filter: blur(30px);
+      pointer-events: none;
+    }
+    h1 {
+      margin: 0;
+      font-size: 4.5rem;
+      font-weight: 900 4.5rem/1 -apple-system, system-ui, sans-serif;
+      letter-spacing: -2.5px;
+      background: linear-gradient(90deg, var(--blue), var(--green), var(--orange));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 50px rgba(10,132,255,0.4);
+    }
+    .poem {
+      margin-top: 1.8rem;
+      font-size: 1.55rem;
+      font-weight: 300;
+      opacity: 0.9;
+      line-height: 1.7;
+      letter-spacing: 0.6px;
     }
 
-    footer{
-      position:absolute;bottom:0;left:0;right:0;padding:18px;
-      text-align:center;background:rgba(0,0,0,.7);backdrop-filter:blur(20px);
-      font-size:.9rem;opacity:.7;z-index:10;letter-spacing:0.4px
+    footer {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 1.2rem;
+      text-align: center;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(20px);
+      font-size: 0.92rem;
+      opacity: 0.75;
+      z-index: 1000;
+      letter-spacing: 0.4px;
+    }
+
+    /* Pulsing dot for user's location */
+    .user-marker {
+      background: var(--blue);
+      border: 3px solid #fff;
+      border-radius: 50%;
+      width: 16px !important;
+      height: 16px !important;
+      box-shadow: 0 0 20px #0a84ff;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(10,132,255,0.7); }
+      70% { box-shadow: 0 0 0 20px rgba(10,132,255,0); }
+      100% { box-shadow: 0 0 0 0 rgba(10,132,255,0); }
     }
   </style>
 </head>
 <body>
 
   <div id="map"></div>
-  <canvas class="canvas" id="canvas"></canvas>
 
   <div class="header">
     <h1>RootDonate</h1>
@@ -58,35 +103,103 @@
     A living artwork • 2025 • No affiliation with xAI, Grok, or Optimism • Forever free
   </footer>
 
-<script>
-  const map = L.map('map', {
-    zoomControl: false, 
-    minZoom: 2.5, 
-    maxZoom: 19, 
-    fadeAnimation: true, 
-    zoomAnimation: true
-  }).setView([20, 0], 2.8);
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // Initialize map
+    const map = L.map('map', {
+      zoomControl: false,
+      minZoom: 2.5,
+      maxZoom: 18,
+      fadeAnimation: true,
+      zoomAnimation: true,
+      worldCopyJump: true
+    }).setView([20, 0], 2.8);
 
-  L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
-    attribution: '', 
-    maxZoom: 20
-  }).addTo(map);
+    // Dark, beautiful tile layer
+    L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+      attribution: '',
+      maxZoom: 20
+    }).addTo(map);
 
-  // Added logic for dynamic IP node GPS enablement
-  async function fetchIPNodes() {
-    const response = await fetch('http://cernvm/FIND/?sgml+cms'); // Replace with actual API endpoint
-    return response.json();
-  }
-
-  fetchIPNodes().then(ipNodes => {
-    ipNodes.forEach(node => {
-      L.marker([node.lat, node.lon])
-        .addTo(map)
-        .bindPopup(`IP: ${node.ip}, Location: ${node.location}`);
+    // Custom icon for the user's location
+    const userIcon = L.divIcon({
+      className: 'user-marker',
+      iconSize: [16, 16],
+      html: '<div></div>'
     });
-  }).catch(error => {
-    console.error('Error fetching IP nodes:', error);
-  });
-</script>
+
+    let userMarker = null;
+
+    // 1. Try HTML5 Geolocation (most accurate)
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+
+          // Remove old marker if exists
+          if (userMarker) map.removeLayer(userMarker);
+
+          userMarker = L.marker([lat, lon], { icon: userIcon })
+            .addTo(map)
+            .bindPopup('You are here • right now', { closeButton: false })
+            .openPopup();
+
+          map.setView([lat, lon], 4, { animate: true });
+        },
+        (error) => {
+          console.warn('Geolocation denied or failed:', error.message);
+          fallbackToIPLocation();
+        },
+        { timeout: 10000, maximumAge: 600000, enableHighAccuracy: true }
+      );
+    } else {
+      fallbackToIPLocation();
+    }
+
+    // 2. Fallback: Use IP-based geolocation (ipapi.co – free & no key needed)
+    function fallbackToIPLocation() {
+      fetch('https://ipapi.co/json/')
+        .then(res => res.json())
+        .then(data => {
+          if (data.latitude && data.longitude) {
+            const lat = data.latitude;
+            const lon = data.longitude;
+
+            if (userMarker) map.removeLayer(userMarker);
+
+            userMarker = L.marker([lat, lon], { icon: userIcon })
+              .addTo(map)
+              .bindPopup(`You are here • ${data.city}, ${data.country_name}`, { closeButton: false })
+              .openPopup();
+
+            map.setView([lat, lon], 4, { animate: true });
+          }
+        })
+        .catch(err => console.error('IP location failed:', err));
+    }
+
+    // Optional: Add a few poetic static nodes around the world
+    const poeticNodes = [
+      { lat: 40.7128, lon: -74.0060, text: "Someone just smiled in New York" },
+      { lat: 35.6762, lon: 139.6503, text: "A quiet breath in Tokyo" },
+      { lat: 51.5074, lon: -0.1278, text: "Someone is dreaming in London" },
+      { lat: -33.8688, lon: 151.2093, text: "Sunrise over Sydney" },
+      { lat: 48.8566, lon: 2.3522, text: "A poet walks in Paris" }
+    ];
+
+    poeticNodes.forEach(node => {
+      L.circleMarker([node.lat, node.lon], {
+        radius: 6,
+        fillColor: "#ff9f0a",
+        color: "#fff",
+        weight: 1.5,
+        opacity: 0.8,
+        fillOpacity: 0.5
+      })
+      .addTo(map)
+      .bindPopup(node.text, { closeButton: false });
+    });
+  </script>
 </body>
 </html>

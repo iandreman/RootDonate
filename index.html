@@ -67,70 +67,20 @@
       attribution:'', maxZoom:20
     }).addTo(map);
 
-    // Gentle breathing dots
-    const dots = [
-      [50.11,8.68],[52.37,4.94],[51.51,-0.09],[38.94,-77.46],
-      [-23.63,-46.64],[25.78,-80.22],[35.68,139.77],[1.30,103.77],
-      [35.6762,139.6503],[40.7128,-74.0060],[48.8566,2.3522]
+    // Added logic for IP nodes
+    const ipNodes = [
+      { ip: "192.168.0.1", lat: 40.73061, lon: -73.935242 },
+      { ip: "192.168.0.2", lat: 34.052235, lon: -118.243683 },
+      { ip: "192.168.0.3", lat: 51.507222, lon: -0.1275 }
     ];
 
-    dots.forEach(p => {
-      const m = L.circleMarker(p, {
-        radius:22, fillColor:"#ff9f0a", color:"#ffffff44", weight:2,
-        fillOpacity:0.6
-      }).addTo(map);
-      
-      // breathing animation
-      setInterval(() => {
-        const now = Date.now() / 4000;
-        const pulse = 0.6 + 0.4 * Math.sin(now);
-        m.setStyle({fillOpacity:pulse, radius:22 + 8*pulse});
-      }, 50);
+    // Add markers for each IP node
+    ipNodes.forEach(node => {
+      L.marker([node.lat, node.lon])
+        .addTo(map)
+        .bindPopup(`IP: ${node.ip}`);
     });
 
-    // Canvas stars / soft particles
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const particles = [];
-    for(let i=0;i<180;i++){
-      particles.push({
-        x:Math.random()*canvas.width,
-        y:Math.random()*canvas.height,
-        r:Math.random()*1.5+0.5,
-        speed:0.1+Math.random()*0.3
-      });
-    }
-
-    function draw(){
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      particles.forEach(p=>{
-        ctx.beginPath();
-        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-        ctx.fillStyle = `rgba(255,255,255,${0.2+Math.random()*0.3})`;
-        ctx.fill();
-        p.x += p.speed;
-        if(p.x>canvas.width) p.x=0;
-      });
-      requestAnimationFrame(draw);
-    }
-    draw();
-
-    // Slowly rotating poetry
-    const lines = [
-      "We are all here • together",
-      "One planet • one quiet network",
-      "Breathing the same invisible light",
-      "Thank you for existing right now",
-      "The internet is made of people",
-      "You are not alone • never were"
-    ];
-    let i = 0;
-    setInterval(() => {
-      document.getElementById('poem').innerHTML = lines[i++ % lines.length];
-    }, 11000);
   </script>
 </body>
 </html>

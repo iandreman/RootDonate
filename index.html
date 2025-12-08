@@ -94,11 +94,6 @@
       worldCopyJump: true
     }).setView([20, 0], 2.8);
 
-    L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
-      attribution: '',
-      maxZoom: 20
-    }).addTo(map);
-
     // Icons
     const userIcon = L.divIcon({ className: 'user-marker', iconSize: [18, 18] });
     const otherIcon = L.divIcon({ className: 'other-marker', iconSize: [15, 15] });

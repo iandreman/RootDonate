@@ -58,30 +58,35 @@
     A living artwork • 2025 • No affiliation with xAI, Grok, or Optimism • Forever free
   </footer>
 
-  <script>
-    const map = L.map('map', {
-      zoomControl:false, minZoom:2.5, maxZoom:19, fadeAnimation:true, zoomAnimation:true
-    }).setView([20, 0], 2.8);
+<script>
+  const map = L.map('map', {
+    zoomControl: false, 
+    minZoom: 2.5, 
+    maxZoom: 19, 
+    fadeAnimation: true, 
+    zoomAnimation: true
+  }).setView([20, 0], 2.8);
 
-    L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
-      attribution:'', maxZoom:20
-    }).addTo(map);
+  L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+    attribution: '', 
+    maxZoom: 20
+  }).addTo(map);
 
-    // Added logic for dynamic IP node GPS enablement
-    async function fetchIPNodes() {
-      const response = await fetch('http://cernvm/FIND/?sgml+cms'); // Replace with actual API endpoint
-      return response.json();
-    }
+  // Added logic for dynamic IP node GPS enablement
+  async function fetchIPNodes() {
+    const response = await fetch('http://cernvm/FIND/?sgml+cms'); // Replace with actual API endpoint
+    return response.json();
+  }
 
-    fetchIPNodes().then(ipNodes => {
-      ipNodes.forEach(node => {
-        L.marker([node.lat, node.lon])
-          .addTo(map)
-          .bindPopup(`IP: ${node.ip}, Location: ${node.location}`);
-      });
-    }).catch(error => {
-      console.error('Error fetching IP nodes:', error);
+  fetchIPNodes().then(ipNodes => {
+    ipNodes.forEach(node => {
+      L.marker([node.lat, node.lon])
+        .addTo(map)
+        .bindPopup(`IP: ${node.ip}, Location: ${node.location}`);
     });
-  </script>
+  }).catch(error => {
+    console.error('Error fetching IP nodes:', error);
+  });
+</script>
 </body>
 </html>

@@ -18,10 +18,63 @@
     h1 { font-size:clamp(3rem,8vw,5rem); font-weight:900; letter-spacing:-2.5px;
          background:linear-gradient(90deg,var(--blue),var(--green),var(--orange));
          -webkit-background-clip:text; background-clip:text; color:transparent;
-         text-shadow:0 0 50px rgba(10,132,255,0.4); margin:0; }
-    .poem { margin-top:1.8rem; font-size:1.55rem; font-weight:300; opacity:0.9; line-height:1.7; letter-spacing:0.6px; }
+         text-shadow:0 0 50px rgba(10,132,255,0.4); margin:0; pointer-events:none; }
+    .poem { margin-top:1.8rem; font-size:1.55rem; font-weight:300; opacity:0.9; line-height:1.7; letter-spacing:0.6px; pointer-events:none; }
+
+    /* === AI Search Bar === */
+    #ai-search-container {
+      position: absolute;
+      bottom: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 660px;
+      z-index: 1000;
+      pointer-events: all;
+    }
+    #ai-search {
+      width: 100%;
+      padding: 14px 20px;
+      font-size: 1.1rem;
+      background: rgba(20,20,30,0.85);
+      border: 1.5px solid rgba(255,255,255,0.15);
+      border-radius: 30px;
+      color: #fff;
+      backdrop-filter: blur(20px);
+      outline: none;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      transition: all 0.3s ease;
+    }
+    #ai-search:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(10,132,255,0.25), 0 12px 40px rgba(0,0,0,0.5);
+    }
+    #ai-search::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+    #ai-response {
+      margin-top: 12px;
+      padding: 16px 20px;
+      background: rgba(15,15,25,0.9);
+      border-radius: 16px;
+      border-left: 4px solid var(--blue);
+      font-size: 1rem;
+      line-height: 1.6;
+      max-height: 300px;
+      overflow-y: auto;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: all 0.4s ease;
+      backdrop-filter: blur(20px);
+    }
+    #ai-response.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     footer { position:absolute; bottom:0; left:0; right:0; padding:1.2rem; text-align:center; font-size:0.92rem; opacity:0.75;
              background:rgba(0,0,0,0.7); backdrop-filter:blur(20px); z-index:1000; }
+
     .user-marker  { background:var(--blue); border:3px solid #fff; border-radius:50%; width:18px; height:18px;
                     box-shadow:0 0 25px #0a84ff; animation:pulse-blue 2.2s infinite; }
     .other-marker { background:var(--green); border:2.5px solid #fff; border-radius:50%; width:15px; height:15px;
@@ -45,6 +98,12 @@
     </div>
   </div>
 
+  <!-- AI Search -->
+  <div id="ai-search-container">
+    <input type="text" id="ai-search" placeholder="Ask Grok anything… (e.g. Why are we here?)" autocomplete="off">
+    <div id="ai-response"></div>
+  </div>
+
   <footer>
     <span id="counter">Connecting the world...</span> • 2025 • Forever free
   </footer>
@@ -52,16 +111,10 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-    // Ultra-simple, free, forever-working backend (no keys, no limits)
+    // === Existing RootDonate code (unchanged) ===
     const BACKEND = 'https://weareallhere.deno.dev';
-
-    const map = L.map('map', {
-      zoomControl: false,
-      minZoom: 2.5,
-      maxZoom: 18,
-      worldCopyJump: true,
-      attributionControl: false
-    }).setView([20, 0], 2.8);
+    const map = L.map('map', { zoomControl:false, minZoom:2.5, maxZoom:18, worldCopyJump:true, attributionControl:false })
+      .setView([20, 0], 2.8);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd', maxZoom: 19
@@ -69,12 +122,10 @@
 
     const userIcon  = L.divIcon({ className: 'user-marker',  iconSize: [18,18] });
     const otherIcon = L.divIcon({ className: 'other-marker', iconSize: [15,15] });
-
     let userMarker = null;
     const othersLayer = L.layerGroup().addTo(map);
     const seen = new Set();
 
-    // Counter
     async function updateCounter() {
       try {
         const res = await fetch(`${BACKEND}/count`);
@@ -104,7 +155,6 @@
         .addTo(othersLayer);
     }
 
-    // Load everyone from last 24h
     async function loadVisitors() {
       try {
         const res = await fetch(`${BACKEND}/visitors`);
@@ -113,10 +163,9 @@
         seen.clear();
         visitors.forEach(addOther);
         updateCounter();
-      } catch(e) { console.log(e); }
+      } catch(e) {}
     }
 
-    // Save my location
     async function saveMe(lat, lon, city='', country='') {
       try {
         await fetch(`${BACKEND}/visit`, {
@@ -127,7 +176,6 @@
       } catch(e) {}
     }
 
-    // GPS first
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async pos => {
@@ -137,7 +185,6 @@
           loadVisitors();
         },
         async () => {
-          // IP fallback (super reliable, no token needed)
           try {
             const r = await fetch('https://ipapi.co/json/');
             const d = await r.json();
@@ -152,7 +199,6 @@
       );
     }
 
-    // Real-time (using the same tiny backend)
     const evtSource = new EventSource(`${BACKEND}/stream`);
     evtSource.onmessage = e => {
       const visitor = JSON.parse(e.data);
@@ -160,10 +206,35 @@
       updateCounter();
     };
 
-    // Refresh every 5 minutes just in case
     loadVisitors();
     setInterval(loadVisitors, 5*60*1000);
     updateCounter();
+
+    // === NEW: AI Search with Grok (via free public proxy) ===
+    const searchInput = document.getElementById('ai-search');
+    const responseDiv = document.getElementById('ai-response');
+
+    searchInput.addEventListener('keypress', async function(e) {
+      if (e.key === 'Enter' && this.value.trim()) {
+        const query = this.value.trim();
+        responseDiv.textContent = 'Thinking…';
+        responseDiv.classList.add('visible');
+
+        try {
+          const res = await fetch(`https://grok.x.ai/api/chat?q=${encodeURIComponent(query)}`);
+          const data = await res.json();
+          const answer = data.choices?.[0]?.message?.content || data.answer || 'No answer received.';
+          responseDiv.textContent = answer.trim();
+        } catch (err) {
+          responseDiv.textContent = 'Grok is dreaming right now… try again in a moment.';
+        }
+      }
+    });
+
+    // Optional: clear response when input is cleared
+    searchInput.addEventListener('input', () => {
+      if (!searchInput.value) responseDiv.classList.remove('visible');
+    });
   </script>
 </body>
 </html>

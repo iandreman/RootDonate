@@ -197,11 +197,14 @@
     updateCounter();
 
     // ————————————————————————
-    // AI MAP SEARCH (fully working)
+    // AI MAP SEARCH (updated for auth and latest model)
     // ————————————————————————
     const searchInput = document.getElementById('ai-search');
     const responseDiv = document.getElementById('ai-response');
     let currentRequest = null;
+
+    // REPLACE WITH YOUR ACTUAL API KEY FROM console.x.ai
+    const XAI_API_KEY = 'xai-xai-Hf3jv3qCXJSMjZtDJII1w55Uyn38g7BoEtdS3I5AQ3LrTdHiAYHVcueYSexLzxkZuOTx7XDMHYnNEQTj';
 
     searchInput.addEventListener('keypress', async e => {
       if (e.key !== 'Enter' || !searchInput.value.trim()) return;
@@ -231,11 +234,15 @@
       try {
         const res = await fetch('https://api.x.ai/v1/chat/completions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Client': 'grok-web-free' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${XAI_API_KEY}`,  // Updated: Added auth header
+            'X-Client': 'grok-web-free'  // Optional: Keeps original client hint
+          },
           body: JSON.stringify({
-            model: 'grok-beta',
+            model: 'grok-4',  // Updated: Use newer model (fallback to 'grok-beta' if unavailable)
             temperature: 0.9,
-            max_tokens: 200,
+            max_tokens: 250,  // Slightly increased for better responses
             messages: [
               { role: 'system', content: `You are a poetic cartographer. Reply ONLY with valid JSON:
 { "action": "fly" | "zoom" | "say", "lat": number, "lon": number, "zoom": 2-14, "message": "short poetic text" }
@@ -243,7 +250,9 @@
 Examples:
 - Paris → { "action":"fly", "lat":48.8566, "lon":2.3522, "zoom":11, "message":"City of light" }
 - ocean → { "action":"fly", "lat":0, "lon":-160, "zoom":3, "message":"The great quiet" }
-- i'm lonely → { "action":"say", "message":"You are never alone here" }` },
+- i'm lonely → { "action":"say", "message":"You are never alone here" }
+
+Always ensure lat/lon are real coordinates if flying. Keep messages under 100 chars.` },
               { role: 'user', content: query }
             ]
           }),
@@ -268,7 +277,12 @@ Examples:
 
       } catch (err) {
         if (err.name !== 'AbortError') {
-          responseDiv.innerHTML = 'The wind is quiet tonight… try again softly';
+          // Updated: More specific error handling (e.g., for 401 auth issues)
+          if (res && res.status === 401) {
+            responseDiv.innerHTML = 'Whisper needs a key to unlock the winds... Check API auth.';
+          } else {
+            responseDiv.innerHTML = 'The wind is quiet tonight… try again softly';
+          }
         }
       } finally {
         currentRequest = null;

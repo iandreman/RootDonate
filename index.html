@@ -181,11 +181,8 @@
 
     // Optional: Add a few poetic static nodes around the world
     const poeticNodes = [
-      { lat: 40.7128, lon: -74.0060, text: "Someone just smiled in New York" },
-      { lat: 35.6762, lon: 139.6503, text: "A quiet breath in Tokyo" },
-      { lat: 51.5074, lon: -0.1278, text: "Someone is dreaming in London" },
-      { lat: -33.8688, lon: 151.2093, text: "Sunrise over Sydney" },
-      { lat: 48.8566, lon: 2.3522, text: "A poet walks in Paris" }
+      lat = data.latitude;
+      lon = data.longitude;
     ];
 
     poeticNodes.forEach(node => {
@@ -197,7 +194,7 @@
         opacity: 0.8,
         fillOpacity: 0.5
       })
-      .addTo(userMarker)
+      .addTo(map)
       .bindPopup(node.text, { closeButton: false });
     });
   </script>

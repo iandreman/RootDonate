@@ -218,7 +218,7 @@
       if (e.key === 'Enter' && this.value.trim()) {
         const query = this.value.trim();
         responseDiv.textContent = 'Thinking…';
-        responseDiv.classList.add('visible');
+        responseDiv.classList.add(map);
 
         try {
           const res = await fetch(`https://grok.x.ai/api/chat?q=${encodeURIComponent(query)}`);

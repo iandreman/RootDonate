@@ -8,24 +8,53 @@
   
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    :root{--blue:#0a84ff;--green:#30d158;--orange:#ff9f0a;}
-    *{box-sizing:border-box;}
-    body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;color:#fff;font-family:-apple-system,system-ui,sans-serif;}
-    #map{width:100%;height:100%;background:#000;filter:brightness(0.92) contrast(1.12);}
-    .header{position:absolute;top:0;left:0;right:0;padding:3rem 2rem 2rem;text-align:center;z-index:1000;background:linear-gradient(180deg,rgba(0,0,0,0.9),transparent);backdrop-filter:blur(30px);pointer-events:none;}
-    h1{margin:0;font-size:4.5rem;font-weight:900;letter-spacing:-2.5px;background:linear-gradient(90deg,var(--blue),var(--green),var(--orange));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 50px rgba(10,132,255,0.4);}
-    .poem{margin-top:1.8rem;font-size:1.55rem;font-weight:300;opacity:0.9;line-height:1.7;letter-spacing:0.6px;}
-    footer{position:absolute;bottom:0;left:0;right:0;padding:1.2rem;text-align:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(20px);font-size:0.92rem;opacity:0.75;z-index:1000;}
-    
-    .user-marker, .other-marker{
-      background:var(--blue);border:3px solid #fff;border-radius:50%;width:18px;height:18px;
-      box-shadow:0 0 25px #0a84ff;animation:pulse 2.2s infinite;
+    :root { --blue:#0a84ff; --green:#30d158; --orange:#ff9f0a; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body, html { height:100%; overflow:hidden; background:#000; color:#fff; font-family:-apple-system,system-ui,sans-serif; }
+    #map { width:100%; height:100%; filter:brightness(0.92) contrast(1.12); }
+
+    .header {
+      position:absolute; top:0; left:0; right:0;
+      padding:3rem 2rem 2rem; text-align:center; z-index:1000;
+      background:linear-gradient(180deg, rgba(0,0,0,0.9), transparent);
+      backdrop-filter:blur(30px); pointer-events:none;
     }
-    .other-marker{background:var(--green);box-shadow:0 0 25px #30d158;animation:pulse 3s infinite;}
-    @keyframes pulse{
-      0%{box-shadow:0 0 0 0 rgba(10,132,255,0.8);}
-      70%{box-shadow:0 0 0 22px rgba(10,132,255,0);}
-      100%{box-shadow:0 0 0 0 rgba(10,132,255,0);}
+    h1 {
+      font-size:4.5rem; font-weight:900; letter-spacing:-2.5px;
+      background:linear-gradient(90deg, var(--blue), var(--green), var(--orange));
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      text-shadow:0 0 50px rgba(10,132,255,0.4);
+    }
+    .poem {
+      margin-top:1.8rem; font-size:1.55rem; font-weight:300; opacity:0.9;
+      line-height:1.7; letter-spacing:0.6px;
+    }
+    footer {
+      position:absolute; bottom:0; left:0; right:0;
+      padding:1.2rem; text-align:center; font-size:0.92rem; opacity:0.75;
+      background:rgba(0,0,0,0.7); backdrop-filter:blur(20px); z-index:1000;
+    }
+
+    /* Pulsing markers */
+    .user-marker {
+      background:var(--blue); border:3px solid #fff; border-radius:50%;
+      width:18px; height:18px; box-shadow:0 0 25px #0a84ff;
+      animation:pulse-blue 2.2s infinite;
+    }
+    .other-marker {
+      background:var(--green); border:2.5px solid #fff; border-radius:50%;
+      width:15px; height:15px; box-shadow:0 0 20px #30d158;
+      animation:pulse-green 3s infinite;
+    }
+    @keyframes pulse-blue {
+      0%   { box-shadow:0 0 0 0 rgba(10,132,255,0.8); }
+      70%  { box-shadow:0 0 0 22px rgba(10,132,255,0); }
+      100% { box-shadow:0 0 0 0 rgba(10,132,255,0); }
+    }
+    @keyframes pulse-green {
+      0%   { box-shadow:0 0 0 0 rgba(48,209,88,0.7); }
+      70%  { box-shadow:0 0 0 18px rgba(48,209,88,0); }
+      100% { box-shadow:0 0 0 0 rgba(48,209,88,0); }
     }
   </style>
 </head>
@@ -43,20 +72,21 @@
   </div>
 
   <footer>
-    <span id="counter">Thousands of humans breathing with you right now</span> • 2025 • Forever free
+    <span id="counter">Connecting the world...</span> • 2025 • Forever free
   </footer>
 
+  <!-- Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <script>
-    // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
-    //  PUT YOUR SUPABASE KEYS HERE
-    const SUPABASE_URL = 'https://ekdiarbztipvogxversx.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrZGlhcmJ6dGlwdm9neHZlcnN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNTk1MzgsImV4cCI6MjA4MDczNTUzOH0.dxIG7ABT8YqNe2mnbfNcgqf3cUTE3l4YdFpSiidHk4I';
-    // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+    // Supabase config (your working keys)
+    const supabase = Supabase.createClient(
+      'https://ekdiarbztipvogxversx.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrZGlhcmJ6dGlwdm9neHZlcnN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNTk1MzgsImV4cCI6MjA4MDczNTUzOH0.dxIG7ABT8YqNe2mnbfNcgqf3cUTE3l4YdFpSiidHk4I'
+    );
 
-    const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+    // Map setup
     const map = L.map('map', {
       zoomControl: false,
       minZoom: 2.5,
@@ -69,98 +99,125 @@
       maxZoom: 20
     }).addTo(map);
 
-    const userIcon = L.divIcon({className:'user-marker', iconSize:[18,18]});
-    const otherIcon = L.divIcon({className:'other-marker', iconSize:[15,15]});
+    // Icons
+    const userIcon = L.divIcon({ className: 'user-marker', iconSize: [18, 18] });
+    const otherIcon = L.divIcon({ className: 'other-marker', iconSize: [15, 15] });
 
     let userMarker = null;
     const othersLayer = L.layerGroup().addTo(map);
+    const markerKeyMap = new Map(); // Prevents duplicate markers
 
     // Update live counter
     async function updateCounter() {
-      const { count } = await supabase.from('visitors').select('*', { count: 'exact', head: true })
-        .gte('created_at', new Date(Date.now() - 24*60*60*1000).toISOString()); // last 24h
-      document.getElementById('counter').textContent = 
-        count ? `${count.toLocaleString()}+ humans breathing with you right now` : 'You are the first today';
+      const dayAgo = new Date(Date.now() - 24*60*60*1000).toISOString();
+      const { count } = await supabase
+        .from('visitors')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', dayAgo);
+
+      const text = count > 0 
+        ? `${count.toLocaleString()}+ humans breathing with you right now`
+        : 'You are the first today • welcome home';
+      document.getElementById('counter').textContent = text;
     }
 
     // Show current user
-    function showUser(lat, lon, popup = 'You are here • right now') {
-      if (userMarker) map.removeLayer(userMarker);
-      userMarker = L.marker([lat, lon], {icon: userIcon}).addTo(map)
-        .bindPopup(popup, {closeButton:false, autoClose:false}).openPopup();
-      map.setView([lat, lon], 5, {animate:true, duration:2.5});
+    function showUser(lat, lon, popupText = 'You are here • right now') {
+      if (userMarker) userMarker.remove();
+      userMarker = L.marker([lat, lon], { icon: userIcon })
+        .addTo(map)
+        .bindPopup(popupText, { closeButton: false, autoClose: false })
+        .openPopup();
+      map.setView([lat, lon], 5, { animate: true, duration: 2.5 });
     }
 
-    // Add or update another visitor
-    function addOtherVisitor({lat, lng, city, country}) {
-      const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
-      if (othersLayer._keyedLayers?.[key]) return; // avoid duplicates
+    // Add another visitor
+    function addOtherVisitor({ lat, lng, city, country }) {
+      const key = `${lat.toFixed(5)}|${lng.toFixed(5)}`;
+      if (markerKeyMap.has(key)) return;
 
-      const text = city ? `${city}, ${country}` : 'Somewhere on Earth';
-      L.marker([lat, lng], {icon: otherIcon})
+      const text = city && country ? `${city}, ${country}` : 'Somewhere on Earth';
+      const marker = L.marker([lat, lng], { icon: otherIcon })
         .addTo(othersLayer)
-        .bindPopup(text, {closeButton:false, autoClose:false});
+        .bindPopup(text, { closeButton: false, autoClose: false });
+
+      markerKeyMap.set(key, marker);
     }
 
     // Load all recent visitors
     async function loadAllVisitors() {
+      const dayAgo = new Date(Date.now() - 24*60*60*1000).toISOString();
       const { data } = await supabase
         .from('visitors')
         .select('lat,lng,city,country')
-        .gte('created_at', new Date(Date.now() - 24*60*60*1000).toISOString());
-      
+        .gte('created_at', dayAgo)
+        .order('created_at', { ascending: false });
+
       othersLayer.clearLayers();
+      markerKeyMap.clear();
       data?.forEach(addOtherVisitor);
       updateCounter();
     }
 
-    // Push current user to the shared table
-    async function pushMyLocation(lat, lon, city = '', country = '') {
+    // Push current location
+    async function pushLocation(lat, lon, city = '', country = '') {
       await supabase.from('visitors').insert({
-        lat, lng: lon, city, country
+        lat,
+        lng: lon,
+        city,
+        country
       });
-      loadAllVisitors(); // refresh everyone
     }
 
-    // ——— Geolocation ———
+    // Geolocation: GPS first
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         pos => {
-          const {latitude, longitude} = pos.coords;
+          const { latitude, longitude } = pos.coords;
           showUser(latitude, longitude);
-          pushMyLocation(latitude, longitude);
+          pushLocation(latitude, longitude);
         },
-        () => fallbackIP(),
-        {timeout:12000, maximumAge:300000, enableHighAccuracy:true}
+        () => fallbackToIP(),
+        { timeout: 12000, maximumAge: 300000, enableHighAccuracy: true }
       );
     } else {
-      fallbackIP();
+      fallbackToIP();
     }
 
-    function fallbackIP() {
+    // Fallback: IP geolocation
+    function fallbackToIP() {
       fetch('https://ipapi.co/json/')
         .then(r => r.ok ? r.json() : Promise.reject())
         .then(d => {
-          const lat = d.latitude, lon = d.longitude;
+          const lat = d.latitude;
+          const lon = d.longitude;
           const city = d.city || '';
           const country = d.country_name || 'Earth';
           showUser(lat, lon, `You are here • ${city}, ${country}`);
-          pushMyLocation(lat, lon, city, country);
+          pushLocation(lat, lon, city, country);
         })
-        .catch(() => map.setView([20,0], 2.8));
+        .catch(() => {
+          map.setView([20, 0], 2.8);
+          document.getElementById('counter').textContent = 'We are all here • somewhere';
+        });
     }
 
-    // Real-time listener — new dots appear instantly
-    supabase.channel('visitors')
-      .on('postgres_changes', {event:'INSERT', schema:'public', table:'visitors'}, payload => {
+    // Real-time listener
+    supabase
+      .channel('visitors-changes')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'visitors'
+      }, payload => {
         addOtherVisitor(payload.new);
         updateCounter();
       })
       .subscribe();
 
-    // Initial load
+    // Initial load + periodic refresh
     loadAllVisitors();
-    setInterval(loadAllVisitors, 5*60*1000); // refresh every 5 min just in case
+    setInterval(loadAllVisitors, 5 * 60 * 1000);
   </script>
 </body>
 </html>

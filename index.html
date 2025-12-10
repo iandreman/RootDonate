@@ -64,7 +64,7 @@
 
   <div class="search-container">
     <div style="position:relative;">
-      <input type="text" id="search-input" placeholder="Tokyo · Africa · cold · night · Brazil…" autocomplete="off">
+      <input type="text" id="search-input" placeholder="Try: Tokyo · Africa · cold · night · Brazil…" autocomplete="off">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
         <circle cx="11" cy="11" r="8"/>
         <path d="m21 21-4.35-4.35"/>
@@ -98,63 +98,71 @@
     const seen = new Set();
     const allVisitors = [];
 
-    // ──────── MOVE DOM REFERENCES TO AFTER HTML EXISTS ────────
-    const searchInput = document.getElementById('search-input');
-    const autocompleteList = document.getElementById('autocomplete-list');
+    // ──────── ALL DOM ELEMENTS GRABBED AFTER PAGE LOADS ────────
+    document.addEventListener('DOMContentLoaded', () => {
+      const searchInput = document.getElementById('search-input');
+      const autocompleteList = document.getElementById('autocomplete-list');
 
-    function smartSearch(q) {
-      q = q.toLowerCase().trim();
-      if (!q) return allVisitors;
+      // AI-powered search
+      function smartSearch(q) {
+        q = q.toLowerCase().trim();
+        if (!q) return allVisitors;
 
-      let results = allVisitors.filter(v => 
-        v.city.toLowerCase().includes(q) || 
-        v.country.toLowerCase().includes(q)
-      );
-      if (results.length) return results;
+        // Direct city/country
+        let results = allVisitors.filter(v => 
+          v.city.toLowerCase().includes(q) || 
+          v.country.toLowerCase().includes(q)
+        );
+        if (results.length) return results;
 
-      if (q.includes('africa')) return allVisitors.filter(v => v.country.match(/africa|kenya|nigeria|egypt|ghana|morocco/i));
-      if (q.includes('europe')) return allVisitors.filter(v => v.country.match(/uk|france|germany|italy|spain|netherlands|sweden/i));
-      if (q.includes('asia') || q.includes('tokyo') || q.includes('japan')) return allVisitors.filter(v => v.country.match(/japan|china|korea|india|thailand|singapore/i));
-      if (q.includes('america') || q.includes('usa') || q.includes('brazil')) return allVisitors.filter(v => v.country.match(/united states|brazil|canada|mexico|argentina/i));
-      if (q.includes('cold') || q.includes('winter')) return allVisitors.filter(v => ['iceland','norway','sweden','finland','canada','russia'].some(c => v.country.toLowerCase().includes(c)));
-      if (q.includes('hot') || q.includes('summer')) return allVisitors.filter(v => ['brazil','india','thailand','mexico','egypt','australia'].some(c => v.country.toLowerCase().includes(c)));
-      if (q.includes('night') || q.includes('dark')) {
-        const nightLng = ((new Date().getUTCHours() + 12) % 24) * 15 - 180;
-        return allVisitors.filter(v => Math.abs(v.lng - nightLng) < 80);
+        // Magic keywords
+        if (q.includes('africa')) return allVisitors.filter(v => v.country.match(/africa|kenya|nigeria|egypt|ghana|south africa|morocco/i));
+        if (q.includes('europe')) return allVisitors.filter(v => v.country.match(/uk|france|germany|italy|spain|netherlands|sweden|poland/i));
+        if (q.includes('asia') || q.includes('tokyo') || q.includes('japan')) return allVisitors.filter(v => v.country.match(/japan|china|korea|india|thailand|singapore|indonesia/i));
+        if (q.includes('america') || q.includes('usa') || q.includes('brazil')) return allVisitors.filter(v => v.country.match(/united states|brazil|canada|mexico|argentina/i));
+        if (q.includes('cold') || q.includes('winter')) return allVisitors.filter(v => ['iceland','norway','sweden','finland','canada','russia','greenland'].some(c => v.country.toLowerCase().includes(c)));
+        if (q.includes('hot') || q.includes('summer')) return allVisitors.filter(v => ['brazil','india','thailand','mexico','egypt','australia','indonesia'].some(c => v.country.toLowerCase().includes(c)));
+        if (q.includes('night') || q.includes('sleep') || q.includes('dark')) {
+          const nightLng = ((new Date().getUTCHours() + 12) % 24) * 15 - 180;
+          return allVisitors.filter(v => Math.abs(v.lng - nightLng) < 80);
+        }
+
+        return allVisitors.filter(v => v.label.toLowerCase().includes(q));
       }
 
-      return allVisitors.filter(v => v.label.toLowerCase().includes(q));
-    }
-
-    function doSearch() {
-      const results = smartSearch(searchInput.value);
-      autocompleteList.innerHTML = '';
-      if (!results.length) {
-        autocompleteList.style.display = 'none';
-        return;
-      }
-      results.slice(0, 12).forEach((v, i) => {
-        const div = document.createElement('div');
-        div.className = 'autocomplete-item';
-        div.textContent = i === 0 && results.length > 1 ? `${v.label} ➜ +${results.length-1} more` : v.label;
-        div.onclick = () => {
-          allVisitors.forEach(x => x.marker.getElement()?.classList.remove('highlighted-marker'));
-          v.marker.getElement()?.classList.add('highlighted-marker');
-          map.flyTo([v.lat, v.lng], 9, { duration: 1.8 });
-          v.marker.openPopup();
-          searchInput.value = v.label;
+      function doSearch() {
+        const results = smartSearch(searchInput.value);
+        autocompleteList.innerHTML = '';
+        if (!results.length) {
           autocompleteList.style.display = 'none';
-        };
-        autocompleteList.appendChild(div);
+          return;
+        }
+        results.slice(0, 12).forEach((v, i) => {
+          const div = document.createElement('div');
+          div.className = 'autocomplete-item';
+          div.textContent = i === 0 && results.length > 1 ? `${v.label} + ${results.length-1} more` : v.label;
+          div.onclick = () => {
+            allVisitors.forEach(x => x.marker.getElement()?.classList.remove('highlighted-marker'));
+            v.marker.getElement()?.classList.add('highlighted-marker');
+            map.flyTo([v.lat, v.lng], 9, { duration: 1.8 });
+            v.marker.openPopup();
+            searchInput.value = v.label;
+            autocompleteList.style.display = 'none';
+          };
+          autocompleteList.appendChild(div);
+        });
+        autocompleteList.style.display = 'block';
+      }
+
+      searchInput.addEventListener('input', doSearch);
+      document.addEventListener('click', e => {
+        if (!searchInput.contains(e.target) && !autocompleteList.contains(e.target)) {
+          autocompleteList.style.display = 'none';
+        }
       });
-      autocompleteList.style.display = 'block';
-    }
+    });
 
-    // ──────── ONLY ATTACH SEARCH AFTER DATA LOADS ────────
-    function enableSearch() {
-      searchInput.oninput = doSearch;
-    }
-
+    // ──────── MAP & DATA LOGIC (unchanged) ────────
     function addOther(data) {
       const key = `${data.lat.toFixed(4)},${data.lng.toFixed(4)}`;
       if (seen.has(key)) return;
@@ -174,17 +182,16 @@
         allVisitors.length = 0;
         visitors.forEach(addOther);
         document.getElementById('counter').textContent = `${visitors.length.toLocaleString()}+ humans breathing with you right now`;
-        enableSearch(); // ← THIS IS THE FIX
       } catch(e) { console.error(e); }
     }
 
-    // Geolocation
+    // Your location
     navigator.geolocation.getCurrentPosition(
       pos => {
         const {latitude, longitude} = pos.coords;
         if (userMarker) userMarker.remove();
         userMarker = L.marker([latitude, longitude], {icon: userIcon})
-          .addTo(map).bindPopup('You are here • right now', {closeButton:false, autoClose:false}).openPopup();
+          .addTo(map).bindPopup('You are here • right now', {closeButton:false}).openPopup();
         map.flyTo([latitude, longitude], 5, {duration: 2.5});
         fetch(`${BACKEND}/visit`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lat:latitude,lng:longitude})});
         loadVisitors();
@@ -203,10 +210,7 @@
       {enableHighAccuracy:true, timeout:15000}
     );
 
-    new EventSource(`${BACKEND}/stream`).onmessage = e => {
-      addOther(JSON.parse(e.data));
-    };
-
+    new EventSource(`${BACKEND}/stream`).onmessage = e => addOther(JSON.parse(e.data));
     loadVisitors();
     setInterval(loadVisitors, 300000);
   </script>

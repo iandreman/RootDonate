@@ -45,7 +45,7 @@
     }
     #search-input {
       width: 100%;
-      padding: 0.95rem 1.2rem 0.95rem 1.2rem;
+      padding: 0.95rem 1.2rem;
       border: none;
       border-radius: 16px;
       background: rgba(255,255,255,0.22);
@@ -87,8 +87,7 @@
       border-bottom: 1px solid rgba(255,255,255,0.07);
       transition: background 0.2s;
     }
-    .autocomplete-item:hover, .autocomplete-item.active { background: rgba(255,255,255,0.12); }
-    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover { background: rgba(255,255,255,0.12); }
 
     /* Markers */
     .user-marker  { background:var(--blue); border:3px solid #fff; border-radius:50%; width:18px; height:18px; box-shadow:0 0 25px #0a84ff; animation:pulse-blue 3s infinite; }
@@ -102,7 +101,6 @@
 
   <div id="map"></div>
 
-  <!-- Search -->
   <div class="search-container">
     <div style="position:relative;">
       <input type="text" id="search-input" placeholder="Search any city or country…" autocomplete="off">
@@ -142,11 +140,9 @@
     const seen = new Set();
     const allVisitors = [];
 
-    // DOM elements (now safe – script is at the end)
     const searchInput = document.getElementById('search-input');
     const autocompleteList = document.getElementById('autocomplete-list');
 
-    // Counter
     async function updateCounter() {
       try {
         const {count} = await (await fetch(`${BACKEND}/count`)).json();
@@ -186,7 +182,10 @@
         allVisitors.length = 0;
         visitors.forEach(addOther);
         updateCounter();
-      } catch(e) {}
+
+        // CRUCIAL: Only activate search AFTER visitors are loaded
+        activateSearch();
+      } catch(e) { console.error(e); }
     }
 
     async function saveMe(lat, lon, city='', country='') {
@@ -199,7 +198,6 @@
       } catch(e) {}
     }
 
-    // Geolocation + fallback
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async pos => {
@@ -222,58 +220,57 @@
       );
     }
 
-    // Live updates
     new EventSource(`${BACKEND}/stream`).onmessage = e => {
       addOther(JSON.parse(e.data));
       updateCounter();
     };
 
-    // ==================== SEARCH ====================
-    function showAutocomplete(matches) {
-      autocompleteList.innerHTML = '';
-      if (!matches.length) { autocompleteList.style.display = 'none'; return; }
+    // ──────── SEARCH (activated only after first load) ────────
+    function activateSearch() {
+      function showAutocomplete(matches) {
+        autocompleteList.innerHTML = '';
+        if (!matches.length) { autocompleteList.style.display = 'none'; return; }
 
-      matches.slice(0, 12).forEach(visitor => {
-        const item = document.createElement('div');
-        item.className = 'autocomplete-item';
-        item.textContent = visitor.label;
-        item.onclick = () => selectPlace(visitor);
-        autocompleteList.appendChild(item);
+        matches.slice(0, 12).forEach(visitor => {
+          const item = document.createElement('div');
+          item.className = 'autocomplete-item';
+          item.textContent = visitor.label;
+          item.onclick = () => {
+            searchInput.value = visitor.label;
+            autocompleteList.style.display = 'none';
+            allVisitors.forEach(v => v.marker.getElement()?.classList.remove('highlighted-marker'));
+            visitor.marker.getElement()?.classList.add('highlighted-marker');
+            map.flyTo([visitor.lat, visitor.lng], 9, { duration: 2 });
+            visitor.marker.openPopup();
+          };
+          autocompleteList.appendChild(item);
+        });
+        autocompleteList.style.display = 'block';
+      }
+
+      searchInput.addEventListener('input', () => {
+        const query = searchInput.value.trim().toLowerCase();
+        if (!query) {
+          autocompleteList.style.display = 'none';
+          allVisitors.forEach(v => v.marker.getElement()?.classList.remove('highlighted-marker'));
+          return;
+        }
+        const matches = allVisitors.filter(v =>
+          v.city.toLowerCase().includes(query) ||
+          v.country.toLowerCase().includes(query) ||
+          v.label.toLowerCase().includes(query)
+        );
+        showAutocomplete(matches);
       });
-      autocompleteList.style.display = 'block';
+
+      document.addEventListener('click', e => {
+        if (!searchInput.contains(e.target) && !autocompleteList.contains(e.target)) {
+          autocompleteList.style.display = 'none';
+        }
+      });
     }
 
-    function selectPlace(visitor) {
-      searchInput.value = visitor.label;
-      autocompleteList.style.display = 'none';
-      allVisitors.forEach(v => v.marker.getElement()?.classList.remove('highlighted-marker'));
-      visitor.marker.getElement()?.classList.add('highlighted-marker');
-      map.flyTo([visitor.lat, visitor.lng], 9, { duration: 2 });
-      visitor.marker.openPopup();
-    }
-
-    searchInput.addEventListener('input', () => {
-      const query = searchInput.value.trim().toLowerCase();
-      if (!query) {
-        autocompleteList.style.display = 'none';
-        allVisitors.forEach(v => v.marker.getElement()?.classList.remove('highlighted-marker'));
-        return;
-      }
-      const matches = allVisitors.filter(v =>
-        v.city.toLowerCase().includes(query) ||
-        v.country.toLowerCase().includes(query) ||
-        v.label.toLowerCase().includes(query)
-      );
-      showAutocomplete(matches);
-    });
-
-    document.addEventListener('click', e => {
-      if (!searchInput.contains(e.target) && !autocompleteList.contains(e.target)) {
-        autocompleteList.style.display = 'none';
-      }
-    });
-
-    // Initial load
+    // Start
     loadVisitors();
     setInterval(loadVisitors, 5*60*1000);
     updateCounter();

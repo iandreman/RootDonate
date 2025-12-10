@@ -120,18 +120,15 @@
   <div id="map"></div>
 
   <!-- Search with Autocomplete -->
+  <!-- Search with Autocomplete -->
   <div class="search-container">
-    <input type="text" id="search-input" placeholder="Search any city or country..." autocomplete="off">
-    <div class="search-container">
-  <div style="position: relative;">
-    <input type="text" id="search-input" placeholder="Search any city or country..." autocomplete="off">
-    <svg style="position:absolute;right:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;opacity:0.7;pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-      <circle cx="11" cy="11" r="8"/>
-      <path d="m21 21-4.35-4.35"/>
-    </svg>
-  </div>
-  <div id="autocomplete-list" class="autocomplete-list"></div>
-</div>
+    <div style="position: relative;">
+      <input type="text" id="search-input" placeholder="Search any city or country…" autocomplete="off">
+      <svg style="position:absolute; right:14px; top:50%; transform:translateY(-50%); width:20px; height:20px; opacity:0.7; pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+      </svg>
+    </div>
     <div id="autocomplete-list" class="autocomplete-list"></div>
   </div>
 
@@ -313,10 +310,39 @@
       }
     });
 
+        // ← VERY IMPORTANT: these must come AFTER the HTML exists
+    const searchInput = document.getElementById('search-input');
+    const autocompleteList = document.getElementById('autocomplete-list');
+
     // Initial load
     loadVisitors();
     setInterval(loadVisitors, 5*60*1000);
     updateCounter();
   </script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // ← All your existing JS stays exactly the same until here…
+
+  // Just wrap the search-related DOM references like this:
+  document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('search-input');
+    const autocompleteList = document.getElementById('autocomplete-list');
+
+    // ← Paste ALL the rest of your search code exactly as it was:
+    function showAutocomplete(matches) { … }
+    function selectPlace(visitor) { … }
+
+    searchInput.addEventListener('input', () => { … });
+
+    document.addEventListener('click', e => {
+      if (!searchInput.contains(e.target) && !autocompleteList.contains(e.target)) {
+        autocompleteList.style.display = 'none';
+      }
+    });
+  });
+
+  // ← Keep the rest of your script (map init, geolocation, etc.) outside if you want,
+  //    but the search part must wait for DOMContentLoaded now.
+</script>
 </body>
 </html>

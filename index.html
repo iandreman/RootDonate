@@ -11,81 +11,44 @@
     * { box-sizing:border-box; margin:0; padding:0; }
     body, html { height:100%; overflow:hidden; background:#000; color:#fff;
                  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
-
     #map { width:100%; height:100%; filter:brightness(0.92) contrast(1.12); }
+    .header { position:absolute; top:0; left:0; right:0; padding:3rem 2rem 2rem; text-align:center; z-index:1000; pointer-events:none;
+              background:linear-gradient(180deg,rgba(0,0,0,0.9),transparent); }
+    h1 { font-size:clamp(3rem,8vw,5rem); font-weight:900; letter-spacing:-2.5px;
+         background:linear-gradient(90deg,var(--blue),var(--green),var(--orange));
+         -webkit-background-clip:text; background-clip:text; color:transparent;
+         text-shadow:0 0 50px rgba(10,132,255,0.4); }
+    .poem { margin-top:1.8rem; font-size:1.55rem; font-weight:300; opacity:0.9; line-height:1.7; }
 
-    .header {
-      position:absolute; top:0; left:0; right:0; padding:3rem 2rem 2rem;
-      text-align:center; z-index:1000; pointer-events:none;
-      background:linear-gradient(180deg,rgba(0,0,0,0.9),transparent);
-    }
-    h1 {
-      font-size:clamp(3rem,8vw,5rem); font-weight:900; letter-spacing:-2.5px;
-      background:linear-gradient(90deg,var(--blue),var(--green),var(--orange));
-      -webkit-background-clip:text; background-clip:text; color:transparent;
-      text-shadow:0 0 50px rgba(10,132,255,0.4);
-    }
-    .poem { margin-top:1.8rem; font-size:1.55rem; font-weight:300; opacity:0.9; line-height:1.7; letter-spacing:0.6px; }
-
-    footer {
-      position:absolute; bottom:0; left:0; right:0; padding:1.2rem;
-      text-align:center; font-size:0.92rem; opacity:0.75; z-index:1000;
-      background:rgba(0,0,0,0.7); backdrop-filter:blur(20px);
-    }
+    footer { position:absolute; bottom:0; left:0; right:0; padding:1.2rem; text-align:center;
+             font-size:0.92rem; opacity:0.75; z-index:1000; background:rgba(0,0,0,0.7); backdrop-filter:blur(20px); }
 
     .search-container {
-      position: absolute;
-      top: 1.8rem;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1000;
-      width: 420px;
-      max-width: 92vw;
+      position: absolute; top: 1.8rem; left: 50%; transform: translateX(-50%);
+      z-index: 1000; width: 420px; max-width: 92vw;
     }
     #search-input {
-      width: 100%;
-      padding: 0.95rem 1.2rem;
-      border: none;
-      border-radius: 16px;
-      background: rgba(255,255,255,0.22);
-      backdrop-filter: blur(20px);
-      color: white;
-      font-size: 1.1rem;
-      outline: none;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5),
-                  inset 0 0 0 2px rgba(255,255,255,0.15);
+      width: 100%; padding: 0.95rem 1.2rem; border: none; border-radius: 16px;
+      background: rgba(255,255,255,0.22); backdrop-filter: blur(20px); color: white;
+      font-size: 1.1rem; outline: none;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 0 0 2px rgba(255,255,255,0.15);
       transition: all 0.3s ease;
     }
     #search-input::placeholder { color: rgba(255,255,255,0.75); font-weight:500; }
-    #search-input:focus {
-      background: rgba(255,255,255,0.3);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 0 3px rgba(10,132,255,0.6);
-    }
-    .search-icon {
-      position:absolute; right:14px; top:50%; transform:translateY(-50%);
-      width:20px; height:20px; opacity:0.7; pointer-events:none;
-    }
+    #search-input:focus { background: rgba(255,255,255,0.3);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 0 3px rgba(10,132,255,0.6); }
+    .search-icon { position:absolute; right:14px; top:50%; transform:translateY(-50%);
+      width:20px; height:20px; opacity:0.7; pointer-events:none; }
 
     .autocomplete-list {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      margin-top: 4px;
-      background: rgba(20,20,30,0.95);
-      backdrop-filter: blur(20px);
-      border-radius: 0 0 14px 14px;
-      max-height: 340px;
-      overflow-y: auto;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      display: none;
-      z-index: 1001;
+      position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px;
+      background: rgba(20,20,30,0.95); backdrop-filter: blur(20px);
+      border-radius: 0 0 14px 14px; max-height: 340px; overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: none; z-index: 1001;
     }
     .autocomplete-item {
-      padding: 0.9rem 1.1rem;
-      cursor: pointer;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
-      transition: background 0.2s;
+      padding: 0.9rem 1.1rem; cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.07); transition: background 0.2s;
     }
     .autocomplete-item:hover { background: rgba(255,255,255,0.12); }
 
@@ -102,7 +65,7 @@
 
   <div class="search-container">
     <div style="position:relative;">
-      <input type="text" id="search-input" placeholder="Ask anything… “Tokyo”, “Africa”, “cold”, “night”…" autocomplete="off">
+      <input type="text" id="search-input" placeholder="Try: Tokyo · Africa · cold · night · Brazil…" autocomplete="off">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
         <circle cx="11" cy="11" r="8"/>
         <path d="m21 21-4.35-4.35"/>
@@ -120,16 +83,13 @@
     </div>
   </div>
 
-  <footer>
-    <span id="counter">Connecting the world...</span> • 2025 • Forever free
-  </footer>
+  <footer><span id="counter">Connecting the world...</span> • 2025 • Forever free</footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     const BACKEND = 'https://weareallhere.deno.dev';
     const map = L.map('map', { zoomControl:false, minZoom:2.5, maxZoom:18, worldCopyJump:true, attributionControl:false })
                  .setView([20, 0], 2.8);
-
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { subdomains:'abcd', maxZoom:19 }).addTo(map);
 
     const userIcon  = L.divIcon({ className:'user-marker',  iconSize:[18,18] });
@@ -142,37 +102,68 @@
     const searchInput = document.getElementById('search-input');
     const autocompleteList = document.getElementById('autocomplete-list');
 
-    // Tiny AI brain
-    const AI = {
-      cold: ['Iceland','Norway','Sweden','Finland','Canada','Russia','Greenland','Alaska','Denmark','Estonia','Latvia','Lithuania'],
-      hot: ['Brazil','India','Thailand','Mexico','Egypt','Australia','Indonesia','Philippines','Colombia','Peru','Vietnam'],
-      night: () => {
-        const hour = new Date().getUTCHours();
-        const nightLng = ((hour + 12) % 24) * 15 - 180;
-        return allVisitors.filter(v => Math.abs(v.lng - nightLng) < 70);
-      }
-    };
+    // Simple smart search
+    function smartSearch(q) {
+      q = q.toLowerCase().trim();
+      if (!q) return allVisitors;
 
-    function smartSearch(query) {
-      query = query.toLowerCase().trim();
-      if (!query) return allVisitors.slice(0, 50);
-
-      const direct = allVisitors.filter(v =>
-        v.city.toLowerCase().includes(query) ||
-        v.country.toLowerCase().includes(query)
+      // Direct match first
+      let results = allVisitors.filter(v =>
+        v.city.toLowerCase().includes(q) || v.country.toLowerCase().includes(q)
       );
-      if (direct.length) return direct;
+      if (results.length) return results;
 
-      if (query.includes('africa')) return allVisitors.filter(v => v.country.includes('Africa') || v.country.match(/(Nigeria|Kenya|Egypt|South Africa|Ghana|Morocco)/i));
-      if (query.includes('europe')) return allVisitors.filter(v => v.country.match(/(United Kingdom|Germany|France|Italy|Spain|Netherlands|Sweden|Poland|Ukraine)/i));
-      if (query.includes('asia') || query.includes('japan') || query.includes('tokyo')) return allVisitors.filter(v => v.country.match(/(Japan|China|India|Korea|Singapore|Thailand)/i));
-      if (query.includes('america') || query.includes('usa') || query.includes('brazil')) return allVisitors.filter(v => v.country.match(/(United States|Brazil|Canada|Mexico|Argentina)/i));
-      if (query.includes('cold') || query.includes('freezing') || query.includes('winter')) return allVisitors.filter(v => AI.cold.some(c => v.country.includes(c)));
-      if (query.includes('hot') || query.includes('summer')) return allVisitors.filter(v => AI.hot.some(c => v.country.includes(c)));
-      if (query.includes('night') || query.includes('sleeping') || query.includes('dark')) return AI.night();
-      if (query.includes('ocean') || query.includes('island')) return allVisitors.filter(v => v.country.includes('Island') || v.country.includes('Ocean') || v.country.includes('New Zealand'));
+      // Magic words
+      const magic = {
+        africa: ['africa', 'kenya', 'nigeria', 'egypt', 'ghana'],
+        europe: ['europe', 'london', 'paris', 'berlin', 'rome', 'madrid'],
+        asia: ['asia', 'tokyo', 'beijing', 'seoul', 'bangkok', 'delhi'],
+        america: ['america', 'usa', 'brazil', 'canada', 'mexico', 'argentina'],
+        cold: ['iceland', 'norway', 'sweden', 'finland', 'canada', 'russia'],
+        hot: ['brazil', 'india', 'thailand', 'mexico', 'egypt'],
+        night: () => {
+          const nightLng = ((new Date().getUTCHours() + 12) % 24) * 15 - 180;
+          return allVisitors.filter(v => Math.abs(v.lng - nightLng) < 80);
+        }
+      };
 
-      return allVisitors.filter(v => v.label.toLowerCase().includes(query));
+      for (const [key, terms] of Object.entries(magic)) {
+        if (typeof terms === 'function') {
+          if (q.includes('night') || q.includes('sleep') || q.includes('dark')) return terms();
+        } else if (terms.some(t => q.includes(t))) {
+          return allVisitors.filter(v => terms.some(t => v.country.toLowerCase().includes(t) || v.city.toLowerCase().includes(t)));
+        }
+      }
+
+      return allVisitors.filter(v => v.label.toLowerCase().includes(q));
+    }
+
+    function performSearch() {
+      const results = smartSearch(searchInput.value);
+      autocompleteList.innerHTML = '';
+      if (!results.length) { autocompleteList.style.display = 'none'; return; }
+
+      results.slice(0, 12).forEach((v, i) => {
+        const div = document.createElement('div');
+        div.className = 'autocomplete-item';
+        div.textContent = i === 0 && results.length > 1 ? `${v.label} ➜ +${results.length-1} more` : v.label;
+        div.onclick = () => {
+          allVisitors.forEach(x => x.marker.getElement()?.classList.remove('highlighted-marker'));
+          v.marker.getElement()?.classList.add('highlighted-marker');
+          map.flyTo([v.lat, v.lng], 9, { duration: 1.8 });
+          v.marker.openPopup();
+          searchInput.value = v.label;
+          autocompleteList.style.display = 'none';
+        };
+        autocompleteList.appendChild(div);
+      });
+      autocompleteList.style.display = 'block';
+    }
+
+    // ← THIS IS THE ONLY IMPORTANT PART ←
+    function refreshSearch() {
+      searchInput.removeEventListener('input', performSearch);
+      searchInput.addEventListener('input', performSearch);
     }
 
     async function updateCounter() {
@@ -186,10 +177,8 @@
 
     function showUser(lat, lon, text = 'You are here • right now') {
       if (userMarker) userMarker.remove();
-      userMarker = L.marker([lat, lon], {icon: userIcon})
-        .addTo(map)
-        .bindPopup(text, {closeButton:false, autoClose:false, closeOnEscapeKey:false})
-        .openPopup();
+      userMarker = L.marker([lat, lon], {icon: userIcon}).addTo(map)
+        .bindPopup(text, {closeButton:false, autoClose:false, closeOnEscapeKey:false}).openPopup();
       map.flyTo([lat, lon], 5, {duration: 2.5});
     }
 
@@ -197,13 +186,12 @@
       const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
       if (seen.has(key)) return;
       seen.add(key);
-
       const label = city && country ? `${city}, ${country}` : 'Somewhere on Earth';
       const marker = L.marker([lat, lng], {icon: otherIcon})
         .bindPopup(label, {closeButton:false, autoClose:false})
         .addTo(othersLayer);
-
       allVisitors.push({ marker, lat, lng, city: city||'', country: country||'', label });
+      refreshSearch(); // ← Keep search alive when new people appear
     }
 
     async function loadVisitors() {
@@ -214,28 +202,19 @@
         allVisitors.length = 0;
         visitors.forEach(addOther);
         updateCounter();
-
-        // SEARCH ONLY ACTIVATES AFTER DATA IS LOADED
-        activateSearch();
+        refreshSearch(); // ← Crucial: re-activate search with fresh data
       } catch(e) { console.error(e); }
     }
 
-    async function saveMe(lat, lon, city='', country='') {
-      try {
-        await fetch(`${BACKEND}/visit`, { method:'POST', headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({lat, lng:lon, city, country})
-        });
-      } catch(e) {}
-    }
-
+    // Geolocation + save
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        async pos => { const {latitude, longitude} = pos.coords; showUser(latitude, longitude); await saveMe(latitude, longitude); loadVisitors(); },
+        async pos => { showUser(pos.coords.latitude, pos.coords.longitude); await fetch(`${BACKEND}/visit`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lat:pos.coords.latitude,lng:pos.coords.longitude})}); loadVisitors(); },
         async () => {
           try {
             const d = await (await fetch('https://ipapi.co/json/')).json();
             showUser(d.latitude, d.longitude, `You are here • ${d.city||''}, ${d.country_name||'Earth'}`);
-            await saveMe(d.latitude, d.longitude, d.city, d.country_name);
+            await fetch(`${BACKEND}/visit`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lat:d.latitude,lng:d.longitude,city:d.city,country:d.country_name})});
             loadVisitors();
           } catch { document.getElementById('counter').textContent = 'We are all here • somewhere'; }
         },
@@ -248,46 +227,7 @@
       updateCounter();
     };
 
-    // AI SEARCH — ACTIVATED ONLY AFTER VISITORS LOAD
-    function activateSearch() {
-      // Remove any previous listener
-      searchInput.oninput = null;
-
-      searchInput.addEventListener('input', () => {
-        const query = searchInput.value.trim();
-        const results = smartSearch(query);
-
-        autocompleteList.innerHTML = '';
-        if (!results.length) {
-          autocompleteList.style.display = 'none';
-          return;
-        }
-
-        results.slice(0, 12).forEach((v, i) => {
-          const item = document.createElement('div');
-          item.className = 'autocomplete-item';
-          item.textContent = i === 0 && results.length > 1 ? `${v.label} ➜ and ${results.length-1} more…` : v.label;
-          item.onclick = () => {
-            allVisitors.forEach(x => x.marker.getElement()?.classList.remove('highlighted-marker'));
-            v.marker.getElement()?.classList.add('highlighted-marker');
-            map.flyTo([v.lat, v.lng], 9, { duration: 1.8 });
-            v.marker.openPopup();
-            searchInput.value = v.label;
-            autocompleteList.style.display = 'none';
-          };
-          autocompleteList.appendChild(item);
-        });
-        autocompleteList.style.display = 'block';
-      });
-
-      document.addEventListener('click', e => {
-        if (!searchInput.contains(e.target) && !autocompleteList.contains(e.target)) {
-          autocompleteList.style.display = 'none';
-        }
-      });
-    }
-
-    // Start everything
+    // Start
     loadVisitors();
     setInterval(loadVisitors, 5*60*1000);
     updateCounter();

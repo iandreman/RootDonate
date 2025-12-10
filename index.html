@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RootDonate • We Are All Here</title>
-  <meta name="description" content="A quiet work of art about being human on the same internet." />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     :root { --blue:#0a84ff; --green:#30d158; --orange:#ff9f0a; }
@@ -12,12 +11,12 @@
     body, html { height:100%; overflow:hidden; background:#000; color:#fff;
                  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
     #map { width:100%; height:100%; filter:brightness(0.92) contrast(1.12); }
+
     .header { position:absolute; top:0; left:0; right:0; padding:3rem 2rem 2rem; text-align:center; z-index:1000; pointer-events:none;
               background:linear-gradient(180deg,rgba(0,0,0,0.9),transparent); }
     h1 { font-size:clamp(3rem,8vw,5rem); font-weight:900; letter-spacing:-2.5px;
          background:linear-gradient(90deg,var(--blue),var(--green),var(--orange));
-         -webkit-background-clip:text; background-clip:text; color:transparent;
-         text-shadow:0 0 50px rgba(10,132,255,0.4); }
+         -webkit-background-clip:text; background-clip:text; color:transparent; }
     .poem { margin-top:1.8rem; font-size:1.55rem; font-weight:300; opacity:0.9; line-height:1.7; }
 
     footer { position:absolute; bottom:0; left:0; right:0; padding:1.2rem; text-align:center;
@@ -32,11 +31,11 @@
       background: rgba(255,255,255,0.22); backdrop-filter: blur(20px); color: white;
       font-size: 1.1rem; outline: none;
       box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 0 0 2px rgba(255,255,255,0.15);
-      transition: all 0.3s ease;
     }
-    #search-input::placeholder { color: rgba(255,255,255,0.75); font-weight:500; }
+    #search-input::placeholder { color: rgba(255,255,255,0.75); }
     #search-input:focus { background: rgba(255,255,255,0.3);
       box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 0 3px rgba(10,132,255,0.6); }
+
     .search-icon { position:absolute; right:14px; top:50%; transform:translateY(-50%);
       width:20px; height:20px; opacity:0.7; pointer-events:none; }
 
@@ -48,7 +47,7 @@
     }
     .autocomplete-item {
       padding: 0.9rem 1.1rem; cursor: pointer;
-      border-bottom: 1px solid rgba(255,255,255,0.07); transition: background 0.2s;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
     }
     .autocomplete-item:hover { background: rgba(255,255,255,0.12); }
 
@@ -65,7 +64,7 @@
 
   <div class="search-container">
     <div style="position:relative;">
-      <input type="text" id="search-input" placeholder="Try: Tokyo · Africa · cold · night · Brazil…" autocomplete="off">
+      <input type="text" id="search-input" placeholder="Tokyo · Africa · cold · night · Brazil…" autocomplete="off">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
         <circle cx="11" cy="11" r="8"/>
         <path d="m21 21-4.35-4.35"/>
@@ -99,50 +98,41 @@
     const seen = new Set();
     const allVisitors = [];
 
+    // ──────── MOVE DOM REFERENCES TO AFTER HTML EXISTS ────────
     const searchInput = document.getElementById('search-input');
     const autocompleteList = document.getElementById('autocomplete-list');
 
-    // Simple smart search
     function smartSearch(q) {
       q = q.toLowerCase().trim();
       if (!q) return allVisitors;
 
-      // Direct match first
-      let results = allVisitors.filter(v =>
-        v.city.toLowerCase().includes(q) || v.country.toLowerCase().includes(q)
+      let results = allVisitors.filter(v => 
+        v.city.toLowerCase().includes(q) || 
+        v.country.toLowerCase().includes(q)
       );
       if (results.length) return results;
 
-      // Magic words
-      const magic = {
-        africa: ['africa', 'kenya', 'nigeria', 'egypt', 'ghana'],
-        europe: ['europe', 'london', 'paris', 'berlin', 'rome', 'madrid'],
-        asia: ['asia', 'tokyo', 'beijing', 'seoul', 'bangkok', 'delhi'],
-        america: ['america', 'usa', 'brazil', 'canada', 'mexico', 'argentina'],
-        cold: ['iceland', 'norway', 'sweden', 'finland', 'canada', 'russia'],
-        hot: ['brazil', 'india', 'thailand', 'mexico', 'egypt'],
-        night: () => {
-          const nightLng = ((new Date().getUTCHours() + 12) % 24) * 15 - 180;
-          return allVisitors.filter(v => Math.abs(v.lng - nightLng) < 80);
-        }
-      };
-
-      for (const [key, terms] of Object.entries(magic)) {
-        if (typeof terms === 'function') {
-          if (q.includes('night') || q.includes('sleep') || q.includes('dark')) return terms();
-        } else if (terms.some(t => q.includes(t))) {
-          return allVisitors.filter(v => terms.some(t => v.country.toLowerCase().includes(t) || v.city.toLowerCase().includes(t)));
-        }
+      if (q.includes('africa')) return allVisitors.filter(v => v.country.match(/africa|kenya|nigeria|egypt|ghana|morocco/i));
+      if (q.includes('europe')) return allVisitors.filter(v => v.country.match(/uk|france|germany|italy|spain|netherlands|sweden/i));
+      if (q.includes('asia') || q.includes('tokyo') || q.includes('japan')) return allVisitors.filter(v => v.country.match(/japan|china|korea|india|thailand|singapore/i));
+      if (q.includes('america') || q.includes('usa') || q.includes('brazil')) return allVisitors.filter(v => v.country.match(/united states|brazil|canada|mexico|argentina/i));
+      if (q.includes('cold') || q.includes('winter')) return allVisitors.filter(v => ['iceland','norway','sweden','finland','canada','russia'].some(c => v.country.toLowerCase().includes(c)));
+      if (q.includes('hot') || q.includes('summer')) return allVisitors.filter(v => ['brazil','india','thailand','mexico','egypt','australia'].some(c => v.country.toLowerCase().includes(c)));
+      if (q.includes('night') || q.includes('dark')) {
+        const nightLng = ((new Date().getUTCHours() + 12) % 24) * 15 - 180;
+        return allVisitors.filter(v => Math.abs(v.lng - nightLng) < 80);
       }
 
       return allVisitors.filter(v => v.label.toLowerCase().includes(q));
     }
 
-    function performSearch() {
+    function doSearch() {
       const results = smartSearch(searchInput.value);
       autocompleteList.innerHTML = '';
-      if (!results.length) { autocompleteList.style.display = 'none'; return; }
-
+      if (!results.length) {
+        autocompleteList.style.display = 'none';
+        return;
+      }
       results.slice(0, 12).forEach((v, i) => {
         const div = document.createElement('div');
         div.className = 'autocomplete-item';
@@ -160,38 +150,20 @@
       autocompleteList.style.display = 'block';
     }
 
-    // ← THIS IS THE ONLY IMPORTANT PART ←
-    function refreshSearch() {
-      searchInput.removeEventListener('input', performSearch);
-      searchInput.addEventListener('input', performSearch);
+    // ──────── ONLY ATTACH SEARCH AFTER DATA LOADS ────────
+    function enableSearch() {
+      searchInput.oninput = doSearch;
     }
 
-    async function updateCounter() {
-      try {
-        const {count} = await (await fetch(`${BACKEND}/count`)).json();
-        document.getElementById('counter').textContent =
-          count > 0 ? `${count.toLocaleString()}+ humans breathing with you right now`
-                    : 'You are the first today • welcome home';
-      } catch(e) {}
-    }
-
-    function showUser(lat, lon, text = 'You are here • right now') {
-      if (userMarker) userMarker.remove();
-      userMarker = L.marker([lat, lon], {icon: userIcon}).addTo(map)
-        .bindPopup(text, {closeButton:false, autoClose:false, closeOnEscapeKey:false}).openPopup();
-      map.flyTo([lat, lon], 5, {duration: 2.5});
-    }
-
-    function addOther({lat, lng, city, country}) {
-      const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+    function addOther(data) {
+      const key = `${data.lat.toFixed(4)},${data.lng.toFixed(4)}`;
       if (seen.has(key)) return;
       seen.add(key);
-      const label = city && country ? `${city}, ${country}` : 'Somewhere on Earth';
-      const marker = L.marker([lat, lng], {icon: otherIcon})
+      const label = data.city && data.country ? `${data.city}, ${data.country}` : 'Somewhere on Earth';
+      const marker = L.marker([data.lat, data.lng], {icon: otherIcon})
         .bindPopup(label, {closeButton:false, autoClose:false})
         .addTo(othersLayer);
-      allVisitors.push({ marker, lat, lng, city: city||'', country: country||'', label });
-      refreshSearch(); // ← Keep search alive when new people appear
+      allVisitors.push({ marker, lat: data.lat, lng: data.lng, city: data.city||'', country: data.country||'', label });
     }
 
     async function loadVisitors() {
@@ -201,36 +173,42 @@
         seen.clear();
         allVisitors.length = 0;
         visitors.forEach(addOther);
-        updateCounter();
-        refreshSearch(); // ← Crucial: re-activate search with fresh data
+        document.getElementById('counter').textContent = `${visitors.length.toLocaleString()}+ humans breathing with you right now`;
+        enableSearch(); // ← THIS IS THE FIX
       } catch(e) { console.error(e); }
     }
 
-    // Geolocation + save
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async pos => { showUser(pos.coords.latitude, pos.coords.longitude); await fetch(`${BACKEND}/visit`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lat:pos.coords.latitude,lng:pos.coords.longitude})}); loadVisitors(); },
-        async () => {
-          try {
-            const d = await (await fetch('https://ipapi.co/json/')).json();
-            showUser(d.latitude, d.longitude, `You are here • ${d.city||''}, ${d.country_name||'Earth'}`);
-            await fetch(`${BACKEND}/visit`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lat:d.latitude,lng:d.longitude,city:d.city,country:d.country_name})});
-            loadVisitors();
-          } catch { document.getElementById('counter').textContent = 'We are all here • somewhere'; }
-        },
-        {enableHighAccuracy:true, timeout:15000}
-      );
-    }
+    // Geolocation
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const {latitude, longitude} = pos.coords;
+        if (userMarker) userMarker.remove();
+        userMarker = L.marker([latitude, longitude], {icon: userIcon})
+          .addTo(map).bindPopup('You are here • right now', {closeButton:false, autoClose:false}).openPopup();
+        map.flyTo([latitude, longitude], 5, {duration: 2.5});
+        fetch(`${BACKEND}/visit`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lat:latitude,lng:longitude})});
+        loadVisitors();
+      },
+      () => {
+        fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
+          const lat = d.latitude, lng = d.longitude;
+          if (userMarker) userMarker.remove();
+          userMarker = L.marker([lat, lng], {icon: userIcon})
+            .addTo(map).bindPopup(`You are here • ${d.city}, ${d.country_name}`, {closeButton:false}).openPopup();
+          map.flyTo([lat, lng], 5);
+          fetch(`${BACKEND}/visit`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lat,lng,city:d.city,country:d.country_name})});
+          loadVisitors();
+        });
+      },
+      {enableHighAccuracy:true, timeout:15000}
+    );
 
     new EventSource(`${BACKEND}/stream`).onmessage = e => {
       addOther(JSON.parse(e.data));
-      updateCounter();
     };
 
-    // Start
     loadVisitors();
-    setInterval(loadVisitors, 5*60*1000);
-    updateCounter();
+    setInterval(loadVisitors, 300000);
   </script>
 </body>
 </html>

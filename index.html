@@ -7,40 +7,116 @@
   <meta name="description" content="A quiet work of art about being human on the same internet." />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    :root { --blue:#0a84ff; --green:#30d158; --orange:#ff9f0a; }
-    * { box-sizing:border-box; margin:0; padding:0; }
-    body, html { height:100%; overflow:hidden; background:#000; color:#fff;
-                 font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
-    #map { width:100%; height:100%; filter:brightness(0.92) contrast(1.12); }
-
+    :root {
+      --blue: #0a84ff;
+      --green: #30d158;
+      --orange: #ff9f0a;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body,
+    html {
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+      filter: brightness(0.92) contrast(1.12);
+    }
     .header {
-      position:absolute; top:0; left:0; right:0; padding:3rem 2rem 2rem;
-      text-align:center; z-index:1000; pointer-events:none;
-      background:linear-gradient(180deg,rgba(0,0,0,0.9),transparent);
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 3rem 2rem 2rem;
+      text-align: center;
+      z-index: 1000;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.9), transparent);
     }
     h1 {
-      font-size:clamp(3rem,8vw,5rem); font-weight:900; letter-spacing:-2.5px;
-      background:linear-gradient(90deg,var(--blue),var(--green),var(--orange));
-      -webkit-background-clip:text; background-clip:text; color:transparent;
-      text-shadow:0 0 50px rgba(10,132,255,0.4);
+      font-size: clamp(3rem, 8vw, 5rem);
+      font-weight: 900;
+      letter-spacing: -2.5px;
+      background: linear-gradient(90deg, var(--blue), var(--green), var(--orange));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 50px rgba(10, 132, 255, 0.4);
     }
-    .poem { margin-top:1.8rem; font-size:1.55rem; font-weight:300; opacity:0.9; line-height:1.7; letter-spacing:0.6px; }
-
+    .poem {
+      margin-top: 1.8rem;
+      font-size: 1.55rem;
+      font-weight: 300;
+      opacity: 0.9;
+      line-height: 1.7;
+      letter-spacing: 0.6px;
+    }
     footer {
-      position:absolute; bottom:0; left:0; right:0; padding:1.2rem;
-      text-align:center; font-size:0.92rem; opacity:0.75; z-index:1000;
-      background:rgba(0,0,0,0.7); backdrop-filter:blur(20px);
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1.2rem;
+      text-align: center;
+      font-size: 0.92rem;
+      opacity: 0.75;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(20px);
     }
-
-    .user-marker  { background:var(--blue); border:3px solid #fff; border-radius:50%; width:18px; height:18px; box-shadow:0 0 25px #0a84ff; animation:pulse-blue 3s infinite; }
-    .other-marker { background:var(--green); border:2.5px solid #fff; border-radius:50%; width:15px; height:15px; box-shadow:0 0 20px #30d158; animation:pulse-green 3s infinite; }
-    @keyframes pulse-blue  { 0%,100% { box-shadow:0 0 0 0 rgba(10,132,255,0.8); } 70% { box-shadow:0 0 0 22px rgba(10,132,255,0); } }
-    @keyframes pulse-green { 0%,100% { box-shadow:0 0 0 0 rgba(48,209,88,0.7); } 70% { box-shadow:0 0 0 18px rgba(48,209,88,0); } }
+    .user-marker {
+      background: var(--blue);
+      border: 3px solid #fff;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      box-shadow: 0 0 25px #0a84ff;
+      animation: pulse-blue 3s infinite;
+    }
+    .other-marker {
+      background: var(--green);
+      border: 2.5px solid #fff;
+      border-radius: 50%;
+      width: 15px;
+      height: 15px;
+      box-shadow: 0 0 20px #30d158;
+      animation: pulse-green 3s infinite;
+    }
+    @keyframes pulse-blue {
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(10, 132, 255, 0.8);
+      }
+      70% {
+        box-shadow: 0 0 0 22px rgba(10, 132, 255, 0);
+      }
+    }
+    @keyframes pulse-green {
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 0 18px rgba(48, 209, 88, 0);
+      }
+    }
   </style>
 </head>
 <body>
-
   <div id="map"></div>
+
+  <div class="header">
+    <h1>RootDonate</h1>
+    <div class="poem">We Are All Here</div>
+  </div>
 
   <footer>
     <span id="counter">Connecting the world...</span> • 2025 • Forever free
@@ -48,86 +124,136 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    const BACKEND = 'https://weareallhere.deno.dev';
-    const map = L.map('map', { zoomControl:false, minZoom:2.5, maxZoom:18, worldCopyJump:true, attributionControl:false })
-                 .setView([20, 0], 2.8);
+    const BACKEND = "https://weareallhere.deno.dev";
+    const map = L.map("map", {
+      zoomControl: false,
+      minZoom: 2.5,
+      maxZoom: 18,
+      worldCopyJump: true,
+      attributionControl: false,
+    }).setView([20, 0], 2.8);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { subdomains:'abcd', maxZoom:19 }).addTo(map);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      subdomains: "abcd",
+      maxZoom: 19,
+    }).addTo(map);
 
-    const userIcon  = L.divIcon({ className:'user-marker',  iconSize:[18,18] });
-    const otherIcon = L.divIcon({ className:'other-marker', iconSize:[15,15] });
+    const userIcon = L.divIcon({ className: "user-marker", iconSize: [18, 18] });
+    const otherIcon = L.divIcon({ className: "other-marker", iconSize: [15, 15] });
     let userMarker = null;
     const othersLayer = L.layerGroup().addTo(map);
     const seen = new Set();
 
     async function updateCounter() {
       try {
-        const {count} = await (await fetch(`${BACKEND}/count`)).json();
-        document.getElementById('counter').textContent =
-          count > 0 ? `${count.toLocaleString()}+ humans breathing with you right now`
-                    : 'You are the first today • welcome home';
-      } catch(e) {}
+        const response = await fetch(`${BACKEND}/count`);
+        const { count } = await response.json();
+        document.getElementById("counter").textContent =
+          count > 0
+            ? `${count.toLocaleString()}+ humans breathing with you right now`
+            : "You are the first today • welcome home";
+      } catch (e) {
+        // Silent fail
+      }
     }
 
-    function showUser(lat, lon, text = 'You are here • right now') {
+    function getCurrentTimeUTC() {
+      const now = new Date();
+      return now.toLocaleString("en-US", {
+        timeZone: "UTC",
+        dateStyle: "short",
+        timeStyle: "short",
+      }) + " UTC";
+    }
+
+    function showUser(lat, lon, text = "You are here • right now") {
       if (userMarker) userMarker.remove();
-      userMarker = L.marker([lat, lon], {icon: userIcon})
+      const timeStr = getCurrentTimeUTC();
+      const popupText = `${text} • ${timeStr}`;
+      userMarker = L.marker([lat, lon], { icon: userIcon })
         .addTo(map)
-        .bindPopup(text, {closeButton:false, autoClose:false, closeOnEscapeKey:false})
+        .bindPopup(popupText, {
+          closeButton: false,
+          autoClose: false,
+          closeOnEscapeKey: false,
+        })
         .openPopup();
-      map.flyTo([lat, lon], 5, {duration: 2.5});
+      map.flyTo([lat, lon], 5, { duration: 2.5 });
     }
 
-    function addOther({lat, lng, city, country}) {
+    function addOther({ lat, lng, city, country }) {
       const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
       if (seen.has(key)) return;
       seen.add(key);
-      const label = city && country ? `${city}, ${country}` : 'Somewhere on Earth';
-      L.marker([lat, lng], {icon: otherIcon})
-        .bindPopup(label, {closeButton:false, autoClose:false})
+      const label = city && country ? `${city}, ${country}` : "Somewhere on Earth";
+      L.marker([lat, lng], { icon: otherIcon })
+        .bindPopup(label, { closeButton: false, autoClose: false })
         .addTo(othersLayer);
     }
 
     async function loadVisitors() {
       try {
-        const visitors = await (await fetch(`${BACKEND}/visitors`)).json();
+        const response = await fetch(`${BACKEND}/visitors`);
+        const visitors = await response.json();
         othersLayer.clearLayers();
         seen.clear();
         visitors.forEach(addOther);
         updateCounter();
-      } catch(e) {}
+      } catch (e) {
+        // Silent fail
+      }
     }
 
     // Geolocation + fallback
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        async pos => {
-          const {latitude, longitude} = pos.coords;
+        async (pos) => {
+          const { latitude, longitude } = pos.coords;
           showUser(latitude, longitude);
-          await fetch(`${BACKEND}/visit`, {method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({lat:latitude,lng:longitude})});
+          await fetch(`${BACKEND}/visit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ lat: latitude, lng: longitude }),
+          });
           loadVisitors();
         },
         async () => {
           try {
-            const d = await (await fetch('https://ipapi.co/json/')).json();
-            showUser(d.latitude, d.longitude, `You are here • ${d.city||''}, ${d.country_name||'Earth'}`);
-            await fetch(`${BACKEND}/visit`, {method:'POST',headers:{'Content-Type':'application/json'},
-              body:JSON.stringify({lat:d.latitude,lng:d.longitude,city:d.city,country:d.country_name})});
+            const response = await fetch("https://ipapi.co/json/");
+            const d = await response.json();
+            showUser(
+              d.latitude,
+              d.longitude,
+              `You are here • ${d.city || ""}, ${d.country_name || "Earth"}`
+            );
+            await fetch(`${BACKEND}/visit`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                lat: d.latitude,
+                lng: d.longitude,
+                city: d.city,
+                country: d.country_name,
+              }),
+            });
             loadVisitors();
-          } catch { document.getElementById('counter').textContent = 'We are all here • somewhere'; }
+          } catch {
+            document.getElementById("counter").textContent = "We are all here • somewhere";
+          }
         },
-        {enableHighAccuracy:true, timeout:15000}
+        { enableHighAccuracy: true, timeout: 15000 }
       );
     }
 
-    new EventSource(`${BACKEND}/stream`).onmessage = e => {
+    // Real-time updates via SSE
+    new EventSource(`${BACKEND}/stream`).onmessage = (e) => {
       addOther(JSON.parse(e.data));
       updateCounter();
     };
 
+    // Initial load
     loadVisitors();
-    setInterval(loadVisitors, 5*60*1000);
+    setInterval(loadVisitors, 5 * 60 * 1000);
     updateCounter();
   </script>
 </body>

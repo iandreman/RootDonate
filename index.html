@@ -71,6 +71,25 @@
       z-index: 1000;
       background: rgba(0, 0, 0, 0.7);
       backdrop-filter: blur(20px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .share-btn {
+      pointer-events: all;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .share-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
     }
     .user-marker {
       background: var(--blue);
@@ -122,7 +141,9 @@
   </div>
 
   <footer>
-    <span id="counter">Connecting the world...</span> • 2025 • Forever free • Location shared only while open
+    <span id="counter">Connecting the world...</span>
+    <button class="share-btn" id="shareFootprints">Share My Footprints via Email</button>
+    <span>• 2025 • Forever free • Location shared only while open</span>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -156,6 +177,17 @@
         dateStyle: "short",
         timeStyle: "short",
       }) + " UTC";
+    }
+
+    function formatTimestamp(ts) {
+      return new Date(ts).toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZoneName: "short"
+      });
     }
 
     function showUser(lat, lon, text = "You are here • right now") {
@@ -209,7 +241,6 @@
       } catch {}
     }
 
-    // Load and show previous visits as footprints (local only, private)
     function loadFootprints() {
       const stored = localStorage.getItem("rootdonate_footprints");
       if (stored) {
@@ -225,10 +256,37 @@
         if (stored) points = JSON.parse(stored);
       } catch {}
       points.push({ lat, lon, time: Date.now() });
-      // Keep only last 8 footprints
-      if (points.length > 8) points = points.slice(-8);
+      // Keep more history now – up to 50 points for richer trails
+      if (points.length > 50) points = points.slice(-50);
       localStorage.setItem("rootdonate_footprints", JSON.stringify(points));
     }
+
+    // Email sharing function
+    document.getElementById("shareFootprints").addEventListener("click", () => {
+      const stored = localStorage.getItem("rootdonate_footprints");
+      if (!stored || stored === "[]") {
+        alert("No footprints saved yet – open the page a few times to build a trail!");
+        return;
+      }
+
+      const points = JSON.parse(stored);
+      const reversed = [...points].reverse(); // newest first
+
+      let bodyText = "Hi,%0D%0A%0D%0AI’m sharing my recent RootDonate footprints with you – We Are All Here 🫶%0D%0A%0D%0ARecent trail (newest first):%0D%0A";
+
+      reversed.forEach((p, i) => {
+        const timeStr = formatTimestamp(p.time);
+        bodyText += `• ${timeStr} – ${p.lat.toFixed(6)}, ${p.lon.toFixed(6)}%0D%0A`;
+      });
+
+      bodyText += "%0D%0AForever free • Privacy first • Location only shared while open%0D%0A";
+      bodyText += "https://rootdonate.co.uk%0D%0A%0D%0AStay connected!";
+
+      const subject = encodeURIComponent("My RootDonate Footprints – We Are All Here");
+      const body = encodeURIComponent(bodyText);
+
+      window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    });
 
     // Geolocation flow
     if (navigator.geolocation) {
@@ -236,7 +294,6 @@
         async (pos) => {
           const { latitude: lat, longitude: lng } = pos.coords;
 
-          // Add footprint of this visit
           saveFootprint(lat, lng);
           loadFootprints();
 
@@ -249,7 +306,6 @@
           loadVisitors();
         },
         async () => {
-          // Fallback to IP-based location
           try {
             const res = await fetch("https://ipapi.co/json/");
             const d = await res.json();

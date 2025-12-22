@@ -272,15 +272,15 @@
       const points = JSON.parse(stored);
       const reversed = [...points].reverse(); // newest first
 
-      let bodyText = "Hi,%0D%0A%0D%0AI’m sharing my recent RootDonate footprints with you – We Are All Here 🫶%0D%0A%0D%0ARecent trail (newest first):%0D%0A";
+      let bodyText = "Hi, I’m sharing my recent RootDonate footprints with you – We Are All Here 🫶Recent trail (newest first):";
 
       reversed.forEach((p, i) => {
         const timeStr = formatTimestamp(p.time);
-        bodyText += `• ${timeStr} – ${p.lat.toFixed(6)}, ${p.lon.toFixed(6)}%0D%0A`;
+        bodyText += `• ${timeStr} – ${p.lat.toFixed(6)}, ${p.lon.toFixed(6)}`;
       });
 
-      bodyText += "%0D%0AForever free • Privacy first • Location only shared while open%0D%0A";
-      bodyText += "https://rootdonate.co.uk%0D%0A%0D%0AStay connected!";
+      bodyText += "Forever free • Privacy first • Location only shared while open";
+      bodyText += "https://rootdonate.co.uk Stay connected!";
 
       const subject = encodeURIComponent("My RootDonate Footprints – We Are All Here");
       const body = encodeURIComponent(bodyText);

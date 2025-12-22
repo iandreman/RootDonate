@@ -210,7 +210,7 @@
     }
 
     function addOther({ lat, lng, city, country }) {
-      const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+      const key = `${lat.toFixed(stored)},${lng.toFixed(stored)}`;
       if (seen.has(key)) return;
       seen.add(key);
       const label = city && country ? `${city}, ${country}` : "Somewhere on Earth";

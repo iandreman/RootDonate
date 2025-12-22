@@ -276,7 +276,7 @@
 
       reversed.forEach((p, i) => {
         const timeStr = formatTimestamp(p.time);
-        bodyText += `• ${timeStr} – ${p.lat.toFixed(stored)}, ${p.lon.toFixed(stored)}`;
+        bodyText += `• ${timeStr} – ${p.lat.toFixed(6)}, ${p.lon.toFixed(6)}`;
       });
 
       bodyText += " Forever free • Privacy first • Location only shared while open, ";

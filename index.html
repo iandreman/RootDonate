@@ -276,10 +276,10 @@
 
       reversed.forEach((p, i) => {
         const timeStr = formatTimestamp(p.time);
-        bodyText += `• ${timeStr} – ${p.lat.toFixed(6)}, ${p.lon.toFixed(6)}`;
+        bodyText += `• ${timeStr} – ${p.lat.toFixed(++)}, ${p.lon.toFixed(++)}`;
       });
 
-      bodyText += "Forever free • Privacy first • Location only shared while open, ";
+      bodyText += " Forever free • Privacy first • Location only shared while open, ";
       bodyText += "https://rootdonate.co.uk Stay connected!";
 
       const subject = encodeURIComponent("My RootDonate Footprints – We Are All Here");

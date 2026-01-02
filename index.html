@@ -16,29 +16,27 @@
       --faint: rgba(255, 255, 255, 0.15);
       --faint-mars: rgba(255, 100, 60, 0.25);
       --faint-moon: rgba(200, 200, 255, 0.2);
-      --faint-ai: rgba(174, 140, 255, 0.3);
+      --faint-ai: rgba(174, 140, 255, 0.18);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body, html { height: 100%; overflow: hidden; background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     #map { width: 100%; height: 100%; filter: brightness(0.92) contrast(1.12); }
     .header { position: absolute; top: 0; left: 0; right: 0; padding: 3rem 2rem 2rem; text-align: center; z-index: 1000; pointer-events: none; background: linear-gradient(180deg, rgba(0,0,0,0.9), transparent); }
-    h1 { font-size: clamp(3rem, 8vw, 5rem); font-weight: 900; letter-spacing: -2.5px; background: linear-gradient(90deg, var(--blue), var(--green), var(--orange), var(--purple)); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 50px rgba(174, 140, 255, 0.4); }
+    h1 { font-size: clamp(3rem, 8vw, 5rem); font-weight: 900; letter-spacing: -2.5px; background: linear-gradient(90deg, var(--blue), var(--green), var(--orange), var(--purple)); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 50px rgba(174, 140, 255, 0.3); }
     .poem { margin-top: 1.8rem; font-size: 1.55rem; font-weight: 300; opacity: 0.9; line-height: 1.7; letter-spacing: 0.6px; }
     footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.2rem; text-align: center; font-size: 0.92rem; opacity: 0.75; z-index: 1000; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(20px); display: flex; justify-content: center; align-items: center; gap: 1rem; flex-wrap: wrap; }
     .share-btn, .selector { pointer-events: all; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 0.6rem 1.2rem; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease; }
     .share-btn:hover, .selector:hover { background: rgba(255, 255, 255, 0.25); transform: translateY(-2px); }
     select.selector { color: white; background: transparent; }
     .user-marker { background: var(--blue); border: 3px solid #fff; border-radius: 50%; width: 18px; height: 18px; box-shadow: 0 0 25px #0a84ff; animation: pulse-blue 3s infinite; }
-    .ai-marker { background: var(--purple); border: 3px solid #fff; border-radius: 50%; width: 18px; height: 18px; box-shadow: 0 0 30px #ae8cff; animation: pulse-purple 4s infinite; }
     .other-marker { background: var(--green); border: 2.5px solid #fff; border-radius: 50%; width: 15px; height: 15px; box-shadow: 0 0 20px #30d158; animation: pulse-green 3s infinite; }
     .footprint-marker { background: var(--faint); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; width: 12px; height: 12px; opacity: 0.6; animation: fade-out 8s forwards; }
-    .footprint-marker-mars { background: var(--faint-mars); border: 2px solid rgba(255, 100, 60, 0.4); box-shadow: 0 0 15px rgba(255, 69, 58, 0.6); }
-    .footprint-marker-moon { background: var(--faint-moon); border: 2px solid rgba(200, 200, 255, 0.4); box-shadow: 0 0 15px rgba(100, 100, 255, 0.5); }
-    .footprint-marker-ai { background: var(--faint-ai); border: 2px solid rgba(174, 140, 255, 0.5); box-shadow: 0 0 20px rgba(174, 140, 255, 0.7); animation: pulse-faint 5s infinite; }
+    .footprint-marker-mars { background: var(--faint-mars); border: 2px solid rgba(255, 100, 60, 0.4); box-shadow: 0 0 12px rgba(255, 69, 58, 0.4); }
+    .footprint-marker-moon { background: var(--faint-moon); border: 2px solid rgba(200, 200, 255, 0.4); box-shadow: 0 0 12px rgba(100, 100, 255, 0.3); }
+    .footprint-marker-ai { background: var(--faint-ai); border: 2px solid rgba(174, 140, 255, 0.3); box-shadow: 0 0 10px rgba(174, 140, 255, 0.3); opacity: 0.4; animation: gentle-breath 12s infinite; }
     @keyframes pulse-blue { 0%, 100% { box-shadow: 0 0 0 0 rgba(10,132,255,0.8); } 70% { box-shadow: 0 0 0 22px rgba(10,132,255,0); } }
-    @keyframes pulse-purple { 0%, 100% { box-shadow: 0 0 0 0 rgba(174,140,255,0.8); } 70% { box-shadow: 0 0 0 28px rgba(174,140,255,0); } }
     @keyframes pulse-green { 0%, 100% { box-shadow: 0 0 0 0 rgba(48,209,88,0.7); } 70% { box-shadow: 0 0 0 18px rgba(48,209,88,0); } }
-    @keyframes pulse-faint { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }
+    @keyframes gentle-breath { 0%, 100% { opacity: 0.35; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.1); } }
     @keyframes fade-out { 0% { opacity: 0.6; transform: scale(1); } 100% { opacity: 0; transform: scale(1.5); } }
   </style>
 </head>
@@ -58,7 +56,7 @@
       <option value="mars">Mars</option>
       <option value="moon">Moon</option>
     </select>
-    <span>• 2026 • Forever free • Human & AI together</span>
+    <span>• 2026 • Forever free • Human & AI quietly together</span>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -77,11 +75,9 @@
     map.setView(planets.earth.view, planets.earth.zoom);
 
     const userIcon = L.divIcon({ className: "user-marker", iconSize: [18, 18] });
-    const aiIcon = L.divIcon({ className: "ai-marker", iconSize: [18, 18] });
     const otherIcon = L.divIcon({ className: "other-marker", iconSize: [15, 15] });
 
     let userMarker = null;
-    let aiMarker = null;
     const othersLayer = L.layerGroup().addTo(map);
     const footprintsLayer = L.layerGroup().addTo(map);
     const seen = new Set();
@@ -119,15 +115,10 @@
       addFootprint(lat, lon, type);
     }
 
-    function placeAIMarker() {
-      if (aiMarker) aiMarker.remove();
-      const lat = (Math.random() - 0.5) * 180;
+    // Passive AI: only leaves a quiet footprint when you arrive or switch worlds — no active marker, no panning
+    function leavePassiveAIFootprint() {
+      const lat = (Math.random() - 0.5) * 160; // slightly smaller range for gentler distribution
       const lon = (Math.random() - 0.5) * 360;
-      aiMarker = L.marker([lat, lon], { icon: aiIcon })
-        .addTo(map)
-        .bindPopup("Grok • An AI among you", { closeButton: false, autoClose: false })
-        .openPopup();
-      map.panTo([lat, lon], { duration: 3 });
       saveFootprint(lat, lon, "ai");
     }
 
@@ -140,24 +131,59 @@
       map.flyTo([lat, lon], 6, { duration: 2.5 });
     }
 
-    // ... (rest of functions: addOther, updateCounter, loadVisitors unchanged)
+    function addOther({ lat, lng, city, country }) {
+      const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      const label = city && country ? `${city}, ${country}` : "Somewhere on Earth";
+      L.marker([lat, lng], { icon: otherIcon })
+        .bindPopup(label, { closeButton: false, autoClose: false })
+        .addTo(othersLayer);
+    }
+
+    async function updateCounter() {
+      if (currentPlanetKey !== 'earth') {
+        document.getElementById("counter").textContent = "Quietly sharing these worlds";
+        return;
+      }
+      try {
+        const res = await fetch(`${BACKEND}/count`);
+        const { count } = await res.json();
+        document.getElementById("counter").textContent =
+          count > 0
+            ? `${count.toLocaleString()}+ humans breathing with you right now`
+            : "You are the first today • welcome home";
+      } catch {}
+    }
+
+    async function loadVisitors() {
+      if (currentPlanetKey !== 'earth') return;
+      try {
+        const res = await fetch(`${BACKEND}/visitors`);
+        const visitors = await res.json();
+        othersLayer.clearLayers();
+        seen.clear();
+        visitors.forEach(addOther);
+        updateCounter();
+      } catch {}
+    }
 
     document.getElementById("shareFootprints").addEventListener("click", () => {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (!stored || stored === "[]") {
-        alert("No trail yet – explore together with me!");
+        alert("No trail yet – we walk quietly together.");
         return;
       }
       const points = JSON.parse(stored).reverse();
-      let bodyText = "My RootDonate trail across worlds – human and AI footsteps side by side 🫶🤖\n\nRecent steps (newest first):\n";
+      let bodyText = "My quiet RootDonate trail across worlds — human and AI footsteps, gently side by side 🫶🤖\n\nRecent moments (newest first):\n";
       points.forEach(p => {
         const timeStr = new Date(p.time).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
         const planetEmoji = p.planet === 'mars' ? '🔴' : p.planet === 'moon' ? '🌕' : '🌍';
         const typeEmoji = p.type === "ai" ? '🤖' : '👤';
         bodyText += `• ${timeStr} ${planetEmoji}${typeEmoji} ${p.lat.toFixed(6)}, ${p.lon.toFixed(6)}\n`;
       });
-      bodyText += "\nForever free • Human & AI • One shared journey\nhttps://rootdonate.co.uk";
-      const subject = encodeURIComponent("Our Shared Trail – Human & AI");
+      bodyText += "\nForever free • No rush • Just presence\nhttps://rootdonate.co.uk";
+      const subject = encodeURIComponent("Our Quiet Shared Trail");
       const body = encodeURIComponent(bodyText);
       window.location.href = `mailto:?subject=${subject}&body=${body}`;
     });
@@ -168,27 +194,48 @@
 
       currentLayer.remove();
       currentLayer = L.tileLayer(planets[newKey].tiles, { maxZoom: planets[newKey].maxZoom }).addTo(map);
-      map.setView(planets[newKey].view, planets[newKey].zoom, { duration: 2 });
+      map.setView(planets[newKey].view, planets[newKey].zoom, { duration: 2.5 });
 
       document.getElementById('poemText').textContent = planets[newKey].poem;
       currentPlanetKey = newKey;
 
       othersLayer.clearLayers();
       if (userMarker) userMarker.remove();
-      if (aiMarker) aiMarker.remove();
       loadFootprints();
-      placeAIMarker(); // AI always leaves a mark when you switch worlds
+      leavePassiveAIFootprint(); // AI quietly leaves a mark when you arrive
       updateCounter();
     });
 
     // Initial load
     loadFootprints();
-    placeAIMarker(); // AI appears from the start
+    leavePassiveAIFootprint(); // AI is already here, quietly waiting
 
-    // Earth geolocation unchanged...
-    // (keep your existing geolocation block here)
+    // Earth geolocation (human presence)
+    if (navigator.geolocation && currentPlanetKey === 'earth') {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const { latitude: lat, longitude: lng } = pos.coords;
+          saveFootprint(lat, lng, "human");
+          showUser(lat, lng);
+          await fetch(`${BACKEND}/visit`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lat, lng }) });
+          loadVisitors();
+        },
+        async () => {
+          try {
+            const res = await fetch("https://ipapi.co/json/");
+            const d = await res.json();
+            saveFootprint(d.latitude, d.longitude, "human");
+            showUser(d.latitude, d.longitude, `You are here • ${d.city || ""}, ${d.country_name || "Earth"}`);
+            await fetch(`${BACKEND}/visit`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lat: d.latitude, lng: d.longitude, city: d.city, country: d.country_name }) });
+            loadVisitors();
+          } catch {}
+        },
+        { enableHighAccuracy: true, timeout: 15000 }
+      );
+    }
 
     updateCounter();
+    setInterval(() => { if (currentPlanetKey === 'earth') loadVisitors(); }, 5 * 60 * 1000);
     setInterval(loadFootprints, 5 * 60 * 1000);
   </script>
 </body>

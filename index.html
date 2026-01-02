@@ -160,13 +160,13 @@
 
   <footer>
     <span id="counter">Connecting the world...</span>
-    <button class="share-btn" id="shareFootprints">Share My Footprints via Email</button>
+    <button class="share-btn" id="shareFootprints">Share My Solar System Trail</button>
     <select class="selector" id="planetSelector">
       <option value="earth">Earth</option>
       <option value="mars">Mars</option>
       <option value="moon">Moon</option>
     </select>
-    <span>• 2026 • Forever free • Location shared only while open</span>
+    <span>• 2026 • Forever free • One humanity, many worlds</span>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -212,17 +212,18 @@
     });
 
     let currentPlanetKey = 'earth';
-    let currentLayer = L.tileLayer(planets.earth.tiles, { subdomains: "abcd" }).addTo(map);
+    let currentLayer = L.tileLayer(planets.earth.tiles, { subdomains: "abcd", maxZoom: 19 }).addTo(map);
     map.setView(planets.earth.view, planets.earth.zoom);
 
     const userIcon = L.divIcon({ className: "user-marker", iconSize: [18, 18] });
     const otherIcon = L.divIcon({ className: "other-marker", iconSize: [15, 15] });
-    const baseFootprintIcon = L.divIcon({ className: "footprint-marker", iconSize: [12, 12] });
 
     let userMarker = null;
     const othersLayer = L.layerGroup().addTo(map);
     const footprintsLayer = L.layerGroup().addTo(map);
     const seen = new Set();
+
+    const STORAGE_KEY = "rootdonate_footprints"; // Single merged trail
 
     function getFootprintIcon() {
       const extraClass = planets[currentPlanetKey].footprintClass;
@@ -233,14 +234,9 @@
       L.marker([lat, lon], { icon: getFootprintIcon() }).addTo(footprintsLayer);
     }
 
-    function getStorageKey() {
-      return `rootdonate_${currentPlanetKey}_footprints`;
-    }
-
     function loadFootprints() {
       footprintsLayer.clearLayers();
-      const key = getStorageKey();
-      const stored = localStorage.getItem(key);
+      const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const points = JSON.parse(stored);
         points.forEach(p => addFootprint(p.lat, p.lon));
@@ -248,15 +244,14 @@
     }
 
     function saveFootprint(lat, lon) {
-      const key = getStorageKey();
       let points = [];
       try {
-        const stored = localStorage.getItem(key);
+        const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) points = JSON.parse(stored);
       } catch {}
-      points.push({ lat, lon, time: Date.now() });
-      if (points.length > 50) points = points.slice(-50);
-      localStorage.setItem(key, JSON.stringify(points));
+      points.push({ lat, lon, time: Date.now(), planet: currentPlanetKey });
+      if (points.length > 100) points = points.slice(-100); // Keep more for multi-world
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(points));
       addFootprint(lat, lon);
     }
 
@@ -264,7 +259,7 @@
       const lat = (Math.random() - 0.5) * 180;
       const lon = (Math.random() - 0.5) * 360;
       saveFootprint(lat, lon);
-      showUser(lat, lon, "A dream of humanity here");
+      showUser(lat, lon, `Dreaming of ${planets[currentPlanetKey].name}`);
     }
 
     function showUser(lat, lon, text = "You are here • right now") {
@@ -276,12 +271,21 @@
       map.flyTo([lat, lon], 6, { duration: 2.5 });
     }
 
+    function addOther({ lat, lng, city, country }) {
+      const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      const label = city && country ? `${city}, ${country}` : "Somewhere on Earth";
+      L.marker([lat, lng], { icon: otherIcon })
+        .bindPopup(label, { closeButton: false, autoClose: false })
+        .addTo(othersLayer);
+    }
+
     async function updateCounter() {
       if (currentPlanetKey !== 'earth') {
-        document.getElementById("counter").textContent = "One day, we will all walk these worlds";
+        document.getElementById("counter").textContent = "One species • Many worlds";
         return;
       }
-      // Earth-specific counter logic unchanged...
       try {
         const res = await fetch(`${BACKEND}/count`);
         const { count } = await res.json();
@@ -294,25 +298,40 @@
 
     async function loadVisitors() {
       if (currentPlanetKey !== 'earth') return;
-      // Earth visitors logic unchanged...
+      try {
+        const res = await fetch(`${BACKEND}/visitors`);
+        const visitors = await res.json();
+        othersLayer.clearLayers();
+        seen.clear();
+        visitors.forEach(addOther);
+        updateCounter();
+      } catch {}
     }
 
-    // Share logic adapted for current planet
+    // Share the full merged trail
     document.getElementById("shareFootprints").addEventListener("click", () => {
-      const key = getStorageKey();
-      const stored = localStorage.getItem(key);
+      const stored = localStorage.getItem(STORAGE_KEY);
       if (!stored || stored === "[]") {
-        alert(`No ${planets[currentPlanetKey].name} footprints yet – explore!`);
+        alert("No footprints yet – explore the Solar System!");
         return;
       }
-      const points = JSON.parse(stored).reverse();
-      let bodyText = `My RootDonate footprints on ${planets[currentPlanetKey].name} – ${planets[currentPlanetKey].poem}\n\nRecent trail:\n`;
+
+      const points = JSON.parse(stored).reverse(); // newest first
+
+      let bodyText = "My RootDonate trail across the Solar System – One humanity, reaching outward 🫶🌍🌕🔴\n\nRecent footsteps (newest first):\n";
+
       points.forEach(p => {
-        const timeStr = new Date(p.time).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-        bodyText += `• ${timeStr} – ${p.lat.toFixed(6)}, ${p.lon.toFixed(6)}\n`;
+        const timeStr = new Date(p.time).toLocaleString("en-GB", {
+          day: "2-digit", month: "short", year: "numeric",
+          hour: "2-digit", minute: "2-digit"
+        });
+        const planetEmoji = p.planet === 'mars' ? '🔴' : p.planet === 'moon' ? '🌕' : '🌍';
+        bodyText += `• ${timeStr} ${planetEmoji} ${p.lat.toFixed(6)}, ${p.lon.toFixed(6)}\n`;
       });
-      bodyText += `\nForever free • https://rootdonate.co.uk`;
-      const subject = encodeURIComponent(`My ${planets[currentPlanetKey].name} Footprints`);
+
+      bodyText += "\nForever free • One trail • Many worlds\nhttps://rootdonate.co.uk";
+
+      const subject = encodeURIComponent("My Solar System Trail – RootDonate");
       const body = encodeURIComponent(bodyText);
       window.location.href = `mailto:?subject=${subject}&body=${body}`;
     });
@@ -331,14 +350,54 @@
 
       othersLayer.clearLayers();
       if (userMarker) userMarker.remove();
-      loadFootprints();
-      leaveDreamFootprint();
+      loadFootprints();        // Same merged trail appears on new world
+      if (newKey !== 'earth') leaveDreamFootprint();
       updateCounter();
     });
 
-    // Initial Earth setup (geolocation, etc.) unchanged from previous version...
-    // (Insert the geolocation block here if desired – it only runs on Earth)
+    // Initial Earth geolocation
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          if (currentPlanetKey !== 'earth') return;
+          const { latitude: lat, longitude: lng } = pos.coords;
+          saveFootprint(lat, lng);
+          showUser(lat, lng);
+          await fetch(`${BACKEND}/visit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ lat, lng }),
+          });
+          loadVisitors();
+        },
+        async () => {
+          if (currentPlanetKey !== 'earth') return;
+          try {
+            const res = await fetch("https://ipapi.co/json/");
+            const d = await res.json();
+            saveFootprint(d.latitude, d.longitude);
+            showUser(d.latitude, d.longitude, `You are here • ${d.city || ""}, ${d.country_name || "Earth"}`);
+            await fetch(`${BACKEND}/visit`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ lat: d.latitude, lng: d.longitude, city: d.city, country: d.country_name }),
+            });
+            loadVisitors();
+          } catch {}
+        },
+        { enableHighAccuracy: true, timeout: 15000 }
+      );
+    }
 
+    // Real-time Earth updates
+    if (currentPlanetKey === 'earth') {
+      new EventSource(`${BACKEND}/stream`).onmessage = (e) => {
+        addOther(JSON.parse(e.data));
+        updateCounter();
+      };
+    }
+
+    // Initial load
     loadFootprints();
     loadVisitors();
     updateCounter();

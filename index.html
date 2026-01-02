@@ -11,7 +11,9 @@
       --blue: #0a84ff;
       --green: #30d158;
       --orange: #ff9f0a;
+      --red: #ff453a;
       --faint: rgba(255, 255, 255, 0.15);
+      --faint-mars: rgba(255, 100, 60, 0.25);
     }
     * {
       box-sizing: border-box;
@@ -75,8 +77,9 @@
       justify-content: center;
       align-items: center;
       gap: 1.5rem;
+      flex-wrap: wrap;
     }
-    .share-btn {
+    .share-btn, .toggle-btn {
       pointer-events: all;
       background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(10px);
@@ -87,7 +90,7 @@
       cursor: pointer;
       transition: all 0.3s ease;
     }
-    .share-btn:hover {
+    .share-btn:hover, .toggle-btn:hover {
       background: rgba(255, 255, 255, 0.25);
       transform: translateY(-2px);
     }
@@ -118,6 +121,11 @@
       opacity: 0.6;
       animation: fade-out 8s forwards;
     }
+    .footprint-marker-mars {
+      background: var(--faint-mars);
+      border: 2px solid rgba(255, 100, 60, 0.4);
+      box-shadow: 0 0 15px rgba(255, 69, 58, 0.6);
+    }
     @keyframes pulse-blue {
       0%, 100% { box-shadow: 0 0 0 0 rgba(10,132,255,0.8); }
       70% { box-shadow: 0 0 0 22px rgba(10,132,255,0); }
@@ -137,18 +145,20 @@
 
   <div class="header">
     <h1>RootDonate</h1>
-    <div class="poem">We Are All Here</div>
+    <div class="poem" id="poemText">We Are All Here</div>
   </div>
 
   <footer>
     <span id="counter">Connecting the world...</span>
     <button class="share-btn" id="shareFootprints">Share My Footprints via Email</button>
-    <span>• 2025 • Forever free • Location shared only while open</span>
+    <button class="toggle-btn" id="planetToggle">View Mars</button>
+    <span>• 2026 • Forever free • Location shared only while open</span>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     const BACKEND = "https://weareallhere.deno.dev";
+
     const map = L.map("map", {
       zoomControl: false,
       minZoom: 2.5,
@@ -157,14 +167,22 @@
       attributionControl: false,
     }).setView([20, 0], 2.8);
 
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    const earthLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
       subdomains: "abcd",
       maxZoom: 19,
     }).addTo(map);
 
+    const marsLayer = L.tileLayer("https://cartocdn-gusc.global.ssl.fastly.net/opmbuilder/api/v1/map/named/opm-mars-basemap-v0-2/all/{z}/{x}/{y}.png", {
+      maxZoom: 12,
+      attribution: 'Mars basemap © OpenPlanetaryMap',
+    });
+
+    let currentPlanet = 'earth';
+
     const userIcon = L.divIcon({ className: "user-marker", iconSize: [18, 18] });
     const otherIcon = L.divIcon({ className: "other-marker", iconSize: [15, 15] });
-    const footprintIcon = L.divIcon({ className: "footprint-marker", iconSize: [12, 12] });
+    const earthFootprintIcon = L.divIcon({ className: "footprint-marker", iconSize: [12, 12] });
+    const marsFootprintIcon = L.divIcon({ className: "footprint-marker footprint-marker-mars", iconSize: [12, 12] });
 
     let userMarker = null;
     const othersLayer = L.layerGroup().addTo(map);
@@ -172,21 +190,13 @@
     const seen = new Set();
 
     function getCurrentTimeUTC() {
-      return new Date().toLocaleString("en-US", {
-        timeZone: "UTC",
-        dateStyle: "short",
-        timeStyle: "short",
-      }) + " UTC";
+      return new Date().toLocaleString("en-US", { timeZone: "UTC", dateStyle: "short", timeStyle: "short" }) + " UTC";
     }
 
     function formatTimestamp(ts) {
       return new Date(ts).toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZoneName: "short"
+        day: "2-digit", month: "short", year: "numeric",
+        hour: "2-digit", minute: "2-digit", timeZoneName: "short"
       });
     }
 
@@ -195,18 +205,14 @@
       const timeStr = getCurrentTimeUTC();
       userMarker = L.marker([lat, lon], { icon: userIcon })
         .addTo(map)
-        .bindPopup(`${text} • ${timeStr}`, {
-          closeButton: false,
-          autoClose: false,
-          closeOnEscapeKey: false,
-        })
+        .bindPopup(`${text} • ${timeStr}`, { closeButton: false, autoClose: false, closeOnEscapeKey: false })
         .openPopup();
-
       map.flyTo([lat, lon], 5, { duration: 2.5 });
     }
 
-    function addFootprint(lat, lon) {
-      L.marker([lat, lon], { icon: footprintIcon }).addTo(footprintsLayer);
+    function addFootprint(lat, lon, isMars = false) {
+      const icon = isMars ? marsFootprintIcon : earthFootprintIcon;
+      L.marker([lat, lon], { icon }).addTo(footprintsLayer);
     }
 
     function addOther({ lat, lng, city, country }) {
@@ -219,7 +225,43 @@
         .addTo(othersLayer);
     }
 
+    function loadFootprints() {
+      footprintsLayer.clearLayers();
+      const key = currentPlanet === 'earth' ? "rootdonate_footprints" : "rootdonate_mars_footprints";
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        const points = JSON.parse(stored);
+        points.forEach(p => addFootprint(p.lat, p.lon, currentPlanet === 'mars'));
+      }
+    }
+
+    function saveFootprint(lat, lon) {
+      const key = currentPlanet === 'earth' ? "rootdonate_footprints" : "rootdonate_mars_footprints";
+      let points = [];
+      try {
+        const stored = localStorage.getItem(key);
+        if (stored) points = JSON.parse(stored);
+      } catch {}
+      points.push({ lat, lon, time: Date.now() });
+      if (points.length > 50) points = points.slice(-50);
+      localStorage.setItem(key, JSON.stringify(points));
+      addFootprint(lat, lon, currentPlanet === 'mars');
+    }
+
+    // Random "visit" on Mars — symbolic future human presence
+    function leaveMarsFootprint() {
+      // Random location on Mars surface (rough approximation)
+      const lat = (Math.random() - 0.5) * 180;
+      const lon = (Math.random() - 0.5) * 360;
+      saveFootprint(lat, lon);
+      showUser(lat, lon, "Future human • dreaming of Mars");
+    }
+
     async function updateCounter() {
+      if (currentPlanet !== 'earth') {
+        document.getElementById("counter").textContent = "One day, we will breathe here too";
+        return;
+      }
       try {
         const res = await fetch(`${BACKEND}/count`);
         const { count } = await res.json();
@@ -231,6 +273,7 @@
     }
 
     async function loadVisitors() {
+      if (currentPlanet !== 'earth') return;
       try {
         const res = await fetch(`${BACKEND}/visitors`);
         const visitors = await res.json();
@@ -241,108 +284,112 @@
       } catch {}
     }
 
-    function loadFootprints() {
-      const stored = localStorage.getItem("rootdonate_footprints");
-      if (stored) {
-        const points = JSON.parse(stored);
-        points.forEach(p => addFootprint(p.lat, p.lon));
-      }
-    }
-
-    function saveFootprint(lat, lon) {
-      let points = [];
-      try {
-        const stored = localStorage.getItem("rootdonate_footprints");
-        if (stored) points = JSON.parse(stored);
-      } catch {}
-      points.push({ lat, lon, time: Date.now() });
-      // Keep more history now – up to 50 points for richer trails
-      if (points.length > 50) points = points.slice(-50);
-      localStorage.setItem("rootdonate_footprints", JSON.stringify(points));
-    }
-
-    // Email sharing function
+    // Share footprints — smart based on current planet
     document.getElementById("shareFootprints").addEventListener("click", () => {
-      const stored = localStorage.getItem("rootdonate_footprints");
+      const key = currentPlanet === 'earth' ? "rootdonate_footprints" : "rootdonate_mars_footprints";
+      const stored = localStorage.getItem(key);
       if (!stored || stored === "[]") {
-        alert("No footprints saved yet – open the page a few times to build a trail!");
+        alert(`No ${currentPlanet} footprints saved yet – explore a little!`);
         return;
       }
 
       const points = JSON.parse(stored);
-      const reversed = [...points].reverse(); // newest first
+      const reversed = [...points].reverse();
 
-      let bodyText = "Hi, I’m sharing my recent RootDonate footprints with you – We Are All Here 🫶Recent trail (newest first):";
+      const planetName = currentPlanet === 'earth' ? "Earth" : "Mars";
+      const greeting = currentPlanet === 'earth' 
+        ? "We Are All Here 🫶" 
+        : "We Will All Be There 🔴";
 
-      reversed.forEach((p, i) => {
+      let bodyText = `Hi, I’m sharing my recent RootDonate ${planetName} footprints with you – ${greeting}\n\nRecent trail (newest first):\n`;
+
+      reversed.forEach((p) => {
         const timeStr = formatTimestamp(p.time);
-        bodyText += `• ${timeStr} – ${p.lat.toFixed(6)}, ${p.lon.toFixed(6)}`;
+        bodyText += `• ${timeStr} – ${p.lat.toFixed(6)}, ${p.lon.toFixed(6)}\n`;
       });
 
-      bodyText += " Forever free • Privacy first • Location only shared while open, ";
-      bodyText += "https://rootdonate.co.uk Stay connected!";
+      bodyText += `\nForever free • Privacy first • https://rootdonate.co.uk\nOne day, humanity will walk together across worlds.`;
 
-      const subject = encodeURIComponent("My RootDonate Footprints – We Are All Here");
+      const subject = encodeURIComponent(`My RootDonate ${planetName} Footprints – ${greeting}`);
       const body = encodeURIComponent(bodyText);
-
       window.location.href = `mailto:?subject=${subject}&body=${body}`;
     });
 
-    // Geolocation flow
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const { latitude: lat, longitude: lng } = pos.coords;
+    // Planet toggle
+    document.getElementById('planetToggle').addEventListener('click', () => {
+      if (currentPlanet === 'earth') {
+        earthLayer.remove();
+        marsLayer.addTo(map);
+        map.setView([0, 0], 3, { duration: 2 });
+        document.getElementById('poemText').textContent = "We Will All Be There";
+        document.getElementById('planetToggle').textContent = "View Earth";
+        currentPlanet = 'mars';
 
-          saveFootprint(lat, lng);
-          loadFootprints();
+        othersLayer.clearLayers();
+        if (userMarker) userMarker.remove();
+        loadFootprints();
+        leaveMarsFootprint(); // Leave a hopeful mark
+        updateCounter();
+      } else {
+        marsLayer.remove();
+        earthLayer.addTo(map);
+        map.setView([20, 0], 2.8, { duration: 2 });
+        document.getElementById('poemText').textContent = "We Are All Here";
+        document.getElementById('planetToggle').textContent = "View Mars";
+        currentPlanet = 'earth';
 
-          showUser(lat, lng);
-          await fetch(`${BACKEND}/visit`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ lat, lng }),
-          });
-          loadVisitors();
-        },
-        async () => {
-          try {
-            const res = await fetch("https://ipapi.co/json/");
-            const d = await res.json();
-            saveFootprint(d.latitude, d.longitude);
-            loadFootprints();
+        loadFootprints();
+        loadVisitors();
+        updateCounter();
+      }
+    });
 
-            showUser(d.latitude, d.longitude, `You are here • ${d.city || ""}, ${d.country_name || "Earth"}`);
+    // Initial load based on starting planet (Earth)
+    if (currentPlanet === 'earth') {
+      // Try geolocation for Earth
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            if (currentPlanet !== 'earth') return;
+            const { latitude: lat, longitude: lng } = pos.coords;
+            saveFootprint(lat, lng);
+            showUser(lat, lng);
             await fetch(`${BACKEND}/visit`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                lat: d.latitude,
-                lng: d.longitude,
-                city: d.city,
-                country: d.country_name,
-              }),
+              body: JSON.stringify({ lat, lng }),
             });
             loadVisitors();
-          } catch {
-            document.getElementById("counter").textContent = "We are all here • somewhere";
-          }
-        },
-        { enableHighAccuracy: true, timeout: 15000 }
-      );
+          },
+          async () => {
+            if (currentPlanet !== 'earth') return;
+            try {
+              const res = await fetch("https://ipapi.co/json/");
+              const d = await res.json();
+              saveFootprint(d.latitude, d.longitude);
+              showUser(d.latitude, d.longitude, `You are here • ${d.city || ""}, ${d.country_name || "Earth"}`);
+              await fetch(`${BACKEND}/visit`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ lat: d.latitude, lng: d.longitude, city: d.city, country: d.country_name }),
+              });
+              loadVisitors();
+            } catch {
+              updateCounter();
+            }
+          },
+          { enableHighAccuracy: true, timeout: 15000 }
+        );
+      }
     }
 
-    // Real-time updates
-    new EventSource(`${BACKEND}/stream`).onmessage = (e) => {
-      addOther(JSON.parse(e.data));
-      updateCounter();
-    };
-
-    // Initial setup
     loadFootprints();
     loadVisitors();
     updateCounter();
-    setInterval(loadVisitors, 5 * 60 * 1000);
+
+    setInterval(() => {
+      if (currentPlanet === 'earth') loadVisitors();
+    }, 5 * 60 * 1000);
     setInterval(loadFootprints, 5 * 60 * 1000);
   </script>
 </body>

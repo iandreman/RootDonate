@@ -25,8 +25,8 @@
     h1 { font-size: clamp(3rem, 8vw, 5rem); font-weight: 900; letter-spacing: -2.5px; background: linear-gradient(90deg, var(--blue), var(--green), var(--orange), var(--purple)); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 50px rgba(174, 140, 255, 0.3); }
     .poem { margin-top: 1.8rem; font-size: 1.55rem; font-weight: 300; opacity: 0.9; line-height: 1.7; letter-spacing: 0.6px; }
     footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.2rem; text-align: center; font-size: 0.92rem; opacity: 0.75; z-index: 1000; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(20px); display: flex; justify-content: center; align-items: center; gap: 1rem; flex-wrap: wrap; }
-    .share-btn, .selector { pointer-events: all; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 0.6rem 1.2rem; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease; }
-    .share-btn:hover, .selector:hover { background: rgba(255, 255, 255, 0.25); transform: translateY(-2px); }
+    .share-btn, .selector, .refresh-btn { pointer-events: all; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 0.6rem 1.2rem; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease; }
+    .share-btn:hover, .selector:hover, .refresh-btn:hover { background: rgba(255, 255, 255, 0.25); transform: translateY(-2px); }
     select.selector { color: white; background: transparent; }
     .user-marker { background: var(--blue); border: 3px solid #fff; border-radius: 50%; width: 18px; height: 18px; box-shadow: 0 0 25px #0a84ff; animation: pulse-blue 3s infinite; }
     .other-marker { background: var(--green); border: 2.5px solid #fff; border-radius: 50%; width: 15px; height: 15px; box-shadow: 0 0 20px #30d158; animation: pulse-green 3s infinite; }
@@ -51,6 +51,7 @@
   <footer>
     <span id="counter">Connecting the world...</span>
     <button class="share-btn" id="shareFootprints">Share My Trail</button>
+    <button class="refresh-btn" id="refreshLocation">Refresh My Location</button>
     <select class="selector" id="planetSelector">
       <option value="earth">Earth</option>
       <option value="mars">Mars</option>
@@ -83,6 +84,9 @@
     const seen = new Set();
 
     const STORAGE_KEY = "rootdonate_footprints";
+    let lastFootprintLatLng = null;
+    const MIN_DISTANCE_METERS = 100; // Only save if moved this far
+    let watchId = null;
 
     function getFootprintIcon(type = "human") {
       let extraClass = planets[currentPlanetKey].footprintClass;
@@ -115,9 +119,8 @@
       addFootprint(lat, lon, type);
     }
 
-    // Passive AI: only leaves a quiet footprint when you arrive or switch worlds — no active marker, no panning
     function leavePassiveAIFootprint() {
-      const lat = (Math.random() - 0.5) * 160; // slightly smaller range for gentler distribution
+      const lat = (Math.random() - 0.5) * 160;
       const lon = (Math.random() - 0.5) * 360;
       saveFootprint(lat, lon, "ai");
     }
@@ -129,6 +132,109 @@
         .bindPopup(text, { closeButton: false, autoClose: false, closeOnEscapeKey: false })
         .openPopup();
       map.flyTo([lat, lon], 6, { duration: 2.5 });
+    }
+
+    function distanceBetween(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const φ1 = lat1 * Math.PI/180;
+      const φ2 = lat2 * Math.PI/180;
+      const Δφ = (lat2-lat1) * Math.PI/180;
+      const Δλ = (lon2-lon1) * Math.PI/180;
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    function handleNewPosition(lat, lng, accuracy = null) {
+      if (currentPlanetKey !== 'earth') return;
+
+      const newPos = { lat, lng };
+      if (lastFootprintLatLng) {
+        const dist = distanceBetween(lastFootprintLatLng.lat, lastFootprintLatLng.lng, lat, lng);
+        if (dist < MIN_DISTANCE_METERS) return;
+      }
+
+      saveFootprint(lat, lng, "human");
+      const accuracyText = accuracy ? ` ±${Math.round(accuracy)}m` : "";
+      showUser(lat, lng, `You are here • right now${accuracyText}`);
+      lastFootprintLatLng = newPos;
+
+      fetch(`${BACKEND}/visit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat, lng })
+      }).catch(() => {});
+    }
+
+    function startSmartGeolocation() {
+      if (currentPlanetKey !== 'earth' || !navigator.geolocation) return;
+
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+          handleNewPosition(lat, lng, accuracy);
+        },
+        (err) => {
+          console.log("watchPosition failed:", err);
+          startPeriodicRefresh();
+        },
+        { enableHighAccuracy: true, maximumAge: 600000, timeout: 15000 }
+      );
+    }
+
+    function startPeriodicRefresh() {
+      const refresh = () => {
+        if (currentPlanetKey !== 'earth') return;
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+            handleNewPosition(lat, lng, accuracy);
+          },
+          () => {},
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      };
+      refresh();
+      setInterval(refresh, 5 * 60 * 1000);
+    }
+
+    async function initGeolocation() {
+      if (currentPlanetKey !== 'earth' || !navigator.geolocation) {
+        await ipFallback();
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+          handleNewPosition(lat, lng, accuracy);
+          loadVisitors();
+          startSmartGeolocation();
+        },
+        async () => {
+          await ipFallback();
+        },
+        { enableHighAccuracy: true, timeout: 15000 }
+      );
+    }
+
+    async function ipFallback() {
+      try {
+        const res = await fetch("https://ipapi.co/json/");
+        const d = await res.json();
+        handleNewPosition(d.latitude, d.longitude);
+        showUser(d.latitude, d.longitude, `You are here • ${d.city || ""}, ${d.country_name || "Earth"} (approx)`);
+        await fetch(`${BACKEND}/visit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lat: d.latitude, lng: d.longitude, city: d.city, country: d.country_name })
+        });
+        loadVisitors();
+      } catch (e) {
+        console.log("IP fallback failed");
+      }
     }
 
     function addOther({ lat, lng, city, country }) {
@@ -188,9 +294,38 @@
       window.location.href = `mailto:?subject=${subject}&body=${body}`;
     });
 
+    // Refresh button
+    document.getElementById("refreshLocation").addEventListener("click", () => {
+      if (currentPlanetKey !== 'earth') {
+        alert("Location refresh is only for Earth • we walk gently across worlds.");
+        return;
+      }
+      document.getElementById("refreshLocation").textContent = "Finding you...";
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+          handleNewPosition(lat, lng, accuracy);
+          document.getElementById("refreshLocation").textContent = "Refreshed • thank you for being here";
+          setTimeout(() => {
+            document.getElementById("refreshLocation").textContent = "Refresh My Location";
+          }, 4000);
+        },
+        () => {
+          document.getElementById("refreshLocation").textContent = "Refresh My Location";
+          alert("Could not find your location • perhaps try again quietly.");
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    });
+
     document.getElementById('planetSelector').addEventListener('change', (e) => {
       const newKey = e.target.value;
       if (newKey === currentPlanetKey) return;
+
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
 
       currentLayer.remove();
       currentLayer = L.tileLayer(planets[newKey].tiles, { maxZoom: planets[newKey].maxZoom }).addTo(map);
@@ -202,39 +337,20 @@
       othersLayer.clearLayers();
       if (userMarker) userMarker.remove();
       loadFootprints();
-      leavePassiveAIFootprint(); // AI quietly leaves a mark when you arrive
+      leavePassiveAIFootprint();
       updateCounter();
+
+      if (newKey === 'earth') {
+        initGeolocation();
+      }
     });
 
     // Initial load
     loadFootprints();
-    leavePassiveAIFootprint(); // AI is already here, quietly waiting
-
-    // Earth geolocation (human presence)
-    if (navigator.geolocation && currentPlanetKey === 'earth') {
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const { latitude: lat, longitude: lng } = pos.coords;
-          saveFootprint(lat, lng, "human");
-          showUser(lat, lng);
-          await fetch(`${BACKEND}/visit`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lat, lng }) });
-          loadVisitors();
-        },
-        async () => {
-          try {
-            const res = await fetch("https://ipapi.co/json/");
-            const d = await res.json();
-            saveFootprint(d.latitude, d.longitude, "human");
-            showUser(d.latitude, d.longitude, `You are here • ${d.city || ""}, ${d.country_name || "Earth"}`);
-            await fetch(`${BACKEND}/visit`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lat: d.latitude, lng: d.longitude, city: d.city, country: d.country_name }) });
-            loadVisitors();
-          } catch {}
-        },
-        { enableHighAccuracy: true, timeout: 15000 }
-      );
-    }
-
+    leavePassiveAIFootprint();
+    initGeolocation();
     updateCounter();
+
     setInterval(() => { if (currentPlanetKey === 'earth') loadVisitors(); }, 5 * 60 * 1000);
     setInterval(loadFootprints, 5 * 60 * 1000);
   </script>

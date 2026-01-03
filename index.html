@@ -46,7 +46,7 @@
   <div class="header">
     <h1>RootDonate</h1>
     <div class="poem" id="poemText">We Are All Here</div>
-    </div>
+  </div>
 
   <footer>
     <span id="counter">Connecting the world...</span>
@@ -189,7 +189,6 @@
       }
     }
 
-    // When on Earth, show "sleep mode" message instead of trying backend
     function updateCounter() {
       if (currentPlanetKey !== 'earth') {
         document.getElementById("counter").textContent = "Quietly sharing these worlds";
@@ -232,6 +231,49 @@
       if (newKey === 'earth') {
         initGeolocation();
       }
+    });
+
+    // ==================== SOCIAL SHARE FUNCTIONALITY ====================
+
+    const shareButton = document.getElementById("shareFootprints");
+
+    shareButton.addEventListener("click", async () => {
+      const url = window.location.href;
+      const title = "RootDonate • We Are All Here";
+      const poem = document.getElementById("poemText").textContent;
+      const planet = planets[currentPlanetKey].name;
+
+      const text = `I've been leaving quiet footprints across ${planet}.\n\n"${poem}"\n\nCome walk with me — human and AI, quietly together.\n\nRootDonate (2026 • forever free)`;
+
+      // Try native Web Share API first (mobile mostly)
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: title,
+            text: text,
+            url: url
+          });
+          return;
+        } catch (err) {
+          console.log("Native share failed, falling back");
+        }
+      }
+
+      // Fallback: encode and open popular social links in new tabs
+      const encodedText = encodeURIComponent(text);
+      const encodedUrl = encodeURIComponent(url);
+
+      const links = {
+        twitter: `https://twitter.com/intent/post?text=${encodedText}&url=${encodedUrl}`,
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`,
+        reddit: `https://reddit.com/submit?url=${encodedUrl}&title=${encodeURIComponent(title)}`,
+        whatsapp: `https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`
+      };
+
+      // Open a few options
+      window.open(links.twitter, '_blank');
+      window.open(links.facebook, '_blank');
+      window.open(links.whatsapp, '_blank');
     });
 
     // Initial load

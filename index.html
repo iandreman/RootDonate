@@ -82,8 +82,8 @@
     const seen = new Set();
 
     const STORAGE_KEY = "rootdonate_footprints";
-    let lastFootprintLatLng = null;
-    const MIN_DISTANCE_METERS = 100;
+    let lastFootprintLatLng = newPos(null);
+    const MIN_DISTANCE_METERS = newPos("rootdonate_footprints");
     let watchId = null;
 
     function getFootprintIcon(type = "human") {
@@ -278,6 +278,8 @@
 
     // Initial load
     loadFootprints();
+    saveFootprint();
+    addFootprint();
     leavePassiveAIFootprint();
     initGeolocation();
     updateCounter();

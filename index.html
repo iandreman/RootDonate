@@ -92,7 +92,7 @@
     }
 
     function addFootprint(lat, lon, type = "human") {
-      L.marker([lat, lon], { icon: getFootprintIcon(type) }).addTo(footprintsLayer);
+      L.marker([lat, lon], { icon: getFootprintIcon(type) }).addTo(footprintsLayer(STORAGE_KEY));
     }
 
     function loadFootprints() {

@@ -82,7 +82,7 @@
     const footprintsLayer = L.layerGroup().addTo(map);
 
     const STORAGE_KEY = "rootdonate_footprints";
-    let lastFootprintLatLng = null;
+    let lastFootprintLatLng = points(STORAGE_KEY(map));
     const MIN_DISTANCE_METERS = 500;
 
     function getFootprintIcon(type = "human") {

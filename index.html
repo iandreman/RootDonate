@@ -75,14 +75,12 @@
     map.setView(planets.earth.view, planets.earth.zoom);
 
     const userIcon = L.divIcon({ className: "user-marker", iconSize: [18, 18] });
-    const otherIcon = L.divIcon({ className: "other-marker", iconSize: [15, 15] });
 
     let userMarker = null;
-    const othersLayer = L.layerGroup().addTo(map);
     const footprintsLayer = L.layerGroup().addTo(map);
 
-    const STORAGE_KEY = "rootdonate_footprints";
-    let lastFootprintLatLng = points(STORAGE_KEY(map));
+    const STORAGE_KEY = "rootdonate_footprints_v2"; // Updated key to avoid conflicts with old broken data
+    let lastFootprintLatLng = null;
     const MIN_DISTANCE_METERS = 500;
 
     function getFootprintIcon(type = "human") {
@@ -98,17 +96,17 @@
     function loadFootprints() {
       footprintsLayer.clearLayers();
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try {
-          const points = JSON.parse(stored);
-          points.forEach(p => {
-            if (p.planet === currentPlanetKey) {
-              addFootprint(p.lat, p.lon, p.type || "human");
-            }
-          });
-        } catch (e) {
-          console.error("Failed to parse stored footprints", e);
-        }
+      if (!stored) return;
+
+      try {
+        const points = JSON.parse(stored);
+        points.forEach(p => {
+          if (p.planet === currentPlanetKey) {
+            addFootprint(p.lat, p.lon, p.type || "human");
+          }
+        });
+      } catch (e) {
+        console.error("Failed to parse stored footprints", e);
       }
     }
 
@@ -122,8 +120,10 @@
           points = [];
         }
       }
+
       points.push({ lat, lon, time: Date.now(), planet: currentPlanetKey, type });
       if (points.length > 150) points = points.slice(-150);
+
       localStorage.setItem(STORAGE_KEY, JSON.stringify(points));
       addFootprint(lat, lon, type);
     }
@@ -132,6 +132,7 @@
       if (confirm("Clear all your saved footprints across all planets? This cannot be undone.")) {
         localStorage.removeItem(STORAGE_KEY);
         footprintsLayer.clearLayers();
+        lastFootprintLatLng = null;
         alert("Your footprints have been cleared. Starting fresh.");
       }
     }
@@ -235,7 +236,6 @@
       document.getElementById("poemText").textContent = planets[newKey].poem;
       currentPlanetKey = newKey;
 
-      othersLayer.clearLayers();
       if (userMarker) userMarker.remove();
       userMarker = null;
       lastFootprintLatLng = null;
@@ -258,7 +258,7 @@
           await navigator.share({ title, text, url });
           return;
         } catch (err) {
-          console.log("Native share failed");
+          console.log("Native share failed", err);
         }
       }
 

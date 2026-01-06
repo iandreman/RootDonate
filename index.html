@@ -25,8 +25,8 @@
     h1 { font-size: clamp(3rem, 8vw, 5rem); font-weight: 900; letter-spacing: -2.5px; background: linear-gradient(90deg, var(--blue), var(--green), var(--orange), var(--purple)); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 50px rgba(174, 140, 255, 0.3); }
     .poem { margin-top: 1.8rem; font-size: 1.55rem; font-weight: 300; opacity: 0.9; line-height: 1.7; letter-spacing: 0.6px; }
     footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.2rem; text-align: center; font-size: 0.92rem; opacity: 0.75; z-index: 1000; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(20px); display: flex; justify-content: center; align-items: center; gap: 1rem; flex-wrap: wrap; }
-    .share-btn, .selector, .refresh-btn { pointer-events: all; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 0.6rem 1.2rem; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease; }
-    .share-btn:hover, .selector:hover, .refresh-btn:hover { background: rgba(255, 255, 255, 0.25); transform: translateY(-2px); }
+    .share-btn, .selector, .refresh-btn, .clear-btn { pointer-events: all; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 0.6rem 1.2rem; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease; }
+    .share-btn:hover, .selector:hover, .refresh-btn:hover, .clear-btn:hover { background: rgba(255, 255, 255, 0.25); transform: translateY(-2px); }
     select.selector { color: white; background: transparent; appearance: none; }
     .user-marker { background: var(--blue); border: 3px solid #fff; border-radius: 50%; width: 18px; height: 18px; box-shadow: 0 0 25px #0a84ff; animation: pulse-blue 3s infinite; }
     .other-marker { background: var(--green); border: 2.5px solid #fff; border-radius: 50%; width: 15px; height: 15px; box-shadow: 0 0 20px #30d158; animation: pulse-green 3s infinite; }
@@ -52,6 +52,7 @@
     <span id="counter">Connecting the world...</span>
     <button class="share-btn" id="shareFootprints">Share My Trail</button>
     <button class="refresh-btn" id="refreshLocation">Refresh My Location</button>
+    <button class="clear-btn" id="clearFootprints">Clear My Footprints</button>
     <select class="selector" id="planetSelector">
       <option value="earth">Earth</option>
       <option value="mars">Mars</option>
@@ -82,17 +83,16 @@
 
     const STORAGE_KEY = "rootdonate_footprints";
     let lastFootprintLatLng = null;
-    const MIN_DISTANCE_METERS = 500; // Minimum distance (in meters) before adding a new human footprint on Earth
-    let watchId = null;
+    const MIN_DISTANCE_METERS = 500;
 
     function getFootprintIcon(type = "human") {
-      let extraClass = planets[currentPlanetKey].footprintClass;
+      let extraClass = planets[currentPlanetKey].footprintClass || "";
       if (type === "ai") extraClass += " footprint-marker-ai";
       return L.divIcon({ className: `footprint-marker ${extraClass}`, iconSize: [12, 12] });
     }
 
     function addFootprint(lat, lon, type = "human") {
-      L.marker([lat, lon], { icon: getFootprintIcon(type) }).addTo(footprintsLayer(STORAGE_KEY));
+      L.marker([lat, lon], { icon: getFootprintIcon(type) }).addTo(footprintsLayer);
     }
 
     function loadFootprints() {
@@ -107,7 +107,7 @@
             }
           });
         } catch (e) {
-          console.error("Failed to parse stored footprints");
+          console.error("Failed to parse stored footprints", e);
         }
       }
     }
@@ -128,6 +128,14 @@
       addFootprint(lat, lon, type);
     }
 
+    function clearAllFootprints() {
+      if (confirm("Clear all your saved footprints across all planets? This cannot be undone.")) {
+        localStorage.removeItem(STORAGE_KEY);
+        footprintsLayer.clearLayers();
+        alert("Your footprints have been cleared. Starting fresh.");
+      }
+    }
+
     function leavePassiveAIFootprint() {
       const lat = (Math.random() - 0.5) * 160;
       const lon = (Math.random() - 0.5) * 360;
@@ -144,14 +152,12 @@
     }
 
     function distanceBetween(lat1, lon1, lat2, lon2) {
-      const R = 6371000; // Earth's radius in meters
+      const R = 6371000;
       const φ1 = lat1 * Math.PI / 180;
       const φ2 = lat2 * Math.PI / 180;
       const Δφ = (lat2 - lat1) * Math.PI / 180;
       const Δλ = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-                Math.cos(φ1) * Math.cos(φ2) *
-                Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+      const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
     }
@@ -177,13 +183,11 @@
       }
 
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
+        pos => {
           const { latitude: lat, longitude: lng, accuracy } = pos.coords;
           handleNewPosition(lat, lng, accuracy);
         },
-        async () => {
-          await ipFallback();
-        },
+        async () => await ipFallback(),
         { enableHighAccuracy: true, timeout: 15000 }
       );
     }
@@ -202,13 +206,13 @@
     }
 
     function updateCounter() {
-      if (currentPlanetKey !== 'earth') {
-        document.getElementById("counter").textContent = "Quietly sharing these worlds";
-      } else {
-        document.getElementById("counter").textContent = "The shared presence is resting in sleep mode • breathing quietly";
-      }
+      document.getElementById("counter").textContent =
+        currentPlanetKey !== 'earth'
+          ? "Quietly sharing these worlds"
+          : "The shared presence is resting in sleep mode • breathing quietly";
     }
 
+    // Event Listeners
     document.getElementById("refreshLocation").addEventListener("click", () => {
       if (currentPlanetKey !== 'earth') {
         alert("Location refresh is only for Earth • we walk gently across worlds.");
@@ -218,7 +222,9 @@
       location.reload();
     });
 
-    document.getElementById('planetSelector').addEventListener('change', (e) => {
+    document.getElementById("clearFootprints").addEventListener("click", clearAllFootprints);
+
+    document.getElementById("planetSelector").addEventListener("change", e => {
       const newKey = e.target.value;
       if (newKey === currentPlanetKey) return;
 
@@ -226,7 +232,7 @@
       currentLayer = L.tileLayer(planets[newKey].tiles, { maxZoom: planets[newKey].maxZoom }).addTo(map);
       map.setView(planets[newKey].view, planets[newKey].zoom, { duration: 2.5 });
 
-      document.getElementById('poemText').textContent = planets[newKey].poem;
+      document.getElementById("poemText").textContent = planets[newKey].poem;
       currentPlanetKey = newKey;
 
       othersLayer.clearLayers();
@@ -239,7 +245,6 @@
       updateCounter();
     });
 
-    // Social share functionality
     document.getElementById("shareFootprints").addEventListener("click", async () => {
       const url = window.location.href;
       const title = "RootDonate • We Are All Here";
@@ -257,10 +262,8 @@
         }
       }
 
-      // Fallback: open popular sharing options
       const encodedText = encodeURIComponent(text);
       const encodedUrl = encodeURIComponent(url);
-
       window.open(`https://twitter.com/intent/post?text=${encodedText}`, '_blank');
       window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`, '_blank');
       window.open(`https://api.whatsapp.com/send?text=${encodedText}`, '_blank');

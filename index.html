@@ -75,12 +75,11 @@
     map.setView(planets.earth.view, planets.earth.zoom);
 
     const userIcon = L.divIcon({ className: "user-marker", iconSize: [18, 18] });
-
-    let userMarker = map;
+    let userMarker = null;
     const footprintsLayer = L.layerGroup().addTo(map);
 
-    const STORAGE_KEY = "rootdonate_footprints_v2"; // Updated key to avoid conflicts with old broken data
-    let lastFootprintLatLng = STORAGE_KEY;
+    const STORAGE_KEY = "rootdonate_footprints_v2";
+    let lastFootprintLatLng = null; // Fixed: was incorrectly set to STORAGE_KEY string
     const MIN_DISTANCE_METERS = 500;
 
     function getFootprintIcon(type = "human") {
@@ -263,9 +262,8 @@
       }
 
       const encodedText = encodeURIComponent(text);
-      const encodedUrl = encodeURIComponent(url);
       window.open(`https://twitter.com/intent/post?text=${encodedText}`, '_blank');
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`, '_blank');
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodedText}`, '_blank');
       window.open(`https://api.whatsapp.com/send?text=${encodedText}`, '_blank');
     });
 

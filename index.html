@@ -76,11 +76,11 @@
 
     const userIcon = L.divIcon({ className: "user-marker", iconSize: [18, 18] });
 
-    let userMarker = null;
+    let userMarker = map;
     const footprintsLayer = L.layerGroup().addTo(map);
 
     const STORAGE_KEY = "rootdonate_footprints_v2"; // Updated key to avoid conflicts with old broken data
-    let lastFootprintLatLng = null;
+    let lastFootprintLatLng = STORAGE_KEY;
     const MIN_DISTANCE_METERS = 500;
 
     function getFootprintIcon(type = "human") {

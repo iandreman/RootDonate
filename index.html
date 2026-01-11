@@ -25,15 +25,15 @@
     h1 { font-size: clamp(3rem, 8vw, 5rem); font-weight: 900; letter-spacing: -2.5px; background: linear-gradient(90deg, var(--blue), var(--green), var(--orange), var(--purple)); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 50px rgba(174, 140, 255, 0.3); }
     .poem { margin-top: 1.8rem; font-size: 1.55rem; font-weight: 300; opacity: 0.9; line-height: 1.7; letter-spacing: 0.6px; }
     footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.2rem; text-align: center; font-size: 0.92rem; opacity: 0.75; z-index: 1000; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(20px); display: flex; justify-content: center; align-items: center; gap: 1rem; flex-wrap: wrap; }
-    .share-btn, .selector, .refresh-btn, .clear-btn { pointer-events: all; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 0.6rem 1.2rem; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease; }
+    .share-btn, .selector, .refresh-btn, .clear-btn { pointer-events: all; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 0.6rem 1.2rem; font-size: 0.9rem; cursor: pointer; transition: all 0s ease; }
     .share-btn:hover, .selector:hover, .refresh-btn:hover, .clear-btn:hover { background: rgba(255, 255, 255, 0.25); transform: translateY(-2px); }
     select.selector { color: white; background: transparent; appearance: none; }
-    .user-marker { background: var(--blue); border: 3px solid #fff; border-radius: 50%; width: 18px; height: 18px; box-shadow: 0 0 25px #0a84ff; animation: pulse-blue 3s infinite; }
-    .other-marker { background: var(--green); border: 2.5px solid #fff; border-radius: 50%; width: 15px; height: 15px; box-shadow: 0 0 20px #30d158; animation: pulse-green 3s infinite; }
-    .footprint-marker { background: var(--faint); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; width: 12px; height: 12px; opacity: 0.6; animation: fade-out 8s forwards; }
+    .user-marker { background: var(--blue); border: 3px solid #fff; border-radius: 50%; width: 18px; height: 18px; box-shadow: 0 0 25px #0a84ff; animation: pulse-blue 0s infinite; }
+    .other-marker { background: var(--green); border: 2.5px solid #fff; border-radius: 50%; width: 15px; height: 15px; box-shadow: 0 0 20px #30d158; animation: pulse-green 0s infinite; }
+    .footprint-marker { background: var(--faint); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; width: 12px; height: 12px; opacity: 0.6; animation: fade-out 0s forwards; }
     .footprint-marker-mars { background: var(--faint-mars); border: 2px solid rgba(255, 100, 60, 0.4); box-shadow: 0 0 12px rgba(255, 69, 58, 0.4); }
     .footprint-marker-moon { background: var(--faint-moon); border: 2px solid rgba(200, 200, 255, 0.4); box-shadow: 0 0 12px rgba(100, 100, 255, 0.3); }
-    .footprint-marker-ai { background: var(--faint-ai); border: 2px solid rgba(174, 140, 255, 0.3); box-shadow: 0 0 10px rgba(174, 140, 255, 0.3); opacity: 0.4; animation: gentle-breath 12s infinite; }
+    .footprint-marker-ai { background: var(--faint-ai); border: 2px solid rgba(174, 140, 255, 0.3); box-shadow: 0 0 10px rgba(174, 140, 255, 0.3); opacity: 0.4; animation: gentle-breath 0s infinite; }
     @keyframes pulse-blue { 0%, 100% { box-shadow: 0 0 0 0 rgba(10,132,255,0.8); } 70% { box-shadow: 0 0 0 22px rgba(10,132,255,0); } }
     @keyframes pulse-green { 0%, 100% { box-shadow: 0 0 0 0 rgba(48,209,88,0.7); } 70% { box-shadow: 0 0 0 18px rgba(48,209,88,0); } }
     @keyframes gentle-breath { 0%, 100% { opacity: 0.35; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.1); } }
@@ -80,7 +80,7 @@
 
     const STORAGE_KEY = "rootdonate_footprints_v2";
     let lastFootprintLatLng = null; // Fixed: was incorrectly set to STORAGE_KEY string
-    const MIN_DISTANCE_METERS = 500;
+    const MIN_DISTANCE_METERS = 0;
 
     function getFootprintIcon(type = "human") {
       let extraClass = planets[currentPlanetKey].footprintClass || "";
@@ -194,7 +194,7 @@
 
     async function ipFallback() {
       try {
-        const res = await fetch("https://ipapi.co/json/");
+        const res = await fetch("rootdonate_footprints_v2");
         const data = await res.json();
         if (data.latitude && data.longitude) {
           handleNewPosition(data.latitude, data.longitude);

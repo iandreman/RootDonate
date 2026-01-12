@@ -90,7 +90,7 @@
   </div>
 
   <footer>
-    <span id="status">Live X vibes • Jan 12 2026 ~18:38 GMT • @iandreme (Swagga Rico) • Carrick interim buzz heavy</span>
+    <span id="status">Live X vibes • Jan 12 2026 ~18:50 GMT • @iandreme (Swagga Rico) • Carrick interim buzz heavy</span>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -146,8 +146,19 @@
       }
     }
 
-    // Fallback real-time X posts (Jan 12 2026 ~18:38 GMT) – Carrick/MUFC vibes from X API
+    // Fallback real-time X posts (Jan 12 2026 ~18:50 GMT) – Carrick/MUFC vibes from X API
     const fallbackPosts = [
+      { u: "brendan_D_first", t: "Manchester United are set to announce Michael Carrick as the club's interim manager within the next 48 hours after talks progressed.", url: "https://x.com/brendan_D_first/status/2010786000155656312" },
+      { u: "MUNScout", t: "Michael Carrick has accepted all conditions of Manchester United contract proposal. The agreement is almost done and it will be sealed THIS week, as expected. Michael Carrick would like to bring Jonathan Woodgate to be part of his backroom team", url: "https://x.com/MUNScout/status/2010785822149353778" },
+      { u: "KingffGaming3", t: "🚨🛑 Positive talks took place today between Manchester United and Michael Carrick. He’s the leading candidate to become new interim manager until June, deal now at final stages. Talks over staff ongoing, as @MikeKeegan_DM reports. https://www.youtube.com/watch?v=CkxqtFaNZSQ&feature=youtu.be #GoldenGlobes2026", url: "https://x.com/KingffGaming3/status/2010785809646145849" },
+      { u: "Realisiah1", t: "Welcome back to Manchester United, Michael Carrick! The logic makes sense considering the reports about Ole wanting the permanent job in the summer if all goes well. Important to not be mislead and make the same mistake twice. Happy with Carrick? 🏴󠁧󠁢󠁥󠁮󠁧󠁿 🔴", url: "https://x.com/Realisiah1/status/2010785792696684782" },
+      { u: "giddy_fx", t: "Michael Carrick, you did well the first time you managed the United team, can you do well now? The situation of Manchester United is not the same. #GlazersOut", url: "https://x.com/giddy_fx/status/2010785603571630387" },
+      { u: "RealRedsTalk1", t: "🚨 Michael Carrick is hoping to bring in Jonathan Woodgate as part of his coaching staff at Manchester United. #MUFC [@JacobsBen]", url: "https://x.com/RealRedsTalk1/status/2010785382628266316" },
+      { u: "0xKirito_o", t: "✅ Michael Carrick has accepted all conditions of Manchester United contract proposal. > Deal now at final stages > Agreement will be sealed THIS WEEK > Carrick to become new interim manager until June > Talks over staff ongoing 🔴 Here we go, soon. Source: Fabrizio Romano (@FabrizioRomano)", url: "https://x.com/0xKirito_o/status/2010785236851048490" },
+      { u: "footemxtra", t: "Michael Carrick Aims to Sign Ex-Real Madrid Defender for Manchester United https://footem.in/michael-carrick-seeks-to-sign-former-real-madrid-defender-for-manchester-united/", url: "https://x.com/footemxtra/status/2010784501312438303" },
+      { u: "IndoSport", t: "#LATEST - Manchester United are expected to appoint Michael Carrick as their interim head coach after further talks on Monday. https://www.independent.ie/sport/soccer/premier-league/michael-carrick-set-to-be-appointed-interim-manchester-united-head-coach-after-old-trafford-talks/a2102414386.html", url: "https://x.com/IndoSport/status/2010784346978791630" },
+      { u: "Iamprincesanya3", t: "Michael Carrick’s first two games as caretaker Manchester United manager: 🆚 𝗠𝗮𝗻 𝗖𝗶𝘁𝘆 (𝗛) 🆚 𝗔𝗿𝘀𝗲𝗻𝗮𝗹 (𝗔)", url: "https://x.com/Iamprincesanya3/status/2010784248354259138" },
+      { u: "Utdvellum", t: "Michael Carrick stepping in as interim boss says it all. A club legend, calm head, knows the dressing room inside out at Manchester United. Same logic as Real Madrid moving on from Xabi Alonso when things stopped making sense. Big clubs act, not panic. You turn to a proven man who’s been there, done that instead of another gamble. That is not desperation. That is finally some sense. Welcome back, Carra. Stabilize this mess.", url: "https://x.com/Utdvellum/status/2010783819125731781" },
       { u: "SimplyUtd", t: "🚨 Michael Carrick is keen to bring Jonathan Woodgate onto his coaching staff at Manchester United. [@JacobsBen]", url: "https://x.com/SimplyUtd/status/2010783496323973486" },
       { u: "abhisthebest", t: "🚨 Michael Carrick is hoping to bring in Jonathan Woodgate as part of his coaching staff at Manchester United. #MUFC [@JacobsBen]", url: "https://x.com/abhisthebest/status/2010783478472683918" },
       { u: "mufcMPB", t: "🚨 Michael Carrick is hoping to bring in Jonathan Woodgate as part of his coaching staff at Manchester United. #MUFC [@JacobsBen]", url: "https://x.com/mufcMPB/status/2010783085953237394" },
@@ -156,18 +167,7 @@
       { u: "CitiLogueNews", t: "JUST IN: Manchester United has confirmed the appointment of Michael Carrick as interim manager.", url: "https://x.com/CitiLogueNews/status/2010782655122718746" },
       { u: "Ronjr021", t: "🚨Michael Carrick is the new Manchester United manager till the end of the season will be announced this week ‼️ Here we go 🔜 [@FabrizioRomano]", url: "https://x.com/Ronjr021/status/2010782593072185795" },
       { u: "manutdf2", t: "🗣️ Wayne Rooney on Michael Carrick: “I was with him in Barbados last week…” 🌴😅 From beach vibes to the Old Trafford hot seat 🔥⚽️ Football really moves FAST! #MUFC #ManchesterUnited #MichaelCarrick #WayneRooney #FromBeachToBench 🌴🔴 #rooney #GlazersAndRatcliffeOutNow #Carrick", url: "https://x.com/manutdf2/status/2010781678130647188" },
-      { u: "centredevils", t: "Michael Carrick wants to bring former Real Madrid defender to Manchester United.", url: "https://x.com/centredevils/status/2010780873684402216" },
-      { u: "Peters_Buhari", t: "Michael Carrick was set to be appointed as Manchester United interim manager few hours ago but it looks like that will be put on hold as Xabi Alonso leaves Real Madrid. Man u fans, who would you choose? Xabi Alonso 🆚 Michael Carrick #Alonso #Carrick #xabi #manutd #RealMadrid", url: "https://x.com/Peters_Buhari/status/2010780478320861184" },
-      { u: "bigbarnes123", t: "🚨 💣 Michael Carrick getting closer to @ManUtd job. No announcement expected tonight but looks like Carrick will get the job. Madina Ten Hag Vinicius Xabi Alonso Manchester United", url: "https://x.com/bigbarnes123/status/2010780470372680165" },
-      { u: "globaleeyenews", t: "Michael Carrick has accepted all conditions of Manchester United contract proposal.", url: "https://x.com/globaleeyenews/status/2010780291778932823" },
-      { u: "Abubaka70097152", t: "🚨🗣️Wayne Rooney on if he would join Michael Carrick at Manchester United as part of his coaching staff: “Of course I would! I think it’s a no-brainer if that’s the situation.” #MUFC", url: "https://x.com/Abubaka70097152/status/2010780193418367380" },
-      { u: "SurfballMedia", t: "🔴⚪️ CAN MICHAEL CARRICK HANDLE THE MANCHESTER UNITED JOB ?? #manchesterunited #carrick #sacked #amorim #naija", url: "https://x.com/SurfballMedia/status/2010780004431642885" },
-      { u: "thestretford3nd", t: "Michael Carrick wants Jonathan Woodgate as part of his coaching team at Manchester United. @JamieJackson___, @UtdDistrict", url: "https://x.com/thestretford3nd/status/2010779820947562716" },
-      { u: "fahdswaleh", t: "BREAKING: Michael Carrick is expected to be confirmed as the interim manager of Manchester United in the next 48 hours [Lawton_Times]", url: "https://x.com/fahdswaleh/status/2010779700386492665" },
-      { u: "LiamgameEFMU", t: "Manchester United Michael Carrick #eFootball", url: "https://x.com/LiamgameEFMU/status/2010779574343536895" },
-      { u: "TheHalaandguy", t: "🚨🛑 Michael Carrick has accepted all conditions of Manchester United contract proposal. The agreement is almost done and it will be sealed THIS week, as expected. Here we go, soon. 💣🔙", url: "https://x.com/TheHalaandguy/status/2010779451270054374" },
-      { u: "DVMsports", t: "🚨🛑 Michael Carrick has accepted all conditions of Manchester United contract proposal. The agreement is almost done and it will be sealed THIS week, as expected. Here we go, soon. 💣🔙", url: "https://x.com/DVMsports/status/2010779170503319712" },
-      { u: "zola_254", t: "If Manchester United appoint Michael Carrick, City are not taking 3 points from old Trafford. Bookmark this.", url: "https://x.com/zola_254/status/2010779038097588264" }
+      { u: "centredevils", t: "Michael Carrick wants to bring former Real Madrid defender to Manchester United. https://centredevils.co.uk/news/michael-carrick-wants-to-bring-former-real-madrid-defender-to-manchester-united/", url: "https://x.com/centredevils/status/2010780873684402216" }
     ];
 
     function showYou(lat, lng) {
@@ -195,7 +195,7 @@
         addPost(51.507 + offLat, -0.128 + offLng, p.u, p.t, p.url);
       });
 
-      document.getElementById('status').textContent = `${posts.length} live X posts loaded • Carrick / MUFC vibes • Jan 12 2026 ~18:38 GMT`;
+      document.getElementById('status').textContent = `${posts.length} live X posts loaded • Carrick / MUFC vibes • Jan 12 2026 ~18:50 GMT`;
     }
 
     // GPS → fallback to London
@@ -213,3 +213,4 @@
   </script>
 </body>
 </html>
+```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

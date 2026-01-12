@@ -89,7 +89,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     // === YOUR PERSONAL AVATAR (swap this!) ===
-    const YOUR_AVATAR = "https://pbs.twimg.com/profile_images/1452130026212765700/q9iBQMu8_400x400.jpg"; // ← put your X pic URL here
+    const YOUR_AVATAR = "https://pbs.twimg.com/profile_images/1452130026212765700/q9iBQMu8_400x400.jpg";
 
     const AI_AVATARS = [
       {name: "Grok", seed: "Grok-xAI"},
@@ -173,6 +173,7 @@
       if (watchId) navigator.geolocation.clearWatch(watchId);
       document.getElementById('searchWave').style.opacity = '1';
       document.getElementById('poemText').textContent = "AI searching live position...";
+      document.getElementById('counter').textContent = "AI hunting fresh coordinates...";
 
       const options = { enableHighAccuracy: true, timeout: 35000, maximumAge: 0 };
       let bestAcc = Infinity;
@@ -188,7 +189,7 @@
             showUser(lat, lng, acc, 'AI improving lock...');
           }
 
-          if (acc <= 45) {  // tighter accuracy for 2026 feel
+          if (acc <= 45) {
             showUser(lat, lng, acc, 'Locked • AI crew incoming!');
             spawnAICrew(lat, lng);
             document.getElementById('searchWave').style.opacity = '0';
@@ -203,8 +204,6 @@
         },
         options
       );
-
-      document.getElementById('counter').textContent = 'AI scanning GPS... (patience for precision)';
     }
 
     function ipFallback() {
@@ -215,6 +214,9 @@
     }
 
     function spawnAICrew(lat, lng) {
+      // Optional: clear old ghosts on new search?
+      // footprintsLayer.clearLayers(); ghostMarkers = []; // uncomment if you want fresh crew only
+
       AI_AVATARS.forEach(ai => {
         const offsetLat = (Math.random() - 0.5) * 0.015;
         const offsetLng = (Math.random() - 0.5) * 0.022;
@@ -223,20 +225,24 @@
       document.getElementById('counter').textContent = `${AI_AVATARS.length} AI ghosts spawned nearby`;
     }
 
-    // Make AI ghosts wander / "search" around
+    // Make AI ghosts slowly wander
     setInterval(() => {
       ghostMarkers.forEach(g => {
         const wander = (Math.random() - 0.5) * 0.004;
         const newLat = g.baseLat + wander;
         const newLng = g.baseLng + wander * 1.4;
         g.marker.setLatLng([newLat, newLng]);
-        g.baseLat = newLat; g.baseLng = newLng; // update base for next wander
+        g.baseLat = newLat; g.baseLng = newLng;
       });
-    }, 45000 + Math.random() * 45000); // random between 45-90s
+    }, 45000 + Math.random() * 45000);
 
-    // Buttons
-    document.getElementById('refreshLocation').onclick = showUser;
+    // ─── Buttons ───────────────────────────────────────────────
+    document.getElementById('refreshLocation').onclick = () => {
+      startAISearch();  // ← This is the magic line that makes refresh work properly now
+    };
+
     document.getElementById('clearFootprints').onclick = clearAllFootprints;
+
     document.getElementById('shareFootprints').onclick = async () => {
       const url = window.location.href;
       const text = `AI searching live GPS on Earth!\nGhost crew locked • RootDonate 2026\n${url}`;
@@ -244,7 +250,7 @@
                       : window.open(`https://twitter.com/intent/post?text=${encodeURIComponent(text)}`, '_blank');
     };
 
-    // Init
+    // ─── Init ──────────────────────────────────────────────────
     loadFootprints();
     startAISearch();
     setTimeout(() => map.invalidateSize(), 500);

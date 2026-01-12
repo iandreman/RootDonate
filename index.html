@@ -214,15 +214,16 @@
     }
 
     function spawnAICrew(lat, lng) {
-      // Optional: clear old ghosts on new search?
-      // footprintsLayer.clearLayers(); ghostMarkers = []; // uncomment if you want fresh crew only
+      // CLEAN UP OLD GHOSTS before spawning new crew on refresh/new search
+      ghostMarkers.forEach(g => g.marker.remove());
+      ghostMarkers = [];
 
       AI_AVATARS.forEach(ai => {
         const offsetLat = (Math.random() - 0.5) * 0.015;
         const offsetLng = (Math.random() - 0.5) * 0.022;
         addFootprint(lat + offsetLat, lng + offsetLng, 'ai', ai.name, true);
       });
-      document.getElementById('counter').textContent = `${AI_AVATARS.length} AI ghosts spawned nearby`;
+      document.getElementById('counter').textContent = `${AI_AVATARS.length} fresh AI ghosts spawned nearby`;
     }
 
     // Make AI ghosts slowly wander
@@ -238,7 +239,7 @@
 
     // ─── Buttons ───────────────────────────────────────────────
     document.getElementById('refreshLocation').onclick = () => {
-      startAISearch();  // ← This is the magic line that makes refresh work properly now
+      startAISearch();  // Now triggers cleanup + fresh crew
     };
 
     document.getElementById('clearFootprints').onclick = clearAllFootprints;

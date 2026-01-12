@@ -48,8 +48,6 @@
     const YOUR_AVATAR = "https://pbs.twimg.com/profile_images/1452130026212765700/q9iBQMu8.jpg";
     const AI_AVATAR = "https://api.dicebear.com/9.x/bottts/svg?seed=RootDonate&backgroundColor=2d3748&radius=50";
 
-    const fakeNames = ["SwaggaRico", "BigSmoke420", "LamarDaSavage", "TrevorChaos", "FranklinOG", "AI_GhostBot", "CrewPhantom", "NoPixelLegend", "FiveMRunner"];
-
     const map = L.map('map', {
       center: [51.5, -0.1],
       zoom: 6,
@@ -123,19 +121,7 @@
         .openPopup();
       map.flyTo([lat, lng], 15, { duration: 2 }); // Zoom in close for live feel
     }
-
-    function spawnCrew(lat, lng) {
-      const count = 15 + Math.floor(Math.random() * 10);
-      for (let i = 0; i < count; i++) {
-        const offsetLat = (Math.random() - 0.5) * 0.05; // Tight cluster ~5km
-        const offsetLng = (Math.random() - 0.5) * 0.1;
-        const crewLat = lat + offsetLat;
-        const crewLng = lng + offsetLng;
-        const isAI = Math.random() > 0.4;
-        const name = fakeNames[Math.floor(Math.random() * fakeNames.length)];
-        saveFootprint(crewLat, crewLng, isAI ? "ai" : "human", name);
-      }
-    }
+  }
 
     function startLiveGPS() {
       if (watchId) navigator.geolocation.clearWatch(watchId);

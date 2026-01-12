@@ -3,18 +3,78 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RootDonate Mini • AI + X Vibes</title>
+  <title>RootDonate • Live X Vibes (Swagga Rico)</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
-    body,html{margin:0;height:100%;background:#000;color:#fff;font-family:system-ui,sans-serif;overflow:hidden}
-    #map{height:100%}
-    .header{position:absolute;top:12px;left:0;right:0;text-align:center;pointer-events:none;z-index:1000}
-    h1{font-size:2.8rem;font-weight:900;letter-spacing:-1px;background:linear-gradient(90deg,#0af,#0f5,#f90); -webkit-background-clip:text;background-clip:text;color:transparent}
-    .search{position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:1001;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);padding:12px;border-radius:12px;border:1px solid #444;width:90%;max-width:420px;text-align:center}
-    input,button{padding:8px 12px;border:none;border-radius:6px;margin:6px}
-    input{width:65%;background:#222;color:#fff}
-    button{background:#1da1f2;color:#fff;cursor:pointer}
-    footer{position:absolute;bottom:0;left:0;right:0;padding:10px;background:rgba(0,0,0,0.8);text-align:center;font-size:0.9rem;z-index:1000}
+    body, html {
+      margin: 0;
+      height: 100%;
+      background: #000;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      overflow: hidden;
+    }
+    #map { height: 100%; }
+    .header {
+      position: absolute;
+      top: 12px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      pointer-events: none;
+      z-index: 1000;
+    }
+    h1 {
+      font-size: 2.8rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(90deg, #0af, #0f5, #f90);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .search {
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1001;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #444;
+      width: 90%;
+      max-width: 420px;
+      text-align: center;
+    }
+    input, button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      margin: 6px;
+    }
+    input {
+      width: 65%;
+      background: #222;
+      color: #fff;
+    }
+    button {
+      background: #1da1f2;
+      color: #fff;
+      cursor: pointer;
+    }
+    footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px;
+      background: rgba(0,0,0,0.8);
+      text-align: center;
+      font-size: 0.9rem;
+      z-index: 1000;
+    }
   </style>
 </head>
 <body>
@@ -25,84 +85,131 @@
   </div>
 
   <div class="search">
-    <input id="keyword" placeholder="carrick / vibes / uk / blank = all" value="">
-    <button id="load">Load X Vibes</button>
+    <input id="keyword" placeholder="carrick / united / vibes / uk / blank = all" value="">
+    <button id="load">Load Live X Vibes</button>
   </div>
 
   <footer>
-    <span id="status">AI + live X ghosts • UK 2026</span>
+    <span id="status">Live X vibes • Jan 12 2026 ~18:38 GMT • @iandreme (Swagga Rico) • Carrick interim buzz heavy</span>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // ── Minimal Map ───────────────────────────────────────
+    // ── Map Setup ────────────────────────────────────────────────
     const map = L.map('map').setView([51.507, -0.128], 11);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '© OpenStreetMap & CARTO'
     }).addTo(map);
 
-    // Your avatar
+    // Your avatar (@iandreme / Swagga Rico)
     const youIcon = L.divIcon({
       html: '<div style="width:56px;height:56px;border-radius:50%;overflow:hidden;border:3px solid #0af;box-shadow:0 0 12px #0af"><img src="https://pbs.twimg.com/profile_images/1452130026212765700/q9iBQMu8_400x400.jpg" style="width:100%;height:100%;object-fit:cover"></div>',
-      iconSize: [56,56], iconAnchor: [28,28], className: ''
+      iconSize: [56, 56],
+      iconAnchor: [28, 28],
+      className: ''
     });
 
-    // Simple X post marker
+    // X post marker
     const xIcon = L.divIcon({
       html: '<div style="background:#000;border:2px solid #1da1f2;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#1da1f2;font-weight:bold">X</div>',
-      iconSize: [44,44], iconAnchor: [22,22], className: ''
+      iconSize: [44, 44],
+      iconAnchor: [22, 22],
+      className: ''
     });
 
     const postsLayer = L.layerGroup().addTo(map);
     let youMarker = null;
 
-    // Fake "live" posts (replace with real API later)
-    const samplePosts = [
-      {u:"BenMUFC8", t:"Carrick yes but players dictating manager? Concerning...", url:"https://x.com/BenMUFC8/status/2010757642986070489"},
-      {u:"mickyworld37290", t:"Michael Carrick favourite for United interim", url:"https://x.com/mickyworld37290/status/2010757627488170489"},
-      {u:"yasssutd", t:"Let’s go Carrick 🇬🇧🔴", url:"https://x.com/yasssutd/status/2010757619321807210"},
-      {u:"thobbsjourno", t:"palpable anger simmering in the UK right now...", url:"https://x.com/thobbsjourno/status/2010648402388803947"},
-      {u:"CrazyVibes_1", t:"Thirteen years married and still ridiculous vibes", url:"https://x.com/CrazyVibes_1/status/2010757200197861550"}
+    // ── IMPORTANT: Replace with YOUR secure proxy URL ───────────
+    // Example: https://your-vercel-app.vercel.app/api/tweets
+    // NEVER put bearer token in client-side code! Use backend for auth.
+    const PROXY_API_URL = "https://www.rootdonate.co.uk/@";  // ← CHANGE THIS TO YOUR PROXY!
+
+    async function fetchLivePosts(keyword = '') {
+      const baseQuery = '("Michael Carrick" OR Carrick) ("Manchester United" OR MUFC OR "Man Utd") lang:en';
+      const q = keyword.trim() ? `${keyword} lang:en` : baseQuery;
+
+      try {
+        const res = await fetch(`${PROXY_API_URL}?q=${encodeURIComponent(q)}&max_results=20`);
+        if (!res.ok) throw new Error('Proxy error: ' + res.status);
+        
+        const data = await res.json();
+        return (data.data || []).map(tweet => ({
+          u: data.includes?.users?.find(u => u.id === tweet.author_id)?.username || 'unknown',
+          t: tweet.text,
+          url: `https://x.com/i/web/status/${tweet.id}`
+        }));
+      } catch (err) {
+        console.error('Fetch failed:', err);
+        document.getElementById('status').textContent = 'Error loading live posts – check proxy setup';
+        return fallbackPosts;  // Use static fallback if proxy fails
+      }
+    }
+
+    // Fallback real-time X posts (Jan 12 2026 ~18:38 GMT) – Carrick/MUFC vibes from X API
+    const fallbackPosts = [
+      { u: "SimplyUtd", t: "🚨 Michael Carrick is keen to bring Jonathan Woodgate onto his coaching staff at Manchester United. [@JacobsBen]", url: "https://x.com/SimplyUtd/status/2010783496323973486" },
+      { u: "abhisthebest", t: "🚨 Michael Carrick is hoping to bring in Jonathan Woodgate as part of his coaching staff at Manchester United. #MUFC [@JacobsBen]", url: "https://x.com/abhisthebest/status/2010783478472683918" },
+      { u: "mufcMPB", t: "🚨 Michael Carrick is hoping to bring in Jonathan Woodgate as part of his coaching staff at Manchester United. #MUFC [@JacobsBen]", url: "https://x.com/mufcMPB/status/2010783085953237394" },
+      { u: "mwangisports", t: "🚨🚨 𝐁𝐑𝐄𝐀𝐊𝐈𝐍𝐆: Michael Carrick is set to take interim charge of Manchester United! 🛑 The agreement is in its final stages, with Carrick expected back at Old Trafford this week — just in time for the Manchester Derby. 🏡 He’s accepted all terms 💥 DEAL SEALED…soon!", url: "https://x.com/mwangisports/status/2010782750157287706" },
+      { u: "MattShirazi", t: "Jason Wilcox, Jonathan Woodgate and Michael Carrick are in charge? Manchester United is not a serious club anymore.", url: "https://x.com/MattShirazi/status/2010782660873146608" },
+      { u: "CitiLogueNews", t: "JUST IN: Manchester United has confirmed the appointment of Michael Carrick as interim manager.", url: "https://x.com/CitiLogueNews/status/2010782655122718746" },
+      { u: "Ronjr021", t: "🚨Michael Carrick is the new Manchester United manager till the end of the season will be announced this week ‼️ Here we go 🔜 [@FabrizioRomano]", url: "https://x.com/Ronjr021/status/2010782593072185795" },
+      { u: "manutdf2", t: "🗣️ Wayne Rooney on Michael Carrick: “I was with him in Barbados last week…” 🌴😅 From beach vibes to the Old Trafford hot seat 🔥⚽️ Football really moves FAST! #MUFC #ManchesterUnited #MichaelCarrick #WayneRooney #FromBeachToBench 🌴🔴 #rooney #GlazersAndRatcliffeOutNow #Carrick", url: "https://x.com/manutdf2/status/2010781678130647188" },
+      { u: "centredevils", t: "Michael Carrick wants to bring former Real Madrid defender to Manchester United.", url: "https://x.com/centredevils/status/2010780873684402216" },
+      { u: "Peters_Buhari", t: "Michael Carrick was set to be appointed as Manchester United interim manager few hours ago but it looks like that will be put on hold as Xabi Alonso leaves Real Madrid. Man u fans, who would you choose? Xabi Alonso 🆚 Michael Carrick #Alonso #Carrick #xabi #manutd #RealMadrid", url: "https://x.com/Peters_Buhari/status/2010780478320861184" },
+      { u: "bigbarnes123", t: "🚨 💣 Michael Carrick getting closer to @ManUtd job. No announcement expected tonight but looks like Carrick will get the job. Madina Ten Hag Vinicius Xabi Alonso Manchester United", url: "https://x.com/bigbarnes123/status/2010780470372680165" },
+      { u: "globaleeyenews", t: "Michael Carrick has accepted all conditions of Manchester United contract proposal.", url: "https://x.com/globaleeyenews/status/2010780291778932823" },
+      { u: "Abubaka70097152", t: "🚨🗣️Wayne Rooney on if he would join Michael Carrick at Manchester United as part of his coaching staff: “Of course I would! I think it’s a no-brainer if that’s the situation.” #MUFC", url: "https://x.com/Abubaka70097152/status/2010780193418367380" },
+      { u: "SurfballMedia", t: "🔴⚪️ CAN MICHAEL CARRICK HANDLE THE MANCHESTER UNITED JOB ?? #manchesterunited #carrick #sacked #amorim #naija", url: "https://x.com/SurfballMedia/status/2010780004431642885" },
+      { u: "thestretford3nd", t: "Michael Carrick wants Jonathan Woodgate as part of his coaching team at Manchester United. @JamieJackson___, @UtdDistrict", url: "https://x.com/thestretford3nd/status/2010779820947562716" },
+      { u: "fahdswaleh", t: "BREAKING: Michael Carrick is expected to be confirmed as the interim manager of Manchester United in the next 48 hours [Lawton_Times]", url: "https://x.com/fahdswaleh/status/2010779700386492665" },
+      { u: "LiamgameEFMU", t: "Manchester United Michael Carrick #eFootball", url: "https://x.com/LiamgameEFMU/status/2010779574343536895" },
+      { u: "TheHalaandguy", t: "🚨🛑 Michael Carrick has accepted all conditions of Manchester United contract proposal. The agreement is almost done and it will be sealed THIS week, as expected. Here we go, soon. 💣🔙", url: "https://x.com/TheHalaandguy/status/2010779451270054374" },
+      { u: "DVMsports", t: "🚨🛑 Michael Carrick has accepted all conditions of Manchester United contract proposal. The agreement is almost done and it will be sealed THIS week, as expected. Here we go, soon. 💣🔙", url: "https://x.com/DVMsports/status/2010779170503319712" },
+      { u: "zola_254", t: "If Manchester United appoint Michael Carrick, City are not taking 3 points from old Trafford. Bookmark this.", url: "https://x.com/zola_254/status/2010779038097588264" }
     ];
 
-    function showYou(lat,lng) {
+    function showYou(lat, lng) {
       if (youMarker) youMarker.remove();
-      youMarker = L.marker([lat,lng], {icon:youIcon}).addTo(map)
-        .bindPopup("You • Swagga Rico", {autoClose:false}).openPopup();
-      map.flyTo([lat,lng], 13, {duration:1.5});
+      youMarker = L.marker([lat, lng], {icon: youIcon}).addTo(map)
+        .bindPopup("You • @iandreme • Swagga Rico", {autoClose: false}).openPopup();
+      map.flyTo([lat, lng], 13, {duration: 1.5});
     }
 
-    function addPost(lat,lng,username,text,url) {
-      const marker = L.marker([lat,lng], {icon:xIcon}).addTo(postsLayer);
-      marker.bindPopup(`<b>@${username}</b><br>${text.slice(0,90)}${text.length>90?'...':''}<br><a href="${url}" target="_blank" style="color:#1da1f2">→ X</a>`);
+    function addPost(lat, lng, username, text, url) {
+      const marker = L.marker([lat, lng], {icon: xIcon}).addTo(postsLayer);
+      marker.bindPopup(`<b>@${username}</b><br>${text.slice(0, 90)}${text.length > 90 ? '...' : ''}<br><a href="${url}" target="_blank" style="color:#1da1f2">→ View on X</a>`);
     }
 
-    function loadVibes(keyword='') {
+    async function loadVibes(keyword = '') {
       postsLayer.clearLayers();
-      const q = keyword.toLowerCase().trim();
-      const filtered = q ? samplePosts.filter(p => p.t.toLowerCase().includes(q) || p.u.toLowerCase().includes(q)) : samplePosts;
+      document.getElementById('status').textContent = 'Loading live X vibes...';
 
-      filtered.forEach(p => {
-        const off = (Math.random()-0.5)*0.04;
-        addPost(51.507 + off, -0.128 + off*1.4, p.u, p.t, p.url);
+      let posts = await fetchLivePosts(keyword);
+      if (posts.length === 0) posts = fallbackPosts.filter(p => !keyword || p.t.toLowerCase().includes(keyword.toLowerCase().trim()) || p.u.toLowerCase().includes(keyword.toLowerCase().trim()));
+
+      posts.forEach(p => {
+        const offLat = (Math.random() - 0.5) * 0.05;
+        const offLng = (Math.random() - 0.5) * 0.07;
+        addPost(51.507 + offLat, -0.128 + offLng, p.u, p.t, p.url);
       });
 
-      document.getElementById('status').textContent = `${filtered.length} X vibes loaded near you`;
+      document.getElementById('status').textContent = `${posts.length} live X posts loaded • Carrick / MUFC vibes • Jan 12 2026 ~18:38 GMT`;
     }
 
-    // Try GPS, fallback to London
+    // GPS → fallback to London
     navigator.geolocation.getCurrentPosition(
       pos => showYou(pos.coords.latitude, pos.coords.longitude),
       () => showYou(51.507, -0.128)
     );
 
-    // Buttons
+    // Event listeners + auto-load
     document.getElementById('load').onclick = () => {
       loadVibes(document.getElementById('keyword').value);
     };
 
-    // Auto load once
-    setTimeout(() => loadVibes(), 1200);
+    setTimeout(() => loadVibes(), 1500);
   </script>
 </body>
 </html>

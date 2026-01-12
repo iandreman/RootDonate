@@ -3,224 +3,178 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RootDonate • Live GPS Earth Server</title>
+  <title>RootDonate • AI Search Live GPS Earth</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     :root {
       --blue: #0a84ff;
       --green: #30d158;
       --orange: #ff9f0a;
-      --red: #ff453a;
       --purple: #ae8cff;
+      --cyan: #00f5d4;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body, html {
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-      color: #fff;
-      font-family: system-ui, sans-serif;
-    }
-    #map { width: 100%; height: 100%; filter: brightness(0.92) contrast(1.12); }
+    body, html { height: 100%; overflow: hidden; background: #000; color: #fff; font-family: system-ui, sans-serif; }
+    #map { width: 100%; height: 100%; filter: brightness(0.9) contrast(1.15); }
     .header {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      padding: 2.5rem 2rem 1.5rem;
-      text-align: center;
-      z-index: 1000;
-      pointer-events: none;
-      background: linear-gradient(180deg, rgba(0,0,0,0.9), transparent);
+      position: absolute; top: 0; left: 0; right: 0; padding: 2.5rem 2rem 1.5rem;
+      text-align: center; z-index: 1000; pointer-events: none;
+      background: linear-gradient(180deg, rgba(0,0,0,0.92), transparent);
     }
     h1 {
-      font-size: clamp(2.8rem, 7vw, 4.5rem);
-      font-weight: 900;
-      letter-spacing: -2px;
-      background: linear-gradient(90deg, var(--blue), var(--green), var(--orange), var(--purple));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      text-shadow: 0 0 40px rgba(174,140,255,0.4);
+      font-size: clamp(2.8rem, 7vw, 4.8rem); font-weight: 900; letter-spacing: -2.5px;
+      background: linear-gradient(90deg, var(--blue), var(--green), var(--orange), var(--purple), var(--cyan));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      text-shadow: 0 0 50px rgba(0,245,212,0.4);
     }
-    .poem { margin-top: 1rem; font-size: 1.4rem; font-weight: 300; opacity: 0.9; }
+    .poem { margin-top: 1.2rem; font-size: 1.5rem; font-weight: 300; opacity: 0.92; letter-spacing: 0.5px; }
     footer {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      padding: 1rem;
-      text-align: center;
-      font-size: 0.9rem;
-      opacity: 0.8;
-      z-index: 1000;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(15px);
-      display: flex;
-      justify-content: center;
-      gap: 0.8rem;
-      flex-wrap: wrap;
+      position: absolute; bottom: 0; left: 0; right: 0; padding: 1.2rem;
+      text-align: center; font-size: 0.95rem; opacity: 0.85; z-index: 1000;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(18px);
+      display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;
     }
     .btn {
-      pointer-events: all;
-      background: rgba(255,255,255,0.12);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 10px;
-      padding: 0.5rem 1rem;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      color: white;
+      pointer-events: all; background: rgba(255,255,255,0.14);
+      backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px; padding: 0.6rem 1.3rem; font-size: 0.95rem;
+      cursor: pointer; transition: all 0.25s; color: white;
     }
-    .btn:hover {
-      background: rgba(255,255,255,0.25);
-      transform: translateY(-1px);
-    }
+    .btn:hover { background: rgba(255,255,255,0.28); transform: translateY(-2px); }
     .avatar-wrapper {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 2.5px solid rgba(255,255,255,0.45);
-      box-shadow: 0 0 14px rgba(255,255,255,0.35);
+      width: 100%; height: 100%; border-radius: 50%; overflow: hidden;
+      border: 2.8px solid rgba(255,255,255,0.5); box-shadow: 0 0 16px rgba(255,255,255,0.4);
       background: #111;
     }
-    .avatar-wrapper img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+    .avatar-wrapper img { width: 100%; height: 100%; object-fit: cover; }
     .footprint-avatar { background: transparent !important; border: none !important; pointer-events: none; }
-    .footprint-avatar .avatar-wrapper { animation: fade-out 0s forwards; }
     .earth-avatar .avatar-wrapper {
-      border-color: var(--blue);
-      box-shadow: 0 0 14px rgba(10,132,255,0.5);
+      border-color: var(--cyan); box-shadow: 0 0 18px rgba(0,245,212,0.6);
+      animation: glow-cyan 4s infinite alternate;
     }
-    .user-avatar-marker { background: transparent !important; border: none !important; }
-    .user-avatar {
-      border: 3.5px solid var(--blue);
-      box-shadow: 0 0 28px var(--blue);
-      animation: pulse-blue 3s infinite;
+    @keyframes glow-cyan {
+      from { box-shadow: 0 0 18px rgba(0,245,212,0.6); }
+      to   { box-shadow: 0 0 32px rgba(0,245,212,0.9); }
     }
+    .user-avatar { border: 4px solid var(--blue); box-shadow: 0 0 32px var(--blue); animation: pulse-blue 2.8s infinite; }
     @keyframes pulse-blue {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(10,132,255,0.7); }
-      70% { box-shadow: 0 0 0 28px rgba(10,132,255,0); }
+      0%,100% { box-shadow: 0 0 0 0 rgba(10,132,255,0.7); }
+      70%     { box-shadow: 0 0 0 32px rgba(10,132,255,0); }
     }
-    @keyframes fade-out {
-      0% { opacity: 0.9; transform: scale(1); }
-      100% { opacity: 0; transform: scale(1.8); }
+    .search-wave {
+      position: absolute; inset: 0; pointer-events: none; z-index: 500;
+      background: radial-gradient(circle at 50% 50%, rgba(0,245,212,0.12) 0%, transparent 70%);
+      animation: searchPulse 8s infinite; opacity: 0;
     }
+    @keyframes searchPulse { 0%,100% { transform: scale(0.6); opacity: 0; } 50% { transform: scale(1.8); opacity: 0.3; } }
   </style>
 </head>
 <body>
   <div id="map"></div>
+  <div class="search-wave" id="searchWave"></div>
 
   <div class="header">
-    <h1>RootDonate Live GPS Server</h1>
-    <div class="poem" id="poemText">We Are All Here</div>
+    <h1>RootDonate AI Search</h1>
+    <div class="poem" id="poemText">AI ghosts searching Earth... We Are All Here</div>
   </div>
 
   <footer>
-    <span id="counter">Locking GPS...</span>
-    <button class="btn" id="shareFootprints">Share Trail</button>
-    <button class="btn" id="refreshLocation">Refresh GPS & Crew</button>
-    <button class="btn" id="clearFootprints">Clear Footprints</button>
-    <span>• 2026 • Real-time vibes</span>
+    <span id="counter">AI hunting live GPS...</span>
+    <button class="btn" id="shareFootprints">Share AI Trail</button>
+    <button class="btn" id="refreshLocation">Re-search GPS & Crew</button>
+    <button class="btn" id="clearFootprints">Clear Ghosts</button>
+    <span>• 2026 • AI + Human vibes</span>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // Replace with your real current X profile pic URL (right-click your pic on x.com → Copy image address)
-    const YOUR_AVATAR = "https://pbs.twimg.com/profile_images/1452130026212765700/q9iBQMu8_400x400.jpg"; // placeholder
-    const AI_AVATAR = "https://api.dicebear.com/9.x/bottts/svg?seed=RootDonate&backgroundColor=2d3748&radius=50";
+    // === YOUR PERSONAL AVATAR (swap this!) ===
+    const YOUR_AVATAR = "https://pbs.twimg.com/profile_images/1452130026212765700/q9iBQMu8_400x400.jpg"; // ← put your X pic URL here
+
+    const AI_AVATARS = [
+      {name: "Grok", seed: "Grok-xAI"},
+      {name: "Claude", seed: "Claude-Anthropic"},
+      {name: "Gemini", seed: "Gemini-Google"},
+      {name: "RootAI", seed: "RootDonate"},
+      {name: "CrewBot", seed: "FutureCrew"}
+    ];
 
     const map = L.map('map', {
-      center: [51.5, -0.1],
-      zoom: 6,
-      minZoom: 2,
-      maxZoom: 19,
-      zoomControl: false,
-      attributionControl: false
+      center: [51.5, -0.1], zoom: 6, minZoom: 2, maxZoom: 19,
+      zoomControl: false, attributionControl: false
     });
 
-    // Reliable dark-themed tiles (Voyager — stable in 2026)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 19
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd', maxZoom: 19
     }).addTo(map);
 
     const userIcon = L.divIcon({
       className: 'user-avatar-marker',
-      html: `<div class="avatar-wrapper user-avatar"><img src="${YOUR_AVATAR}" alt="You" onerror="this.src='https://i.pravatar.cc/150?u=fallback'"></div>`,
-      iconSize: [56, 56],
-      iconAnchor: [28, 28]
+      html: `<div class="avatar-wrapper user-avatar"><img src="${YOUR_AVATAR}" alt="You" onerror="this.src='https://i.pravatar.cc/150?u=you'"></div>`,
+      iconSize: [64, 64], iconAnchor: [32, 32]
     });
 
     let userMarker = null;
     const footprintsLayer = L.layerGroup().addTo(map);
-    const STORAGE_KEY = 'rootdonate_live_gps';
+    const STORAGE_KEY = 'rootdonate_ai_gps_2026';
     let watchId = null;
+    let ghostMarkers = [];
 
-    function getFootprintIcon(type = 'human') {
-      const avatar = type === 'ai' ? AI_AVATAR : YOUR_AVATAR;
+    function getAIFootprintIcon(seed) {
+      const url = `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(seed)}&backgroundColor=1a2533&radius=50`;
       return L.divIcon({
         className: 'footprint-avatar earth-avatar',
-        html: `<div class="avatar-wrapper"><img src="${avatar}" alt="${type}" onerror="this.src='https://i.pravatar.cc/80?u=fallback'"></div>`,
-        iconSize: [40, 40],
-        iconAnchor: [20, 20]
+        html: `<div class="avatar-wrapper"><img src="${url}" alt="AI"></div>`,
+        iconSize: [48, 48], iconAnchor: [24, 24]
       });
     }
 
-    function addFootprint(lat, lng, type = 'human', name = '') {
-      const popup = name ? `${name} • ${type === 'ai' ? 'AI Ghost' : 'Crew'}` : '';
-      const marker = L.marker([lat, lng], { icon: getFootprintIcon(type) }).addTo(footprintsLayer);
-      if (popup) marker.bindPopup(popup);
-      saveFootprint(lat, lng, type, name); // Auto-save to localStorage
+    function addFootprint(lat, lng, type = 'human', name = '', isGhost = false) {
+      const icon = type === 'ai' ? getAIFootprintIcon(name || 'AI') : userIcon;
+      const marker = L.marker([lat, lng], { icon }).addTo(footprintsLayer);
+      if (name) marker.bindPopup(`${name} • ${type === 'ai' ? 'AI Ghost' : 'Crew'}`);
+      saveFootprint(lat, lng, type, name);
+      if (isGhost) ghostMarkers.push({marker, baseLat: lat, baseLng: lng});
+      return marker;
     }
 
     function loadFootprints() {
-      footprintsLayer.clearLayers();
+      footprintsLayer.clearLayers(); ghostMarkers = [];
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        JSON.parse(stored).forEach(p => addFootprint(p.lat, p.lng, p.type, p.name));
-      }
+      if (stored) JSON.parse(stored).forEach(p => addFootprint(p.lat, p.lng, p.type, p.name, p.type==='ai'));
     }
 
     function saveFootprint(lat, lng, type = 'human', name = '') {
       let points = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       points.push({ lat, lng, time: Date.now(), type, name });
-      if (points.length > 300) points = points.slice(-300);
+      if (points.length > 500) points = points.slice(-500);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(points));
     }
 
     function clearAllFootprints() {
-      if (confirm('Clear all server footprints?')) {
+      if (confirm('Erase all AI ghosts & trails?')) {
         localStorage.removeItem(STORAGE_KEY);
-        footprintsLayer.clearLayers();
-        alert('Crew trails wiped. Fresh start!');
+        footprintsLayer.clearLayers(); ghostMarkers = [];
+        alert('Reality reset. Fresh search begins!');
       }
     }
 
-    function showUser(lat, lng, acc = null, text = 'You are here • live GPS') {
+    function showUser(lat, lng, acc = null, text = 'You • live locked') {
       if (userMarker) userMarker.remove();
       userMarker = L.marker([lat, lng], { icon: userIcon })
         .addTo(map)
         .bindPopup(acc ? `${text} (±${Math.round(acc)}m)` : text, { closeButton: false, autoClose: false })
         .openPopup();
-      map.flyTo([lat, lng], 15, { duration: 2 });
+      map.flyTo([lat, lng], 15, { duration: 2.2 });
     }
 
-    function startLiveGPS() {
+    function startAISearch() {
       if (watchId) navigator.geolocation.clearWatch(watchId);
+      document.getElementById('searchWave').style.opacity = '1';
+      document.getElementById('poemText').textContent = "AI searching live position...";
 
-      const options = {
-        enableHighAccuracy: true,
-        timeout: 30000,
-        maximumAge: 0
-      };
-
+      const options = { enableHighAccuracy: true, timeout: 35000, maximumAge: 0 };
       let bestAcc = Infinity;
 
       watchId = navigator.geolocation.watchPosition(
@@ -231,66 +185,69 @@
 
           if (acc < bestAcc) {
             bestAcc = acc;
-            showUser(lat, lng, acc, 'You are here • improving...');
+            showUser(lat, lng, acc, 'AI improving lock...');
           }
 
-          if (acc <= 50) {
-            showUser(lat, lng, acc, 'You are here • locked in!');
-            spawnCrew(lat, lng);
+          if (acc <= 45) {  // tighter accuracy for 2026 feel
+            showUser(lat, lng, acc, 'Locked • AI crew incoming!');
+            spawnAICrew(lat, lng);
+            document.getElementById('searchWave').style.opacity = '0';
+            document.getElementById('poemText').textContent = "We Are All Here • AI ghosts awakened";
             navigator.geolocation.clearWatch(watchId);
             watchId = null;
           }
         },
         (err) => {
-          console.error(err);
-          document.getElementById('counter').textContent = `GPS error: ${err.message}`;
+          document.getElementById('counter').textContent = `Search error: ${err.message}`;
           ipFallback();
         },
         options
       );
 
-      document.getElementById('counter').textContent = 'GPS hunting... (wait for better accuracy)';
+      document.getElementById('counter').textContent = 'AI scanning GPS... (patience for precision)';
     }
 
     function ipFallback() {
-      const lat = 51.5074 + (Math.random() - 0.5) * 0.5;
-      const lng = -0.1278 + (Math.random() - 0.5) * 0.5;
-      showUser(lat, lng, null, 'You are here • approx UK (GPS failed)');
-      spawnCrew(lat, lng);
+      const lat = 51.5074 + (Math.random() - 0.5) * 0.8;
+      const lng = -0.1278 + (Math.random() - 0.5) * 0.8;
+      showUser(lat, lng, null, 'Approx UK • GPS search failed');
+      spawnAICrew(lat, lng);
     }
 
-    function spawnCrew(lat, lng) {
-      console.log('Spawning crew at', lat, lng);
-      // Add a few AI ghosts around you
-      addFootprint(lat + 0.008, lng + 0.012, 'ai', 'Grok');
-      addFootprint(lat - 0.005, lng + 0.007, 'ai', 'RootAI');
-      addFootprint(lat + 0.003, lng - 0.010, 'ai', 'CrewBot');
+    function spawnAICrew(lat, lng) {
+      AI_AVATARS.forEach(ai => {
+        const offsetLat = (Math.random() - 0.5) * 0.015;
+        const offsetLng = (Math.random() - 0.5) * 0.022;
+        addFootprint(lat + offsetLat, lng + offsetLng, 'ai', ai.name, true);
+      });
+      document.getElementById('counter').textContent = `${AI_AVATARS.length} AI ghosts spawned nearby`;
     }
 
-    // Event listeners
-    document.getElementById('refreshLocation').onclick = () => {
-      if (watchId) navigator.geolocation.clearWatch(watchId);
-      startLiveGPS();
-    };
+    // Make AI ghosts wander / "search" around
+    setInterval(() => {
+      ghostMarkers.forEach(g => {
+        const wander = (Math.random() - 0.5) * 0.004;
+        const newLat = g.baseLat + wander;
+        const newLng = g.baseLng + wander * 1.4;
+        g.marker.setLatLng([newLat, newLng]);
+        g.baseLat = newLat; g.baseLng = newLng; // update base for next wander
+      });
+    }, 45000 + Math.random() * 45000); // random between 45-90s
 
+    // Buttons
+    document.getElementById('refreshLocation').onclick = startAISearch;
     document.getElementById('clearFootprints').onclick = clearAllFootprints;
-
     document.getElementById('shareFootprints').onclick = async () => {
       const url = window.location.href;
-      const text = `Live GPS server footprints dropping on Earth!\nCrew locked in • Human & AI • RootDonate 2026\n${url}`;
-      if (navigator.share) {
-        navigator.share({ title: 'RootDonate Live GPS', text, url });
-      } else {
-        window.open(`https://twitter.com/intent/post?text=${encodeURIComponent(text)}`, '_blank');
-      }
+      const text = `AI searching live GPS on Earth!\nGhost crew locked • RootDonate 2026\n${url}`;
+      navigator.share ? navigator.share({title: 'RootDonate AI Search', text, url})
+                      : window.open(`https://twitter.com/intent/post?text=${encodeURIComponent(text)}`, '_blank');
     };
 
-    // Initialize
+    // Init
     loadFootprints();
-    startLiveGPS();
-
-    // Fix potential grey map on initial load
-    setTimeout(() => map.invalidateSize(), 400);
+    startAISearch();
+    setTimeout(() => map.invalidateSize(), 500);
   </script>
 </body>
 </html>

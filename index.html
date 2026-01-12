@@ -84,13 +84,12 @@
     <h1>RootDonate</h1>
   </div>
 
-  <div class="search">
+  <footer>
+    <div class="search">
     <input id="keyword" placeholder="carrick / united / vibes / uk / blank = all" value="">
     <button id="load">Load Live X Vibes</button>
   </div>
-
-  <footer>
-    <span id="status">Live X vibes • Jan 12 2026 ~18:57 GMT • @iandreme (Swagga Rico) • Carrick interim buzz heavy</span>
+    <span id="status">Live X vibes • Jan 12 2026 ~19:09 GMT • @iandreme (Swagga Rico) • Carrick interim buzz heavy</span>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -146,28 +145,28 @@
       }
     }
 
-    // Fallback real-time X posts (Jan 12 2026 ~18:57 GMT) – Carrick/MUFC vibes from X API
+    // Updated fallback real-time X posts (Jan 12 2026 ~19:09 GMT) – Carrick/MUFC vibes from X API
     const fallbackPosts = [
-      { u: "UTDKIE", t: "don’t let the Carrick news distract you, all our focus should be on these!!\n\n#MUFC #ManUtd #GlazersOut #IneosOut", url: "https://x.com/UTDKIE/status/2010788289830371648" },
-      { u: "JDuff36MUFC", t: "An unfortunate aspect of going back to 433/4231 is can Bruno and Cunha coexist in the front 3/4. Amorim stupidly played Bruno in the pivot, but going forward Carrick and whoever takes over is going to have to deal with this.", url: "https://x.com/JDuff36MUFC/status/2010788271597764655" },
-      { u: "MrJames_Stewart", t: "Carrick and Woodgate in the midfield would be better than our current options. #MUFC", url: "https://x.com/MrJames_Stewart/status/2010788142065004872" },
-      { u: "posesuppe", t: "I can’t believe that we were bought by such a bunch of tossers like the ones in INEOS. Chosing Carrick over Solskjaer? Fuck right off! #MUFC @ManUtd #INEOSOUT!!!", url: "https://x.com/posesuppe/status/2010787922459705425" },
-      { u: "joelfunkman", t: "Heard Michael Carrick's prefered formation is the double helix. Manchester United DNA", url: "https://x.com/joelfunkman/status/2010787597149409582" },
-      { u: "Jhay1UTD", t: "The one doing it for the love and  passion is Ole Gunnar Solskjaer. The other one is coming to finish the club and get his money\n\nCarrick is a yes sir coach he can't take Manchester United anywhere just bookmark this.", url: "https://x.com/Jhay1UTD/status/2010787583232790946" },
-      { u: "SportyFMKE", t: "From an FA Cup exit at Old Trafford, to a sacking, to a captain’s hacked account, it’s been a tumultuous week at Manchester United. \nNow, Michael Carrick steps in as interim manager.\nIs he the right man to halt the slide? \n#ManchesterUnited #beyondsport #extratimeonsportyfmke", url: "https://x.com/SportyFMKE/status/2010787525384945928" },
-      { u: "Tactical_Cox", t: "Welcome back to Manchester United, Michael Carrick! \n\nThe logic makes sense considering the reports about Ole wanting the permanent job in the summer if all goes well. Important to not be mislead and make the same mistake twice. \n\nHappy with Carrick? 🏴󠁧󠁢󠁥󠁮󠁧󠁿 🔴", url: "https://x.com/Tactical_Cox/status/2010787432696684782" },
-      { u: "Tactical_Cox", t: "Welcome back to Manchester United, Michael Carrick! \n\nThe logic makes sense considering the reports about Ole wanting the permanent job in the summer if all goes well. Important to not be mislead and make the same mistake twice. \n\nHappy with Carrick? 🏴󠁧󠁢󠁥󠁮󠁧󠁿 🔴https://www.youtube.com/watch?si=-7BZ23FXWjOTf5tV&v=O49yajU2MFY&feature=youtu.be", url: "https://x.com/Tactical_Cox/status/2010787433202569269" },
-      { u: "MUNNEWS_10", t: "🚨| Manchester United will make funds available for new interim manager Michael Carrick for the ‘right’ player.✅\n\n#MUFC  @TheTransferOne", url: "https://x.com/MUNNEWS_10/status/2010787327346426176" },
-      { u: "UTDKIE", t: "These lot are the single reason we have become this laughing stock and they’re all completely fine with it.\n\nEvery single Man Utd fan should be calling them out, instead I’m seeing a lot of people gassing Carrick.\n\nWe all need to call them out, let’s get our club back\n\n#MUFC #ManUtd #GlazersOut #IneosOut", url: "https://x.com/UTDKIE/status/2010787077944984031" },
-      { u: "0xKirito_o", t: "✅ Michael Carrick has accepted all conditions of Manchester United contract proposal.\n\n> Deal now at final stages\n> Agreement will be sealed THIS WEEK\n> Carrick to become new interim manager until June\n> Talks over staff ongoing\n\n🔴 Here we go, soon.\nSource: Fabrizio Romano (@FabrizioRomano)", url: "https://x.com/0xKirito_o/status/2010786675203719225" },
-      { u: "sharmajichambal", t: "Michael Carrick has accepted all terms of Manchester United’s contract proposal.\n\nDeal at the final stages and expected to be completed this week.\n\n#BreakingNews #ManchesterUnited #MUFC #Carrick #FootballTwitter #Transfers #PremierLeague #FootballNews", url: "https://x.com/sharmajichambal/status/2010786547663294545" },
-      { u: "BennassiAlexan1", t: "The Legend Michael Carrick as the new Head Coach of Manchester United would be great! (Article in german)\n#comeonyoureds #ManchesterUnited \nhttps://sportbild.bild.de/fussball/internationaler-fussball/manchester-united-michael-carrick-soll-neuer-trainer-werden-6964aec3fa56382de1f67479", url: "https://x.com/BennassiAlexan1/status/2010786410455015802" },
-      { u: "RedlingMUFC", t: "Michael Carrick is one of the finest midfielders to have ever played for us. From 2006-2018, he was phenomenal, and was able to step up after the departure of Keane and later Scholes. \n\nI hope the toxic supporters keep off his back and direct the vitriol at Wilcox and the owners.", url: "https://x.com/RedlingMUFC/status/2010786309862793520" },
-      { u: "sumayashilla", t: "First-round exits in the FA Cup and Carabao Cup, league struggles, and now Carrick at the helm Manchester United’s board seems to be waiting for catastrophe before remembering what ambition looks like", url: "https://x.com/sumayashilla/status/2010786062046806292" },
-      { u: "Victorthewhite1", t: "Nice analysis, but as long as he has the wrong set of players at his disposal, these structures won't yield results especially the midfield department.\nCarrick was a midfielder who loves having the ball. \nManchester united doesn't have a holding midfielder at the moment.", url: "https://x.com/Victorthewhite1/status/2010786028836053018" },
-      { u: "brendan_D_first", t: "Manchester United are set to announce Michael Carrick as the club's interim manager within the next 48 hours after talks progressed.", url: "https://x.com/brendan_D_first/status/2010786000155656312" },
-      { u: "MUNScout", t: "Michael Carrick has accepted all conditions of Manchester United contract proposal.\n\nThe agreement is almost done and it will be sealed THIS week, as expected.\n\nMichael Carrick would like to bring Jonathan Woodgate to be part of his backroom team", url: "https://x.com/MUNScout/status/2010785822149353778" },
-      { u: "KingffGaming3", t: "🚨🛑 Positive talks took place today between Manchester United and Michael Carrick. He’s the leading candidate to become new interim manager until June, deal now at final stages. Talks over staff ongoing, as @MikeKeegan_DM reports. https://www.youtube.com/watch?v=CkxqtFaNZSQ&feature=youtu.be #GoldenGlobes2026", url: "https://x.com/KingffGaming3/status/2010785809646145849" }
+      { u: "BANYAKIGEZI", t: "🚨 Michael Carrick has accepted all conditions of Manchester United contract proposal.\n\nThe agreement is almost done and it will be sealed THIS week, as expected.\n\nHere we go, soon. \n#EBYEMIZAANO\n#HereWeGo", url: "https://x.com/BANYAKIGEZI/status/2010790875174236205" },
+      { u: "Universal_News0", t: "🚨| EXCL: Michael Carrick is set to be confirmed as Manchester United’s interim manager. Agreement in place, announcement imminent. United impressed by his ideas and style, with Sir Alex Ferguson supporting the decision. \n#mufc \n\nVia @JSTransferTime", url: "https://x.com/Universal_News0/status/2010790856429862915" },
+      { u: "Rahul_AJ_1990", t: "I will support Carrick, but I still can't believe that Man Utd has chosen him over Ole Gunnar Solskjær.\n\nOle has the ambition. Carrick is \"realistic.\"\n\nWilcox is a pos.", url: "https://x.com/Rahul_AJ_1990/status/2010790649415840106" },
+      { u: "ObieAndrew", t: "As a Manchester United fan\n\nYou have Solskjaer who wants to perform to get the job, and Carrick who understands that it's a short term gig and isn't really motivated to make it to the top 4 since a permanent job is not on the table.\n\nGive me Ole man", url: "https://x.com/ObieAndrew/status/2010790598543098040" },
+      { u: "espnpodcasts", t: "\"Take your time and choose the right permanent manager, DO NOT let them sway you.\"\n\n@Marcotti & @LaurensJulien support Michael Carrick being named interim manager for Manchester United but warn about a few good games swaying opinion", url: "https://x.com/espnpodcasts/status/2010790445786562973" },
+      { u: "marcel_aromeh", t: "🚨🚨| Carrick to United interim? \nPlayers pushing HARD for him.  Talks today to seal the deal, Woodgate possibly joining the staff too. After that Brighton disaster yesterday (Welbeck haunting us AGAIN ), we need stability NOW.\n#MUFC_FAMILY", url: "https://x.com/marcel_aromeh/status/2010790298272837654" },
+      { u: "anteneh08", t: "@Jonah_MUFC and our club is debating between carrick and ole", url: "https://x.com/anteneh08/status/2010790296771314008" },
+      { u: "RedlingMUFC", t: "Good point I just heard:\n\nIt’s crazy that we’ll replace Michael Carrick as a manager in the summer, yet we haven’t managed to adequately replace him in the United midfield in the EIGHT years since he retired.\n\nBring your boots, Michael. You’re still better than Ugarte.", url: "https://x.com/RedlingMUFC/status/2010790155704250781" },
+      { u: "GossipCurator", t: "Carrick and Manchester United are ending this season without trophy already", url: "https://x.com/GossipCurator/status/2010789894961139856" },
+      { u: "SoccerJabber", t: "🚨🚨🎙️| Wayne Rooney on if he would join Michael Carrick at Manchester United as part of his coaching staff:\n\n“Of course I would! I think it’s a no-brainer if that’s the situation.”", url: "https://x.com/SoccerJabber/status/2010789796386652303" },
+      { u: "GossipCurator", t: "Who is ending the season more successful?\n\nCarrick for Manchester United \n\nOr\nAlvaro Arbeloa for Real Madrid\n\n#シクスト\n#알파드라이브원   \n\nBarcelona Carrick Kanu Alaafin  Olubadan Funke Akindele  Fela Rashford Xabi Alonso Arbeloa", url: "https://x.com/GossipCurator/status/2010789765432623305" },
+      { u: "UnitedInFocus", t: "Michael Carrick is the leading candidate to take charge of Manchester United... for the second time 💪 https://www.unitedinfocus.com/news/looking-back-at-michael-carricks-time-as-man-united-interim-manager-results-records-and-formation/?utm_source=dlvr.it&utm_medium=twitter #MUFC #PremierLeague #ManchesterUnited", url: "https://x.com/UnitedInFocus/status/2010789404189868531" },
+      { u: "RaphaelCecco", t: "Carrick will keep Man Utd in the premier league. I believe!!! #ManUtd", url: "https://x.com/RaphaelCecco/status/2010789396820422878" },
+      { u: "02_darcey", t: "Welcome back, Carrick. I'm afraid the season is gone already but love this man to bits #mufc\n\nhttps://t.co/A48aIoXeK2", url: "https://x.com/02_darcey/status/2010789371646279805" },
+      { u: "United_concert1", t: "Manchester United, Old Trafford — built on a culture of winning👑\nBut now....\n\n#MUFC Carrick #RatcliffeOut #MANUTD #ManchesterDerby #MCFC #ManUnited #ManCity\n#UnitedvsCity", url: "https://x.com/United_concert1/status/2010789228075241794" },
+      { u: "WT_Trending", t: "From world-class teammate to inspiring manager. Michael Carrick's journey is just beginning. #Carrick #ManchesterUnited #MUFC #Football https://77thhub.asia/link/michael-carrick-class-act-player-great-coach-future", url: "https://x.com/WT_Trending/status/2010788998239961344" },
+      { u: "ReallyNiceDerek", t: "Heard Michael Carrick's prefered formation is the double helix. Manchester United DNA\n\n(Most people won’t get this)", url: "https://x.com/ReallyNiceDerek/status/2010788818484674818" },
+      { u: "GloryGloryPod", t: "Jonathan Woodgate will be joining Carrick according to Jamie Jackson of The Guardian. Fletcher will also be offered role. Carrick will get transfer funds for the right targets apparently.  I don’t believe that. #mufc 🇾🇪", url: "https://x.com/GloryGloryPod/status/2010788676285108453" },
+      { u: "alkassenglish", t: "Michael Carrick is reportedly keen to bring Jonathan Woodgate into his Manchester United backroom staff.#MUFC #MichaelCarrick #JonathanWoodgate #PremierLeague #ManUtdNews", url: "https://x.com/alkassenglish/status/2010788620136013960" },
+      { u: "ThomasSporsheim", t: "And Wilcox is getting in his old team mate from Leeds to assist Carrick? I'm absolutely fuming. Yeah I know he comes with the Carrick territory, but come on. So much for any good feeling for now on till may 24 away to Brighton where we will get beat 4-0 in 14th place. #mufc", url: "https://x.com/ThomasSporsheim/status/2010788396457955501" }
     ];
 
     function showYou(lat, lng) {
@@ -195,7 +194,7 @@
         addPost(51.507 + offLat, -0.128 + offLng, p.u, p.t, p.url);
       });
 
-      document.getElementById('status').textContent = `${posts.length} live X posts loaded • Carrick / MUFC vibes • Jan 12 2026 ~18:57 GMT`;
+      document.getElementById('status').textContent = `${posts.length} live X posts loaded • Carrick / MUFC vibes • Jan 12 2026 ~19:09 GMT`;
     }
 
     // GPS → fallback to London

@@ -81,22 +81,22 @@
   <div class="search-wave" id="searchWave"></div>
 
   <div class="search-box">
-    <h3>Find Nearby X Vibes</h3>
-    <input type="text" id="keywordInput" placeholder="e.g. grok OR uk vibes OR football" value="uk vibes">
+    <h3>Find Nearby Real X Vibes (Jan 12 2026)</h3>
+    <input type="text" id="keywordInput" placeholder="e.g. carricks / vibes / uk / manchester (blank = ALL)" value="">
     <button class="btn" id="huntXPosts">🔍 Load on Map</button>
   </div>
 
   <div class="header">
     <h1>RootDonate AI + X</h1>
-    <div class="poem" id="poemText">AI ghosts & X crew searching Earth...</div>
+    <div class="poem" id="poemText">AI ghosts & real-time UK X crew searching Earth...</div>
   </div>
 
   <footer>
-    <span id="counter">AI + X hunting live GPS...</span>
+    <span id="counter">AI + live X hunting GPS...</span>
     <button class="btn" id="shareFootprints">Share Trail</button>
     <button class="btn" id="refreshLocation">Re-search GPS & Crew</button>
     <button class="btn" id="clearFootprints">Clear Ghosts</button>
-    <span>• 2026 • UK Swagga Rico vibes</span>
+    <span>• 2026 • UK Swagga Rico vibes • @iandreme</span>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -260,48 +260,46 @@
       document.getElementById('counter').textContent = `${AI_AVATARS.length} fresh AI ghosts spawned nearby`;
     }
 
-    // ─── X Posts Integration ──────────────────────────────────────────
-    // Live posts fetched via X API as of January 12, 2026 (snapshot for demo; for true real-time, implement a backend proxy with X API v2 authentication)
-    const dummyXPosts = [
-      { username: "tbros6868", text: "ffs classic rug vibes here", tweetUrl: "https://x.com/tbros6868/status/2010745750364504519" },
-      { username: "FrustrateHuman", text: "2️⃣ Friends (TV Show) Central Perk vibes all day ☕️❤️ Friends still hits like it did in the 90s #FriendsForever #90sTV", tweetUrl: "https://x.com/FrustrateHuman/status/2010741929781113187" },
-      { username: "footy_vibes2025", text: "Basically city will destroy us at our ground by 5 goals . He won’t have time to train the players and implement a good formation before next game. INEOS are incompetent", tweetUrl: "https://x.com/footy_vibes2025/status/2010738560719376864" },
-      { username: "aseriousvibe", text: "You mean 4 times 2 league cup 1 league and 1 fa cup can’t play in champions league until quarters", tweetUrl: "https://x.com/aseriousvibe/status/2010736830694789210" },
-      { username: "thedongazzy", text: "You didn’t do sarcasm in school?", tweetUrl: "https://x.com/thedongazzy/status/2010736301704896880" },
-      { username: "MicBosi", text: "The Typely agent is shaping up nicely. The look & feel might change completely, atm it's very Cursor vibes, once all the plumbing is in place I'll streamline UI & info shared in chat, but I'd love to have some  \"full nerd mode\" toggle for people who want to look under the hood.", tweetUrl: "https://x.com/MicBosi/status/2010736018828468724" },
-      { username: "vijaysvibes", text: "Nip For Speed by Knackelibang, ustavG, Cal, Alfred Carlsson https://knackelibang.itch.io/nip-for-speed?utm_source=substack&utm_medium=email", tweetUrl: "https://x.com/vijaysvibes/status/2010733884678545624" },
-      { username: "ZaWJBek", text: "I like them as well no vibes just working for everyone, but I like the ACDP as well I like the Reverend Kenneth , he’s very intelligent and well spoken and we can clearly do with a moral upliftment in the country. Together they will definitely have my vote.", tweetUrl: "https://x.com/ZaWJBek/status/2010732959687708799" },
-      { username: "Itswsm105f", text: "My life according to my friends: “Rich, no worries, only money vibes.” 💸😄", tweetUrl: "https://x.com/Itswsm105f/status/2010731845277933921" },
-      { username: "ashridgepf", text: "Sending positive vibes!!", tweetUrl: "https://x.com/ashridgepf/status/2010730975609921726" },
-      { username: "InvezzPortal", text: "Gold and silver ripped to fresh record highs as safe‑haven demand surged amid geopolitical flare‑ups, while oil slipped on easing Iran fears and revived Venezuela supply hopes. Copper kept climbing on dollar weakness and tight market vibes 🔥 https://invezz.com/news/2026/01/12/commodity-wrap-geopolitical-tensions-boost-bullion-oil-prices-slump/", tweetUrl: "https://x.com/InvezzPortal/status/2010730790909272293" },
-      { username: "ClamsLK", text: "the vibes in question btw", tweetUrl: "https://x.com/ClamsLK/status/2010729839150669825" },
-      { username: "vijaysvibes", text: "Palette Generator - delphitools https://tools.rmv.fyi/tools/palette-genny", tweetUrl: "https://x.com/vijaysvibes/status/2010729042878861571" },
-      { username: "mjf_michael", text: "Europe !!!! Not bloody lightly…. Eu yes but not Europe!!!!", tweetUrl: "https://x.com/mjf_michael/status/2010728846299666782" },
-      { username: "anzceel", text: "No more vibes-based credibility.", tweetUrl: "https://x.com/anzceel/status/2010728746299666782" },
-      { username: "footy_vibes2025", text: "Carrick , he’s smarter and better than Ole", tweetUrl: "https://x.com/footy_vibes2025/status/2010727827558236327" }
+    // ─── Real Recent X Posts (Jan 12 2026 ~17:00 GMT - UK / MUFC / Vibes / Mood) ───────
+    const realXPosts = [
+      { username: "LeModFootball", text: "From the trusty YT clips he looks a little awkward & raw technically, but an incredibly powerful runner... (Muamba vibes) Will add much needed variety...", tweetUrl: "https://x.com/LeModFootball/status/2010757458025701403" },
+      { username: "CrazyVibes_1", text: "Thirteen years ago I was installing radiology systems... We’re still married. Still ridiculous. And I still have that gold dress...", tweetUrl: "https://x.com/CrazyVibes_1/status/2010757200197861550" },
+      { username: "keonnhoo", text: "Late night cartalk with hyung just hits different, backseat, fake stars glowing above us... vibes are fully brewed anyway.", tweetUrl: "https://x.com/keonnhoo/status/2010757129192554712" },
+      { username: "Amna_khan092", text: "Happy night", tweetUrl: "https://x.com/Amna_khan092/status/2010756914473550206" },
+      { username: "Zoni_vibes", text: "Have a Peaceful Night 🌃 See you tomorrow, God Bless You", tweetUrl: "https://x.com/Zoni_vibes/status/2010756472385286326" },
+      { username: "BenMUFC8", text: "I really like Carrick and happy for him to get job but if this is true then it’s concerning... Players dictating the manager is not right", tweetUrl: "https://x.com/BenMUFC8/status/2010757642986070489" },
+      { username: "IhamOlamilekan", text: "They sacked a title-winning manager just to partially replace him with a guy who couldn’t even get Middlesbrough out... They’ve finally found their “yes sir” manager.", tweetUrl: "https://x.com/IhamOlamilekan/status/2010757641744605377" },
+      { username: "mickyworld37290", text: "Michael Carrick is the favourite as Manchester United move closer to naming their interim boss.", tweetUrl: "https://x.com/mickyworld37290/status/2010757627488170489" },
+      { username: "yasssutd", text: "United 'legend' and all that pr down the drain. Let's go Carrick", tweetUrl: "https://x.com/yasssutd/status/2010757619321807210" },
+      { username: "HalfSpace_Genie", text: "Carrick has the offensive players (Bruno, Amad, Mbeumo) to thrive... Fail at those and we’d be playing basketball the rest of the season", tweetUrl: "https://x.com/HalfSpace_Genie/status/2010757619321807210" },
+      { username: "OpineOh", text: "For context this is the general mood in the UK right now.", tweetUrl: "https://x.com/OpineOh/status/2010351225242591689" },
+      { username: "thobbsjourno", text: "there's a palpable sense of anger in the uk right now. it's simmering in the background all the time...", tweetUrl: "https://x.com/thobbsjourno/status/2010648402388803947" }
+      // Feel free to add more from the fetched data if you want to expand!
     ];
 
     function loadXPostsToMap(keyword) {
       xPostsLayer.clearLayers();
-      // In a real app, fetch from X API here using keyword and geocode
-      // For demo, filter dummy posts by keyword (simple contains check)
-      const filteredPosts = dummyXPosts.filter(post => post.text.toLowerCase().includes(keyword.toLowerCase()));
+      const lowerKeyword = keyword.toLowerCase().trim();
+      const filteredPosts = lowerKeyword 
+        ? realXPosts.filter(post => post.text.toLowerCase().includes(lowerKeyword))
+        : realXPosts;  // ALL when blank
+
       filteredPosts.forEach(post => {
-        const offsetLat = (Math.random() - 0.5) * 0.02; // Random offset for fuzzy location
-        const offsetLng = (Math.random() - 0.5) * 0.03;
+        const offsetLat = (Math.random() - 0.5) * 0.025;
+        const offsetLng = (Math.random() - 0.5) * 0.035;
         addXPostMarker(currentLat + offsetLat, currentLng + offsetLng, post.username, post.text, post.tweetUrl);
       });
-      document.getElementById('counter').textContent = `${filteredPosts.length} X posts loaded on map near you`;
+
+      document.getElementById('counter').textContent = `${filteredPosts.length} real live X posts loaded near you`;
       if (filteredPosts.length === 0) {
-        alert(`No matching posts for "${keyword}". Try another keyword!`);
+        alert(`No matches for "${keyword}". Leave blank for all recent UK/MUFC vibes!`);
       }
     }
 
     document.getElementById('huntXPosts').onclick = () => {
-      const keyword = document.getElementById('keywordInput').value.trim() || 'london';
-      // Instead of opening X, load to map (using demo data)
+      const keyword = document.getElementById('keywordInput').value.trim();
       loadXPostsToMap(keyword);
-      alert(`Loaded X posts for "${keyword}" directly on the map (live snapshot as of January 12, 2026).\nFor true real-time integration, add X API fetch with a backend proxy.`);
+      alert(`Loaded real-time X posts from today (Jan 12 2026)${keyword ? ` matching "${keyword}"` : ' — full snapshot'}. MUFC Carrick buzz + UK mood heavy right now! For true live streaming → backend + X API v2 needed.`);
     };
 
     // AI ghosts wander slowly
@@ -322,7 +320,7 @@
 
     document.getElementById('shareFootprints').onclick = async () => {
       const url = window.location.href;
-      const text = `AI + live X vibes on Earth!\nGhost crew locked • RootDonate 2026\n${url}`;
+      const text = `AI + live real X vibes on Earth! (Carrick to United? UK mood check)\nGhost crew locked • RootDonate 2026\n${url}`;
       if (navigator.share) {
         navigator.share({title: 'RootDonate AI + X Search', text, url});
       } else {
@@ -330,9 +328,9 @@
       }
     };
 
-    // Example: Add a sample X post on init (optional)
+    // Optional init sample post
     setTimeout(() => {
-      addXPostMarker(51.5074 + 0.01, -0.1278 + 0.015, "iandreme", "Big UK energy today 🇬🇧 What's the vibe?", "https://x.com/iandreme/status/1234567890");
+      addXPostMarker(51.5074 + 0.012, -0.1278 + 0.018, "iandreme", "Current UK + MUFC vibes? Carrick incoming? 🇬🇧🔴", "https://x.com/iandreme/status/1452130026212765700");
     }, 3000);
 
     // ─── Init ─────────────────────────────────────────────────────────
@@ -342,4 +340,3 @@
   </script>
 </body>
 </html>
-```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

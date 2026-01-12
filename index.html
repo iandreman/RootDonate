@@ -3,16 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RootDonate • Live X Vibes (Swagga Rico)</title>
+  <title>Combined: RootDonate Live X Vibes & xAI Grok SDK Example</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
     body, html {
       margin: 0;
-      height: 100%;
+      height: auto;
       background: #000;
       color: #fff;
       font-family: system-ui, sans-serif;
-      overflow: hidden;
+      overflow: auto;
+    }
+    #map-container {
+      position: relative;
+      height: 80vh;
     }
     #map { height: 100%; }
     .header {
@@ -75,23 +79,59 @@
       font-size: 0.9rem;
       z-index: 1000;
     }
+    pre {
+      background: #161b22;
+      padding: 1.2rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      border: 1px solid #30363d;
+    }
+    code {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 0.95rem;
+    }
+    .keyword { color: #ff7b72; }
+    .string   { color: #a5d6ff; }
+    .comment  { color: #8b949e; font-style: italic; }
+    .function { color: #d2a8ff; }
+    .number   { color: #79c0ff; }
   </style>
 </head>
 <body>
-      <div class="search">
-    <input id="keyword" placeholder="carrick / united / vibes / uk / blank = all" value="">
-    <button id="load">Load Live X Vibes</button>
+  <div id="map-container">
+    <div class="search">
+      <input id="keyword" placeholder="carrick / united / vibes / uk / blank = all" value="">
+      <button id="load">Load Live X Vibes</button>
+    </div>
+    <div id="map"></div>
+    <div class="header">
+      <h1>RootDonate</h1>
+    </div>
+    <footer>
+      <span id="status">Live X vibes • Jan 12 2026 ~19:09 GMT • @iandreme (Swagga Rico) • Carrick interim buzz heavy</span>
+    </footer>
   </div>
-  <div id="map"></div>
+  <div id="sdk-example" style="max-width: 900px; margin: 2rem auto; padding: 0 1rem; background: #0d1117; color: #c9d1d9;">
+    <h2>xAI Grok SDK – Weekly News Digest Example</h2>
+    <pre><code><span class="keyword">import</span> os
 
-  <div class="header">
-    <h1>RootDonate</h1>
+<span class="keyword">from</span> xai_sdk <span class="keyword">import</span> Client
+<span class="keyword">from</span> xai_sdk.chat <span class="keyword">import</span> user
+<span class="keyword">from</span> xai_sdk.search <span class="keyword">import</span> SearchParameters
+
+client = Client(api_key=os.getenv(<span class="string">"XAI_API_KEY"</span>))
+
+chat = client.chat.create(
+    model=<span class="string">"grok-4"</span>,
+    search_parameters=SearchParameters(mode=<span class="string">"auto"</span>),
+)
+
+chat.append(user(<span class="string">"Provide me a digest of world news of the week before July 9, 2025."</span>))
+
+response = chat.sample()
+<span class="keyword">print</span>(response.content)
+</code></pre>
   </div>
-
-  <footer>
-    <span id="status">Live X vibes • Jan 12 2026 ~19:09 GMT • @iandreme (Swagga Rico) • Carrick interim buzz heavy</span>
-  </footer>
-
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     // ── Map Setup ────────────────────────────────────────────────
@@ -192,4 +232,3 @@
   </script>
 </body>
 </html>
-```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

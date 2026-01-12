@@ -130,7 +130,7 @@
       const q = keyword.trim() ? `${keyword} lang:en` : baseQuery;
 
       try {
-        const res = await fetch(`${PROXY_API_URL}?q=${encodeURIComponent(q)}&max_results=20`);
+        const res = await fetch(`${PROXY_API_URL}?q=${encodeURIComponent(q)}`);
         if (!res.ok) throw new Error('Proxy error: ' + res.status);
         
         const data = await res.json();

@@ -137,7 +137,7 @@
     // ── IMPORTANT: Replace with YOUR secure proxy URL ───────────
     // Example: https://your-vercel-app.vercel.app/api/tweets
     // NEVER put bearer token in client-side code! Use backend for auth.
-    const PROXY_API_URL = "xai-https://rootdonate.co.uk/@";  // ← CHANGE THIS TO YOUR PROXY!
+    const PROXY_API_URL = "https://rootdonate.co.uk/@";  // ← CHANGE THIS TO YOUR PROXY!
 
     async function fetchLivePosts(keyword = '') {
       const baseQuery = '("Michael Carrick" OR Carrick) ("Manchester United" OR MUFC OR "Man Utd") lang:en';
@@ -162,26 +162,6 @@
 
     // Updated fallback real-time X posts (Jan 12 2026 ~19:53 GMT) – Carrick/MUFC vibes from X API
     const fallbackPosts = [
-      { u: "Josdap1", t: "Thunder wan fire u nd Carrick abi", url: "https://x.com/i/web/status/2010801780188459491" },
-      { u: "coachramoslive", t: "Michael Carrick is keen for his former assistant at Middlesbrough, Jonathan Woodgate, to join him on the coaching staff at Manchester United #シクスト #ManchesterUnited", url: "https://x.com/i/web/status/2010801731387748440" },
-      { u: "gyezi_", t: "📚|• still maintain this of Michael Carrick in Manchester United’s dug-out! #MUFC", url: "https://x.com/i/web/status/2010801716372156618" },
-      { u: "dreamteamfc", t: "How Michael Carrick saw off Solskjaer in Manchester United caretaker coach duel https://www.thesun.co.uk/sport/37887304/man-utd-michael-carrick-solskjaer-interim-manager/?utm_medium=Social&utm_campaign=dreamteamtwitter&utm_source=Twitter#Echobox=1768245279", url: "https://x.com/i/web/status/2010801153416589469" },
-      { u: "TheSunFootball", t: "How Michael Carrick saw off Solskjaer in Manchester United caretaker coach duel https://www.thesun.co.uk/sport/37887304/man-utd-michael-carrick-solskjaer-interim-manager/?utm_medium=Social&utm_campaign=sunfootballtwitter&utm_source=Twitter#Echobox=1768245279", url: "https://x.com/i/web/status/2010801127080517712" },
-      { u: "roundyclock", t: "🚨| BREAKING: Michael Carrick is seen as a STRONG contender to become Manchester United’s interim manager. 🔴👔 [talkSPORT]", url: "https://x.com/i/web/status/2010800963171598845" },
-      { u: "_normah_", t: "Just woke up to see that Xabi Alonso has been sacked. Is it too late for Manchester United to say no to Michael Carrick?", url: "https://x.com/i/web/status/2010800830031806831" },
-      { u: "JensonAdFC", t: "It's obvious now, Ole demanded his own backroom team and wants to stay permanently after UCL qualification. INEOS couldn't handle real ambition. Carrick steps up instead. Doesn't matter, we'll support him through thick and thin. #MUFC #OleBack", url: "https://x.com/i/web/status/2010800709634314502" },
-      { u: "ShaunyRye", t: "Hope Carrick does well to be honest, but I must admit I'm shocked of talk around Woodgate and Carrick's brother joining Utd too. Purely based on the fact that Gibson felt very strongly that we needed a stronger coaching staff to accompany him. #Boro #Carrick #MUFC", url: "https://x.com/i/web/status/2010800564490358919" },
-      { u: "andy_overs", t: "Alonso to LFC (Slott ain’t got long left) Carrick to MUFC Ole to Spurs Frank to West Ham I can see it in the stars!!!! 👃", url: "https://x.com/i/web/status/2010800212659540188" },
-      { u: "Whykay_mufc", t: "You still put @DalotDiogo inside the formation, you want to sack Michael Carrick again", url: "https://x.com/i/web/status/2010800045625684104" },
-      { u: "CaseyErlewein", t: "If Manchester United were still a proper club they would drop everything with Carrick and rush to get Xabi Alonso.", url: "https://x.com/i/web/status/2010799866998636918" },
-      { u: "aipropx", t: "Michael Carrick has named three players central to Man Utd’s best spell under Ruben Amorim https://sports.yahoo.com/articles/michael-carrick-named-three-players-192454177.html #AipropX", url: "https://x.com/i/web/status/2010799793849663552" },
-      { u: "kvnq_tee", t: "🚨 It remains uncertain whether Carrick will be given funds to reinforce the squad February 2 transfer deadline. [@TelegraphDucker] #MUFC", url: "https://x.com/i/web/status/2010799693241205228" },
-      { u: "realunitedke", t: "🚨 Michael Carrick’s Main Task' Returning United to Europe!!👀 While the minimum target is a top-six finish, club officials believe Champions League qualification is a real possibility and are backing him to achieve it! #MUFC  @TelegraphDucker", url: "https://x.com/i/web/status/2010799532733579333" },
-      { u: "Triumphx24", t: "Real Madrid ain't rebuilding... Real Madrid hired the next coach less than 30mins Man utd are still debating on ole and Carrick... It shows you that the board can't take decisions that would have helped Amorim become successful in the first place", url: "https://x.com/i/web/status/2010799050468348414" },
-      { u: "roundyclock", t: "🚨 𝗕𝗥𝗘𝗔𝗞𝗜𝗡𝗚: Michael Carrick to be confirmed as new Manchester United interim manager in the next 48 hours. [Lawton_Times]", url: "https://x.com/i/web/status/2010798970738811052" },
-      { u: "AfIptv2", t: "Michael Carrick has accepted all conditions of Manchester United contract proposal.📺IPTV  all devices supported with zero Buffer available DM me now The agreement is almost done and it will be sealed THIS week, as expected. Here we go, soon", url: "https://x.com/i/web/status/2010798736780509263" },
-      { u: "Papoomarley", t: "We love carrick", url: "https://x.com/i/web/status/2010798604936757720" },
-      { u: "StreetsFball", t: "Michael Carrick has accepted all conditions of Manchester United contract proposal. #ManchesterUnited #epl #viral", url: "https://x.com/i/web/status/2010798464721105022" }
     ];
 
     function showYou(lat, lng) {

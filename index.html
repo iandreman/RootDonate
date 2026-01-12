@@ -83,7 +83,7 @@
   <div class="search-box">
     <h3>Find Nearby X Vibes</h3>
     <input type="text" id="keywordInput" placeholder="e.g. grok OR uk vibes OR football" value="uk vibes">
-    <button class="btn" id="huntXPosts">🔍 Open Live Search</button>
+    <button class="btn" id="huntXPosts">🔍 Load on Map</button>
   </div>
 
   <div class="header">
@@ -168,7 +168,7 @@
         <a href="${tweetUrl}" target="_blank" style="color:#1DA1F2;">View on X →</a>
       `;
       L.marker([lat, lng], { icon: xIcon }).addTo(xPostsLayer)
-        .bindPopup(xUrl);
+        .bindPopup(popupContent);
     }
 
     // ─── Storage ──────────────────────────────────────────────────────
@@ -261,13 +261,38 @@
     }
 
     // ─── X Posts Integration ──────────────────────────────────────────
+    // Dummy posts for demonstration (replace with real API fetch in production)
+    const dummyXPosts = [
+      { username: "UCULondon", text: "Calls for longer PhD scholarships as teaching loads creep up https://www.timeshighereducation.com/news/calls-longer-phd-scholarships-teaching-loads-creep via @timeshighered", tweetUrl: "https://x.com/UCULondon/status/2010741714244223145" },
+      { username: "CouchPotatoUK", text: "Upton Park is an area in London. It's flats and shops and a market with a tube station... It would be interesting to see some street football, but I guarantee the goal posts are stolen by a homeless man trying to keep warm", tweetUrl: "https://x.com/CouchPotatoUK/status/2010741567699779962" },
+      { username: "LadyJLondon", text: "Not a coup… How much has Nadhim donated to Reform or Nigel fot this? 🤔", tweetUrl: "https://x.com/LadyJLondon/status/2010741454566748356" },
+      { username: "Jas_Athwal", text: "London has its lowest recorded homicide rate ever. Air quality is up, public transport is improving, and serious investment is going into policing. One death is one too many, but progress matters. The Mayor is getting on with the job of keeping London safe.", tweetUrl: "https://x.com/Jas_Athwal/status/2010741345024106943" },
+      { username: "hayesgar", text: "Truth is less people die from stabbings as there are stab kits everywhere across London in clubs pubs and place where people congregate. Robbing , phone thefts and shop lifting off the charts but don’t worry ONLY 97 people died . Absolute Clown 🤡🤡", tweetUrl: "https://x.com/hayesgar/status/2010741219811524966" },
+      { username: "LDNRentersUnion", text: "From housing to utilities, profiteering is destroying our lives. We pay sky-high rents for some of the coldest and leakiest homes in Europe while landlords and energy bosses get rich. Together, we have the power to win a system that puts our needs first.", tweetUrl: "https://x.com/LDNRentersUnion/status/2010741154044862788" }
+    ];
+
+    function loadXPostsToMap(keyword) {
+      xPostsLayer.clearLayers();
+      // In a real app, fetch from X API here using keyword and geocode
+      // For demo, filter dummy posts by keyword (simple contains check)
+      const filteredPosts = dummyXPosts.filter(post => post.text.toLowerCase().includes(keyword.toLowerCase()));
+      filteredPosts.forEach(post => {
+        const offsetLat = (Math.random() - 0.5) * 0.02; // Random offset for fuzzy location
+        const offsetLng = (Math.random() - 0.5) * 0.03;
+        addXPostMarker(currentLat + offsetLat, currentLng + offsetLng, post.username, post.text, post.tweetUrl);
+      });
+      document.getElementById('counter').textContent = `${filteredPosts.length} X posts loaded on map near you`;
+      if (filteredPosts.length === 0) {
+        alert(`No matching posts for "${keyword}". Try another keyword!`);
+      }
+    }
+
     document.getElementById('huntXPosts').onclick = () => {
       const keyword = document.getElementById('keywordInput').value.trim() || 'london';
-      const radius = 30; // km - feel free to make adjustable
-      const query = encodeURIComponent(`${keyword} geocode:${currentLat},${currentLng},${radius}km -filter:retweets lang:en`);
-      const xUrl = `https://x.com/search?q=${query}&src=typed_query&f=live`;
-      window.open(xUrl, '_blank');
-      alert(`Live X search opened → "${keyword}" near your position (±${radius}km)\n\nNote: Most posts are fuzzy location guesses — copy cool ones & add manually as markers!`);
+      const radius = 30; // km
+      // Instead of opening X, load to map (using demo data)
+      loadXPostsToMap(keyword);
+      alert(`Loaded X posts for "${keyword}" directly on the map (demo data with fuzzy locations).\nFor real-time integration, add X API fetch with a backend proxy.`);
     };
 
     // AI ghosts wander slowly
@@ -296,7 +321,7 @@
       }
     };
 
-    // Example: Add a dummy X post (replace with real ones you find!)
+    // Example: Add a dummy X post on init (optional)
     setTimeout(() => {
       addXPostMarker(51.5074 + 0.01, -0.1278 + 0.015, "iandreme", "Big UK energy today 🇬🇧 What's the vibe?", "https://x.com/iandreme/status/1234567890");
     }, 3000);
@@ -308,3 +333,4 @@
   </script>
 </body>
 </html>
+```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

@@ -261,14 +261,27 @@
     }
 
     // ─── X Posts Integration ──────────────────────────────────────────
-    // Dummy posts for demonstration (replace with real API fetch in production)
+    // Live posts fetched via X API as of January 12, 2026 (snapshot for demo; for true real-time, implement a backend proxy)
     const dummyXPosts = [
-      { username: "UCULondon", text: "Calls for longer PhD scholarships as teaching loads creep up https://www.timeshighereducation.com/news/calls-longer-phd-scholarships-teaching-loads-creep via @timeshighered", tweetUrl: "https://x.com/UCULondon/status/2010741714244223145" },
-      { username: "CouchPotatoUK", text: "Upton Park is an area in London. It's flats and shops and a market with a tube station... It would be interesting to see some street football, but I guarantee the goal posts are stolen by a homeless man trying to keep warm", tweetUrl: "https://x.com/CouchPotatoUK/status/2010741567699779962" },
-      { username: "LadyJLondon", text: "Not a coup… How much has Nadhim donated to Reform or Nigel fot this? 🤔", tweetUrl: "https://x.com/LadyJLondon/status/2010741454566748356" },
-      { username: "Jas_Athwal", text: "London has its lowest recorded homicide rate ever. Air quality is up, public transport is improving, and serious investment is going into policing. One death is one too many, but progress matters. The Mayor is getting on with the job of keeping London safe.", tweetUrl: "https://x.com/Jas_Athwal/status/2010741345024106943" },
-      { username: "hayesgar", text: "Truth is less people die from stabbings as there are stab kits everywhere across London in clubs pubs and place where people congregate. Robbing , phone thefts and shop lifting off the charts but don’t worry ONLY 97 people died . Absolute Clown 🤡🤡", tweetUrl: "https://x.com/hayesgar/status/2010741219811524966" },
-      { username: "LDNRentersUnion", text: "From housing to utilities, profiteering is destroying our lives. We pay sky-high rents for some of the coldest and leakiest homes in Europe while landlords and energy bosses get rich. Together, we have the power to win a system that puts our needs first.", tweetUrl: "https://x.com/LDNRentersUnion/status/2010741154044862788" }
+      { username: "ManThingsUK", text: "🤣🤣🤣 Defo giving off closet gay vibes.", tweetUrl: "https://x.com/ManThingsUK/status/2010744062102339872" },
+      { username: "DaManu_Official", text: "Exciting news! 🎉 Da Manu and Illy Caffè are teaming up in London City to bring the perfect blend of Italian coffee culture and contemporary dining. ☕🇮🇹 Stay tuned for exclusive collabs, menu drops & city vibes! #DaManuXIlly #LondonCity #CoffeeCulture #Partnership", tweetUrl: "https://x.com/DaManu_Official/status/2010741602507964854" },
+      { username: "Movie_fly", text: "These set photos are straight fire! 1940s London vibes with that classic chase, Doom's multiverse chaos is about to hit hard. Hyped AF!  #AvengersDoomsday", tweetUrl: "https://x.com/Movie_fly/status/2010738494277345643" },
+      { username: "HattersNews", text: "Vertu vibes so back: Here we are again. The Vertu Trophy. And things are getting interesting. https://www.lutontown.co.uk/en/news/vertu-vibes-so-back", tweetUrl: "https://x.com/HattersNews/status/2010738260298101107" },
+      { username: "level94836", text: "you're giving me twitter bot vibes because how have you gone 3 years without posting anything about the UK (your supposed home country) and somehow show up here on a post about American politics?", tweetUrl: "https://x.com/level94836/status/2010737057023541537" },
+      { username: "ViralVibesHQ1", text: "@grok how would it affect uk if every illegal immigrate was deported", tweetUrl: "https://x.com/ViralVibesHQ1/status/2010734121811648845" },
+      { username: "hoku_uk", text: "\"Join our Community Clean-Up Day this Sat!  Gather at 9am at Central Park—bring gloves, friends, and good vibes. Let’s keep our neighborhood green u0026 bright! Tag who you’re bringing! #CommunityLove #GreenNeighborhood\"", tweetUrl: "https://x.com/hoku_uk/status/2010730012484493519" },
+      { username: "BABE4Chelsea", text: "🔵 Liam Rosenior is confident ahead of Chelsea’s Carabao Cup clash with Arsenal on Wednesday night 💪 The Chelsea boss believes his side are ready for the challenge as they prepare for a huge London derby under the lights. 🌃⚽ #CFC #CarabaoCup #ChelseaArsenal #LondonDerby", tweetUrl: "https://x.com/BABE4Chelsea/status/2010726529689686199" },
+      { username: "djdalallondon", text: "Old school elegance meets new age beats. 🥂⚡️ The ultimate genre-bender is almost here. We’re taking those classic retro vibes and plugging them straight into the techno circuit. Get ready to lose yourself in the fusion. Releasing Soon. #DJDalal #TechnoXRetro #MashupAlert", tweetUrl: "https://x.com/djdalallondon/status/2010724772410261908" },
+      { username: "GaikwadUK35", text: "Good evening, ☕🍁🙏", tweetUrl: "https://x.com/GaikwadUK35/status/2010722817147605175" },
+      { username: "ViscountOfVibes", text: "You know a lot about broken Britain as you were one of the chief architects of make it so.", tweetUrl: "https://x.com/ViscountOfVibes/status/2010720270865277413" },
+      { username: "ViscountOfVibes", text: "This will be the nail in the coffin of Britain once they get in power, RIP.", tweetUrl: "https://x.com/ViscountOfVibes/status/2010718476772753874" },
+      { username: "marketbriefer", text: "Ripple secures UK FCA approvals (EMI license + crypto reg). Big step for XRP payments and potential ETF vibes incoming. Bullish. #XRP #Ripple #Crypto #Blockchain", tweetUrl: "https://x.com/marketbriefer/status/2010715354603958588" },
+      { username: "mcrey18598451", text: "#London Cold air, warm coffee, London vibes😊😊", tweetUrl: "https://x.com/mcrey18598451/status/2010714112771182659" },
+      { username: "zywiremedia1", text: "“Trust us, it feels safer” is the most British crime statistic ever. If vibes were data, London would be the safest city on Earth.", tweetUrl: "https://x.com/zywiremedia1/status/2010712929604403623" },
+      { username: "busrabegcecanl", text: "🌐 Mountainhead's Network State Vibes: Elon Musk's Meddling Exposed 🚀 Watched Mountainhead? Those tech bros plotting world takeovers? Yeah, it's basically Elon's X playbook stirring drama in UK riots, Iran protests, Venezuela elections.  Not full conquest, but weakening states for \"Network States\"? Full read:", tweetUrl: "https://x.com/busrabegcecanl/status/2010711248883863604" },
+      { username: "topskillsportuk", text: "🚨🇪🇸 Liam Rosenior telling Marc Guiu to smile after he subbed him off against Charlton on the weekend 😄 #CFC  Trying to bring the good vibes to his new team 🤝", tweetUrl: "https://x.com/topskillsportuk/status/2010709259064168934" },
+      { username: "liberalism101UK", text: "Nailed it.  Too much of the modern left and the right is like this.  It's tribes, vibes and sides. Universal principles be damned.", tweetUrl: "https://x.com/liberalism101UK/status/2010708201319125161" },
+      { username: "SecretSolesLDN", text: "Double the view, double the fun. 👣 Monday vibes from London. Who wants to see more? 🌹 #FeetFinder #FootModel #London #RedNails", tweetUrl: "https://x.com/SecretSolesLDN/status/2010706270433505672" }
     ];
 
     function loadXPostsToMap(keyword) {
@@ -292,7 +305,7 @@
       const radius = 30; // km
       // Instead of opening X, load to map (using demo data)
       loadXPostsToMap(keyword);
-      alert(`Loaded X posts for "${keyword}" directly on the map (demo data with fuzzy locations).\nFor real-time integration, add X API fetch with a backend proxy.`);
+      alert(`Loaded X posts for "${keyword}" directly on the map (live snapshot with fuzzy locations).\nFor true real-time integration, add X API fetch with a backend proxy.`);
     };
 
     // AI ghosts wander slowly

@@ -99,14 +99,19 @@
 </head>
 <body>
   <div id="map-container">
-  <div id="map"></div>
+    <div id="map"></div>
     <div class="header">
       <h1>RootDonate</h1>
       <button id="load">Load Live X Vibes</button>
     </div>
+    <div class="search">
+      <input id="keyword" type="text" placeholder="Search keyword (optional)"/>
+      <button id="search-btn">Search</button>
+    </div>
     <footer>
       <span id="status">Live X vibes • Jan 12 2026 ~19:53 GMT • @iandreme (Swagga Rico) • Carrick interim buzz heavy</span>
     </footer>
+  </div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     // ── Map Setup ────────────────────────────────────────────────
@@ -199,9 +204,8 @@
     );
 
     // Event listeners + auto-load
-    document.getElementById('load').onclick = () => {
-      loadVibes(document.getElementById('keyword').value);
-    };
+    document.getElementById('load').onclick = () => loadVibes();
+    document.getElementById('search-btn').onclick = () => loadVibes(document.getElementById('keyword').value);
 
     setTimeout(() => loadVibes(), 1500);
   </script>

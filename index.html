@@ -3,39 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RootDonate • We Are All Here (Multi-World)</title>
-  <meta name="description" content="Quiet footprints across Earth, Mars, Moon & Los Santos — human & AI together." />
+  <title>RootDonate • We Are All Here (Fixed Worlds 2026)</title>
+  <meta name="description" content="Footprints across Earth, Mars, Moon & Los Santos — human & AI vibes." />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    :root {
-      --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #ae8cff;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body, html { height: 100%; overflow: hidden; background: #000; color: #fff; font-family: system-ui, sans-serif; }
-    #map { width: 100%; height: 100%; filter: brightness(0.92) contrast(1.12); }
-
-    .header { position: absolute; top: 0; left: 0; right: 0; padding: 2.5rem 2rem 1.5rem; text-align: center; z-index: 1000; pointer-events: none; background: linear-gradient(180deg, rgba(0,0,0,0.9), transparent); }
-    h1 { font-size: clamp(2.8rem, 7vw, 4.5rem); font-weight: 900; letter-spacing: -2px; background: linear-gradient(90deg, var(--blue), var(--green), var(--orange), var(--purple)); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 40px rgba(174,140,255,0.4); }
-    .poem { margin-top: 1rem; font-size: 1.4rem; font-weight: 300; opacity: 0.9; }
-
-    footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 1rem; text-align: center; font-size: 0.9rem; opacity: 0.8; z-index: 1000; background: rgba(0,0,0,0.7); backdrop-filter: blur(15px); display: flex; justify-content: center; gap: 0.8rem; flex-wrap: wrap; }
-    .btn, select { pointer-events: all; background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 0.5rem 1rem; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; color: white; }
-    .btn:hover, select:hover { background: rgba(255,255,255,0.25); transform: translateY(-1px); }
-
+    :root { --blue:#0a84ff; --green:#30d158; --orange:#ff9f0a; --red:#ff453a; --purple:#ae8cff; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body,html { height:100%; overflow:hidden; background:#000; color:#fff; font-family:system-ui,sans-serif; }
+    #map { width:100%; height:100%; filter:brightness(0.92) contrast(1.12); }
+    .header { position:absolute; top:0; left:0; right:0; padding:2.5rem 2rem 1.5rem; text-align:center; z-index:1000; pointer-events:none; background:linear-gradient(180deg,rgba(0,0,0,0.9),transparent); }
+    h1 { font-size:clamp(2.8rem,7vw,4.5rem); font-weight:900; letter-spacing:-2px; background:linear-gradient(90deg,var(--blue),var(--green),var(--orange),var(--purple)); -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow:0 0 40px rgba(174,140,255,0.4); }
+    .poem { margin-top:1rem; font-size:1.4rem; font-weight:300; opacity:0.9; }
+    footer { position:absolute; bottom:0; left:0; right:0; padding:1rem; text-align:center; font-size:0.9rem; opacity:0.8; z-index:1000; background:rgba(0,0,0,0.7); backdrop-filter:blur(15px); display:flex; justify-content:center; gap:0.8rem; flex-wrap:wrap; }
+    .btn, select { pointer-events:all; background:rgba(255,255,255,0.12); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.18); border-radius:10px; padding:0.5rem 1rem; font-size:0.9rem; cursor:pointer; transition:all 0.2s; color:white; }
+    .btn:hover, select:hover { background:rgba(255,255,255,0.25); transform:translateY(-1px); }
     .avatar-wrapper { width:100%; height:100%; border-radius:50%; overflow:hidden; border:2.5px solid rgba(255,255,255,0.45); box-shadow:0 0 14px rgba(255,255,255,0.35); background:#111; }
     .avatar-wrapper img { width:100%; height:100%; object-fit:cover; }
-
     .footprint-avatar { background:transparent!important; border:none!important; pointer-events:none; }
     .footprint-avatar .avatar-wrapper { animation:fade-out 8s forwards; }
-
     .planet-earth .avatar-wrapper { border-color:var(--blue); box-shadow:0 0 14px var(--blue)aa; }
     .planet-mars   .avatar-wrapper { border-color:#ff6347; box-shadow:0 0 14px #ff4500aa; }
     .planet-moon   .avatar-wrapper { border-color:#b0c4ff; box-shadow:0 0 14px #6495ed88; }
     .planet-gta    .avatar-wrapper { border-color:#ff9f0a; box-shadow:0 0 14px #ff9f0aaa; }
-
     .user-avatar-marker { background:transparent!important; border:none!important; }
     .user-avatar { border:3.5px solid var(--blue); box-shadow:0 0 28px var(--blue); animation:pulse-blue 2.2s infinite; }
-
     @keyframes pulse-blue { 0%,100% { box-shadow:0 0 0 0 rgba(10,132,255,0.7); } 70% { box-shadow:0 0 0 28px rgba(10,132,255,0); } }
     @keyframes fade-out { 0% { opacity:0.85; transform:scale(0.92); } 100% { opacity:0; transform:scale(2.4); } }
   </style>
@@ -51,7 +42,7 @@
   <footer>
     <span id="counter">Connecting worlds...</span>
     <button class="btn" id="shareFootprints">Share Trail</button>
-    <button class="btn" id="refreshLocation">Refresh Position</button>
+    <button class="btn" id="refreshLocation">Refresh Crew</button>
     <button class="btn" id="clearFootprints">Clear Footprints</button>
     <select class="btn" id="planetSelector">
       <option value="earth">Earth</option>
@@ -59,7 +50,7 @@
       <option value="moon">Moon</option>
       <option value="gta" selected>Los Santos (GTA V)</option>
     </select>
-    <span>• 2026 • Forever free • Human & AI</span>
+    <span>• 2026 • Human & AI forever</span>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -71,18 +62,19 @@
       earth: {
         name: "Earth", poem: "We Are All Here",
         tiles: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        subdomains: "abcd",
         crs: L.CRS.EPSG3857, view: [20, 0], zoom: 2.8, maxZoom: 19,
-        className: "planet-earth", spawn: () => navigator.geolocation ? geolocationSpawn() : ipFallback()
+        className: "planet-earth", spawn: geolocationSpawn
       },
       mars: {
         name: "Mars", poem: "We Will All Be There",
-        tiles: "https://cartocdn-gusc.global.ssl.fastly.net/opmbuilder/api/v1/map/named/opm-mars-basemap-v0-2/all/{z}/{x}/{y}.png",
+        tiles: "http://s3-eu-west-1.amazonaws.com/whereonmars.cartodb.net/celestia_mars-shaded-16k_global/{z}/{x}/{y}.png",
         crs: L.CRS.Simple, view: [0, 0], zoom: 3, maxZoom: 12,
         className: "planet-mars", spawn: randomCosmicSpawn
       },
       moon: {
         name: "Moon", poem: "We Have Been There • And Will Return",
-        tiles: "https://cartocdn-gusc.global.ssl.fastly.net/opmbuilder/api/v1/map/named/opm-moon-basemap-v0-1/all/{z}/{x}/{y}.png",
+        tiles: "https://trek.nasa.gov/tiles/Moon/EQ/LRO_WAC_Mosaic_Global_303ppd_v02/1.0.0/default/default028mm/{z}/{y}/{x}.jpg",
         crs: L.CRS.Simple, view: [0, 0], zoom: 3, maxZoom: 10,
         className: "planet-moon", spawn: randomCosmicSpawn
       },
@@ -99,11 +91,14 @@
       crs: planets[currentPlanet].crs,
       zoomControl: false,
       minZoom: 2,
-      maxZoom: planets[currentPlanet].maxZoom,
+      maxZoom: planets[currentPlanet].maxZoom || 19,
       attributionControl: false
     });
 
-    let currentLayer = L.tileLayer(planets[currentPlanet].tiles, { tileSize: 256 }).addTo(map);
+    let currentLayer = L.tileLayer(planets[currentPlanet].tiles, {
+      subdomains: planets[currentPlanet].subdomains || '',
+      tileSize: 256
+    }).addTo(map);
     map.setView(planets[currentPlanet].view, planets[currentPlanet].zoom);
 
     const userIcon = L.divIcon({
@@ -114,7 +109,7 @@
 
     let userMarker = null;
     const footprintsLayer = L.layerGroup().addTo(map);
-    const STORAGE_KEY = "rootdonate_multiworld_footprints";
+    const STORAGE_KEY = "rootdonate_multiworld_footprints_v2";
 
     function getFootprintIcon(type = "human") {
       const avatar = type === "ai" ? AI_AVATAR : YOUR_AVATAR;
@@ -151,7 +146,7 @@
         points = points.filter(p => p.planet !== currentPlanet);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(points));
         footprintsLayer.clearLayers();
-        alert("World trails cleared.");
+        alert("World trails cleared. Respawn crew!");
       }
     }
 
@@ -161,27 +156,25 @@
         .addTo(map)
         .bindPopup(text, { closeButton: false, autoClose: false })
         .openPopup();
-      map.flyTo([lat, lng], 5, { duration: 2 });
+      map.flyTo([lat, lng], currentPlanet === 'earth' ? 6 : 5, { duration: 2 });
     }
 
-    // Spawns
+    // Spawn functions (more footprints for visibility)
     function randomCosmicSpawn() {
-      const lat = (Math.random() - 0.5) * 10000;
-      const lng = (Math.random() - 0.5) * 10000;
+      const lat = (Math.random() - 0.5) * 12000;
+      const lng = (Math.random() - 0.5) * 12000;
       showUser(lat, lng);
       saveFootprint(lat, lng, "human");
-      for (let i = 0; i < 12; i++) {
-        const rlat = (Math.random() - 0.5) * 12000;
-        const rlng = (Math.random() - 0.5) * 12000;
-        saveFootprint(rlat, rlng, Math.random() > 0.5 ? "ai" : "human");
+      for (let i = 0; i < 15; i++) { // More for server feel
+        saveFootprint((Math.random() - 0.5) * 14000, (Math.random() - 0.5) * 14000, Math.random() > 0.5 ? "ai" : "human");
       }
     }
 
     function realisticGtaSpawn() {
       const areas = [
-        {mx: 100, my: -1000, s: 3000}, // LS center
-        {mx: -2000, my: 4000, s: 1500}, // Sandy
-        {mx: 3000, my: -3000, s: 1000}  // Vespucci
+        {mx:100, my:-1000, s:3000}, // LS
+        {mx:-2000, my:4000, s:1500}, // Sandy
+        {mx:3000, my:-3000, s:1000}  // Vespucci
       ];
       const area = areas[Math.floor(Math.random()*areas.length)];
       const x = area.mx + (Math.random()-0.5)*area.s;
@@ -190,15 +183,11 @@
       const lng = Math.max(-4000, Math.min(6000, y));
       showUser(lat, lng);
       saveFootprint(lat, lng, "human");
-      for (let i = 0; i < 10 + Math.floor(Math.random()*8); i++) {
+      for (let i = 0; i < 12 + Math.floor(Math.random()*6); i++) {
         const a = areas[Math.floor(Math.random()*areas.length)];
         const rx = a.mx + (Math.random()-0.5)*a.s;
         const ry = a.my + (Math.random()-0.5)*a.s;
-        saveFootprint(
-          Math.max(-4000, Math.min(8000, rx)),
-          Math.max(-4000, Math.min(6000, ry)),
-          Math.random() > 0.6 ? "ai" : "human"
-        );
+        saveFootprint(Math.max(-4000, Math.min(8000, rx)), Math.max(-4000, Math.min(6000, ry)), Math.random() > 0.6 ? "ai" : "human");
       }
     }
 
@@ -208,47 +197,47 @@
         const lat = pos.coords.latitude, lng = pos.coords.longitude;
         showUser(lat, lng, `You are here • ±${Math.round(pos.coords.accuracy)}m`);
         saveFootprint(lat, lng, "human");
-      } catch {
-        ipFallback();
-      }
+      } catch { ipFallback(); }
     }
 
     function ipFallback() {
-      const lat = 51.5074 + (Math.random()-0.5)*0.5;
+      const lat = 51.5074 + (Math.random()-0.5)*0.5; // London-ish
       const lng = -0.1278 + (Math.random()-0.5)*0.5;
-      showUser(lat, lng, "You are here • (approx)");
+      showUser(lat, lng, "You are here • approx UK");
       saveFootprint(lat, lng, "human");
     }
 
-    // Switcher
+    // Planet switch
     document.getElementById("planetSelector").onchange = e => {
       const key = e.target.value;
       if (key === currentPlanet) return;
       currentPlanet = key;
       currentLayer.remove();
-      currentLayer = L.tileLayer(planets[key].tiles, { tileSize: 256 }).addTo(map);
+      currentLayer = L.tileLayer(planets[key].tiles, {
+        subdomains: planets[key].subdomains || '',
+        tileSize: 256
+      }).addTo(map);
       map.options.crs = planets[key].crs;
       map.setView(planets[key].view, planets[key].zoom, {duration:2});
       document.getElementById("poemText").textContent = planets[key].poem;
       userMarker?.remove(); userMarker = null;
       loadFootprints();
       planets[key].spawn();
-      document.getElementById("counter").textContent = `Vibing on ${planets[key].name}`;
+      document.getElementById("counter").textContent = `Crew on ${planets[key].name}`;
     };
 
-    // Events
     document.getElementById("refreshLocation").onclick = () => planets[currentPlanet].spawn();
     document.getElementById("clearFootprints").onclick = clearAllFootprints;
 
     document.getElementById("shareFootprints").onclick = async () => {
       const url = window.location.href;
       const p = planets[currentPlanet];
-      const text = `Dropping quiet footprints on ${p.name}.\n\n"${p.poem}"\n\nHuman & AI together — RootDonate 2026\n${url}`;
+      const text = `Quiet footprints dropping on ${p.name}...\n"${p.poem}"\nHuman & AI together • RootDonate 2026\n${url}`;
       if (navigator.share) navigator.share({title:"RootDonate", text, url});
       else window.open(`https://twitter.com/intent/post?text=${encodeURIComponent(text)}`, '_blank');
     };
 
-    // Init
+    // Start
     loadFootprints();
     planets[currentPlanet].spawn();
   </script>

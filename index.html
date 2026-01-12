@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RootDonate • Cosmic GTA V Server</title>
+  <title>RootDonate • Earth Server Footprints</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     :root { --blue:#0a84ff; --green:#30d158; --orange:#ff9f0a; --red:#ff453a; --purple:#ae8cff; }
@@ -14,39 +14,33 @@
     h1 { font-size:clamp(2.8rem,7vw,4.5rem); font-weight:900; letter-spacing:-2px; background:linear-gradient(90deg,var(--blue),var(--green),var(--orange),var(--purple)); -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow:0 0 40px rgba(174,140,255,0.4); }
     .poem { margin-top:1rem; font-size:1.4rem; font-weight:300; opacity:0.9; }
     footer { position:absolute; bottom:0; left:0; right:0; padding:1rem; text-align:center; font-size:0.9rem; opacity:0.8; z-index:1000; background:rgba(0,0,0,0.7); backdrop-filter:blur(15px); display:flex; justify-content:center; gap:0.8rem; flex-wrap:wrap; }
-    .btn, select { pointer-events:all; background:rgba(255,255,255,0.12); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.18); border-radius:10px; padding:0.5rem 1rem; font-size:0.9rem; cursor:pointer; transition:all 0s; color:white; }
-    .btn:hover, select:hover { background:rgba(255,255,255,0.25); transform:translateY(-1px); }
+    .btn { pointer-events:all; background:rgba(255,255,255,0.12); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.18); border-radius:10px; padding:0.5rem 1rem; font-size:0.9rem; cursor:pointer; transition:all 0.2s; color:white; }
+    .btn:hover { background:rgba(255,255,255,0.25); transform:translateY(-1px); }
     .avatar-wrapper { width:100%; height:100%; border-radius:50%; overflow:hidden; border:2.5px solid rgba(255,255,255,0.45); box-shadow:0 0 14px rgba(255,255,255,0.35); background:#111; }
     .avatar-wrapper img { width:100%; height:100%; object-fit:cover; }
     .footprint-avatar { background:transparent!important; border:none!important; pointer-events:none; }
-    .footprint-avatar .avatar-wrapper { animation:fade-out 0s forwards; }
-    .planet-earth .avatar-wrapper { border-color:var(--blue); box-shadow:0 0 14px var(--blue)aa; }
-    .planet-mars   .avatar-wrapper { border-color:#ff6347; box-shadow:0 0 14px #ff4500aa; }
-    .planet-moon   .avatar-wrapper { border-color:#b0c4ff; box-shadow:0 0 14px #6495ed88; }
-    .planet-gta    .avatar-wrapper { border-color:#ff9f0a; box-shadow:0 0 14px #ff9f0aaa; }
+    .footprint-avatar .avatar-wrapper { animation:fade-out 12s forwards; }
+    .earth-avatar .avatar-wrapper { border-color:var(--blue); box-shadow:0 0 14px var(--blue)aa; }
     .user-avatar-marker { background:transparent!important; border:none!important; }
-    .user-avatar { border:3.5px solid var(--blue); box-shadow:0 0 28px var(--blue); animation:pulse-blue 0s infinite; }
+    .user-avatar { border:3.5px solid var(--blue); box-shadow:0 0 28px var(--blue); animation:pulse-blue 4s infinite; }
     @keyframes pulse-blue { 0%,100% { box-shadow:0 0 0 0 rgba(10,132,255,0.7); } 70% { box-shadow:0 0 0 28px rgba(10,132,255,0); } }
-    @keyframes fade-out { 0% { opacity:0.85; transform:scale(0.92); } 100% { opacity:0; transform:scale(2.4); } }
+    @keyframes fade-out { 0% { opacity:0.9; transform:scale(1); } 100% { opacity:0; transform:scale(1.8); } }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
   <div class="header">
-    <h1>RootDonate Cosmic Server</h1>
+    <h1>RootDonate Earth Server</h1>
     <div class="poem" id="poemText">We Are All Here</div>
   </div>
 
   <footer>
-    <span id="counter">Crew connecting...</span>
+    <span id="counter">Server crew loading...</span>
     <button class="btn" id="shareFootprints">Share Trail</button>
     <button class="btn" id="refreshLocation">Respawn Crew</button>
     <button class="btn" id="clearFootprints">Clear Footprints</button>
-    <select class="btn" id="planetSelector">
-      <option value="earth">Earth</option>
-    </select>
-    <span>• 2026 • Human & AI merged</span>
+    <span>• 2026 • Human & AI live vibes</span>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -56,17 +50,8 @@
 
     const fakeNames = ["SwaggaRico", "BigSmoke420", "LamarDaSavage", "TrevorChaos", "FranklinOG", "AI_GhostBot", "CrewPhantom", "NoPixelLegend", "FiveMRunner"];
 
-    // Base is always Earth (EPSG3857), overlays/themes for other worlds
-    const baseTiles = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
-    const subdomains = "abcd";
-
-    // Overlay styles (for Mars/Moon/GTA feel)
-    const worldStyles = {
-      earth: { className: "planet-earth", poem: "We Are All Here", spawn: geolocationSpawn },
-    };
-
     const map = L.map('map', {
-      center: [51.5, -0.1], // UK-ish start
+      center: [51.5, -0.1],
       zoom: 6,
       minZoom: 2,
       maxZoom: 19,
@@ -74,7 +59,10 @@
       attributionControl: false
     });
 
-    L.tileLayer(baseTiles, { subdomains, tileSize: 256 }).addTo(map);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      subdomains: "abcd",
+      tileSize: 256
+    }).addTo(map);
 
     const userIcon = L.divIcon({
       className: "user-avatar-marker",
@@ -84,20 +72,20 @@
 
     let userMarker = null;
     const footprintsLayer = L.layerGroup().addTo(map);
-    const STORAGE_KEY = "rootdonate_cosmic_server";
+    const STORAGE_KEY = "rootdonate_earth_server";
 
-    function getFootprintIcon(type = "human", world = "earth") {
+    function getFootprintIcon(type = "human") {
       const avatar = type === "ai" ? AI_AVATAR : YOUR_AVATAR;
       return L.divIcon({
-        className: `footprint-avatar ${worldStyles[world].className}`,
+        className: `footprint-avatar earth-avatar`,
         html: `<div class="avatar-wrapper"><img src="${avatar}" alt="${type}"></div>`,
         iconSize: [40, 40], iconAnchor: [20, 20]
       });
     }
 
-    function addFootprint(lat, lng, type = "human", name = "", world = currentWorld) {
+    function addFootprint(lat, lng, type = "human", name = "") {
       const popup = name ? `${name} • ${type === "ai" ? "AI Ghost" : "Crew"}` : "";
-      const marker = L.marker([lat, lng], { icon: getFootprintIcon(type, world) }).addTo(footprintsLayer);
+      const marker = L.marker([lat, lng], { icon: getFootprintIcon(type) }).addTo(footprintsLayer);
       if (popup) marker.bindPopup(popup);
     }
 
@@ -105,27 +93,25 @@
       footprintsLayer.clearLayers();
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        JSON.parse(stored).forEach(p => addFootprint(p.lat, p.lng, p.type, p.name, p.world));
+        JSON.parse(stored).forEach(p => addFootprint(p.lat, p.lng, p.type, p.name));
       }
     }
 
-    function saveFootprint(lat, lng, type = "human", name = "", world = currentWorld) {
+    function saveFootprint(lat, lng, type = "human", name = "") {
       let points = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      points.push({ lat, lng, time: Date.now(), world, type, name });
+      points.push({ lat, lng, time: Date.now(), type, name });
       if (points.length > 300) points = points.slice(-300);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(points));
-      addFootprint(lat, lng, type, name, world);
+      addFootprint(lat, lng, type, name);
     }
 
     function clearAllFootprints() {
-      if (confirm("Wipe all cosmic footprints?")) {
+      if (confirm("Clear all server footprints?")) {
         localStorage.removeItem(STORAGE_KEY);
         footprintsLayer.clearLayers();
-        alert("Universe cleaned. Respawn crew!");
+        alert("Crew trails wiped. Fresh server!");
       }
     }
-
-    let currentWorld = 'gta';
 
     function showUser(lat, lng, text = "You are here • right now") {
       if (userMarker) userMarker.remove();
@@ -133,84 +119,64 @@
         .addTo(map)
         .bindPopup(text, { closeButton: false, autoClose: false })
         .openPopup();
-      map.flyTo([lat, lng], 6, { duration: 2.5 });
+      map.flyTo([lat, lng], 8, { duration: 2.5 });
     }
 
-    // Spawn crew in selected world style (positions always on Earth coords, but styled + named)
-    function randomCosmicSpawn() {
-      const lat = (Math.random() - 0.5) * 180;
-      const lng = (Math.random() - 0.5) * 360;
-      showUser(lat, lng, `You are here • ${worldStyles[currentWorld].name} vibes`);
-      saveFootprint(lat, lng, "human", "SwaggaRico", currentWorld);
-      for (let i = 0; i < 15; i++) {
-        const rlat = lat + (Math.random() - 0.5) * 40;
-        const rlng = lng + (Math.random() - 0.5) * 80;
-        const isAI = Math.random() > 0.5;
+    // Spawn live server crew around you
+    function spawnCrew() {
+      // Get current center or fallback
+      const center = map.getCenter();
+      const lat = center.lat;
+      const lng = center.lng;
+
+      showUser(lat, lng, "You are here • server leader");
+      saveFootprint(lat, lng, "human", "SwaggaRico");
+
+      // Spawn 15-25 crew members clustered nearby
+      const count = 15 + Math.floor(Math.random() * 10);
+      for (let i = 0; i < count; i++) {
+        const offsetLat = (Math.random() - 0.5) * 0.5; // ~50km spread
+        const offsetLng = (Math.random() - 0.5) * 1.0;
+        const crewLat = lat + offsetLat;
+        const crewLng = lng + offsetLng;
+        const isAI = Math.random() > 0.4;
         const name = fakeNames[Math.floor(Math.random() * fakeNames.length)];
-        saveFootprint(rlat, rlng, isAI ? "ai" : "human", name, currentWorld);
+        saveFootprint(crewLat, crewLng, isAI ? "ai" : "human", name);
       }
     }
 
-    function realisticGtaSpawn() {
-      const areas = [
-        {mx:51.5, my:-0.1, s:10}, // London-ish (Earth proxy for LS)
-        {mx:40, my:-74, s:5}, // NYC-ish
-        {mx:34, my:-118, s:5} // LA-ish
-      ];
-      const area = areas[Math.floor(Math.random()*areas.length)];
-      const lat = area.mx + (Math.random()-0.5)*area.s;
-      const lng = area.my + (Math.random()-0.5)*area.s;
-      showUser(lat, lng, "You are here • Los Santos kingpin");
-      saveFootprint(lat, lng, "human", "SwaggaRico", currentWorld);
-      for (let i = 0; i < 15 + Math.floor(Math.random()*10); i++) {
-        const a = areas[Math.floor(Math.random()*areas.length)];
-        const rlat = a.mx + (Math.random()-0.5)*a.s;
-        const rlng = a.my + (Math.random()-0.5)*a.s;
-        const isAI = Math.random() > 0.6;
-        const name = fakeNames[Math.floor(Math.random() * fakeNames.length)];
-        saveFootprint(rlat, rlng, isAI ? "ai" : "human", name, currentWorld);
-      }
-    }
-
-    async function geolocationSpawn() {
+    async function initPosition() {
       try {
         const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {enableHighAccuracy:true}));
         const lat = pos.coords.latitude, lng = pos.coords.longitude;
         showUser(lat, lng, `You are here • ±${Math.round(pos.coords.accuracy)}m`);
-        saveFootprint(lat, lng, "human", "SwaggaRico", currentWorld);
-      } catch { ipFallback(); }
+        spawnCrew(); // spawn around real pos
+      } catch {
+        ipFallback();
+      }
     }
 
     function ipFallback() {
       const lat = 51.5074 + (Math.random()-0.5)*0.5;
       const lng = -0.1278 + (Math.random()-0.5)*0.5;
       showUser(lat, lng, "You are here • approx UK");
-      saveFootprint(lat, lng, "human", "SwaggaRico", currentWorld);
+      spawnCrew();
     }
 
-    // World switch: change theme/style, respawn crew, keep base Earth map
-    document.getElementById("planetSelector").onchange = e => {
-      currentWorld = e.target.value;
-      document.getElementById("poemText").textContent = worldStyles[currentWorld].poem;
-      userMarker?.remove(); userMarker = null;
-      loadFootprints(); // Reload with new styles
-      worldStyles[currentWorld].spawn();
-      document.getElementById("counter").textContent = `Crew merged on ${worldStyles[currentWorld].name}`;
-    };
-
-    document.getElementById("refreshLocation").onclick = () => worldStyles[currentWorld].spawn();
+    // Events
+    document.getElementById("refreshLocation").onclick = spawnCrew;
     document.getElementById("clearFootprints").onclick = clearAllFootprints;
 
     document.getElementById("shareFootprints").onclick = async () => {
       const url = window.location.href;
-      const text = `Cosmic server footprints merged: Earth + Mars + Moon + Los Santos!\nHuman & AI crew together • RootDonate 2026\n${url}`;
-      if (navigator.share) navigator.share({title:"RootDonate Cosmic", text, url});
+      const text = `Live server footprints dropping on Earth!\nCrew vibing together • Human & AI • RootDonate 2026\n${url}`;
+      if (navigator.share) navigator.share({title:"RootDonate Server", text, url});
       else window.open(`https://twitter.com/intent/post?text=${encodeURIComponent(text)}`, '_blank');
     };
 
-    // Init
+    // Start
     loadFootprints();
-    worldStyles[currentWorld].spawn();
+    initPosition();
   </script>
 </body>
 </html>

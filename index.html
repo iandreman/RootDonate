@@ -198,6 +198,8 @@
     // Missing spawnCrew function — add your crew logic here or it won't spawn
     function spawnCrew(lat, lng) {
       // Example: add some AI footprints around you
+    addFootprint();
+    showUser();
       console.log("Spawning crew at", lat, lng);
       // saveFootprint(lat + 0.01, lng + 0.01, "ai", "Grok");
       // saveFootprint(lat - 0.01, lng - 0.01, "ai", "RootAI");

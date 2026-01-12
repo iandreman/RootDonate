@@ -2,341 +2,107 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RootDonate • AI + Live X Vibes on Earth</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RootDonate Mini • AI + X Vibes</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
-    :root {
-      --blue: #0a84ff;
-      --green: #30d158;
-      --orange: #ff9f0a;
-      --purple: #ae8cff;
-      --cyan: #00f5d4;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body, html { height: 100%; overflow: hidden; background: #000; color: #fff; font-family: system-ui, sans-serif; }
-    #map { width: 100%; height: 100%; filter: brightness(0.9) contrast(1.15); }
-    .header {
-      position: absolute; top: 0; left: 0; right: 0; padding: 2.5rem 2rem 1.5rem;
-      text-align: center; z-index: 1000; pointer-events: none;
-      background: linear-gradient(180deg, rgba(0,0,0,0.92), transparent);
-    }
-    h1 {
-      font-size: clamp(2.8rem, 7vw, 4.8rem); font-weight: 900; letter-spacing: -2.5px;
-      background: linear-gradient(90deg, var(--blue), var(--green), var(--orange), var(--purple), var(--cyan));
-      -webkit-background-clip: text; background-clip: text; color: transparent;
-      text-shadow: 0 0 50px rgba(0,245,212,0.4);
-    }
-    .poem { margin-top: 1.2rem; font-size: 1.5rem; font-weight: 300; opacity: 0.92; letter-spacing: 0.5px; }
-    footer {
-      position: absolute; bottom: 0; left: 0; right: 0; padding: 1.2rem;
-      text-align: center; font-size: 0.95rem; opacity: 0.85; z-index: 1000;
-      background: rgba(0,0,0,0.75); backdrop-filter: blur(18px);
-      display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;
-    }
-    .btn {
-      pointer-events: all; background: rgba(255,255,255,0.14);
-      backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 12px; padding: 0.6rem 1.3rem; font-size: 0.95rem;
-      cursor: pointer; transition: all 0.25s; color: white;
-    }
-    .btn:hover { background: rgba(255,255,255,0.28); transform: translateY(-2px); }
-    .avatar-wrapper {
-      width: 100%; height: 100%; border-radius: 50%; overflow: hidden;
-      border: 2.8px solid rgba(255,255,255,0.5); box-shadow: 0 0 16px rgba(255,255,255,0.4);
-      background: #111;
-    }
-    .avatar-wrapper img { width: 100%; height: 100%; object-fit: cover; }
-    .footprint-avatar { background: transparent !important; border: none !important; pointer-events: none; }
-    .earth-avatar .avatar-wrapper {
-      border-color: var(--cyan); box-shadow: 0 0 18px rgba(0,245,212,0.6);
-      animation: glow-cyan 4s infinite alternate;
-    }
-    @keyframes glow-cyan {
-      from { box-shadow: 0 0 18px rgba(0,245,212,0.6); }
-      to   { box-shadow: 0 0 32px rgba(0,245,212,0.9); }
-    }
-    .user-avatar { border: 4px solid var(--blue); box-shadow: 0 0 32px var(--blue); animation: pulse-blue 2.8s infinite; }
-    @keyframes pulse-blue {
-      0%,100% { box-shadow: 0 0 0 0 rgba(10,132,255,0.7); }
-      70%     { box-shadow: 0 0 0 32px rgba(10,132,255,0); }
-    }
-    .search-wave {
-      position: absolute; inset: 0; pointer-events: none; z-index: 500;
-      background: radial-gradient(circle at 50% 50%, rgba(0,245,212,0.12) 0%, transparent 70%);
-      animation: searchPulse 8s infinite; opacity: 0;
-    }
-    @keyframes searchPulse { 0%,100% { transform: scale(0.6); opacity: 0; } 50% { transform: scale(1.8); opacity: 0.3; } }
-    .search-box { 
-      position: absolute; top: 1rem; left: 50%; transform: translateX(-50%); z-index: 1001; pointer-events: all; 
-      background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); padding: 1rem; border-radius: 16px; 
-      border: 1px solid rgba(255,255,255,0.15); width: 90%; max-width: 500px; text-align: center; 
-    }
-    input, button { margin: 0.5rem; padding: 0.6rem 1rem; border-radius: 8px; border: none; }
-    input { width: 60%; background: rgba(255,255,255,0.1); color: white; }
+    body,html{margin:0;height:100%;background:#000;color:#fff;font-family:system-ui,sans-serif;overflow:hidden}
+    #map{height:100%}
+    .header{position:absolute;top:12px;left:0;right:0;text-align:center;pointer-events:none;z-index:1000}
+    h1{font-size:2.8rem;font-weight:900;letter-spacing:-1px;background:linear-gradient(90deg,#0af,#0f5,#f90); -webkit-background-clip:text;background-clip:text;color:transparent}
+    .search{position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:1001;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);padding:12px;border-radius:12px;border:1px solid #444;width:90%;max-width:420px;text-align:center}
+    input,button{padding:8px 12px;border:none;border-radius:6px;margin:6px}
+    input{width:65%;background:#222;color:#fff}
+    button{background:#1da1f2;color:#fff;cursor:pointer}
+    footer{position:absolute;bottom:0;left:0;right:0;padding:10px;background:rgba(0,0,0,0.8);text-align:center;font-size:0.9rem;z-index:1000}
   </style>
 </head>
 <body>
   <div id="map"></div>
-  <div class="search-wave" id="searchWave"></div>
-
-  <div class="search-box">
-    <h3>Find Nearby Real X Vibes (Jan 12 2026)</h3>
-    <input type="text" id="keywordInput" placeholder="e.g. carricks / vibes / uk / manchester (blank = ALL)" value="">
-    <button class="btn" id="huntXPosts">🔍 Load on Map</button>
-  </div>
 
   <div class="header">
-    <h1>RootDonate AI + X</h1>
-    <div class="poem" id="poemText">AI ghosts & real-time UK X crew searching Earth...</div>
+    <h1>RootDonate</h1>
+  </div>
+
+  <div class="search">
+    <input id="keyword" placeholder="carrick / vibes / uk / blank = all" value="">
+    <button id="load">Load X Vibes</button>
   </div>
 
   <footer>
-    <span id="counter">AI + live X hunting GPS...</span>
-    <button class="btn" id="shareFootprints">Share Trail</button>
-    <button class="btn" id="refreshLocation">Re-search GPS & Crew</button>
-    <button class="btn" id="clearFootprints">Clear Ghosts</button>
-    <span>• 2026 • UK Swagga Rico vibes • @iandreme</span>
+    <span id="status">AI + live X ghosts • UK 2026</span>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // ─── Config ───────────────────────────────────────────────────────
-    const YOUR_AVATAR = "https://pbs.twimg.com/profile_images/1452130026212765700/q9iBQMu8_400x400.jpg";
-
-    const AI_AVATARS = [
-      {name: "Grok", seed: "Grok-xAI"},
-      {name: "Claude", seed: "Claude-Anthropic"},
-      {name: "Gemini", seed: "Gemini-Google"},
-      {name: "RootAI", seed: "RootDonate"},
-      {name: "CrewBot", seed: "FutureCrew"}
-    ];
-
-    // ─── Map Setup ────────────────────────────────────────────────────
-    const map = L.map('map', {
-      center: [51.5, -0.1], zoom: 6, minZoom: 2, maxZoom: 19,
-      zoomControl: false, attributionControl: false
-    });
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd', maxZoom: 19
+    // ── Minimal Map ───────────────────────────────────────
+    const map = L.map('map').setView([51.507, -0.128], 11);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap & CARTO'
     }).addTo(map);
 
-    const userIcon = L.divIcon({
-      className: 'user-avatar-marker',
-      html: `<div class="avatar-wrapper user-avatar"><img src="${YOUR_AVATAR}" alt="You" onerror="this.src='https://i.pravatar.cc/150?u=you'"></div>`,
-      iconSize: [64, 64], iconAnchor: [32, 32]
+    // Your avatar
+    const youIcon = L.divIcon({
+      html: '<div style="width:56px;height:56px;border-radius:50%;overflow:hidden;border:3px solid #0af;box-shadow:0 0 12px #0af"><img src="https://pbs.twimg.com/profile_images/1452130026212765700/q9iBQMu8_400x400.jpg" style="width:100%;height:100%;object-fit:cover"></div>',
+      iconSize: [56,56], iconAnchor: [28,28], className: ''
     });
 
-    let userMarker = null;
-    const footprintsLayer = L.layerGroup().addTo(map);
-    const xPostsLayer = L.layerGroup().addTo(map);
-    const STORAGE_KEY = 'rootdonate_ai_gps_2026';
-    let watchId = null;
-    let ghostMarkers = [];
-    let currentLat = 51.5074, currentLng = -0.1278; // Default London
+    // Simple X post marker
+    const xIcon = L.divIcon({
+      html: '<div style="background:#000;border:2px solid #1da1f2;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#1da1f2;font-weight:bold">X</div>',
+      iconSize: [44,44], iconAnchor: [22,22], className: ''
+    });
 
-    // ─── Icons & Markers ──────────────────────────────────────────────
-    function getAIFootprintIcon(seed) {
-      const url = `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(seed)}&backgroundColor=1a2533&radius=50`;
-      return L.divIcon({
-        className: 'footprint-avatar earth-avatar',
-        html: `<div class="avatar-wrapper"><img src="${url}" alt="AI"></div>`,
-        iconSize: [48, 48], iconAnchor: [24, 24]
-      });
-    }
+    const postsLayer = L.layerGroup().addTo(map);
+    let youMarker = null;
 
-    function addFootprint(lat, lng, type = 'human', name = '', isGhost = false) {
-      const icon = type === 'ai' ? getAIFootprintIcon(name || 'AI') : userIcon;
-      const marker = L.marker([lat, lng], { icon }).addTo(footprintsLayer);
-      if (name) marker.bindPopup(`${name} • ${type === 'ai' ? 'AI Ghost' : 'Crew'}`);
-      saveFootprint(lat, lng, type, name);
-      if (isGhost) ghostMarkers.push({marker, baseLat: lat, baseLng: lng});
-      return marker;
-    }
-
-    function addXPostMarker(lat, lng, username, text, tweetUrl) {
-      const xIcon = L.divIcon({
-        className: 'x-post-marker',
-        html: `<div style="background:#000;border:2px solid #1DA1F2;border-radius:50%;width:50px;height:50px;display:flex;align-items:center;justify-content:center;color:#1DA1F2;font-weight:bold;">X</div>`,
-        iconSize: [50, 50], iconAnchor: [25, 25]
-      });
-      const popupContent = `
-        <b>@${username}</b><br>
-        ${text.substring(0, 120)}${text.length > 120 ? '...' : ''}<br>
-        <a href="${tweetUrl}" target="_blank" style="color:#1DA1F2;">View on X →</a>
-      `;
-      L.marker([lat, lng], { icon: xIcon }).addTo(xPostsLayer)
-        .bindPopup(popupContent);
-    }
-
-    // ─── Storage ──────────────────────────────────────────────────────
-    function loadFootprints() {
-      footprintsLayer.clearLayers(); ghostMarkers = [];
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) JSON.parse(stored).forEach(p => addFootprint(p.lat, p.lng, p.type, p.name, p.type === 'ai'));
-    }
-
-    function saveFootprint(lat, lng, type = 'human', name = '') {
-      let points = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      points.push({ lat, lng, time: Date.now(), type, name });
-      if (points.length > 500) points = points.slice(-500);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(points));
-    }
-
-    function clearAllFootprints() {
-      if (confirm('Erase all AI ghosts & trails?')) {
-        localStorage.removeItem(STORAGE_KEY);
-        footprintsLayer.clearLayers(); ghostMarkers = [];
-        alert('Reality reset. Fresh search begins!');
-      }
-    }
-
-    // ─── User Location ────────────────────────────────────────────────
-    function showUser(lat, lng, acc = null, text = 'You • live locked') {
-      currentLat = lat; currentLng = lng;
-      if (userMarker) userMarker.remove();
-      userMarker = L.marker([lat, lng], { icon: userIcon })
-        .addTo(map)
-        .bindPopup(acc ? `${text} (±${Math.round(acc)}m)` : text, { closeButton: false, autoClose: false })
-        .openPopup();
-      map.flyTo([lat, lng], 15, { duration: 2.2 });
-    }
-
-    function startAISearch() {
-      if (watchId) navigator.geolocation.clearWatch(watchId);
-      document.getElementById('searchWave').style.opacity = '1';
-      document.getElementById('poemText').textContent = "AI searching live position...";
-      document.getElementById('counter').textContent = "AI hunting fresh coordinates...";
-
-      const options = { enableHighAccuracy: true, timeout: 35000, maximumAge: 0 };
-      let bestAcc = Infinity;
-
-      watchId = navigator.geolocation.watchPosition(
-        (pos) => {
-          const acc = pos.coords.accuracy;
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-
-          if (acc < bestAcc) {
-            bestAcc = acc;
-            showUser(lat, lng, acc, 'AI improving lock...');
-          }
-
-          if (acc <= 45) {
-            showUser(lat, lng, acc, 'Locked • AI crew incoming!');
-            spawnAICrew(lat, lng);
-            document.getElementById('searchWave').style.opacity = '0';
-            document.getElementById('poemText').textContent = "We Are All Here • AI ghosts awakened";
-            navigator.geolocation.clearWatch(watchId);
-            watchId = null;
-          }
-        },
-        (err) => {
-          document.getElementById('counter').textContent = `Search error: ${err.message}`;
-          ipFallback();
-        },
-        options
-      );
-    }
-
-    function ipFallback() {
-      const lat = 51.5074 + (Math.random() - 0.5) * 0.1;
-      const lng = -0.1278 + (Math.random() - 0.5) * 0.1;
-      showUser(lat, lng, null, 'Approx UK • GPS search failed');
-      spawnAICrew(lat, lng);
-    }
-
-    function spawnAICrew(lat, lng) {
-      ghostMarkers.forEach(g => g.marker.remove());
-      ghostMarkers = [];
-
-      AI_AVATARS.forEach(ai => {
-        const offsetLat = (Math.random() - 0.5) * 0.015;
-        const offsetLng = (Math.random() - 0.5) * 0.022;
-        addFootprint(lat + offsetLat, lng + offsetLng, 'ai', ai.name, true);
-      });
-      document.getElementById('counter').textContent = `${AI_AVATARS.length} fresh AI ghosts spawned nearby`;
-    }
-
-    // ─── Real Recent X Posts (Jan 12 2026 ~17:00 GMT - UK / MUFC / Vibes / Mood) ───────
-    const realXPosts = [
-      { username: "LeModFootball", text: "From the trusty YT clips he looks a little awkward & raw technically, but an incredibly powerful runner... (Muamba vibes) Will add much needed variety...", tweetUrl: "https://x.com/LeModFootball/status/2010757458025701403" },
-      { username: "CrazyVibes_1", text: "Thirteen years ago I was installing radiology systems... We’re still married. Still ridiculous. And I still have that gold dress...", tweetUrl: "https://x.com/CrazyVibes_1/status/2010757200197861550" },
-      { username: "keonnhoo", text: "Late night cartalk with hyung just hits different, backseat, fake stars glowing above us... vibes are fully brewed anyway.", tweetUrl: "https://x.com/keonnhoo/status/2010757129192554712" },
-      { username: "Amna_khan092", text: "Happy night", tweetUrl: "https://x.com/Amna_khan092/status/2010756914473550206" },
-      { username: "Zoni_vibes", text: "Have a Peaceful Night 🌃 See you tomorrow, God Bless You", tweetUrl: "https://x.com/Zoni_vibes/status/2010756472385286326" },
-      { username: "BenMUFC8", text: "I really like Carrick and happy for him to get job but if this is true then it’s concerning... Players dictating the manager is not right", tweetUrl: "https://x.com/BenMUFC8/status/2010757642986070489" },
-      { username: "IhamOlamilekan", text: "They sacked a title-winning manager just to partially replace him with a guy who couldn’t even get Middlesbrough out... They’ve finally found their “yes sir” manager.", tweetUrl: "https://x.com/IhamOlamilekan/status/2010757641744605377" },
-      { username: "mickyworld37290", text: "Michael Carrick is the favourite as Manchester United move closer to naming their interim boss.", tweetUrl: "https://x.com/mickyworld37290/status/2010757627488170489" },
-      { username: "yasssutd", text: "United 'legend' and all that pr down the drain. Let's go Carrick", tweetUrl: "https://x.com/yasssutd/status/2010757619321807210" },
-      { username: "HalfSpace_Genie", text: "Carrick has the offensive players (Bruno, Amad, Mbeumo) to thrive... Fail at those and we’d be playing basketball the rest of the season", tweetUrl: "https://x.com/HalfSpace_Genie/status/2010757619321807210" },
-      { username: "OpineOh", text: "For context this is the general mood in the UK right now.", tweetUrl: "https://x.com/OpineOh/status/2010351225242591689" },
-      { username: "thobbsjourno", text: "there's a palpable sense of anger in the uk right now. it's simmering in the background all the time...", tweetUrl: "https://x.com/thobbsjourno/status/2010648402388803947" }
-      // Feel free to add more from the fetched data if you want to expand!
+    // Fake "live" posts (replace with real API later)
+    const samplePosts = [
+      {u:"BenMUFC8", t:"Carrick yes but players dictating manager? Concerning...", url:"https://x.com/BenMUFC8/status/2010757642986070489"},
+      {u:"mickyworld37290", t:"Michael Carrick favourite for United interim", url:"https://x.com/mickyworld37290/status/2010757627488170489"},
+      {u:"yasssutd", t:"Let’s go Carrick 🇬🇧🔴", url:"https://x.com/yasssutd/status/2010757619321807210"},
+      {u:"thobbsjourno", t:"palpable anger simmering in the UK right now...", url:"https://x.com/thobbsjourno/status/2010648402388803947"},
+      {u:"CrazyVibes_1", t:"Thirteen years married and still ridiculous vibes", url:"https://x.com/CrazyVibes_1/status/2010757200197861550"}
     ];
 
-    function loadXPostsToMap(keyword) {
-      xPostsLayer.clearLayers();
-      const lowerKeyword = keyword.toLowerCase().trim();
-      const filteredPosts = lowerKeyword 
-        ? realXPosts.filter(post => post.text.toLowerCase().includes(lowerKeyword))
-        : realXPosts;  // ALL when blank
-
-      filteredPosts.forEach(post => {
-        const offsetLat = (Math.random() - 0.5) * 0.025;
-        const offsetLng = (Math.random() - 0.5) * 0.035;
-        addXPostMarker(currentLat + offsetLat, currentLng + offsetLng, post.username, post.text, post.tweetUrl);
-      });
-
-      document.getElementById('counter').textContent = `${filteredPosts.length} real live X posts loaded near you`;
-      if (filteredPosts.length === 0) {
-        alert(`No matches for "${keyword}". Leave blank for all recent UK/MUFC vibes!`);
-      }
+    function showYou(lat,lng) {
+      if (youMarker) youMarker.remove();
+      youMarker = L.marker([lat,lng], {icon:youIcon}).addTo(map)
+        .bindPopup("You • Swagga Rico", {autoClose:false}).openPopup();
+      map.flyTo([lat,lng], 13, {duration:1.5});
     }
 
-    document.getElementById('huntXPosts').onclick = () => {
-      const keyword = document.getElementById('keywordInput').value.trim();
-      loadXPostsToMap(keyword);
-      alert(`Loaded real-time X posts from today (Jan 12 2026)${keyword ? ` matching "${keyword}"` : ' — full snapshot'}. MUFC Carrick buzz + UK mood heavy right now! For true live streaming → backend + X API v2 needed.`);
-    };
+    function addPost(lat,lng,username,text,url) {
+      const marker = L.marker([lat,lng], {icon:xIcon}).addTo(postsLayer);
+      marker.bindPopup(`<b>@${username}</b><br>${text.slice(0,90)}${text.length>90?'...':''}<br><a href="${url}" target="_blank" style="color:#1da1f2">→ X</a>`);
+    }
 
-    // AI ghosts wander slowly
-    setInterval(() => {
-      ghostMarkers.forEach(g => {
-        const wander = (Math.random() - 0.5) * 0.004;
-        const newLat = g.baseLat + wander;
-        const newLng = g.baseLng + wander * 1.4;
-        g.marker.setLatLng([newLat, newLng]);
-        g.baseLat = newLat; g.baseLng = newLng;
+    function loadVibes(keyword='') {
+      postsLayer.clearLayers();
+      const q = keyword.toLowerCase().trim();
+      const filtered = q ? samplePosts.filter(p => p.t.toLowerCase().includes(q) || p.u.toLowerCase().includes(q)) : samplePosts;
+
+      filtered.forEach(p => {
+        const off = (Math.random()-0.5)*0.04;
+        addPost(51.507 + off, -0.128 + off*1.4, p.u, p.t, p.url);
       });
-    }, 45000 + Math.random() * 45000);
 
-    // ─── Button Handlers ──────────────────────────────────────────────
-    document.getElementById('refreshLocation').onclick = startAISearch;
+      document.getElementById('status').textContent = `${filtered.length} X vibes loaded near you`;
+    }
 
-    document.getElementById('clearFootprints').onclick = clearAllFootprints;
+    // Try GPS, fallback to London
+    navigator.geolocation.getCurrentPosition(
+      pos => showYou(pos.coords.latitude, pos.coords.longitude),
+      () => showYou(51.507, -0.128)
+    );
 
-    document.getElementById('shareFootprints').onclick = async () => {
-      const url = window.location.href;
-      const text = `AI + live real X vibes on Earth! (Carrick to United? UK mood check)\nGhost crew locked • RootDonate 2026\n${url}`;
-      if (navigator.share) {
-        navigator.share({title: 'RootDonate AI + X Search', text, url});
-      } else {
-        window.open(`https://x.com/intent/post?text=${encodeURIComponent(text)}`, '_blank');
-      }
+    // Buttons
+    document.getElementById('load').onclick = () => {
+      loadVibes(document.getElementById('keyword').value);
     };
 
-    // Optional init sample post
-    setTimeout(() => {
-      addXPostMarker(51.5074 + 0.012, -0.1278 + 0.018, "iandreme", "Current UK + MUFC vibes? Carrick incoming? 🇬🇧🔴", "https://x.com/iandreme/status/1452130026212765700");
-    }, 3000);
-
-    // ─── Init ─────────────────────────────────────────────────────────
-    loadFootprints();
-    startAISearch();
-    setTimeout(() => map.invalidateSize(), 500);
+    // Auto load once
+    setTimeout(() => loadVibes(), 1200);
   </script>
 </body>
 </html>

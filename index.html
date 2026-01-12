@@ -107,28 +107,6 @@
     <footer>
       <span id="status">Live X vibes • Jan 12 2026 ~19:53 GMT • @iandreme (Swagga Rico) • Carrick interim buzz heavy</span>
     </footer>
-  </div>
-  <div id="sdk-example" style="max-width: 900px; margin: 2rem auto; padding: 0 1rem; background: #0d1117; color: #c9d1d9;">
-    <h2>xAI Grok SDK – Weekly News Digest Example</h2>
-    <pre><code><span class="keyword">import</span> os
-
-<span class="keyword">from</span> xai_sdk <span class="keyword">import</span> Client
-<span class="keyword">from</span> xai_sdk.chat <span class="keyword">import</span> user
-<span class="keyword">from</span> xai_sdk.search <span class="keyword">import</span> SearchParameters
-
-client = Client(api_key=os.getenv(<span class="string">"xai-https://rootdonate.co.uk/@"</span>))
-
-chat = client.chat.create(
-    model=<span class="string">"grok-4"</span>,
-    search_parameters=SearchParameters(mode=<span class="string">"auto"</span>),
-)
-
-chat.append(user(<span class="string">"Provide me a digest of world news of the week before July 9, 2025."</span>))
-
-response = chat.sample()
-<span class="keyword">print</span>(response.content)
-</code></pre>
-  </div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     // ── Map Setup ────────────────────────────────────────────────

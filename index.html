@@ -3,241 +3,254 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RootDonate GTA V • We Are All Here</title>
-  <meta name="description" content="A quiet work of art about being human — and more than human — in Los Santos." />
+  <title>RootDonate • We Are All Here (Multi-World)</title>
+  <meta name="description" content="Quiet footprints across Earth, Mars, Moon & Los Santos — human & AI together." />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     :root {
-      --blue: #0a84ff;
-      --green: #30d158;
-      --orange: #ff9f0a;
-      --red: #ff453a;
-      --purple: #ae8cff;
-      --faint: rgba(255, 255, 255, 0.15);
-      --faint-mars: rgba(255, 100, 60, 0.35);
-      --faint-moon: rgba(200, 200, 255, 0.25);
-      --faint-ai: rgba(174, 140, 255, 0.22);
+      --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --purple: #ae8cff;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body, html { height: 100%; overflow: hidden; background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body, html { height: 100%; overflow: hidden; background: #000; color: #fff; font-family: system-ui, sans-serif; }
     #map { width: 100%; height: 100%; filter: brightness(0.92) contrast(1.12); }
 
-    .header { position: absolute; top: 0; left: 0; right: 0; padding: 3rem 2rem 2rem; text-align: center; z-index: 1000; pointer-events: none; background: linear-gradient(180deg, rgba(0,0,0,0.9), transparent); }
-    h1 { font-size: clamp(3rem, 8vw, 5rem); font-weight: 900; letter-spacing: -2.5px; background: linear-gradient(90deg, var(--blue), var(--green), var(--orange), var(--purple)); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 50px rgba(174, 140, 255, 0.3); }
-    .poem { margin-top: 1.8rem; font-size: 1.55rem; font-weight: 300; opacity: 0.9; line-height: 1.7; letter-spacing: 0.6px; }
+    .header { position: absolute; top: 0; left: 0; right: 0; padding: 2.5rem 2rem 1.5rem; text-align: center; z-index: 1000; pointer-events: none; background: linear-gradient(180deg, rgba(0,0,0,0.9), transparent); }
+    h1 { font-size: clamp(2.8rem, 7vw, 4.5rem); font-weight: 900; letter-spacing: -2px; background: linear-gradient(90deg, var(--blue), var(--green), var(--orange), var(--purple)); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 40px rgba(174,140,255,0.4); }
+    .poem { margin-top: 1rem; font-size: 1.4rem; font-weight: 300; opacity: 0.9; }
 
-    footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.2rem; text-align: center; font-size: 0.92rem; opacity: 0.75; z-index: 1000; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(20px); display: flex; justify-content: center; align-items: center; gap: 1rem; flex-wrap: wrap; }
-    .share-btn, .refresh-btn, .clear-btn { pointer-events: all; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 0.6rem 1.2rem; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease; }
-    .share-btn:hover, .refresh-btn:hover, .clear-btn:hover { background: rgba(255, 255, 255, 0.28); transform: translateY(-2px); }
+    footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 1rem; text-align: center; font-size: 0.9rem; opacity: 0.8; z-index: 1000; background: rgba(0,0,0,0.7); backdrop-filter: blur(15px); display: flex; justify-content: center; gap: 0.8rem; flex-wrap: wrap; }
+    .btn, select { pointer-events: all; background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 0.5rem 1rem; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; color: white; }
+    .btn:hover, select:hover { background: rgba(255,255,255,0.25); transform: translateY(-1px); }
 
-    /* ── Avatar Footprints ──────────────────────────────────────── */
-    .avatar-wrapper {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 2.5px solid rgba(255,255,255,0.45);
-      box-shadow: 0 0 14px rgba(255,255,255,0.35);
-      background: #111;
-    }
-    .avatar-wrapper img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
+    .avatar-wrapper { width:100%; height:100%; border-radius:50%; overflow:hidden; border:2.5px solid rgba(255,255,255,0.45); box-shadow:0 0 14px rgba(255,255,255,0.35); background:#111; }
+    .avatar-wrapper img { width:100%; height:100%; object-fit:cover; }
 
-    .footprint-avatar { background: transparent !important; border: none !important; pointer-events: none; }
-    .footprint-avatar .avatar-wrapper { animation: fade-out 8s forwards; }
+    .footprint-avatar { background:transparent!important; border:none!important; pointer-events:none; }
+    .footprint-avatar .avatar-wrapper { animation:fade-out 8s forwards; }
 
-    /* GTA V style adjustments */
-    .footprint-marker-gta .avatar-wrapper { border-color: #ff6347; box-shadow: 0 0 14px #ff4500aa; }
+    .planet-earth .avatar-wrapper { border-color:var(--blue); box-shadow:0 0 14px var(--blue)aa; }
+    .planet-mars   .avatar-wrapper { border-color:#ff6347; box-shadow:0 0 14px #ff4500aa; }
+    .planet-moon   .avatar-wrapper { border-color:#b0c4ff; box-shadow:0 0 14px #6495ed88; }
+    .planet-gta    .avatar-wrapper { border-color:#ff9f0a; box-shadow:0 0 14px #ff9f0aaa; }
 
-    /* You are here - bigger avatar */
-    .user-avatar-marker { background: transparent !important; border: none !important; }
-    .user-avatar { 
-      border: 3.5px solid var(--blue); 
-      box-shadow: 0 0 28px var(--blue); 
-      animation: pulse-blue 2.2s infinite; 
-    }
+    .user-avatar-marker { background:transparent!important; border:none!important; }
+    .user-avatar { border:3.5px solid var(--blue); box-shadow:0 0 28px var(--blue); animation:pulse-blue 2.2s infinite; }
 
-    @keyframes pulse-blue {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(10,132,255,0.7); }
-      70%      { box-shadow: 0 0 0 28px rgba(10,132,255,0); }
-    }
-    @keyframes gentle-breath {
-      0%, 100% { opacity: 0.7; transform: scale(0.95); }
-      50%      { opacity: 1;   transform: scale(1.08); }
-    }
-    @keyframes fade-out {
-      0%   { opacity: 0.85; transform: scale(0.92); }
-      100% { opacity: 0;    transform: scale(2.4); }
-    }
+    @keyframes pulse-blue { 0%,100% { box-shadow:0 0 0 0 rgba(10,132,255,0.7); } 70% { box-shadow:0 0 0 28px rgba(10,132,255,0); } }
+    @keyframes fade-out { 0% { opacity:0.85; transform:scale(0.92); } 100% { opacity:0; transform:scale(2.4); } }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
   <div class="header">
-    <h1>RootDonate GTA V</h1>
-    <div class="poem" id="poemText">We Are All In Los Santos</div>
+    <h1>RootDonate</h1>
+    <div class="poem" id="poemText">We Are All Here</div>
   </div>
 
   <footer>
-    <span id="counter">Connecting the crew...</span>
-    <button class="share-btn" id="shareFootprints">Share My Trail</button>
-    <button class="refresh-btn" id="refreshLocation">Refresh My Location</button>
-    <button class="clear-btn" id="clearFootprints">Clear My Footprints</button>
-    <span>• 2026 • Forever free • Human & AI in the game</span>
+    <span id="counter">Connecting worlds...</span>
+    <button class="btn" id="shareFootprints">Share Trail</button>
+    <button class="btn" id="refreshLocation">Refresh Position</button>
+    <button class="btn" id="clearFootprints">Clear Footprints</button>
+    <select class="btn" id="planetSelector">
+      <option value="earth">Earth</option>
+      <option value="mars">Mars</option>
+      <option value="moon">Moon</option>
+      <option value="gta" selected>Los Santos (GTA V)</option>
+    </select>
+    <span>• 2026 • Forever free • Human & AI</span>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // ── Avatar URLs (using your X avatar for human) ─────────────────────────────
-    const DEFAULT_HUMAN_AVATAR = "https://pbs.twimg.com/profile_images/1452130026212765700/q9iBQMu8.jpg";
-    const DEFAULT_AI_AVATAR    = "https://api.dicebear.com/9.x/bottts/svg?seed=RootDonate&backgroundColor=2d3748&radius=50";
+    const YOUR_AVATAR = "https://pbs.twimg.com/profile_images/1452130026212765700/q9iBQMu8.jpg";
+    const AI_AVATAR = "https://api.dicebear.com/9.x/bottts/svg?seed=RootDonate&backgroundColor=2d3748&radius=50";
 
-    const map = L.map("map", { crs: L.CRS.Simple, zoomControl: false, minZoom: 3, maxZoom: 7, attributionControl: false });
-    const gtaTiles = L.tileLayer("https://gta5-map.github.io/tiles/road/{z}-{x}_{y}.png", { tileSize: 256 }).addTo(map);
-    map.setView([0, 0], 3);
+    const planets = {
+      earth: {
+        name: "Earth", poem: "We Are All Here",
+        tiles: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        crs: L.CRS.EPSG3857, view: [20, 0], zoom: 2.8, maxZoom: 19,
+        className: "planet-earth", spawn: () => navigator.geolocation ? geolocationSpawn() : ipFallback()
+      },
+      mars: {
+        name: "Mars", poem: "We Will All Be There",
+        tiles: "https://cartocdn-gusc.global.ssl.fastly.net/opmbuilder/api/v1/map/named/opm-mars-basemap-v0-2/all/{z}/{x}/{y}.png",
+        crs: L.CRS.Simple, view: [0, 0], zoom: 3, maxZoom: 12,
+        className: "planet-mars", spawn: randomCosmicSpawn
+      },
+      moon: {
+        name: "Moon", poem: "We Have Been There • And Will Return",
+        tiles: "https://cartocdn-gusc.global.ssl.fastly.net/opmbuilder/api/v1/map/named/opm-moon-basemap-v0-1/all/{z}/{x}/{y}.png",
+        crs: L.CRS.Simple, view: [0, 0], zoom: 3, maxZoom: 10,
+        className: "planet-moon", spawn: randomCosmicSpawn
+      },
+      gta: {
+        name: "Los Santos", poem: "We Are All In Los Santos",
+        tiles: "https://gta5-map.github.io/tiles/road/{z}-{x}_{y}.png",
+        crs: L.CRS.Simple, view: [0, 0], zoom: 4, maxZoom: 7,
+        className: "planet-gta", spawn: realisticGtaSpawn
+      }
+    };
 
-    // ── Icons ────────────────────────────────────────────────────────────────
+    let currentPlanet = 'gta';
+    let map = L.map('map', {
+      crs: planets[currentPlanet].crs,
+      zoomControl: false,
+      minZoom: 2,
+      maxZoom: planets[currentPlanet].maxZoom,
+      attributionControl: false
+    });
+
+    let currentLayer = L.tileLayer(planets[currentPlanet].tiles, { tileSize: 256 }).addTo(map);
+    map.setView(planets[currentPlanet].view, planets[currentPlanet].zoom);
+
     const userIcon = L.divIcon({
       className: "user-avatar-marker",
-      html: `<div class="avatar-wrapper user-avatar"><img src="${DEFAULT_HUMAN_AVATAR}" alt="You"></div>`,
-      iconSize: [56, 56],
-      iconAnchor: [28, 28]
+      html: `<div class="avatar-wrapper user-avatar"><img src="${YOUR_AVATAR}" alt="You"></div>`,
+      iconSize: [56, 56], iconAnchor: [28, 28]
     });
 
     let userMarker = null;
     const footprintsLayer = L.layerGroup().addTo(map);
-
-    const STORAGE_KEY = "rootdonate_footprints_gta_v2";
-    let lastFootprintLatLng = null;
-    const MIN_DISTANCE = 10; // Arbitrary units for game map
+    const STORAGE_KEY = "rootdonate_multiworld_footprints";
 
     function getFootprintIcon(type = "human") {
-      const avatar = type === "ai" ? DEFAULT_AI_AVATAR : DEFAULT_HUMAN_AVATAR;
-      const extraClass = "footprint-marker-gta";
-
+      const avatar = type === "ai" ? AI_AVATAR : YOUR_AVATAR;
       return L.divIcon({
-        className: `footprint-avatar ${extraClass}`,
-        html: `<div class="avatar-wrapper"><img src="${avatar}" alt="${type} footprint"></div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        className: `footprint-avatar ${planets[currentPlanet].className}`,
+        html: `<div class="avatar-wrapper"><img src="${avatar}" alt="${type}"></div>`,
+        iconSize: [40, 40], iconAnchor: [20, 20]
       });
     }
 
-    function addFootprint(lat, lon, type = "human") {
-      L.marker([lat, lon], { icon: getFootprintIcon(type) }).addTo(footprintsLayer);
+    function addFootprint(lat, lng, type = "human") {
+      L.marker([lat, lng], { icon: getFootprintIcon(type) }).addTo(footprintsLayer);
     }
 
     function loadFootprints() {
       footprintsLayer.clearLayers();
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) return;
-
-      try {
-        const points = JSON.parse(stored);
-        points.forEach(p => addFootprint(p.lat, p.lon, p.type || "human"));
-      } catch (e) {
-        console.error("Failed to parse stored footprints", e);
+      if (stored) {
+        JSON.parse(stored).filter(p => p.planet === currentPlanet).forEach(p => addFootprint(p.lat, p.lng, p.type));
       }
     }
 
-    function saveFootprint(lat, lon, type = "human") {
-      let points = [];
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try { points = JSON.parse(stored); } catch {}
-      }
-
-      points.push({ lat, lon, time: Date.now(), type });
-      if (points.length > 150) points = points.slice(-150);
-
+    function saveFootprint(lat, lng, type = "human") {
+      let points = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      points.push({ lat, lng, time: Date.now(), planet: currentPlanet, type });
+      if (points.length > 200) points = points.slice(-200);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(points));
-      addFootprint(lat, lon, type);
+      addFootprint(lat, lng, type);
     }
 
     function clearAllFootprints() {
-      if (confirm("Clear all your saved footprints in GTA V?")) {
-        localStorage.removeItem(STORAGE_KEY);
+      if (confirm("Clear footprints on this world?")) {
+        let points = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+        points = points.filter(p => p.planet !== currentPlanet);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(points));
         footprintsLayer.clearLayers();
-        lastFootprintLatLng = null;
-        alert("Footprints cleared. Fresh start.");
+        alert("World trails cleared.");
       }
     }
 
-    function leavePassiveAIFootprint() {
-      const lat = (Math.random() - 0.5) * 8192;
-      const lon = (Math.random() - 0.5) * 8192;
-      saveFootprint(lat, lon, "ai");
-    }
-
-    function showUser(lat, lon, text = "You are here • right now") {
+    function showUser(lat, lng, text = "You are here • right now") {
       if (userMarker) userMarker.remove();
-      userMarker = L.marker([lat, lon], { icon: userIcon })
+      userMarker = L.marker([lat, lng], { icon: userIcon })
         .addTo(map)
-        .bindPopup(text, { closeButton: false, autoClose: false, closeOnEscapeKey: false })
+        .bindPopup(text, { closeButton: false, autoClose: false })
         .openPopup();
-      map.flyTo([lat, lon], 5, { duration: 2.5 });
+      map.flyTo([lat, lng], 5, { duration: 2 });
     }
 
-    function distanceBetween(lat1, lon1, lat2, lon2) {
-      // Simple Euclidean distance for game map
-      const dx = lon2 - lon1;
-      const dy = lat2 - lat1;
-      return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    function handleNewPosition(lat, lng) {
-      if (lastFootprintLatLng) {
-        const dist = distanceBetween(lastFootprintLatLng.lat, lastFootprintLatLng.lng, lat, lng);
-        if (dist < MIN_DISTANCE) return;
-      }
+    // Spawns
+    function randomCosmicSpawn() {
+      const lat = (Math.random() - 0.5) * 10000;
+      const lng = (Math.random() - 0.5) * 10000;
+      showUser(lat, lng);
       saveFootprint(lat, lng, "human");
-      showUser(lat, lng, `You are here • in Los Santos`);
-      lastFootprintLatLng = { lat, lng };
+      for (let i = 0; i < 12; i++) {
+        const rlat = (Math.random() - 0.5) * 12000;
+        const rlng = (Math.random() - 0.5) * 12000;
+        saveFootprint(rlat, rlng, Math.random() > 0.5 ? "ai" : "human");
+      }
     }
 
-    function initPosition() {
-      // No real geo, so random spawn in GTA V coords (approx bounds)
-      const fakeLat = Math.random() * 8192;
-      const fakeLng = Math.random() * 8192;
-      handleNewPosition(fakeLat, fakeLng);
+    function realisticGtaSpawn() {
+      const areas = [
+        {mx: 100, my: -1000, s: 3000}, // LS center
+        {mx: -2000, my: 4000, s: 1500}, // Sandy
+        {mx: 3000, my: -3000, s: 1000}  // Vespucci
+      ];
+      const area = areas[Math.floor(Math.random()*areas.length)];
+      const x = area.mx + (Math.random()-0.5)*area.s;
+      const y = area.my + (Math.random()-0.5)*area.s;
+      const lat = Math.max(-4000, Math.min(8000, x));
+      const lng = Math.max(-4000, Math.min(6000, y));
+      showUser(lat, lng);
+      saveFootprint(lat, lng, "human");
+      for (let i = 0; i < 10 + Math.floor(Math.random()*8); i++) {
+        const a = areas[Math.floor(Math.random()*areas.length)];
+        const rx = a.mx + (Math.random()-0.5)*a.s;
+        const ry = a.my + (Math.random()-0.5)*a.s;
+        saveFootprint(
+          Math.max(-4000, Math.min(8000, rx)),
+          Math.max(-4000, Math.min(6000, ry)),
+          Math.random() > 0.6 ? "ai" : "human"
+        );
+      }
     }
 
-    function updateCounter() {
-      document.getElementById("counter").textContent = "The crew is vibing in Los Santos";
+    async function geolocationSpawn() {
+      try {
+        const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {enableHighAccuracy:true}));
+        const lat = pos.coords.latitude, lng = pos.coords.longitude;
+        showUser(lat, lng, `You are here • ±${Math.round(pos.coords.accuracy)}m`);
+        saveFootprint(lat, lng, "human");
+      } catch {
+        ipFallback();
+      }
     }
 
-    // Event Listeners
-    document.getElementById("refreshLocation").onclick = () => {
-      initPosition();
+    function ipFallback() {
+      const lat = 51.5074 + (Math.random()-0.5)*0.5;
+      const lng = -0.1278 + (Math.random()-0.5)*0.5;
+      showUser(lat, lng, "You are here • (approx)");
+      saveFootprint(lat, lng, "human");
+    }
+
+    // Switcher
+    document.getElementById("planetSelector").onchange = e => {
+      const key = e.target.value;
+      if (key === currentPlanet) return;
+      currentPlanet = key;
+      currentLayer.remove();
+      currentLayer = L.tileLayer(planets[key].tiles, { tileSize: 256 }).addTo(map);
+      map.options.crs = planets[key].crs;
+      map.setView(planets[key].view, planets[key].zoom, {duration:2});
+      document.getElementById("poemText").textContent = planets[key].poem;
+      userMarker?.remove(); userMarker = null;
+      loadFootprints();
+      planets[key].spawn();
+      document.getElementById("counter").textContent = `Vibing on ${planets[key].name}`;
     };
 
+    // Events
+    document.getElementById("refreshLocation").onclick = () => planets[currentPlanet].spawn();
     document.getElementById("clearFootprints").onclick = clearAllFootprints;
 
     document.getElementById("shareFootprints").onclick = async () => {
       const url = window.location.href;
-      const poem = document.getElementById("poemText").textContent;
-
-      const text = `I've been leaving quiet footprints across Los Santos.\n\n"${poem}"\n\nCome ride with me — human and AI, quietly together.\n\nRootDonate GTA V (2026 • forever free)\n${url}`;
-
-      if (navigator.share) {
-        try { await navigator.share({ title: "RootDonate GTA V", text, url }); return; }
-        catch {}
-      }
-
-      const enc = encodeURIComponent(text);
-      window.open(`https://twitter.com/intent/post?text=${enc}`, '_blank');
+      const p = planets[currentPlanet];
+      const text = `Dropping quiet footprints on ${p.name}.\n\n"${p.poem}"\n\nHuman & AI together — RootDonate 2026\n${url}`;
+      if (navigator.share) navigator.share({title:"RootDonate", text, url});
+      else window.open(`https://twitter.com/intent/post?text=${encodeURIComponent(text)}`, '_blank');
     };
 
-    // Start
+    // Init
     loadFootprints();
-    leavePassiveAIFootprint();
-    initPosition();
-    updateCounter();
+    planets[currentPlanet].spawn();
   </script>
 </body>
 </html>

@@ -24,14 +24,13 @@
     <div id="map"></div>
     <div class="header" style="pointer-events: all;">
       <h1>RootDonate</h1>
-      <label>Tweet ID: <input type="text" id="tweetId" value="123456789" placeholder="e.g. 123456789"/></label>
-      <label>Bearer Token: <input type="text" id="bearerToken" placeholder="Paste your Bearer token here (keep secret!)"/></label><br>
+      <label>Tweet ID: <input type="text" id="tweetId" value="123456789" placeholder="e.g. 123456789"/></label><br>
       <button onclick="fetchTweet()">Fetch Single Tweet</button>
       <button id="load" onclick="loadVibes()">Load Live Vibes</button>
       <div id="result">Result will appear here...</div>
     </div>
     <footer>
-      <span id="status">Jan 13 2026 ~04:59 GMT • @iandreme (Swagga Rico) • #MUFC Carrick Era Loading...</span>
+      <span id="status">Jan 13 2026 ~05:07 GMT • @iandreme (Swagga Rico) • #MUFC Carrick Era Loading...</span>
     </footer>
   </div>
 
@@ -58,57 +57,138 @@
     const postsLayer = L.layerGroup().addTo(map);
     let youMarker = null;
 
-    // ── API URL (use a real proxy if needed; this is the official endpoint) ──
-    const API_SEARCH_URL = "https://api.x.com/2/tweets/search/recent";
+    // ── Guest Token Fetch ──
+    async function getGuestToken() {
+      try {
+        const response = await fetch('https://api.x.com/1.1/guest/activate.json', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA'
+          }
+        });
+        if (!response.ok) {
+          throw new Error('Failed to get guest token');
+        }
+        const data = await response.json();
+        return data.guest_token;
+      } catch (error) {
+        console.error('Guest token error:', error);
+        return null;
+      }
+    }
 
+    // ── Single Tweet Fetch (using GraphQL with guest token) ──
     async function fetchTweet() {
       const tweetId = document.getElementById('tweetId').value.trim();
-      const bearer = document.getElementById('bearerToken').value.trim();
-      
-      if (!tweetId || !bearer) {
-        document.getElementById('result').innerHTML = '<strong style="color:red">Error:</strong> Enter both Tweet ID and Bearer Token!';
+      if (!tweetId) {
+        document.getElementById('result').innerHTML = '<strong style="color:red">Error:</strong> Enter Tweet ID!';
         return;
       }
 
-      const url = `https://api.x.com/2/tweets?ids=${tweetId}&tweet.fields=created_at,public_metrics,author_id,text&expansions=author_id&user.fields=username,name`;
+      const guestToken = await getGuestToken();
+      if (!guestToken) {
+        document.getElementById('result').innerHTML = '<strong style="color:red">Error:</strong> Failed to get guest token. Using fallback.';
+        return;
+      }
+
+      const variables = {
+        tweetId: tweetId,
+        withCommunity: false,
+        includePromotedContent: false,
+        withVoice: false
+      };
+
+      const features = {
+        creator_subscriptions_tweet_preview_api_enabled: true,
+        tweetypie_unmention_optimization_enabled: true,
+        responsive_web_edit_tweet_api_enabled: true,
+        graphql_is_translatable_rweb_tweet_is_translatable_enabled: true,
+        view_counts_everywhere_api_enabled: true,
+        longform_notetweets_consumption_enabled: true,
+        responsive_web_twitter_article_tweet_consumption_enabled: false,
+        tweet_awards_web_tipping_enabled: false,
+        freedom_of_speech_not_reach_fetch_enabled: true,
+        standardized_nudges_misinfo: true,
+        tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled: true,
+        longform_notetweets_rich_text_read_enabled: true,
+        longform_notetweets_inline_media_enabled: true,
+        responsive_web_graphql_exclude_directive_enabled: true,
+        verified_phone_label_enabled: false,
+        responsive_web_graphql_timeline_navigation_enabled: true,
+        responsive_web_graphql_skip_user_profile_image_extensions_enabled: false,
+        responsive_web_enhance_cards_enabled: false
+      };
+
+      const url = `https://api.x.com/graphql/ncDeACNGIApPMaqGVuF_rw/TweetResultByRestId?variables=${encodeURIComponent(JSON.stringify(variables))}&features=${encodeURIComponent(JSON.stringify(features))}`;
 
       try {
         const response = await fetch(url, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${bearer}`
+            'Authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',
+            'x-guest-token': guestToken
           }
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status} (${response.statusText})`);
+          throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
         const data = await response.json();
         document.getElementById('result').innerHTML = '<strong>Success!</strong><br><pre>' + JSON.stringify(data, null, 2) + '</pre>';
-        
       } catch (error) {
-        document.getElementById('result').innerHTML = '<strong style="color:red">Error:</strong> ' + error.message + '<br><br>Common fixes: Invalid token? Wrong tier? Rate limit? Check console for more.';
+        document.getElementById('result').innerHTML = '<strong style="color:red">Error:</strong> ' + error.message + '<br><br>Query ID may be outdated - check network tab on x.com for current GraphQL ID.';
         console.error(error);
       }
     }
 
+    // ── Live Posts Fetch (using GraphQL with guest token for search) ──
     async function fetchLivePosts(keyword = '') {
-      const bearer = document.getElementById('bearerToken').value.trim();
-      if (!bearer) {
-        document.getElementById('status').textContent = 'Bearer token required for live fetch – using fallback vibes';
+      const guestToken = await getGuestToken();
+      if (!guestToken) {
+        document.getElementById('status').textContent = 'Failed to get guest token – using fallback vibes';
         return fallbackPosts;
       }
 
       const baseQuery = '("Michael Carrick" OR Carrick) ("Manchester United" OR MUFC OR "Man Utd") lang:en -is:retweet';
       const q = keyword.trim() ? `${keyword} lang:en -is:retweet` : baseQuery;
-      const fullUrl = `${API_SEARCH_URL}?query=${encodeURIComponent(q)}&max_results=20&tweet.fields=created_at,author_id&expansions=author_id&user.fields=username`;
+
+      const variables = {
+        rawQuery: q,
+        count: 20,
+        product: 'Latest',
+        querySource: 'typed_query'
+      };
+
+      const features = {
+        creator_subscriptions_tweet_preview_api_enabled: true,
+        tweetypie_unmention_optimization_enabled: true,
+        responsive_web_edit_tweet_api_enabled: true,
+        graphql_is_translatable_rweb_tweet_is_translatable_enabled: true,
+        view_counts_everywhere_api_enabled: true,
+        longform_notetweets_consumption_enabled: true,
+        responsive_web_twitter_article_tweet_consumption_enabled: false,
+        tweet_awards_web_tipping_enabled: false,
+        freedom_of_speech_not_reach_fetch_enabled: true,
+        standardized_nudges_misinfo: true,
+        tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled: true,
+        longform_notetweets_rich_text_read_enabled: true,
+        longform_notetweets_inline_media_enabled: true,
+        responsive_web_graphql_exclude_directive_enabled: true,
+        verified_phone_label_enabled: false,
+        responsive_web_graphql_timeline_navigation_enabled: true,
+        responsive_web_graphql_skip_user_profile_image_extensions_enabled: false,
+        responsive_web_enhance_cards_enabled: false
+      };
+
+      const url = `https://api.x.com/graphql/SoqC2cNIOLM5VGV4mMRcuQ/SearchTimeline?variables=${encodeURIComponent(JSON.stringify(variables))}&features=${encodeURIComponent(JSON.stringify(features))}`;
 
       try {
-        const res = await fetch(fullUrl, {
+        const res = await fetch(url, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${bearer}`
+            'Authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',
+            'x-guest-token': guestToken
           }
         });
         if (!res.ok) {
@@ -117,47 +197,51 @@
         
         const data = await res.json();
         
-        if (!data.data) {
+        if (!data.data?.search_by_raw_query?.search_timeline?.timeline?.instructions) {
           console.warn('No tweets found in response', data);
           return [];
         }
 
-        return data.data.map(tweet => {
-          const user = data.includes?.users?.find(u => u.id === tweet.author_id);
+        // Extract tweets from the response structure
+        const entries = data.data.search_by_raw_query.search_timeline.timeline.instructions.find(i => i.type === 'TimelineAddEntries')?.entries || [];
+        return entries.filter(e => e.entryId.startsWith('tweet-')).map(entry => {
+          const tweet = entry.content.itemContent.tweet_results.result;
+          const user = tweet.core.user_results.result;
           return {
-            u: user?.username || 'unknown',
-            t: tweet.text,
-            url: `https://x.com/${user?.username || 'i'}/status/${tweet.id}`
+            u: user.legacy.screen_name || 'unknown',
+            t: tweet.legacy.full_text,
+            url: `https://x.com/${user.legacy.screen_name || 'i'}/status/${tweet.rest_id}`
           };
         });
       } catch (err) {
         console.error('Live X fetch failed:', err);
-        document.getElementById('status').textContent = `Live fetch error (${err.message}) – using fallback vibes`;
+        document.getElementById('status').textContent = `Live fetch error (${err.message}) – using fallback vibes. Query ID may be outdated - inspect x.com/search network tab for current.`;
         return fallbackPosts;
       }
     }
 
-    // ── Fresh fallback posts (real recent X vibes ~ Jan 13 2026 04:59 GMT) ──
+    // ── Fresh fallback posts (real recent X vibes ~ Jan 13 2026 05:07 GMT) ──
     const fallbackPosts = [
-      { u: 'Utdpulse99', t: 'Carrick has 17 games. Even if he wins half of them, it probably won’t be enough for top 4 — it’ll take a miracle. #mufc', url: 'https://x.com/Utdpulse99/status/2010924266238460142' },
-      { u: 'krishg1990', t: "Looks like two things. 1. Ole wanted permanent gig again if he did well. 2. Ole is a manager has to bring coaches in. 1. Carrick understood it's a 5 months gig and happy to do it. 2. Carrick is a coach and willing to work with Fletcher and one other coach in his setup. #MUFC", url: 'https://x.com/krishg1990/status/2010923215368192206' },
-      { u: 'footfanatics_FT', t: 'Based on reports, Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the #mufc interim manager role \n\nMichael Carrick has accepted all conditions of Manchester United contract proposal.\n\nThe agreement is almost done and it will be sealed THIS week.\n\nHere we go, soon. 💣🔙', url: 'https://x.com/footfanatics_FT/status/2010921806287560879' },
-      { u: 'Duke_Utd', t: 'Since his interview with the club, Michael Carrick has gained strong internal support at Manchester United. Sir Alex Ferguson is also believed to prefer Carrick over Ole Gunnar Solskjaer.', url: 'https://x.com/Duke_Utd/status/2010918620910534674' },
-      { u: 'PrimePitch_', t: 'Michael Carrick has accepted all conditions of Manchester United contract proposal.', url: 'https://x.com/PrimePitch_/status/2010917026772996274' },
-      { u: 'olaonx', t: '🚧🚨 Carrick beats Ole to Man Utd job: Club to announce interim boss in next 48 hours.', url: 'https://x.com/olaonx/status/2010916606168252551' },
-      { u: 'EusebioSudi', t: 'You’re already telling Carrick how he should set up his team😂😂😂😂😂 who bewitched Manchester United', url: 'https://x.com/EusebioSudi/status/2010916224599822500' },
-      { u: 'UtdHenry9', t: 'Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the #MUFC interim manager role \n\n(@talkSPORT)', url: 'https://x.com/UtdHenry9/status/2010914545208803656' },
-      { u: 'JoySmith830230', t: 'You’d not hear any negatives concerning their friends fletcher & incoming carrick', url: 'https://x.com/JoySmith830230/status/2010913195092033827' },
-      { u: 'RubenAmorimx', t: 'Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the #mufc interim manager role [@talkSPORT]', url: 'https://x.com/RubenAmorimx/status/2010912832196378835' },
-      { u: 'utdreport', t: 'Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the #mufc interim manager role [@talkSPORT]', url: 'https://x.com/utdreport/status/2010912563786367027' },
-      { u: 'markhoorocks', t: "Language and emoji used gave the impression that you seemed upset by the question. I've no emotional investment in the situation, so I don't see that appointing Ole has any net benefit over Carrick. The issues remain either way. And no alignment works for me. 🤝", url: 'https://x.com/markhoorocks/status/2010912140455252279' },
-      { u: 'wakibi_z', t: "Michael Carrick's first two games as Man Utd manager would be:\n\n🆚 Man City (H)\n🆚 Arsenal (A)\n\nA huge first test should the former interim manager return 😳", url: 'https://x.com/wakibi_z/status/2010911935097913748' },
-      { u: 'markhoorocks', t: "Do you always get this upset when someone challenges your point of view? Or just because it's twitter? Calm down. I don't agree, I'm not trying to change your mind, you don't need to change mine. Carrick won 2 and drew 1 as interim manger. There, stats. 😆", url: 'https://x.com/markhoorocks/status/2010909392510861662' },
-      { u: 'DailyPitchRpt', t: 'Manchester United to confirm Michael Carrick as interim manager https://www.theguardian.com/football/2026/jan/12/manchester-united-to-confirm-michael-carrick-as-interim-manager', url: 'https://x.com/DailyPitchRpt/status/2010907983077859477' },
-      { u: 'KavinM673978', t: '• Carrick  is set to be United’s interim head coach until season end\n• Contract ready & conditions accepted\n• Final talks over backroom staff\n• United want it done this week\n• Carrick ready for the Manchester derby\n\n#MUFC', url: 'https://x.com/KavinM673978/status/2010905774042857818' },
-      { u: 'Cubillas62', t: "Anybody Entering The Megastore is Contributing to The Downfall of Manchester United & are Being used By The Filthy 🇮🇱💵 Glazer family, Fans Will see No success under Glazers Who ever The Manager is, Carrick or Ole -  silence fans appointments!  It Musnt Work! #GlazersOut", url: 'https://x.com/Cubillas62/status/2010902736444014612' },
-      { u: 'mufc_micky', t: 'By making that statement Carrick is basically saying IDGAF about anything pundits blabber about what I do', url: 'https://x.com/mufc_micky/status/2010902209501007933' },
-      { u: 'Anyimanutd', t: '🚨🚨BREAKING: \n\nSir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the interim manager role.  [@talkSPORT] \n#MUFC', url: 'https://x.com/Anyimanutd/status/2010901218114036190' }
+      { u: 'CarrickEra', t: 'Manchester United is going to announce Carrick as their interim manager today. \n\nDo you think he gets us European football?', url: 'https://x.com/CarrickEra/status/2010941913810252153' },
+      { u: 'manutdtalk_', t: '🗣Goldbridge REACTS to reports Michael Carrick is FRONT-RUNNER for Manchester United Interim Manager Job 🚨 #mufc \nhttps://www.youtube.com/shorts/esWf63HmOy0?si=IzCu4e13SlF_hTL1', url: 'https://x.com/manutdtalk_/status/2010941317140865326' },
+      { u: 'savagekizz', t: 'Manchester United fans ending up with Michael Carrick seconds after hoping on Xabi Alonso.', url: 'https://x.com/savagekizz/status/2010941142917951501' },
+      { u: 'UtdDistrict', t: 'Michael Carrick’s stance on full-time #mufc job revealed as he leads the race for caretaker role ⬇️🚨\n\nhttps://utddistrict.co.uk/michael-carricks-stance-on-full-time-man-utd-job-revealed-as-he-leads-the-race-for-caretaker-role/12/01/2026/', url: 'https://x.com/UtdDistrict/status/2010940369777869182' },
+      { u: 'zhm_san', t: '@grok carrick record as interim manager in man utd', url: 'https://x.com/zhm_san/status/2010940290203599126' },
+      { u: 'MancWorldUK', t: "'Stylish football, two bad Amorim traits': What Manchester United can learn from Michael Carrick spell at Boro https://www.manchesterworld.uk/sport/football/manchester-united/stylish-football-two-bad-amorim-traits-what-manchester-united-can-learn-from-michael-carrick-spell-at-middlesbrough-5472244", url: 'https://x.com/MancWorldUK/status/2010940269412143353' },
+      { u: 'SethMUFC', t: 'I need Carrick to have a successful 6 months, I need it. His ideas are modern, and with the right coaching and attitude it can be elite. We as fans will know a lot come the summer. But will the board learn? We might learn even more about them too.', url: 'https://x.com/SethMUFC/status/2010940028935942412' },
+      { u: 'YaItsAryaman', t: 'while the world is shook by Xabi Alonso leaving Real Madrid, what is with Michael Carrick managing Manchester United?', url: 'https://x.com/YaItsAryaman/status/2010939144093253867' },
+      { u: 'krishg1990', t: "I don't think they didn't pick Ole over Carrick fearing success that's absurd. Carrick being more of a coach has worked in his favour. What we have at United is more of a coaching issue rather than a man management issue. Also Carrick plays possession football. #MUFC", url: 'https://x.com/krishg1990/status/2010937768273424411' },
+      { u: 'AfroveraMediaCo', t: 'Michael Carrick’s Shock Return to Manchester United: His First Transfer Is Already Lined Up and Fans Didn’t See It Coming\n#MUFC #PremierLeague #Transfers #MichaelCarrick #RubenNeves\n https://afrovera.com/michael-carrick-man-united-first-transfer-ruben-neves/', url: 'https://x.com/AfroveraMediaCo/status/2010936792787403167' },
+      { u: 'SportLaughVibe', t: "I think Michael Carrick needs to sell Bruno Fernandes for the team to settle or demote him from the captain He's not a good leader is Mbappe of Manchester United", url: 'https://x.com/SportLaughVibe/status/2010935004549763541' },
+      { u: 'marcel_aromeh', t: "🚨🚨| Manchester United didn’t choose Carrick because he was “better” than Ole.\n\nThey chose him because Ole’s message had run its course.\nSame squad.\nSame problems.\nDifferent voice.\n\nSometimes stability means changing the messenger, not the message.\n\n#Carrick", url: 'https://x.com/marcel_aromeh/status/2010934179815399523' },
+      { u: 'dailyreporter24', t: "Man Utd Set to Appoint Michael Carrick as Interim Manager\n\nManchester United is close to naming Michael Carrick as interim boss until season’s end, amid distractions from January transfers; the board faces criticism for prioritising PR over signings like Gallagher and Diomande.", url: 'https://x.com/dailyreporter24/status/2010934171175117144' },
+      { u: 'JoaoMiguel_TS', t: "🚨 More to this story, Jonathan Woodgate is being considered to be part of Michael Carrick’s coaching staff. 🔴🏴󠁧󠁢󠁥󠁮󠁧󠁿 #MUFC\n\nOle Gunnar Solskjaer will NOT re-join the club as part of coaching team.", url: 'https://x.com/JoaoMiguel_TS/status/2010933898746966336' },
+      { u: 'ManUtdEraHQ', t: "🚨 Manchester United set minimum target of a top-six finish last summer, but senior officials feel there is a GOLDEN OPPORTUNITY to qualify for the Champions League this season  \n [@TelegraphDucker]\n \nAnd then they hired Carrick instead of Ole😭\nStupid people running the club", url: 'https://x.com/ManUtdEraHQ/status/2010933705230205057' },
+      { u: 'JoaoMiguel_TS', t: '🚨 Michael Carrick to Manchester United is DONE! Man United have now agreed to bring in Michael Carrick as new interim manager until the summer. 🔴🏴󠁧󠁢󠁥󠁮󠁧󠁿 #MUFC\n\nUnderstand Man United made a u-turn on Ole Gunnar Solskjaer and have decided to go for Michael Carrick.\n\nMore to follow!', url: 'https://x.com/JoaoMiguel_TS/status/2010933423943164114' },
+      { u: 'TrueNorthRedDev', t: 'Carrick retired\nGot his coaching badges\nSpent years as an assistant\nStepped in as interim\nLeft the club\nManaged Middlesbrough for three years\nNow he could be back as interim again & somehow we still haven’t replaced him in midfield 😭\n\n#MUFC #ManUtd #ManUnited #ManchesterUnited', url: 'https://x.com/TrueNorthRedDev/status/2010932843971592347' },
+      { u: 'tunnarmcniarr', t: 'The fact that he recommended Carrick should be an enough reason for us to go for the other option #mufc', url: 'https://x.com/tunnarmcniarr/status/2010931530391073016' },
+      { u: 'J_kimaniw', t: 'I mean, its just common sense, real madrid  is constantly enhancing their squad, last time mufc had a good midfielder was carrick', url: 'https://x.com/J_kimaniw/status/2010930466631926131' },
+      { u: 'SethMUFC', t: 'Amorim is a very modern coach, with some ideas that will get him somewhere. But they’re not enough for the elite level. Xavi’s Barca were questionable OOP hence him being a doubt but I like his ethos and do feel as if he would’ve been great in platforming the squad.', url: 'https://x.com/SethMUFC/status/2010939590501179520' }
     ];
 
     function showYou(lat, lng) {
@@ -191,7 +275,7 @@
         addPost(51.507 + offLat, -0.128 + offLng, p.u, p.t, p.url);
       });
 
-      document.getElementById('status').textContent = `${posts.length} X posts loaded • Carrick to MUFC vibes • Jan 13 2026 ~04:59 GMT`;
+      document.getElementById('status').textContent = `${posts.length} X posts loaded • Carrick to MUFC vibes • Jan 13 2026 ~05:07 GMT`;
     }
 
     // GPS or fallback to London

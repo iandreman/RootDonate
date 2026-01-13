@@ -24,7 +24,12 @@
     <div id="map"></div>
     <div class="header" style="pointer-events: all;">
       <h1>RootDonate</h1>
-      <button id="result" onclick="handleAction()">Load Vibes / Fetch Tweet</button>
+      <label for="keyword">Search Keyword:</label>
+      <input id="keyword" placeholder="e.g. Carrick MUFC (optional)">
+      <label for="tweetId">Tweet ID:</label>
+      <input id="tweetId" placeholder="For single tweet (optional)">
+      <button id="loadButton" onclick="handleAction()">Load Vibes / Fetch Tweet</button>
+      <div id="result"></div>
     </div>
     <footer>
       <span id="status">Jan 13 2026 ~05:07 GMT • @iandreme (Swagga Rico) • #MUFC Carrick Era Loading...</span>
@@ -54,7 +59,7 @@
     const postsLayer = L.layerGroup().addTo(map);
     let youMarker = null;
 
-    const corsProxy = 'https://cors-anywhere.herokuapp.com/';
+    const corsProxy = 'https://cors-anywhere.herokuapp.com/'; // Note: Visit https://cors-anywhere.herokuapp.com/corsdemo to enable temporary access if needed
 
     // ── Guest Token Fetch ──
     async function getGuestToken() {
@@ -277,11 +282,13 @@
     }
 
     async function handleAction() {
+      const keyword = document.getElementById('keyword').value.trim();
       const tweetId = document.getElementById('tweetId').value.trim();
+      document.getElementById('result').innerHTML = '';
       if (tweetId) {
         await fetchTweet(tweetId);
       } else {
-        await loadVibes();
+        await loadVibes(keyword);
       }
     }
 

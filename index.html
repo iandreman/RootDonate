@@ -22,7 +22,7 @@
       <button id="load">Load Live X Vibes</button>
     </div>
     <footer>
-      <span id="status">Jan 13 2026 ~03:50 GMT • @iandreme (Swagga Rico) • #MUFC Carrick Era Loading...</span>
+      <span id="status">Jan 13 2026 ~03:58 GMT • @iandreme (Swagga Rico) • #MUFC Carrick Era Loading...</span>
     </footer>
   </div>
 
@@ -50,46 +50,62 @@
     let youMarker = null;
 
     // ── Proxy still needed for REAL live fetch (keep for future) ──
-    const PROXY_API_URL = "yzCKmAZJxAUTq9Bjp7T5NUmCX"; // ← UPDATE THIS!
+    const PROXY_API_URL = "https://api.x.com/2/tweets?ids=?&tweet.fields=created_at&expansions=author_id&user.fields=created_at"; // ← UPDATE THIS TO A VALID PROXY URL! The current value looks like a key, not a URL – fetch will fail.
 
     async function fetchLivePosts(keyword = '') {
-      const baseQuery = '("Michael Carrick" OR Carrick) ("Manchester United" OR MUFC OR "Man Utd") lang:en';
-      const q = keyword.trim() ? `${keyword} lang:en` : baseQuery;
+      const baseQuery = '("Michael Carrick" OR Carrick) ("Manchester United" OR MUFC OR "Man Utd") lang:en -is:retweet';
+      const q = keyword.trim() ? `${keyword} lang:en -is:retweet` : baseQuery;
+      const fullQuery = `${q}&max_results=20&tweet.fields=created_at,author_id&expansions=author_id&user.fields=username`;
+
       try {
-        const res = await fetch(`${PROXY_API_URL}?q=${encodeURIComponent(q)}`);
-        if (!res.ok) throw new Error('Proxy error');
+        const res = await fetch(`${PROXY_API_URL}?q=${encodeURIComponent(fullQuery)}`);
+        if (!res.ok) {
+          throw new Error(`Proxy / API error: ${res.status} ${res.statusText}`);
+        }
+        
         const data = await res.json();
-        return (data.data || []).map(tweet => ({
-          u: data.includes?.users?.find(u => u.id === tweet.author_id)?.username || 'unknown',
-          t: tweet.text,
-          url: `https://x.com/i/web/status/${tweet.id}`
-        }));
+        
+        if (!data.data) {
+          console.warn('No tweets found in response', data);
+          return [];
+        }
+
+        return data.data.map(tweet => {
+          const user = data.includes?.users?.find(u => u.id === tweet.author_id);
+          return {
+            u: user?.username || 'unknown',
+            t: tweet.text,
+            url: `https://x.com/${user?.username || 'i'}/status/${tweet.id}`
+          };
+        });
       } catch (err) {
-        console.error('Live fetch failed:', err);
-        document.getElementById('status').textContent = 'Using fallback data • Live needs proxy setup';
+        console.error('Live X fetch failed:', err);
+        document.getElementById('status').textContent = `Live fetch error (${err.message}) – using fallback vibes`;
         return fallbackPosts;
       }
     }
 
-    // ── Fresh fallback posts (real recent X vibes ~ Jan 13 2026) ──
+    // ── Fresh fallback posts (real recent X vibes ~ Jan 13 2026 03:58 GMT) ──
     const fallbackPosts = [
+      { u: 'Utdpulse99', t: 'Carrick has 17 games. Even if he wins half of them, it probably won’t be enough for top 4 — it’ll take a miracle. #mufc', url: 'https://x.com/Utdpulse99/status/2010924266238460142' },
+      { u: 'krishg1990', t: 'Looks like two things. 1. Ole wanted permanent gig again if he did well. 2. Ole is a manager has to bring coaches in. 1. Carrick understood it\'s a 5 months gig and happy to do it. 2. Carrick is a coach and willing to work with Fletcher and one other coach in his setup. #MUFC', url: 'https://x.com/krishg1990/status/2010923215368192206' },
+      { u: 'footfanatics_FT', t: 'Based on reports, Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the #mufc interim manager role \n\nMichael Carrick has accepted all conditions of Manchester United contract proposal.\n\nThe agreement is almost done and it will be sealed THIS week.\n\nHere we go, soon. 💣🔙', url: 'https://x.com/footfanatics_FT/status/2010921806287560879' },
       { u: 'Duke_Utd', t: 'Since his interview with the club, Michael Carrick has gained strong internal support at Manchester United. Sir Alex Ferguson is also believed to prefer Carrick over Ole Gunnar Solskjaer.', url: 'https://x.com/Duke_Utd/status/2010918620910534674' },
       { u: 'PrimePitch_', t: 'Michael Carrick has accepted all conditions of Manchester United contract proposal.', url: 'https://x.com/PrimePitch_/status/2010917026772996274' },
       { u: 'olaonx', t: '🚧🚨 Carrick beats Ole to Man Utd job: Club to announce interim boss in next 48 hours.', url: 'https://x.com/olaonx/status/2010916606168252551' },
-      { u: 'UtdHenry9', t: 'Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the #MUFC interim manager role (@talkSPORT)', url: 'https://x.com/UtdHenry9/status/2010914545208803656' },
+      { u: 'EusebioSudi', t: 'You’re already telling Carrick how he should set up his team😂😂😂😂😂 who bewitched Manchester United', url: 'https://x.com/EusebioSudi/status/2010916224599822500' },
+      { u: 'UtdHenry9', t: 'Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the #MUFC interim manager role \n\n(@talkSPORT)', url: 'https://x.com/UtdHenry9/status/2010914545208803656' },
+      { u: 'JoySmith830230', t: 'You’d not hear any negatives concerning their friends fletcher & incoming carrick', url: 'https://x.com/JoySmith830230/status/2010913195092033827' },
+      { u: 'RubenAmorimx', t: 'Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the #mufc interim manager role [@talkSPORT]', url: 'https://x.com/RubenAmorimx/status/2010912832196378835' },
       { u: 'utdreport', t: 'Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the #mufc interim manager role [@talkSPORT]', url: 'https://x.com/utdreport/status/2010912563786367027' },
-      { u: 'wakibi_z', t: "Michael Carrick's first two games as Man Utd manager would be: 🆚 Man City (H) 🆚 Arsenal (A) A huge first test should the former interim manager return 😳", url: 'https://x.com/wakibi_z/status/2010911935097913748' },
+      { u: 'markhoorocks', t: 'Language and emoji used gave the impression that you seemed upset by the question. I\'ve no emotional investment in the situation, so I don\'t see that appointing Ole has any net benefit over Carrick. The issues remain either way. And no alignment works for me. 🤝', url: 'https://x.com/markhoorocks/status/2010912140455252279' },
+      { u: 'wakibi_z', t: "Michael Carrick's first two games as Man Utd manager would be:\n\n🆚 Man City (H)\n🆚 Arsenal (A)\n\nA huge first test should the former interim manager return 😳", url: 'https://x.com/wakibi_z/status/2010911935097913748' },
+      { u: 'markhoorocks', t: "Do you always get this upset when someone challenges your point of view? Or just because it's twitter? Calm down. I don't agree, I'm not trying to change your mind, you don't need to change mine. Carrick won 2 and drew 1 as interim manger. There, stats. 😆", url: 'https://x.com/markhoorocks/status/2010909392510861662' },
       { u: 'DailyPitchRpt', t: 'Manchester United to confirm Michael Carrick as interim manager https://www.theguardian.com/football/2026/jan/12/manchester-united-to-confirm-michael-carrick-as-interim-manager', url: 'https://x.com/DailyPitchRpt/status/2010907983077859477' },
-      { u: 'KavinM673978', t: '• Carrick is set to be United’s interim head coach until season end • Contract ready & conditions accepted • Final talks over backroom staff • United want it done this week • Carrick ready for the Manchester derby #MUFC', url: 'https://x.com/KavinM673978/status/2010905774042857818' },
-      { u: 'Anyimanutd', t: '🚨🚨BREAKING: Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the interim manager role. [@talkSPORT] #MUFC', url: 'https://x.com/Anyimanutd/status/2010901218114036190' },
-      { u: 'footb___updates', t: '🚨🚨 BREAKING: Sir Alex Ferguson has reportedly advised Manchester United to appoint Michael Carrick as interim manager — ahead of Ole Gunnar Solskjær. 👀🔴 [@talkSPORT]', url: 'https://x.com/footb___updates/status/2010900086000361549' },
-      { u: 'FabrizioRomano', t: '🚨🛑 Michael Carrick has accepted all conditions of Manchester United contract proposal. The agreement is almost done and it will be sealed THIS week, as expected. Here we go, soon. 💣🔙', url: 'https://x.com/FabrizioRomano/status/2010747874641138083' },
-      { u: 'livescore', t: 'Michael Carrick’s first two games as caretaker Manchester United manager: 🆚 Man City (H) 🆚 Arsenal (A) He’ll have a huge say in the title race 👀', url: 'https://x.com/livescore/status/2010748644622746096' },
-      { u: 'ronutd77', t: 'Michael Carrick\'s only 3 games at Manchester United as a caretaking coach. 2 wins - 1 draw - 0 losses. He\'s coming, just in time for Arsenal\'s game 😂', url: 'https://x.com/ronutd77/status/2010746079688454308' },
-      { u: 'SkySportsNews', t: 'Wayne Rooney has expressed an interest in joining Michael Carrick\'s coaching staff at Manchester United 🔴', url: 'https://x.com/SkySportsNews/status/2010805514733486388' },
-      { u: 'FrankEra_', t: '🚨🏴󠁧󠁢󠁥󠁮󠁧󠁿 | Michael Carrick WILL become Manchester United\'s interim Head Coach. It is thought that talks are now focusing on his backroom staff.', url: 'https://x.com/FrankEra_/status/2010739259104502021' },
-      { u: 'StatmanDave', t: 'Michael Carrick has never lost a match as Manchester United manager. 👀', url: 'https://x.com/StatmanDave/status/2010650954342047920' },
-      { u: 'SkySportsPL', t: 'Manchester United are in detailed discussions with Michael Carrick about the role of interim head coach 🚨', url: 'https://x.com/SkySportsPL/status/2010643404729008436' }
+      { u: 'KavinM673978', t: '• Carrick  is set to be United’s interim head coach until season end\n• Contract ready & conditions accepted\n• Final talks over backroom staff\n• United want it done this week\n• Carrick ready for the Manchester derby\n\n#MUFC', url: 'https://x.com/KavinM673978/status/2010905774042857818' },
+      { u: 'Cubillas62', t: "Anybody Entering The Megastore is Contributing to The Downfall of Manchester United & are Being used By The Filthy 🇮🇱💵 Glazer family, Fans Will see No success under Glazers Who ever The Manager is, Carrick or Ole -  silence fans appointments!  It Musnt Work! #GlazersOut", url: 'https://x.com/Cubillas62/status/2010902736444014612' },
+      { u: 'mufc_micky', t: 'By making that statement Carrick is basically saying IDGAF about anything pundits blabber about what I do', url: 'https://x.com/mufc_micky/status/2010902209501007933' },
+      { u: 'Anyimanutd', t: '🚨🚨BREAKING: \n\nSir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the interim manager role.  [@talkSPORT] \n#MUFC', url: 'https://x.com/Anyimanutd/status/2010901218114036190' }
     ];
 
     function showYou(lat, lng) {
@@ -109,7 +125,7 @@
       document.getElementById('status').textContent = 'Loading Carrick / MUFC X vibes...';
 
       let posts = await fetchLivePosts(keyword);
-      if (posts.length === 0 || posts === fallbackPosts) { // show fallback clearly
+      if (posts.length === 0) {
         posts = fallbackPosts.filter(p => 
           !keyword || 
           p.t.toLowerCase().includes(keyword.toLowerCase().trim()) || 
@@ -123,7 +139,7 @@
         addPost(51.507 + offLat, -0.128 + offLng, p.u, p.t, p.url);
       });
 
-      document.getElementById('status').textContent = `${posts.length} X posts loaded • Carrick to MUFC vibes • Jan 13 2026 ~03:50 GMT`;
+      document.getElementById('status').textContent = `${posts.length} X posts loaded • Carrick to MUFC vibes • Jan 13 2026 ~03:58 GMT`;
     }
 
     // GPS or fallback to London
@@ -138,3 +154,4 @@
   </script>
 </body>
 </html>
+```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

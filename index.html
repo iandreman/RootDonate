@@ -6,6 +6,9 @@
   <title>RootDonate Live X Vibes • Carrick to MUFC</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
+    #result { margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 8px; white-space: pre-wrap; }
+    button { padding: 10px 20px; background: #1d9bf0; border: none; color: white; border-radius: 9999px; cursor: pointer; }
+    button:hover { background: #1a8cd8; }
     body, html { margin:0; height:auto; background:#000; color:#fff; font-family:system-ui,sans-serif; overflow:auto; }
     #map-container { position:relative; height:80vh; }
     #map { height:100%; }
@@ -19,7 +22,8 @@
     <div id="map"></div>
     <div class="header">
       <h1>RootDonate</h1>
-      <button id="load">Load Live X Vibes</button>
+      <div id="result">Result will appear here...</div>
+      <button onclick="fetchTweet()">Fetch Tweet</button>
     </div>
     <footer>
       <span id="status">Jan 13 2026 ~03:58 GMT • @iandreme (Swagga Rico) • #MUFC Carrick Era Loading...</span>
@@ -50,7 +54,40 @@
     let youMarker = null;
 
     // ── Proxy still needed for REAL live fetch (keep for future) ──
-    const PROXY_API_URL = "https://api.x.com/2/tweets"; // ← UPDATE THIS TO A VALID PROXY URL! The current value looks like a key, not a URL – fetch will fail.
+    const PROXY_API_URL = "https://api.x.com/2/tweets?ids=${tweetId}&tweet.fields=created_at,public_metrics,author_id,text&expansions=author_id&user.fields=username,name"; // ← UPDATE THIS TO A VALID PROXY URL! The current value looks like a key, not a URL – fetch will fail.
+
+    async function fetchTweet() {
+      const tweetId = document.getElementById('tweetId').value.trim();
+      const bearer = document.getElementById('bearerToken').value.trim();
+      
+      if (!tweetId || !bearer) {
+        document.getElementById('result').innerHTML = '<strong style="color:red">Error:</strong> Enter both Tweet ID and Bearer Token!';
+        return;
+      }
+
+      const url = `https://api.x.com/2/tweets?ids=${tweetId}&tweet.fields=created_at,public_metrics,author_id,text&expansions=author_id&user.fields=username,name`;
+
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${AAAAAAAAAAAAAAAAAAAAANPS6wEAAAAAPHcTiqH5YbVnnQPs%2BQ3jJNCabRc%3DnbpW32QBDA19zYrBXhubXDqOzeFg7YFsRnwRLFbpHPiobdQUdO}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status} (${response.statusText})`);
+        }
+
+        const data = await response.json();
+        document.getElementById('result').innerHTML = '<strong>Success!</strong><br><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        
+      } catch (error) {
+        document.getElementById('result').innerHTML = '<strong style="color:red">Error:</strong> ' + error.message + '<br><br>Common fixes: Invalid token? Wrong tier? Rate limit? Check console for more.';
+        console.error(error);
+      }
+    }
+
 
     async function fetchLivePosts(keyword = '') {
       const baseQuery = '("Michael Carrick" OR Carrick) ("Manchester United" OR MUFC OR "Man Utd") lang:en -is:retweet';

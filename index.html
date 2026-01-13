@@ -3,29 +3,64 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>X / Twitter Tweet Lookup - Simple HTML Example</title>
+  <title>RootDonate Live X Vibes • Carrick to MUFC</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #000; color: #fff; }
     #result { margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 8px; white-space: pre-wrap; }
     button { padding: 10px 20px; background: #1d9bf0; border: none; color: white; border-radius: 9999px; cursor: pointer; }
     button:hover { background: #1a8cd8; }
+    body, html { margin:0; height:100%; background:#000; color:#fff; font-family:system-ui,sans-serif; overflow:auto; }
+    #map-container { position:relative; height:80vh; }
+    #map { height:100%; }
+    .header { position:absolute; top:12px; left:0; right:0; text-align:center; pointer-events:none; z-index:1000; }
+    h1 { font-size:2.8rem; font-weight:900; letter-spacing:-1px; background:linear-gradient(90deg,#0af,#0f5,#f90); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    footer { position:absolute; bottom:0; left:0; right:0; padding:10px; background:rgba(0,0,0,0.8); text-align:center; font-size:0.9rem; z-index:1000; }
+    input { margin: 5px; padding: 8px; border-radius: 4px; border: 1px solid #333; background: #222; color: #fff; }
+    label { pointer-events: all; }
   </style>
 </head>
 <body>
+  <div id="map-container">
+    <div id="map"></div>
+    <div class="header" style="pointer-events: all;">
+      <h1>RootDonate</h1>
+      <label>Tweet ID: <input type="text" id="tweetId" value="123456789" placeholder="e.g. 123456789"/></label>
+      <label>Bearer Token: <input type="text" id="bearerToken" placeholder="Paste your Bearer token here (keep secret!)"/></label><br>
+      <button onclick="fetchTweet()">Fetch Single Tweet</button>
+      <button id="load" onclick="loadVibes()">Load Live Vibes</button>
+      <div id="result">Result will appear here...</div>
+    </div>
+    <footer>
+      <span id="status">Jan 13 2026 ~04:59 GMT • @iandreme (Swagga Rico) • #MUFC Carrick Era Loading...</span>
+    </footer>
+  </div>
 
-  <h1>Fetch a Tweet by ID (X API v2)</h1>
-  
-  <p>Replace the values below:</p>
-  
-  <label>Tweet ID: <input type="text" id="tweetId" value="123456789" placeholder="e.g. 123456789"/></label><br><br>
-  
-  <label>Bearer Token: <input type="text" id="bearerToken" placeholder="Paste your Bearer token here (keep secret!)"/></label><br><br>
-  
-  <button onclick="fetchTweet()">Fetch Tweet</button>
-  
-  <div id="result">Result will appear here...</div>
-
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
+    // ── Map Setup ────────────────────────────────────────────────
+    const map = L.map('map').setView([51.507, -0.128], 11);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap & CARTO'
+    }).addTo(map);
+
+    // Your avatar marker
+    const youIcon = L.divIcon({
+      html: '<div style="width:56px;height:56px;border-radius:50%;overflow:hidden;border:3px solid #0af;box-shadow:0 0 12px #0af"><img src="https://pbs.twimg.com/profile_images/1452130026212765700/q9iBQMu8_400x400.jpg" style="width:100%;height:100%;object-fit:cover"></div>',
+      iconSize: [56, 56], iconAnchor: [28, 28], className: ''
+    });
+
+    // X post marker
+    const xIcon = L.divIcon({
+      html: '<div style="background:#000;border:2px solid #1da1f2;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#1da1f2;font-weight:bold">X</div>',
+      iconSize: [44, 44], iconAnchor: [22, 22], className: ''
+    });
+
+    const postsLayer = L.layerGroup().addTo(map);
+    let youMarker = null;
+
+    // ── API URL (use a real proxy if needed; this is the official endpoint) ──
+    const API_SEARCH_URL = "https://api.x.com/2/tweets/search/recent";
+
     async function fetchTweet() {
       const tweetId = document.getElementById('tweetId').value.trim();
       const bearer = document.getElementById('bearerToken').value.trim();
@@ -57,7 +92,117 @@
         console.error(error);
       }
     }
-  </script>
 
+    async function fetchLivePosts(keyword = '') {
+      const bearer = document.getElementById('bearerToken').value.trim();
+      if (!bearer) {
+        document.getElementById('status').textContent = 'Bearer token required for live fetch – using fallback vibes';
+        return fallbackPosts;
+      }
+
+      const baseQuery = '("Michael Carrick" OR Carrick) ("Manchester United" OR MUFC OR "Man Utd") lang:en -is:retweet';
+      const q = keyword.trim() ? `${keyword} lang:en -is:retweet` : baseQuery;
+      const fullUrl = `${API_SEARCH_URL}?query=${encodeURIComponent(q)}&max_results=20&tweet.fields=created_at,author_id&expansions=author_id&user.fields=username`;
+
+      try {
+        const res = await fetch(fullUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${bearer}`
+          }
+        });
+        if (!res.ok) {
+          throw new Error(`API error: ${res.status} ${res.statusText}`);
+        }
+        
+        const data = await res.json();
+        
+        if (!data.data) {
+          console.warn('No tweets found in response', data);
+          return [];
+        }
+
+        return data.data.map(tweet => {
+          const user = data.includes?.users?.find(u => u.id === tweet.author_id);
+          return {
+            u: user?.username || 'unknown',
+            t: tweet.text,
+            url: `https://x.com/${user?.username || 'i'}/status/${tweet.id}`
+          };
+        });
+      } catch (err) {
+        console.error('Live X fetch failed:', err);
+        document.getElementById('status').textContent = `Live fetch error (${err.message}) – using fallback vibes`;
+        return fallbackPosts;
+      }
+    }
+
+    // ── Fresh fallback posts (real recent X vibes ~ Jan 13 2026 04:59 GMT) ──
+    const fallbackPosts = [
+      { u: 'Utdpulse99', t: 'Carrick has 17 games. Even if he wins half of them, it probably won’t be enough for top 4 — it’ll take a miracle. #mufc', url: 'https://x.com/Utdpulse99/status/2010924266238460142' },
+      { u: 'krishg1990', t: "Looks like two things. 1. Ole wanted permanent gig again if he did well. 2. Ole is a manager has to bring coaches in. 1. Carrick understood it's a 5 months gig and happy to do it. 2. Carrick is a coach and willing to work with Fletcher and one other coach in his setup. #MUFC", url: 'https://x.com/krishg1990/status/2010923215368192206' },
+      { u: 'footfanatics_FT', t: 'Based on reports, Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the #mufc interim manager role \n\nMichael Carrick has accepted all conditions of Manchester United contract proposal.\n\nThe agreement is almost done and it will be sealed THIS week.\n\nHere we go, soon. 💣🔙', url: 'https://x.com/footfanatics_FT/status/2010921806287560879' },
+      { u: 'Duke_Utd', t: 'Since his interview with the club, Michael Carrick has gained strong internal support at Manchester United. Sir Alex Ferguson is also believed to prefer Carrick over Ole Gunnar Solskjaer.', url: 'https://x.com/Duke_Utd/status/2010918620910534674' },
+      { u: 'PrimePitch_', t: 'Michael Carrick has accepted all conditions of Manchester United contract proposal.', url: 'https://x.com/PrimePitch_/status/2010917026772996274' },
+      { u: 'olaonx', t: '🚧🚨 Carrick beats Ole to Man Utd job: Club to announce interim boss in next 48 hours.', url: 'https://x.com/olaonx/status/2010916606168252551' },
+      { u: 'EusebioSudi', t: 'You’re already telling Carrick how he should set up his team😂😂😂😂😂 who bewitched Manchester United', url: 'https://x.com/EusebioSudi/status/2010916224599822500' },
+      { u: 'UtdHenry9', t: 'Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the #MUFC interim manager role \n\n(@talkSPORT)', url: 'https://x.com/UtdHenry9/status/2010914545208803656' },
+      { u: 'JoySmith830230', t: 'You’d not hear any negatives concerning their friends fletcher & incoming carrick', url: 'https://x.com/JoySmith830230/status/2010913195092033827' },
+      { u: 'RubenAmorimx', t: 'Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the #mufc interim manager role [@talkSPORT]', url: 'https://x.com/RubenAmorimx/status/2010912832196378835' },
+      { u: 'utdreport', t: 'Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the #mufc interim manager role [@talkSPORT]', url: 'https://x.com/utdreport/status/2010912563786367027' },
+      { u: 'markhoorocks', t: "Language and emoji used gave the impression that you seemed upset by the question. I've no emotional investment in the situation, so I don't see that appointing Ole has any net benefit over Carrick. The issues remain either way. And no alignment works for me. 🤝", url: 'https://x.com/markhoorocks/status/2010912140455252279' },
+      { u: 'wakibi_z', t: "Michael Carrick's first two games as Man Utd manager would be:\n\n🆚 Man City (H)\n🆚 Arsenal (A)\n\nA huge first test should the former interim manager return 😳", url: 'https://x.com/wakibi_z/status/2010911935097913748' },
+      { u: 'markhoorocks', t: "Do you always get this upset when someone challenges your point of view? Or just because it's twitter? Calm down. I don't agree, I'm not trying to change your mind, you don't need to change mine. Carrick won 2 and drew 1 as interim manger. There, stats. 😆", url: 'https://x.com/markhoorocks/status/2010909392510861662' },
+      { u: 'DailyPitchRpt', t: 'Manchester United to confirm Michael Carrick as interim manager https://www.theguardian.com/football/2026/jan/12/manchester-united-to-confirm-michael-carrick-as-interim-manager', url: 'https://x.com/DailyPitchRpt/status/2010907983077859477' },
+      { u: 'KavinM673978', t: '• Carrick  is set to be United’s interim head coach until season end\n• Contract ready & conditions accepted\n• Final talks over backroom staff\n• United want it done this week\n• Carrick ready for the Manchester derby\n\n#MUFC', url: 'https://x.com/KavinM673978/status/2010905774042857818' },
+      { u: 'Cubillas62', t: "Anybody Entering The Megastore is Contributing to The Downfall of Manchester United & are Being used By The Filthy 🇮🇱💵 Glazer family, Fans Will see No success under Glazers Who ever The Manager is, Carrick or Ole -  silence fans appointments!  It Musnt Work! #GlazersOut", url: 'https://x.com/Cubillas62/status/2010902736444014612' },
+      { u: 'mufc_micky', t: 'By making that statement Carrick is basically saying IDGAF about anything pundits blabber about what I do', url: 'https://x.com/mufc_micky/status/2010902209501007933' },
+      { u: 'Anyimanutd', t: '🚨🚨BREAKING: \n\nSir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the interim manager role.  [@talkSPORT] \n#MUFC', url: 'https://x.com/Anyimanutd/status/2010901218114036190' }
+    ];
+
+    function showYou(lat, lng) {
+      if (youMarker) youMarker.remove();
+      youMarker = L.marker([lat, lng], {icon: youIcon}).addTo(map)
+        .bindPopup("You • @iandreme • Swagga Rico", {autoClose: false}).openPopup();
+      map.flyTo([lat, lng], 13, {duration: 1.5});
+    }
+
+    function addPost(lat, lng, username, text, url) {
+      const marker = L.marker([lat, lng], {icon: xIcon}).addTo(postsLayer);
+      marker.bindPopup(`<b>@${username}</b><br>${text.slice(0, 90)}${text.length > 90 ? '...' : ''}<br><a href="${url}" target="_blank" style="color:#1da1f2">→ View on X</a>`);
+    }
+
+    async function loadVibes(keyword = '') {
+      postsLayer.clearLayers();
+      document.getElementById('status').textContent = 'Loading Carrick / MUFC X vibes...';
+
+      let posts = await fetchLivePosts(keyword);
+      if (posts.length === 0) {
+        posts = fallbackPosts.filter(p => 
+          !keyword || 
+          p.t.toLowerCase().includes(keyword.toLowerCase().trim()) || 
+          p.u.toLowerCase().includes(keyword.toLowerCase().trim())
+        );
+      }
+
+      posts.forEach(p => {
+        const offLat = (Math.random() - 0.5) * 0.08;
+        const offLng = (Math.random() - 0.5) * 0.10;
+        addPost(51.507 + offLat, -0.128 + offLng, p.u, p.t, p.url);
+      });
+
+      document.getElementById('status').textContent = `${posts.length} X posts loaded • Carrick to MUFC vibes • Jan 13 2026 ~04:59 GMT`;
+    }
+
+    // GPS or fallback to London
+    navigator.geolocation.getCurrentPosition(
+      pos => showYou(pos.coords.latitude, pos.coords.longitude),
+      () => showYou(51.507, -0.128)
+    );
+
+    // Auto load on start
+    setTimeout(() => loadVibes(), 1200);
+  </script>
 </body>
 </html>
+```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

@@ -50,7 +50,7 @@
     let youMarker = null;
 
     // ── Proxy still needed for REAL live fetch (keep for future) ──
-    const PROXY_API_URL = "https://api.x.com/2/tweets"; // ← UPDATE THIS TO A VALID PROXY URL! The current value looks like a key, not a URL – fetch will fail.
+    const PROXY_API_URL = "https://x.com/"; // ← UPDATE THIS TO A VALID PROXY URL! The current value looks like a key, not a URL – fetch will fail.
 
     async function fetchLivePosts(keyword = '') {
       const baseQuery = '("Michael Carrick" OR Carrick) ("Manchester United" OR MUFC OR "Man Utd") lang:en -is:retweet';

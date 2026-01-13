@@ -24,9 +24,8 @@
     <div id="map"></div>
     <div class="header" style="pointer-events: all;">
       <h1>RootDonate</h1>
-      <label>Tweet ID: <input type="text" id="tweetId" value="123456789" placeholder="e.g. 123456789"/></label><br>
-      <button onclick="fetchTweet()">Fetch Single Tweet</button>
-      <button id="load" onclick="loadVibes()">Load Live Vibes</button>
+      <label>Tweet ID (optional): <input type="text" id="tweetId" value="" placeholder="e.g. 123456789"/></label><br>
+      <button onclick="handleAction()">Load Vibes / Fetch Tweet</button>
       <div id="result">Result will appear here...</div>
     </div>
     <footer>
@@ -57,10 +56,12 @@
     const postsLayer = L.layerGroup().addTo(map);
     let youMarker = null;
 
+    const corsProxy = 'https://cors-anywhere.herokuapp.com/';
+
     // ── Guest Token Fetch ──
     async function getGuestToken() {
       try {
-        const response = await fetch('https://api.x.com/1.1/guest/activate.json', {
+        const response = await fetch(corsProxy + 'https://api.x.com/1.1/guest/activate.json', {
           method: 'POST',
           headers: {
             'Authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA'
@@ -78,8 +79,7 @@
     }
 
     // ── Single Tweet Fetch (using GraphQL with guest token) ──
-    async function fetchTweet() {
-      const tweetId = document.getElementById('tweetId').value.trim();
+    async function fetchTweet(tweetId) {
       if (!tweetId) {
         document.getElementById('result').innerHTML = '<strong style="color:red">Error:</strong> Enter Tweet ID!';
         return;
@@ -119,7 +119,7 @@
         responsive_web_enhance_cards_enabled: false
       };
 
-      const url = `https://api.x.com/graphql/ncDeACNGIApPMaqGVuF_rw/TweetResultByRestId?variables=${encodeURIComponent(JSON.stringify(variables))}&features=${encodeURIComponent(JSON.stringify(features))}`;
+      const url = corsProxy + `https://api.x.com/graphql/qxWQxcMLiTPcavz9Qy5hwQ/TweetResultByRestId?variables=${encodeURIComponent(JSON.stringify(variables))}&features=${encodeURIComponent(JSON.stringify(features))}`;
 
       try {
         const response = await fetch(url, {
@@ -181,7 +181,7 @@
         responsive_web_enhance_cards_enabled: false
       };
 
-      const url = `https://api.x.com/graphql/SoqC2cNIOLM5VGV4mMRcuQ/SearchTimeline?variables=${encodeURIComponent(JSON.stringify(variables))}&features=${encodeURIComponent(JSON.stringify(features))}`;
+      const url = corsProxy + `https://api.x.com/graphql/4fpceYZ6-YQCx_JSl_Cn_A/SearchTimeline?variables=${encodeURIComponent(JSON.stringify(variables))}&features=${encodeURIComponent(JSON.stringify(features))}`;
 
       try {
         const res = await fetch(url, {
@@ -276,6 +276,15 @@
       });
 
       document.getElementById('status').textContent = `${posts.length} X posts loaded • Carrick to MUFC vibes • Jan 13 2026 ~05:07 GMT`;
+    }
+
+    async function handleAction() {
+      const tweetId = document.getElementById('tweetId').value.trim();
+      if (tweetId) {
+        await fetchTweet(tweetId);
+      } else {
+        await loadVibes();
+      }
     }
 
     // GPS or fallback to London

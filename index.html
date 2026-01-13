@@ -105,7 +105,7 @@
       <button id="load">Load Live X Vibes</button>
     </div>
     <footer>
-      <span id="status">Jan 12 2026 ~19:53 GMT • @iandreme (Swagga Rico)</span>
+      <span id="status">Jan 13 2026 ~03:35 GMT • @iandreme (Swagga Rico)</span>
     </footer>
   </div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -161,8 +161,28 @@
       }
     }
 
-    // Updated fallback real-time X posts (Jan 12 2026 ~19:53 GMT) – Carrick/MUFC vibes from X API
+    // Updated fallback real-time X posts (Jan 13 2026 ~03:35 GMT) – Carrick/MUFC vibes from X API
     const fallbackPosts = [
+      { u: 'Duke_Utd', t: 'Since his interview with the club, Michael Carrick has gained strong internal support at Manchester United. Sir Alex Ferguson is also believed to prefer Carrick over Ole Gunnar Solskjaer.', url: 'https://x.com/i/web/status/2010918620910534674' },
+      { u: 'PrimePitch_', t: 'Michael Carrick has accepted all conditions of Manchester United contract proposal.', url: 'https://x.com/i/web/status/2010917026772996274' },
+      { u: 'olaonx', t: '🚧🚨 Carrick beats Ole to Man Utd job: Club to announce interim boss in next 48 hours.', url: 'https://x.com/i/web/status/2010916606168252551' },
+      { u: 'EusebioSudi', t: 'You’re already telling Carrick how he should set up his team😂😂😂😂😂 who bewitched Manchester United', url: 'https://x.com/i/web/status/2010916224599822500' },
+      { u: 'UtdHenry9', t: 'Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the #MUFC interim manager role (@talkSPORT)', url: 'https://x.com/i/web/status/2010914545208803656' },
+      { u: 'JoySmith830230', t: 'You’d not hear any negatives concerning their friends fletcher & incoming carrick', url: 'https://x.com/i/web/status/2010913195092033827' },
+      { u: 'RubenAmorimx', t: 'Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the #mufc interim manager role [@talkSPORT]', url: 'https://x.com/i/web/status/2010912832196378835' },
+      { u: 'utdreport', t: 'Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the #mufc interim manager role [@talkSPORT]', url: 'https://x.com/i/web/status/2010912563786367027' },
+      { u: 'markhoorocks', t: 'Language and emoji used gave the impression that you seemed upset by the question. I\'ve no emotional investment in the situation, so I don\'t see that appointing Ole has any net benefit over Carrick. The issues remain either way. And no alignment works for me. 🤝', url: 'https://x.com/i/web/status/2010912140455252279' },
+      { u: 'wakibi_z', t: 'Michael Carrick\'s first two games as Man Utd manager would be: 🆚 Man City (H) 🆚 Arsenal (A) A huge first test should the former interim manager return 😳', url: 'https://x.com/i/web/status/2010911935097913748' },
+      { u: 'markhoorocks', t: 'Do you always get this upset when someone challenges your point of view? Or just because it\'s twitter? Calm down. I don\'t agree, I\'m not trying to change your mind, you don\'t need to change mine. Carrick won 2 and drew 1 as interim manger. There, stats. 😆', url: 'https://x.com/i/web/status/2010909392510861662' },
+      { u: 'DailyPitchRpt', t: 'Manchester United to confirm Michael Carrick as interim manager https://www.theguardian.com/football/2026/jan/12/manchester-united-to-confirm-michael-carrick-as-interim-manager', url: 'https://x.com/i/web/status/2010907983077859477' },
+      { u: 'KavinM673978', t: '• Carrick  is set to be United’s interim head coach until season end • Contract ready & conditions accepted • Final talks over backroom staff • United want it done this week • Carrick ready for the Manchester derby #MUFC', url: 'https://x.com/i/web/status/2010905774042857818' },
+      { u: 'Cubillas62', t: 'Anybody Entering The Megastore is Contributing to The Downfall of Manchester United & are Being used By The Filthy 🇮🇱💵 Glazer family, Fans Will see No success under Glazers Who ever The Manager is, Carrick or Ole -  silence fans appointments!  It Musnt Work! #GlazersOut', url: 'https://x.com/i/web/status/2010902736444014612' },
+      { u: 'mufc_micky', t: 'By making that statement Carrick is basically saying IDGAF about anything pundits blabber about what I do', url: 'https://x.com/i/web/status/2010902209501007933' },
+      { u: 'Anyimanutd', t: '🚨🚨BREAKING: Sir Alex Ferguson recommended Michael Carrick over Ole Gunnar Solskjaer for the interim manager role.  [@talkSPORT] #MUFC', url: 'https://x.com/i/web/status/2010901218114036190' },
+      { u: 'XSportpulse', t: '🚨🚨 BREAKING: Sir Alex Ferguson has advised Manchester United to appoint Michael Carrick over Ole Gunnar Solskjær for the interim manager role. (Source: @talkSPORT)', url: 'https://x.com/i/web/status/2010900985032683694' },
+      { u: 'footb___updates', t: '🚨🚨 BREAKING: Sir Alex Ferguson has reportedly advised Manchester United to appoint Michael Carrick as interim manager — ahead of Ole Gunnar Solskjær. 👀🔴 [@talkSPORT]', url: 'https://x.com/i/web/status/2010900086000361549' },
+      { u: 'FOLINTV', t: 'Manchester United are edging closer to appointing Michael Carrick as interim manager until the end of the season. Talks are progressing, with backroom staff the main focus, as Carrick emerges ahead of Ole Gunnar Solskjaer following Ruben Amorim’s dismissal.#ManUtd #MichaelCarrick #PremierLeague #MUFC #FootballNews', url: 'https://x.com/i/web/status/2010898790254067805' },
+      { u: 'DNA_MUFC', t: 'I\'m happy it\'s not Ole. Under Ole that\'s when player power became a thing with his chilled back attitude allowed the players to get bigger than the manager. Also what made him so "good" at United was when he had Carrick and McKenna with him which he don\'t have anymore.', url: 'https://x.com/i/web/status/2010898291949785547' }
     ];
 
     function showYou(lat, lng) {
@@ -190,7 +210,7 @@
         addPost(51.507 + offLat, -0.128 + offLng, p.u, p.t, p.url);
       });
 
-      document.getElementById('status').textContent = `${posts.length} live X posts loaded • Carrick / MUFC vibes • Jan 12 2026 ~19:53 GMT`;
+      document.getElementById('status').textContent = `${posts.length} live X posts loaded • Carrick / MUFC vibes • Jan 13 2026 ~03:35 GMT`;
     }
 
     // GPS → fallback to London
@@ -201,7 +221,7 @@
 
     // Event listeners + auto-load
     document.getElementById('load').onclick = () => loadVibes();
-    document.getElementById('search-btn').onclick = () => loadVibes(document.getElementById('keyword').value);
+    // Note: Search elements not in HTML, but if added: document.getElementById('search-btn').onclick = () => loadVibes(document.getElementById('keyword').value);
 
     setTimeout(() => loadVibes(), 1500);
   </script>

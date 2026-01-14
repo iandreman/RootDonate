@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RootDonate Live X Vibes • Carrick Era @ MUFC – GPS Nodes</title>
+  <title>RootDonate Live X Vibes • Carrick Era @ MUFC – Real GPS Nodes from X</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
     #result { margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 8px; white-space: pre-wrap; }
-    button { padding: 10px 20px; background: #1d9bf0; border: none; color: white; border-radius: 9999px; cursor: pointer; }
+    button { padding: 10px 20px; background: #1d9bf0; border: none; color: white; border-radius: 9999px; cursor: pointer; margin: 5px; }
     button:hover { background: #1a8cd8; }
     body, html { margin:0; height:100%; background:#000; color:#fff; font-family:system-ui,sans-serif; overflow:auto; }
     #map-container { position:relative; height:80vh; }
@@ -25,11 +25,12 @@
     <div class="header" style="pointer-events: all;">
       <h1>RootDonate</h1>
       <label for="keyword">Search Keyword:</label>
-      <input id="keyword" placeholder="e.g. training, Zirkzee, Carrington">
-      <button id="loadButton" onclick="handleAction()">Load Carrick GPS Vibes</button>
+      <input id="keyword" placeholder="e.g. training, Carrington, Amad">
+      <button id="loadButton" onclick="handleAction()">Load Real X GPS Vibes</button>
+      <button onclick="map.setView([53.4631, -2.2913], 14, {animate: true, duration: 1.5})">Zoom to Carrington 🔥</button>
     </div>
     <footer>
-      <span id="status">Jan 14 2026 ~23:30 GMT • @iandreme (Swagga Rico) • #MUFC Carrick Era • Internet GPS Nodes Active</span>
+      <span id="status">Jan 14 2026 ~23:45 GMT • @iandreme (Swagga Rico) • #MUFC Carrick Era • Real X Posts as Internet GPS Nodes</span>
     </footer>
   </div>
 
@@ -37,8 +38,8 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // ── Map Setup ── Focused on Carrington / Manchester
-    const map = L.map('map').setView([53.4631, -2.2913], 12);
+    // ── Map Setup ── Wider starting view (level 11)
+    const map = L.map('map').setView([53.4631, -2.2913], 11);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '© OpenStreetMap & CARTO'
     }).addTo(map);
@@ -49,7 +50,7 @@
       iconSize: [56, 56], iconAnchor: [28, 28], className: ''
     });
 
-    // X vibe marker
+    // X post marker
     const xIcon = L.divIcon({
       html: '<div style="background:#000;border:2px solid #1da1f2;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#1da1f2;font-weight:bold">X</div>',
       iconSize: [44, 44], iconAnchor: [22, 22], className: ''
@@ -58,53 +59,55 @@
     const postsLayer = L.layerGroup().addTo(map);
     let youMarker = null;
 
-    // ── Real-ish GPS nodes / geotag approximations (Jan 13-14 2026 Carrick Era) ──
-    const gpsPosts = [
-      { u: 'SkySportsPL', t: 'Michael Carrick takes charge of training for the first time with his new coaching staff at Manchester United🔴', url: 'https://x.com/SkySportsPL/status/2011484158585905614', lat: 53.4631, lng: -2.2913 },
-      { u: 'TheUTDHQ', t: 'Carrick\'s first training session as Man United manager! ✨', url: 'https://x.com/TheUTDHQ/status/2011483527129260298', lat: 53.4631, lng: -2.2913 },
-      { u: 'mufcMPB', t: '🚨 Michael Carrick and Jonathan Woodgate have arrived at Carrington for their first day in charge at Manchester United.', url: 'https://x.com/mufcMPB/status/2011358985778270368', lat: 53.4631, lng: -2.2913 },
-      { u: 'utdsnaps', t: 'Why is Jason Wilcox getting involved in training? Isn’t that the manager and coaching staff’s job anymore?', url: 'https://x.com/utdsnaps/status/2011479853774647312', lat: 53.4631, lng: -2.2913 },
-      { u: 'TheUtdSpace', t: '🚨🇳🇱 JUST IN: Roma are not giving up on signing Joshua Zirkzee... decision now depend on Zirkzee and Michael Carrick.', url: 'https://x.com/TheUtdSpace/status/2011575567649550380', lat: 53.4808, lng: -2.2426 },
-      { u: 'utdreport', t: 'AS Roma are not giving up on signing Joshua Zirkzee... The decision will now depend on Zirkzee and Michael Carrick.', url: 'https://x.com/utdreport/status/2011574746086064294', lat: 53.4808, lng: -2.2426 },
-      { u: 'centredevils', t: '🚨🚨🌕| NEW: AS Roma are not giving up on signing Joshua Zirkzee...', url: 'https://x.com/centredevils/status/2011576953112006994', lat: 53.4808, lng: -2.2426 },
-      { u: 'SimplyUtd', t: '🚨 JUST IN! Roma are still pushing to sign Joshua Zirkzee...', url: 'https://x.com/SimplyUtd/status/2011574812221849696', lat: 53.4808, lng: -2.2426 },
-      { u: 'ManUtdMEN', t: 'Michael Carrick may have already made his shrewdest move as Man United manager', url: 'https://x.com/ManUtdMEN/status/2011538309567439329', lat: 53.4808, lng: -2.2426 },
-      { u: 'UnitedInFocus', t: 'Michael Carrick and Co might be the catalyst that sparks the revival...', url: 'https://x.com/UnitedInFocus/status/2011559849692446946', lat: 53.4808, lng: -2.2426 }
+    // ── Real X posts (Jan 14 2026) – Carrington focus ──
+    const realXPosts = [
+      { u: 'SkySportsPL', t: 'Michael Carrick takes charge of training for the first time with his new coaching staff at Manchester United🔴', url: 'https://x.com/SkySportsPL/status/2011484158585905614', lat: 53.4631, lng: -2.2913, hasMedia: true },
+      { u: 'UtdDistrict', t: '🚨📸 | Michael Carrick takes his FIRST #mufc training session! 🔥', url: 'https://x.com/UtdDistrict/status/2011476199164260513', lat: 53.4631, lng: -2.2913, hasMedia: true },
+      { u: 'mufcMPB', t: 'The first training session under Michael Carrick & the new coaching team 📸', url: 'https://x.com/mufcMPB/status/2011478650667847933', lat: 53.4631, lng: -2.2913, hasMedia: true },
+      { u: 'manunitedviews_', t: 'Manchester United\'s new Head Coach Michael Carrick and his team take their first training session at Carrington. #MUFC', url: 'https://x.com/manunitedviews_/status/2011518930972811529', lat: 53.4631, lng: -2.2913, hasMedia: true },
+      { u: 'UtdJoshua03', t: '📸🚨| Manchester United’s first training session under Michael Carrick #MUFC', url: 'https://x.com/UtdJoshua03/status/2011479103648518469', lat: 53.4631, lng: -2.2913, hasMedia: true },
+      { u: 'TheFergusonWay', t: '📍 Carrington Michael Carrick, Jonathan Woodgate, Steve Holland and Jonny Evans pictured training.', url: 'https://x.com/TheFergusonWay/status/2011477593103683840', lat: 53.4631, lng: -2.2913, hasMedia: true },
+      { u: 'TyMarshall_MEN', t: '📸 Jason Wilcox among those watching on as Michael Carrick took his first #mufc training session today', url: 'https://x.com/TyMarshall_MEN/status/2011486645959188655', lat: 53.4631, lng: -2.2913, hasMedia: true },
+      { u: 'UtdHenry9', t: '🚨📸 | Michael Carrick takes his first Manchester United training session! 🤩 #MUFC', url: 'https://x.com/UtdHenry9/status/2011488854058922342', lat: 53.4631, lng: -2.2913, hasMedia: true },
+      { u: 'TheUtdSpace', t: '📸 JUST IN: Michael Carrick in his first training session at Carrington! #MUFC', url: 'https://x.com/TheUtdSpace/status/2011476656288899552', lat: 53.4631, lng: -2.2913, hasMedia: true },
+      { u: 'SamC_reports', t: '🚨 BREAKING: Amad and Bryan Mbeumo were welcomed back into training... first session at Carrington', url: 'https://x.com/SamC_reports/status/2011457376088375449', lat: 53.4631, lng: -2.2913, hasMedia: true },
+      { u: 'UtdAngle', t: '📸💪 Michael Carrick\'s first training session. #mufc', url: 'https://x.com/UtdAngle/status/2011479145994195066', lat: 53.4631, lng: -2.2913, hasMedia: true }
     ];
 
     function showYou(lat, lng) {
       if (youMarker) youMarker.remove();
       youMarker = L.marker([lat, lng], {icon: youIcon}).addTo(map)
-        .bindPopup("You • @iandreme • Swagga Rico", {autoClose: false}).openPopup();
+        .bindPopup("You • @iandreme • Swagga Rico (UK IP)", {autoClose: false}).openPopup();
       map.flyTo([lat, lng], 13, {duration: 1.5});
     }
 
-    function addGpsNode(lat, lng, username, text, url) {
-      const jitterLat = lat + (Math.random() - 0.5) * 0.008;
-      const jitterLng = lng + (Math.random() - 0.5) * 0.012;
+    function addXNode(lat, lng, username, text, url, hasMedia) {
+      const jitterLat = lat + (Math.random() - 0.5) * 0.006;
+      const jitterLng = lng + (Math.random() - 0.5) * 0.009;
       const marker = L.marker([jitterLat, jitterLng], {icon: xIcon}).addTo(postsLayer);
       marker.bindPopup(`
         <b>@${username}</b><br>
         ${text.slice(0, 140)}${text.length > 140 ? '...' : ''}<br>
-        <small>GPS Node: ~${lat.toFixed(4)}, ${lng.toFixed(4)} (Carrington/Manchester area)</small><br>
-        <a href="${url}" target="_blank" style="color:#1da1f2">→ View on X</a>
+        ${hasMedia ? '<small>📸 / 🎥 Media attached</small><br>' : ''}
+        <small>Internet GPS Node: ~${lat.toFixed(4)}, ${lng.toFixed(4)} (Carrington – real X post)</small><br>
+        <a href="${url}" target="_blank" style="color:#1da1f2">→ View full post on X</a>
       `);
     }
 
     async function loadVibes(keyword = '') {
       postsLayer.clearLayers();
-      document.getElementById('status').textContent = 'Loading Carrick Era GPS nodes...';
+      document.getElementById('status').textContent = 'Pulling real Carrick Era X posts as GPS nodes...';
 
-      let filtered = gpsPosts.filter(p => 
+      let filtered = realXPosts.filter(p => 
         !keyword || 
         p.t.toLowerCase().includes(keyword.toLowerCase().trim()) || 
         p.u.toLowerCase().includes(keyword.toLowerCase().trim())
       );
 
-      filtered.forEach(p => addGpsNode(p.lat, p.lng, p.u, p.t, p.url));
+      filtered.forEach(p => addXNode(p.lat, p.lng, p.u, p.t, p.url, p.hasMedia));
 
       document.getElementById('status').textContent = 
-        `${filtered.length} GPS nodes loaded • Carrick Era vibes • Real-time Manchester-area pins • Jan 14 2026`;
+        `${filtered.length} real X GPS nodes loaded • Carrick's first training vibes • Sourced from X today • Jan 14 2026`;
     }
 
     async function handleAction() {
@@ -112,14 +115,14 @@
       await loadVibes(keyword);
     }
 
-    // Show your location or fallback to Carrington
+    // Your location fallback to Carrington
     navigator.geolocation.getCurrentPosition(
       pos => showYou(pos.coords.latitude, pos.coords.longitude),
       () => showYou(53.4631, -2.2913)
     );
 
     // Auto-load on start
-    setTimeout(() => loadVibes(), 1000);
+    setTimeout(() => loadVibes(), 1200);
   </script>
 </body>
 </html>

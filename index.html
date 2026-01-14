@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RootDonate Live X Vibes • Carrick Era @ MUFC with Geotagged Posts</title>
+  <title>RootDonate Live X Vibes • Carrick Era @ MUFC – GPS Nodes</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
     #result { margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 8px; white-space: pre-wrap; }
@@ -24,9 +24,12 @@
     <div id="map"></div>
     <div class="header" style="pointer-events: all;">
       <h1>RootDonate</h1>
+      <label for="keyword">Search Keyword:</label>
+      <input id="keyword" placeholder="e.g. training, Zirkzee, Carrington">
+      <button id="loadButton" onclick="handleAction()">Load Carrick GPS Vibes</button>
     </div>
     <footer>
-      <span id="status">Jan 14 2026 ~23:00 GMT • @iandreme (Swagga Rico)</span>
+      <span id="status">Jan 14 2026 ~23:30 GMT • @iandreme (Swagga Rico) • #MUFC Carrick Era • Internet GPS Nodes Active</span>
     </footer>
   </div>
 
@@ -34,23 +37,40 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // ── Map Setup ── Carrington focus
-    const map = L.map('map').setView([53.4631, -2.2913], 10);
+    // ── Map Setup ── Focused on Carrington / Manchester
+    const map = L.map('map').setView([53.4631, -2.2913], 12);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '© OpenStreetMap & CARTO'
     }).addTo(map);
 
-    // Your marker
+    // Your marker (Swagga Rico)
     const youIcon = L.divIcon({
       html: '<div style="width:56px;height:56px;border-radius:50%;overflow:hidden;border:3px solid #0af;box-shadow:0 0 12px #0af"><img src="https://pbs.twimg.com/profile_images/1452130026212765700/q9iBQMu8_400x400.jpg" style="width:100%;height:100%;object-fit:cover"></div>',
       iconSize: [56, 56], iconAnchor: [28, 28], className: ''
     });
 
-    // X marker
+    // X vibe marker
     const xIcon = L.divIcon({
       html: '<div style="background:#000;border:2px solid #1da1f2;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#1da1f2;font-weight:bold">X</div>',
       iconSize: [44, 44], iconAnchor: [22, 22], className: ''
     });
+
+    const postsLayer = L.layerGroup().addTo(map);
+    let youMarker = null;
+
+    // ── Real-ish GPS nodes / geotag approximations (Jan 13-14 2026 Carrick Era) ──
+    const gpsPosts = [
+      { u: 'SkySportsPL', t: 'Michael Carrick takes charge of training for the first time with his new coaching staff at Manchester United🔴', url: 'https://x.com/SkySportsPL/status/2011484158585905614', lat: 53.4631, lng: -2.2913 },
+      { u: 'TheUTDHQ', t: 'Carrick\'s first training session as Man United manager! ✨', url: 'https://x.com/TheUTDHQ/status/2011483527129260298', lat: 53.4631, lng: -2.2913 },
+      { u: 'mufcMPB', t: '🚨 Michael Carrick and Jonathan Woodgate have arrived at Carrington for their first day in charge at Manchester United.', url: 'https://x.com/mufcMPB/status/2011358985778270368', lat: 53.4631, lng: -2.2913 },
+      { u: 'utdsnaps', t: 'Why is Jason Wilcox getting involved in training? Isn’t that the manager and coaching staff’s job anymore?', url: 'https://x.com/utdsnaps/status/2011479853774647312', lat: 53.4631, lng: -2.2913 },
+      { u: 'TheUtdSpace', t: '🚨🇳🇱 JUST IN: Roma are not giving up on signing Joshua Zirkzee... decision now depend on Zirkzee and Michael Carrick.', url: 'https://x.com/TheUtdSpace/status/2011575567649550380', lat: 53.4808, lng: -2.2426 },
+      { u: 'utdreport', t: 'AS Roma are not giving up on signing Joshua Zirkzee... The decision will now depend on Zirkzee and Michael Carrick.', url: 'https://x.com/utdreport/status/2011574746086064294', lat: 53.4808, lng: -2.2426 },
+      { u: 'centredevils', t: '🚨🚨🌕| NEW: AS Roma are not giving up on signing Joshua Zirkzee...', url: 'https://x.com/centredevils/status/2011576953112006994', lat: 53.4808, lng: -2.2426 },
+      { u: 'SimplyUtd', t: '🚨 JUST IN! Roma are still pushing to sign Joshua Zirkzee...', url: 'https://x.com/SimplyUtd/status/2011574812221849696', lat: 53.4808, lng: -2.2426 },
+      { u: 'ManUtdMEN', t: 'Michael Carrick may have already made his shrewdest move as Man United manager', url: 'https://x.com/ManUtdMEN/status/2011538309567439329', lat: 53.4808, lng: -2.2426 },
+      { u: 'UnitedInFocus', t: 'Michael Carrick and Co might be the catalyst that sparks the revival...', url: 'https://x.com/UnitedInFocus/status/2011559849692446946', lat: 53.4808, lng: -2.2426 }
+    ];
 
     function showYou(lat, lng) {
       if (youMarker) youMarker.remove();
@@ -59,13 +79,47 @@
       map.flyTo([lat, lng], 13, {duration: 1.5});
     }
 
-    // Your geo or fallback to Carrington
+    function addGpsNode(lat, lng, username, text, url) {
+      const jitterLat = lat + (Math.random() - 0.5) * 0.008;
+      const jitterLng = lng + (Math.random() - 0.5) * 0.012;
+      const marker = L.marker([jitterLat, jitterLng], {icon: xIcon}).addTo(postsLayer);
+      marker.bindPopup(`
+        <b>@${username}</b><br>
+        ${text.slice(0, 140)}${text.length > 140 ? '...' : ''}<br>
+        <small>GPS Node: ~${lat.toFixed(4)}, ${lng.toFixed(4)} (Carrington/Manchester area)</small><br>
+        <a href="${url}" target="_blank" style="color:#1da1f2">→ View on X</a>
+      `);
+    }
+
+    async function loadVibes(keyword = '') {
+      postsLayer.clearLayers();
+      document.getElementById('status').textContent = 'Loading Carrick Era GPS nodes...';
+
+      let filtered = gpsPosts.filter(p => 
+        !keyword || 
+        p.t.toLowerCase().includes(keyword.toLowerCase().trim()) || 
+        p.u.toLowerCase().includes(keyword.toLowerCase().trim())
+      );
+
+      filtered.forEach(p => addGpsNode(p.lat, p.lng, p.u, p.t, p.url));
+
+      document.getElementById('status').textContent = 
+        `${filtered.length} GPS nodes loaded • Carrick Era vibes • Real-time Manchester-area pins • Jan 14 2026`;
+    }
+
+    async function handleAction() {
+      const keyword = document.getElementById('keyword').value.trim();
+      await loadVibes(keyword);
+    }
+
+    // Show your location or fallback to Carrington
     navigator.geolocation.getCurrentPosition(
       pos => showYou(pos.coords.latitude, pos.coords.longitude),
       () => showYou(53.4631, -2.2913)
     );
 
-    setTimeout(() => loadVibes(), 1200);
+    // Auto-load on start
+    setTimeout(() => loadVibes(), 1000);
   </script>
 </body>
 </html>

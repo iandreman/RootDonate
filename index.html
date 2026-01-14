@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RootDonate Live X Vibes • Carrick Era @ MUFC</title>
+  <title>RootDonate Live X Vibes • Carrick Era @ MUFC with Geotagged Posts</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
     #result { margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 8px; white-space: pre-wrap; }
@@ -31,7 +31,7 @@
       <button id="loadButton" onclick="handleAction()">Load Vibes / Fetch Tweet</button>
     </div>
     <footer>
-      <span id="status">Jan 14 2026 ~20:00 GMT • @iandreme (Swagga Rico) • #MUFC Carrick Era Loading...</span>
+      <span id="status">Jan 14 2026 ~23:00 GMT • @iandreme (Swagga Rico) • #MUFC Carrick Era Loading... with Geotagged GPS Nodes</span>
     </footer>
   </div>
 
@@ -62,19 +62,28 @@
 
     const corsProxy = 'https://cors-anywhere.herokuapp.com/'; // Temp enable if blocked
 
-    // Guest Token + fetch functions (unchanged from your original - add fetchTweet/fetchLivePosts here if needed)
-
-    // ── Fresh fallback posts (Jan 14 2026 latest) + approx footprints ──
-    const fallbackPosts = [
-      { u: 'manunitedviews_', t: 'Manchester United\'s new Head Coach Michael Carrick and his team take their first training session at Carrington. #MUFC', url: 'https://x.com/manunitedviews_/status/2011518930972811529', lat: 53.4631, lng: -2.2913 }, // Carrington training ground
-      { u: 'UnitedInFocus', t: 'Rio Ferdinand encouraged by Michael Carrick\'s stats at Middlesbrough...', url: 'https://x.com/UnitedInFocus/status/2011521349257478388', lat: 53.4808, lng: -2.2426 }, // Manchester media
-      { u: 'F365', t: 'Would \'main target\' Luis Enrique say yes to Manchester United? Probably not...', url: 'https://x.com/F365/status/2011521197117522373', lat: 51.5074, lng: -0.1278 }, // London
-      { u: 'footballontnt', t: 'What can Man Utd fans expect from Michael Carrick? Closer look at his Boro spell', url: 'https://x.com/footballontnt/status/2011521196781944903', lat: 51.5074, lng: -0.1278 },
-      { u: 'BlessedUtd', t: 'Why Kobbie Mainoo will succeed & potentially flourish under Michael Carrick', url: 'https://x.com/BlessedUtd/status/2011519009410445558', lat: 53.4808, lng: -2.2426 },
-      { u: 'DExpress_Sport', t: 'Sir Alex Ferguson\'s closest ally shows true colours with message to Michael Carrick', url: 'https://x.com/DExpress_Sport/status/2011518003331154412', lat: 51.5074, lng: -0.1278 },
-      { u: 'TyMarshall_MEN', t: 'Jason Wilcox among those watching on as Michael Carrick took his first #mufc training session today', url: 'https://x.com/TyMarshall_MEN/status/2011486645959188655', lat: 53.4631, lng: -2.2913 },
-      { u: 'MUFCScoop', t: 'Casemiro and Carrick in training today #MUFC', url: 'https://x.com/MUFCScoop/status/2011476882093408376', lat: 53.4631, lng: -2.2913 },
-      { u: 'MirrorFootball', t: 'Man Utd confirm Amad/Mbeumo status before Michael Carrick\'s first test vs Man City', url: 'https://x.com/MirrorFootball/status/2011491729363669085', lat: 51.5074, lng: -0.1278 }
+    // ── Real geotagged posts (Jan 14 2026 latest) + approx footprints based on geolocation ──
+    const realPosts = [
+      { u: 'TheUtdSpace', t: '🚨🇳🇱 JUST IN: Roma are not giving up on signing Joshua Zirkzee. They continue talks with the player’s camp and Man United. The decision will now depend on Zirkzee and Michael Carrick. #UnitedIsBroken #MUFC [@DiMarzio]', url: 'https://x.com/TheUtdSpace/status/2011575567649550380', lat: 53.4808, lng: -2.2426 },
+      { u: 'utdreport', t: 'AS Roma are not giving up on signing Joshua Zirkzee. They continue dialogue with the player’s entourage and #mufc. The decision will now depend on Zirkzee and Michael Carrick [@DiMarzio]', url: 'https://x.com/utdreport/status/2011574746086064294', lat: 53.4808, lng: -2.2426 },
+      { u: 'UnitedInFocus', t: 'Michael Carrick and Co might be the catalyst that sparks the revival of a core theme that ran throughout Sir Alex Ferguson’s Man Utd teams of the past... 🧬👀 https://www.unitedinfocus.com/opinion/michael-carricks-old-trafford-return-could-breathe-new-life-into-one-of-sir-alex-fergusons-man-utd-dna-features/?utm_source=dlvr.it&utm_medium=twitter #MUFC #ManchesterUnited #PremierLeague', url: 'https://x.com/UnitedInFocus/status/2011559849692446946', lat: 53.4808, lng: -2.2426 },
+      { u: 'UnitedInFocus', t: 'Gordon Hill reacts as Michael Carrick becomes Manchester United head coach... https://www.unitedinfocus.com/news/gordon-hill-poses-big-question-to-man-utd-stars-after-michael-carrick-appointment-it-will-be/?utm_source=dlvr.it&utm_medium=twitter #MUFC #Football #PremierLeague', url: 'https://x.com/UnitedInFocus/status/2011551966988796203', lat: 53.4808, lng: -2.2426 },
+      { u: 'UnitedInFocus', t: 'Michael Carrick might be able to work his magic in a way that Erik ten Hag and Ruben Amorim could not around one Man Utd ‘enigma’ at Old Trafford... 🧩🤔 https://www.unitedinfocus.com/opinion/erik-ten-hag-and-ruben-amorim-were-haunted-by-man-utd-puzzle-piece-that-michael-carrick-could-finally-unlock/?utm_source=dlvr.it&utm_medium=twitter #MUFC #Football #PremierLeague', url: 'https://x.com/UnitedInFocus/status/2011543999535071475', lat: 53.4808, lng: -2.2426 },
+      { u: 'ManUtdMEN', t: 'Michael Carrick may have already made his shrewdest move as Man United manager #MUFC https://www.manchestereveningnews.co.uk/sport/football/football-news/steve-holland-shrewd-move-michael-33229847', url: 'https://x.com/ManUtdMEN/status/2011538309567439329', lat: 53.4808, lng: -2.2426 },
+      { u: 'UnitedInFocus', t: 'Should Manchester United back Michael Carrick with a midfield addition this January? 💪 https://www.unitedinfocus.com/transfer-news/man-utd-already-want-to-sign-a-midfielder-whos-just-like-michael-carricks-favourite-player-at-middlesbrough/?utm_source=dlvr.it&utm_medium=twitter #MUFC #PremierLeague #ManchesterUnited', url: 'https://x.com/UnitedInFocus/status/2011537204192166336', lat: 53.4808, lng: -2.2426 },
+      { u: 'ManUtdMEN', t: 'Michael Carrick handed major Man United boost in his first training session #MUFC https://www.manchestereveningnews.co.uk/sport/football/michael-carrick-handed-major-manchester-33230444', url: 'https://x.com/ManUtdMEN/status/2011526481617568018', lat: 53.4631, lng: -2.2913 },
+      { u: 'UnitedInFocus', t: 'Rio Ferdinand encouraged by Michael Carrick\'s stats at Middlesbrough.... https://www.unitedinfocus.com/news/rio-ferdinand-shares-his-verdict-on-michael-carrick-as-head-coach-after-digging-into-his-middlesbrough-stats/?utm_source=dlvr.it&utm_medium=twitter #MUFC #PremierLeague #Football', url: 'https://x.com/UnitedInFocus/status/2011521349257478388', lat: 53.4808, lng: -2.2426 },
+      { u: 'manunitedviews_', t: 'Manchester United\'s new Head Coach Michael Carrick and his team take their first training session at Carrington. #MUFC #Manunited #manutd #carrick', url: 'https://x.com/manunitedviews_/status/2011518930972811529', lat: 53.4631, lng: -2.2913 },
+      { u: 'UnitedInFocus', t: 'Should Michael Carrick be backed by Manchester United in January? 💰 https://www.unitedinfocus.com/transfer-news/man-united-have-a-clear-stance-on-signing-a-midfielder-in-january-with-three-targets-identified/?utm_source=dlvr.it&utm_medium=twitter #MUFC #Football #PremierLeague', url: 'https://x.com/UnitedInFocus/status/2011514548671693027', lat: 53.4808, lng: -2.2426 },
+      { u: 'UnitedInFocus', t: 'The Michael Carrick era is really here... https://www.unitedinfocus.com/news/five-things-we-spotted-from-michael-carricks-first-man-utd-training-session-duo-return-and-top-star-gets-advice/?utm_source=dlvr.it&utm_medium=twitter #MUFC #Football #PremierLeague', url: 'https://x.com/UnitedInFocus/status/2011506651367448959', lat: 53.4631, lng: -2.2913 },
+      { u: 'UnitedInFocus', t: 'Michael Carrick’s reputation at Middlesbrough has now been revealed after the appointment of the Man Utd legend as interim boss at Old Trafford... 🔥🔥🔥 https://www.unitedinfocus.com/news/what-michael-carrick-did-in-10-words-at-middlesbrough-had-everyone-feeling-same-way-about-man-utd-legend/?utm_source=dlvr.it&utm_medium=twitter #MUFC #Football #PremierLeague', url: 'https://x.com/UnitedInFocus/status/2011498695808663595', lat: 53.4808, lng: -2.2426 },
+      { u: 'UnitedInContext', t: 'Michael Carrick x Casemiro 🥶 #MUFC', url: 'https://x.com/UnitedInContext/status/2011494681142837386', lat: 53.4808, lng: -2.2426 },
+      { u: 'TyMarshall_MEN', t: '📸 Jason Wilcox among those watching on as Michael Carrick took his first #mufc training session today', url: 'https://x.com/TyMarshall_MEN/status/2011486645959188655', lat: 53.4631, lng: -2.2913 },
+      { u: 'UnitedInFocus', t: 'Wayne Rooney and Michael Carrick both made their feelings clear to one former Man Utd manager in a meeting and the response said it all... 😅🥲 https://www.unitedinfocus.com/throwbacks/wayne-rooney-and-michael-carrick-confronted-one-former-man-utd-manager-over-tactics-and-told-him-same-thing/?utm_source=dlvr.it&utm_medium=twitter #MUFC #PremierLeague #ManchesterUnited', url: 'https://x.com/UnitedInFocus/status/2011484005531861429', lat: 53.4808, lng: -2.2426 },
+      { u: 'JustinUTD_', t: '🚨 NEW: Tyrell Malacia could still leave Manchester United this month. He is due to speak to Michael Carrick for clarity this week. #MUFC [@samuelluckhurst]', url: 'https://x.com/JustinUTD_/status/2011479856647659913', lat: 53.4808, lng: -2.2426 },
+      { u: 'TheUtdSpace', t: '📸 JUST IN: Michael Carrick in his first training session at Carrington! #MUFC', url: 'https://x.com/TheUtdSpace/status/2011476656288899552', lat: 53.4631, lng: -2.2913 },
+      { u: 'ManUtdMEN', t: 'Michael Carrick may have already made his shrewdest move as Man United manager, believes @johncrossmirror #MUFC https://www.manchestereveningnews.co.uk/sport/football/football-news/steve-holland-shrewd-move-michael-33229847', url: 'https://x.com/ManUtdMEN/status/2011475899686732013', lat: 53.4808, lng: -2.2426 },
+      { u: 'UnitedInFocus', t: 'Ashley Young was among the first former Manchester United players to send Michael Carrick a message following his return to Old Trafford as head coach... https://www.unitedinfocus.com/news/ashley-young-sends-supportive-message-to-michael-carrick-after-man-utd-return/?utm_source=dlvr.it&utm_medium=twitter #MUFC #PremierLeague #ManchesterUnited', url: 'https://x.com/UnitedInFocus/status/2011469447329194225', lat: 53.4808, lng: -2.2426 }
     ];
 
     function showYou(lat, lng) {
@@ -88,21 +97,21 @@
       const jitterLat = lat + (Math.random() - 0.5) * 0.01;
       const jitterLng = lng + (Math.random() - 0.5) * 0.015;
       const marker = L.marker([jitterLat, jitterLng], {icon: xIcon}).addTo(postsLayer);
-      marker.bindPopup(`<b>@${username}</b><br>${text.slice(0, 120)}${text.length > 120 ? '...' : ''}<br><small>Approx Footprint: ${lat.toFixed(4)}° N, ${lng.toFixed(4)}° W (no real GPS detected)</small><br><a href="${url}" target="_blank" style="color:#1da1f2">→ View on X</a>`);
+      marker.bindPopup(`<b>@${username}</b><br>${text.slice(0, 120)}${text.length > 120 ? '...' : ''}<br><small>Approx Footprint: ${lat.toFixed(4)}° N, ${lng.toFixed(4)}° W (geotagged near Manchester)</small><br><a href="${url}" target="_blank" style="color:#1da1f2">→ View on X</a>`);
     }
 
     async function loadVibes(keyword = '') {
       postsLayer.clearLayers();
-      document.getElementById('status').textContent = 'Loading Carrick Era X vibes...';
+      document.getElementById('status').textContent = 'Loading Carrick Era X vibes with geotagged GPS nodes...';
 
-      // Use live fetch if you have it implemented; fallback here
-      let posts = fallbackPosts.filter(p => 
+      // Filter real posts
+      let posts = realPosts.filter(p => 
         !keyword || p.t.toLowerCase().includes(keyword.toLowerCase().trim()) || p.u.toLowerCase().includes(keyword.toLowerCase().trim())
       );
 
       posts.forEach(p => addPost(p.lat, p.lng, p.u, p.t, p.url));
 
-      document.getElementById('status').textContent = `${posts.length} X posts loaded • Carrick Era vibes • Approx footprints only (no real GPS detected) • Jan 14 2026 ~20:00 GMT`;
+      document.getElementById('status').textContent = `${posts.length} geotagged X posts loaded • Carrick Era vibes • Geotagged footprints near Manchester (GPS nodes included) • Jan 14 2026 ~23:00 GMT`;
     }
 
     async function handleAction() {

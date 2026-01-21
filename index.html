@@ -40,9 +40,6 @@
 
   <div class="overlay">
     <h1>Root Donate Map</h1>
-
-    <button id="refresh">Refresh / Center</button>
-
     <div id="gps">GPS: checking...</div>
     <div id="status">Jan 21, 2026 • @iandreme • Email → Map demo</div>
   </div>
@@ -57,7 +54,7 @@
     // ────────────────────────────────────────────────
 
     const map = L.map('map').setView([53.4631, -2.2913], 13);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/{z}/{x}/{y}{r}.png', {
       attribution: '© OpenStreetMap & CARTO'
     }).addTo(map);
 

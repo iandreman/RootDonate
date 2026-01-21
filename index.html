@@ -3,315 +3,132 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Donate Map • Drop Message → GPS • #MUFC</title>
+  <title>Hello World • Map Pin Drop • #MUFC</title>
 
+  <!-- Leaflet CSS + JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5p5QbskXk=" crossorigin="anonymous" />
-
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
 
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-
   <style>
-    :root {
-      --primary: #1d9bf0;
-      --success: #00ff55;
-      --error:   #ff6666;
-      --dark:    #000;
-      --dark-2:  #0f0f0f;
-      --gray:    #444;
-      --light:   #eeeeee;
-    }
-
-    * { box-sizing: border-box; }
-
-    html, body {
+    body, html {
       margin: 0;
       padding: 0;
       height: 100%;
-      width: 100%;
-      overflow: hidden;
-      background: var(--dark);
-      color: var(--light);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: Arial, sans-serif;
+      background: #000;
+      color: #eee;
     }
-
     #map {
-      height: 100%;
+      height: 70%;
       width: 100%;
-      position: absolute;
-      inset: 0;
-      z-index: 1;
     }
-
-    .overlay {
-      position: absolute;
-      top: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1000;
-      background: rgba(15,15,15,0.88);
-      backdrop-filter: blur(8px);
-      padding: 1.8rem 2rem;
-      border-radius: 16px;
+    .form-box {
+      padding: 20px;
+      background: #111;
       text-align: center;
-      max-width: 94%;
-      width: 460px;
-      max-height: 86vh;
-      overflow-y: auto;
-      box-shadow: 0 8px 32px rgba(0,255,80,0.15);
     }
-
-    h1 {
-      margin: 0 0 1.3rem;
-      font-size: clamp(2rem, 7vw, 2.8rem);
-      background: linear-gradient(90deg, #00aaff, #00ff55, #ffaa00);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
     input, textarea {
-      display: block;
-      margin: 1rem auto;
-      padding: 0.95rem 1.2rem;
-      width: 100%;
-      border: 1px solid var(--gray);
-      border-radius: 12px;
-      background: var(--dark-2);
-      color: var(--light);
-      font-size: 1.05rem;
-      transition: border-color 0.25s, box-shadow 0.25s;
+      width: 90%;
+      max-width: 400px;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #222;
+      color: white;
     }
-
-    input:focus, textarea:focus {
-      outline: none;
-      border-color: var(--success);
-      box-shadow: 0 0 0 4px rgba(0,255,85,0.2);
-    }
-
-    textarea { resize: vertical; min-height: 110px; }
-
-    .buttons {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 1.3rem;
-      margin: 1.6rem 0 0.8rem;
-    }
-
     button {
-      padding: 0.9rem 2rem;
+      padding: 12px 30px;
+      background: #00cc44;
+      color: black;
       border: none;
-      border-radius: 12px;
-      font-weight: 600;
-      font-size: 1.05rem;
+      border-radius: 8px;
+      font-size: 1.1em;
       cursor: pointer;
-      transition: all 0.25s ease;
-      touch-action: manipulation;
     }
-
-    button:hover, button:active {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.55);
+    button:hover {
+      background: #00ff55;
     }
-
-    #refresh    { background: #333; color: #eee; }
-    #sendEmail  { background: var(--success); color: #000; }
-    #sendEmail:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-
-    #status, #gps {
-      font-size: 0.98rem;
-      margin: 1rem 0;
-      min-height: 1.7em;
-      color: var(--success);
-    }
-
-    .error   { color: var(--error) !important; }
-    .success { color: var(--success) !important; }
-
-    @media (max-width: 520px) {
-      .overlay {
-        padding: 1.4rem 1.6rem;
-        width: 96%;
-      }
-      button { padding: 0.85rem 1.7rem; font-size: 1rem; }
+    h1 {
+      margin: 10px 0;
+      color: #00ff55;
     }
   </style>
 </head>
 <body>
 
+  <h1>Hello World Map • Drop a Pin ⚽ #MUFC</h1>
+
   <div id="map"></div>
 
-  <div class="overlay">
-    <h1>Root Donate Map</h1>
-
-    <div id="gps">GPS: checking...</div>
-    <div id="status">Today • @iandreme • Drop your message</div>
-
-    <input type="text"    id="name"    placeholder="Your name / handle (optional)" />
-    <input type="email"   id="email"   placeholder="Email (optional – for reply)" />
-    <textarea id="message" placeholder="Your message / donation note / shoutout... #MUFC"></textarea>
-
-    <div class="buttons">
-      <button id="refresh">Center map</button>
-      <button id="sendEmail">Send Message → Map</button>
-    </div>
+  <div class="form-box">
+    <input type="text" id="name" placeholder="Your name / @handle" />
+    <textarea id="msg" placeholder="Short message..." rows="2"></textarea>
+    <button onclick="dropPin()">Drop Pin → Map</button>
   </div>
 
   <script>
-    // ─── EmailJS Config ─────────────────────────────────────────────
-    //  MUST REPLACE THESE THREE VALUES ───────────────────────────────
-    emailjs.init({ publicKey: "YOUR_PUBLIC_KEY_HERE" });   // ← from Account page
-
-    const SERVICE_ID  = "YOUR_SERVICE_ID_HERE";            // ← from Email Services
-    const TEMPLATE_ID = "YOUR_TEMPLATE_ID_HERE";           // ← from Email Templates
-
-    // ─── Map Setup ──────────────────────────────────────────────────
-    const map = L.map('map', {
-      zoomControl: true,
-      zoomSnap: 0.5
-    }).setView([53.4631, -2.2913], 13);
+    // Basic Leaflet map centered on Old Trafford
+    const map = L.map('map').setView([53.4631, -2.2913], 14);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
 
+    // Simple green dot icon
     const greenDot = L.divIcon({
-      className: 'dot',
-      html: '<div style="background:#0f5;width:18px;height:18px;border-radius:50%;border:3px solid white;box-shadow:0 0 14px #0f5;"></div>',
-      iconSize: [18, 18],
-      iconAnchor: [9, 9]
+      html: '<div style="background:#0f5; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px #0f5;"></div>',
+      className: '', // remove default shadow
+      iconSize: [16, 16],
+      iconAnchor: [8, 8]
     });
 
-    // ─── State ──────────────────────────────────────────────────────
+    // Try to get user location (optional)
     let userLat = 53.4631;
     let userLng = -2.2913;
 
-    function updateGPS(lat, lng) {
-      document.getElementById('gps').textContent = `GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-    }
-
-    // ─── Geolocation ────────────────────────────────────────────────
     if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(
-        pos => {
-          userLat = pos.coords.latitude;
-          userLng = pos.coords.longitude;
-          updateGPS(userLat, userLng);
-        },
-        err => {
-          console.warn('Geolocation error:', err.code, err.message);
-          document.getElementById('gps').textContent = 'GPS unavailable — using Old Trafford coords';
-        },
-        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
-      );
-    } else {
-      document.getElementById('gps').textContent = 'Geolocation not supported by browser';
+      navigator.geolocation.getCurrentPosition(pos => {
+        userLat = pos.coords.latitude;
+        userLng = pos.coords.longitude;
+        map.setView([userLat, userLng], 15);
+      });
     }
 
-    // ─── Markers ────────────────────────────────────────────────────
-    function addMarker(lat, lng, text = '') {
-      const popupContent = `
-        <b>@iandreme</b><br>
-        ${text || '(no message)'}<br>
-        <small>${new Date().toLocaleString()}</small>
-      `;
-      L.marker([lat, lng], { icon: greenDot })
-        .addTo(map)
-        .bindPopup(popupContent);
-    }
+    // Function to drop pin
+    function dropPin() {
+      const name = document.getElementById('name').value.trim() || 'Anonymous';
+      const msg  = document.getElementById('msg').value.trim()  || 'Hello world!';
 
-    // Demo markers – remove when live if you want clean map
-    [
-      { lat: 53.4631, lng: -2.2913, text: "Hello from Carrington! ⚽ #MUFC" },
-      { lat: 53.4650, lng: -2.2850, text: "Training day vibes" },
-      { lat: 53.4600, lng: -2.2950, text: "Carrick masterclass incoming..." }
-    ].forEach(m => addMarker(m.lat, m.lng, m.text));
-
-    // ─── Send Message ───────────────────────────────────────────────
-    const sendBtn  = document.getElementById('sendEmail');
-    const statusEl = document.getElementById('status');
-
-    async function sendMessage() {
-      const name    = document.getElementById('name').value.trim()    || 'Anonymous';
-      const email   = document.getElementById('email').value.trim()   || 'no-reply@example.com';
-      const message = document.getElementById('message').value.trim();
-
-      if (!message) {
-        statusEl.textContent = 'Please write a message first ⚽';
-        statusEl.className = 'error';
-        setTimeout(resetStatus, 4500);
+      if (!msg) {
+        alert('Write a short message first ⚽');
         return;
       }
 
-      sendBtn.disabled = true;
-      statusEl.textContent = 'Sending...';
-      statusEl.className = '';
+      // Use user's approximate location (or fallback to Old Trafford)
+      const lat = userLat;
+      const lng = userLng;
 
-      const params = {
-        from_name:   name,
-        reply_to:    email,
-        message:     message,
-        latitude:    userLat.toFixed(6),
-        longitude:   userLng.toFixed(6),
-        gps_text:    `GPS: ${userLat.toFixed(5)}, ${userLng.toFixed(5)}`,
-        user_handle: '@iandreme',
-        timestamp:   new Date().toLocaleString(),
-        subject:     `Map Drop from ${name} #MUFC`
-      };
+      // Add marker with popup
+      L.marker([lat, lng], { icon: greenDot })
+        .addTo(map)
+        .bindPopup(`<b>Hello from ${name}</b><br>${msg}<br><small>#MUFC</small>`);
 
-      try {
-        await emailjs.send(SERVICE_ID, TEMPLATE_ID, params);
-        statusEl.textContent = 'Sent successfully! Pin added ⚽';
-        statusEl.className = 'success';
-        addMarker(userLat, userLng, `${name}: ${message.substring(0,60)}${message.length > 60 ? '...' : ''}`);
-        document.getElementById('message').value = '';
-      } catch (err) {
-        console.error('EmailJS error:', err);
-        statusEl.textContent = `Failed – ${err.text || err.message || 'check console (F12)'}`;
-        statusEl.className = 'error';
-      } finally {
-        sendBtn.disabled = false;
-        setTimeout(resetStatus, 7000);
-      }
+      // Optional: zoom to new pin
+      map.setView([lat, lng], 16);
+
+      // Clear form
+      document.getElementById('msg').value = '';
+      alert('Pin dropped! ⚽');
     }
 
-    function resetStatus() {
-      statusEl.textContent = 'Today • @iandreme • Drop your message';
-      statusEl.className = '';
-    }
-
-    // ─── Event Listeners ────────────────────────────────────────────
-    document.getElementById('sendEmail').addEventListener('click', sendMessage);
-
-    document.getElementById('refresh').addEventListener('click', () => {
-      map.setView([userLat, userLng], 15);
-      statusEl.textContent = 'Centered on your location';
-      statusEl.className = 'success';
-      setTimeout(() => {
-        map.invalidateSize();
-        resetStatus();
-      }, 1200);
-    });
-
-    // ─── Fix Leaflet size issues ────────────────────────────────────
-    function fixMapSize() {
-      setTimeout(() => map.invalidateSize(), 100);
-      setTimeout(() => map.invalidateSize(), 400);
-      setTimeout(() => map.invalidateSize(), 1200);
-    }
-
-    window.addEventListener('load',   fixMapSize);
-    window.addEventListener('resize', fixMapSize);
-    fixMapSize();
+    // Demo starter pin
+    L.marker([53.4631, -2.2913], { icon: greenDot })
+      .addTo(map)
+      .bindPopup('<b>@iandreme</b><br>Hello world from Old Trafford! ⚽');
   </script>
+
 </body>
 </html>

@@ -3,61 +3,47 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pin Drop Map • Saved Locally • #MUFC</title>
-
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5p5QbskXk=" crossorigin="anonymous" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+  <title>Root Donate Drops • Saved Locally • #MUFC</title>
 
   <style>
     html, body {
       margin: 0;
       padding: 0;
       height: 100%;
-      width: 100%;
       background: #000;
       color: #eee;
       font-family: Arial, Helvetica, sans-serif;
     }
-    #map {
-      height: 100%;
-      width: 100%;
-      position: absolute;
-      top: 0;
-      left: 0;
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
     }
-    .overlay {
-      position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1000;
-      background: rgba(17,17,17,0.85);
-      backdrop-filter: blur(6px);
-      padding: 15px 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    h1 {
       text-align: center;
-      max-width: 90%;
-      width: 380px;
+      color: #00ff55;
+      margin-bottom: 10px;
     }
     input, textarea {
       width: 100%;
-      padding: 10px;
-      margin: 8px 0;
+      padding: 12px;
+      margin: 10px 0;
       border: 1px solid #444;
-      border-radius: 6px;
-      background: #222;
+      border-radius: 8px;
+      background: #111;
       color: white;
       font-size: 1em;
     }
-    textarea { resize: vertical; min-height: 60px; }
+    textarea { resize: vertical; min-height: 80px; }
+    .buttons {
+      text-align: center;
+      margin: 15px 0;
+    }
     button {
-      padding: 10px 20px;
-      margin: 6px;
+      padding: 12px 24px;
+      margin: 0 8px;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
       transition: all 0.2s;
@@ -67,131 +53,102 @@
     #clearBtn  { background: #cc0000; color: white; }
     #clearBtn:hover  { background: #ff3333; }
     #status {
-      margin: 8px 0;
-      min-height: 1.2em;
+      text-align: center;
+      margin: 10px 0;
+      min-height: 1.4em;
       font-size: 0.95em;
     }
     .success { color: #0f5; }
     .error   { color: #f66; }
+    .pin-list {
+      margin-top: 20px;
+    }
+    .pin {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .pin-header {
+      font-weight: bold;
+      color: #0f5;
+      margin-bottom: 6px;
+    }
+    .pin-gps {
+      font-size: 0.85em;
+      color: #aaa;
+    }
+    .pin-msg {
+      margin: 8px 0;
+    }
+    .pin-time {
+      font-size: 0.8em;
+      color: #777;
+      text-align: right;
+    }
   </style>
 </head>
 <body>
 
-  <div id="map"></div>
+  <div class="container">
+    <h1>Root Donate Drops ⚽ #MUFC</h1>
 
-  <div class="overlay">
-    <h2>Root Donate Map ⚽</h2>
     <input type="text" id="name" placeholder="Name / @handle" value="@iandreme" />
-    <textarea id="msg" placeholder="Your message..."></textarea>
+    <textarea id="msg" placeholder="Your message / donation note / shoutout..."></textarea>
     
-    <div>
-      <button id="dropBtn">Drop Pin</button>
-      <button id="clearBtn">Clear All Pins</button>
+    <div class="buttons">
+      <button id="dropBtn">Drop Message</button>
+      <button id="clearBtn">Clear All</button>
     </div>
     
     <div id="status"></div>
+
+    <div class="pin-list" id="pinList"></div>
   </div>
 
   <script>
-    // ─── Map Setup ──────────────────────────────────────────────────
-    const map = L.map('map', { zoomControl: true }).setView([53.4631, -2.2913], 14);
+    const STORAGE_KEY = 'rootDonateDrops';
 
-    // Choose ONE tile provider below (swap easily)
-
-    // Recommended: OSM France HOT style – reliable, fast, no key needed
-    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | HOT',
-      maxZoom: 19
-    }).addTo(map);
-
-    // Alternative 1: CartoDB Positron (clean, light style)
-    // L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    //   attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors & CARTO',
-    //   subdomains: 'abcd',
-    //   maxZoom: 20
-    // }).addTo(map);
-
-    // Alternative 2: Stadia Maps OSM Bright (vibrant, modern)
-    // L.tileLayer('https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png', {
-    //   attribution: '© OpenStreetMap contributors & Stadia Maps',
-    //   maxZoom: 20
-    // }).addTo(map);
-
-    // Alternative 3: CyclOSM (great for paths/terrain detail)
-    // L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
-    //   attribution: '© OpenStreetMap contributors | CyclOSM',
-    //   maxZoom: 20
-    // }).addTo(map);
-
-    const greenDot = L.divIcon({
-      className: 'custom-green-dot',
-      html: '<div style="background:#0f5;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 0 10px #0f5;"></div>',
-      iconSize: [16, 16],
-      iconAnchor: [8, 8]
-    });
-
-    // Force size fix (kept for safety)
-    function fixMapSize() {
-      setTimeout(() => map.invalidateSize(), 100);
-      setTimeout(() => map.invalidateSize(), 300);
-      setTimeout(() => map.invalidateSize(), 800);
-    }
-
-    window.addEventListener('load', fixMapSize);
-    window.addEventListener('resize', fixMapSize);
-
-    // ─── LocalStorage ───────────────────────────────────────────────
-    const STORAGE_KEY = 'mufcMapPins';
-
-    function loadPins() {
+    function loadDrops() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
         return saved ? JSON.parse(saved) : [];
       } catch (e) {
-        console.warn('Pins parse error:', e);
+        console.warn('Drops parse error:', e);
         return [];
       }
     }
 
-    function savePins(pins) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(pins));
+    function saveDrops(drops) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(drops));
     }
 
     function roundCoord(num) {
       return Number(num.toFixed(6));
     }
 
-    // ─── Marker Add ─────────────────────────────────────────────────
-    function addMarker(lat, lng, name, msg, isNew = false) {
-      const safeName = name.replace(/</g, '&lt;').replace(/>/g, '&gt;') || 'Anonymous';
-      const safeMsg  = msg.replace(/</g, '&lt;').replace(/>/g, '&gt;') || '(no message)';
-      const popup = `
-        <b>${safeName}</b><br>
-        ${safeMsg}<br>
-        <small>#MUFC ${isNew ? '· just now' : ''}</small>
-      `;
-      L.marker([lat, lng], { icon: greenDot }).addTo(map).bindPopup(popup);
-    }
+    function renderDrops() {
+      const drops = loadDrops();
+      const listEl = document.getElementById('pinList');
+      listEl.innerHTML = '';
 
-    // Load pins
-    const pins = loadPins();
-    pins.forEach(p => addMarker(p.lat, p.lng, p.name, p.msg));
+      if (drops.length === 0) {
+        listEl.innerHTML = '<p style="text-align:center;color:#555;">No drops yet — be the first! ⚽</p>';
+        return;
+      }
 
-    // ─── User Location ──────────────────────────────────────────────
-    let userLat = 53.4631;
-    let userLng = -2.2913;
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          userLat = pos.coords.latitude;
-          userLng = pos.coords.longitude;
-          map.setView([userLat, userLng], 15);
-          fixMapSize();
-          showStatus('Centered on your location ⚽', 'success');
-        },
-        () => showStatus('Location denied — using Old Trafford fallback', 'error')
-      );
+      drops.forEach(drop => {
+        const div = document.createElement('div');
+        div.className = 'pin';
+        div.innerHTML = `
+          <div class="pin-header">${drop.name || 'Anonymous'}</div>
+          <div class="pin-msg">${drop.msg || '(no message)'}</div>
+          <div class="pin-gps">GPS: ${drop.lat}, ${drop.lng}</div>
+          <div class="pin-time">${new Date(drop.timestamp).toLocaleString()}</div>
+        `;
+        listEl.appendChild(div);
+      });
     }
 
     // ─── UI Helpers ─────────────────────────────────────────────────
@@ -203,7 +160,25 @@
       setTimeout(() => { statusEl.textContent = ''; statusEl.className = ''; }, 5000);
     }
 
-    // ─── Drop Pin ───────────────────────────────────────────────────
+    // ─── Initial Load ───────────────────────────────────────────────
+    renderDrops();
+
+    // ─── User Location ──────────────────────────────────────────────
+    let userLat = 53.4631;
+    let userLng = -2.2913;
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          userLat = pos.coords.latitude;
+          userLng = pos.coords.longitude;
+          showStatus('Location ready — drop away! ⚽', 'success');
+        },
+        () => showStatus('Location denied — using Old Trafford fallback', 'error')
+      );
+    }
+
+    // ─── Drop Message ───────────────────────────────────────────────
     document.getElementById('dropBtn').addEventListener('click', () => {
       const name = document.getElementById('name').value.trim() || 'Anonymous';
       const msg  = document.getElementById('msg').value.trim();
@@ -215,24 +190,23 @@
 
       const lat = roundCoord(userLat);
       const lng = roundCoord(userLng);
+      const timestamp = Date.now();
 
-      addMarker(lat, lng, name, msg, true);
+      const newDrop = { name, msg, lat, lng, timestamp };
+      const updatedDrops = [...loadDrops(), newDrop];
+      saveDrops(updatedDrops);
 
-      const newPin = { lat, lng, name, msg };
-      const updatedPins = [...loadPins(), newPin];
-      savePins(updatedPins);
-
-      map.setView([lat, lng], 16);
       document.getElementById('msg').value = '';
-      showStatus('Pin dropped & saved locally! ⚽', 'success');
-      fixMapSize();
+      renderDrops();
+      showStatus('Dropped & saved locally! ⚽', 'success');
     });
 
     // ─── Clear All ──────────────────────────────────────────────────
     document.getElementById('clearBtn').addEventListener('click', () => {
-      if (confirm('Clear ALL saved pins? This cannot be undone.')) {
+      if (confirm('Clear ALL saved drops?')) {
         localStorage.removeItem(STORAGE_KEY);
-        location.reload();
+        renderDrops();
+        showStatus('All drops cleared!', 'success');
       }
     });
   </script>

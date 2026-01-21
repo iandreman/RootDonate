@@ -3,10 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Donate Drops • Real-Time #MUFC</title>
-
-  <!-- Supabase JS client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>Root Donate Drops • ~500 m GPS Pins (Local)</title>
 
   <style>
     html, body { margin:0; padding:0; height:100%; background:#000; color:#eee; font-family:Arial,Helvetica,sans-serif; }
@@ -26,39 +23,34 @@
     .pin-list { margin-top:16px; }
     .location-group { margin-bottom:28px; }
     .location-header { 
-      background:#1a1a1a; 
-      padding:10px 14px; 
-      border-radius:8px 8px 0 0; 
-      font-weight:bold; 
-      color:#0f5; 
-      border:1px solid #333; 
-      border-bottom:none; 
-      font-size:1.05em; 
+      background:#1a1a1a; padding:10px 14px; border-radius:8px 8px 0 0; 
+      font-weight:bold; color:#0f5; border:1px solid #333; border-bottom:none; font-size:1.05em; 
     }
     .pin { 
-      background:#111; 
-      border:1px solid #333; 
-      border-top:none; 
-      padding:14px 16px; 
-      margin:0; 
+      background:#111; border:1px solid #333; border-top:none; padding:14px 16px; margin:0; 
     }
     .pin:not(:last-child) { border-bottom:1px solid #222; }
     .pin-header { font-weight:bold; color:#55ff99; margin-bottom:6px; }
     .pin-msg { margin:8px 0 10px; white-space:pre-wrap; line-height:1.4; }
     .pin-time { font-size:0.82em; color:#777; text-align:right; margin-top:6px; }
+    .info-box { background:#222; padding:12px; border-radius:8px; margin:12px 0; font-size:0.95em; line-height:1.4; }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <h1>Root Donate Drops ⚽ #MUFC (Real-Time)</h1>
+    <h1>Root Donate Drops ⚽ #MUFC (~500 m Radius)</h1>
+
+    <div class="info-box" id="locationInfo">
+      Waiting for location...
+    </div>
 
     <input type="text" id="name" placeholder="Name / @handle" value="@iandreme" />
-    <textarea id="msg" placeholder="Your message / donation note / shoutout..."></textarea>
+    <textarea id="msg" placeholder="Your message / shoutout... (visible within ~500 m of drop location)"></textarea>
     
     <div class="buttons">
       <button id="dropBtn">Drop Message</button>
-      <button id="clearBtn">Clear All (Local Only)</button>
+      <button id="clearBtn">Clear Drops in ~500 m</button>
     </div>
     
     <div id="status"></div>
@@ -67,201 +59,188 @@
   </div>
 
   <script>
-    // ─── Supabase Config ────────────────────────────────────────────
-    const SUPABASE_URL  = 'https://ekdiarbztipvogxversx.supabase.co';
-    const SUPABASE_ANON = 'sb_publishable_b_PuReasRGPXbHcbmY8xTA_6CoxfEgH';  // ← Replace with your real anon key
+    const STORAGE_KEY = 'root-donate-drops-local';
+    const COORD_PRECISION = 5;          // ~1.1 m grouping precision
+    const MATCH_TOLERANCE = 0.0045;     // ≈ 500 meters radius (tune here)
 
-    const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    let userLat = null;
+    let userLng = null;
 
-    // ─── IndexedDB (local fallback) ─────────────────────────────────
-    const DB_NAME = 'RootDonateDropsDB';
-    const DB_VERSION = 1;
-    const STORE_NAME = 'drops';
-    let db;
+    // ─── Helpers ────────────────────────────────────────────────────
+    function coordsMatch(aLat, aLng, bLat, bLng) {
+      return Math.abs(aLat - bLat) <= MATCH_TOLERANCE && Math.abs(aLng - bLng) <= MATCH_TOLERANCE;
+    }
 
-    function openDB() {
-      return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, DB_VERSION);
-        req.onerror = () => reject(req.error);
-        req.onsuccess = () => { db = req.result; resolve(); };
-        req.onupgradeneeded = e => {
-          const store = e.target.result.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
-          store.createIndex('gps', ['lat', 'lng']);
-          store.createIndex('timestamp', 'timestamp');
-        };
+    function roundCoord(n) {
+      return Number(n.toFixed(COORD_PRECISION));
+    }
+
+    function getDrops() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveDrops(drops) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(drops));
+      window.dispatchEvent(new Event('storage'));
+    }
+
+    function addDrop(name, msg, lat, lng) {
+      const drops = getDrops();
+      drops.push({
+        name: name || 'Anonymous',
+        msg: msg || '(no message)',
+        lat: roundCoord(lat),
+        lng: roundCoord(lng),
+        timestamp: new Date().toISOString()
+      });
+      saveDrops(drops);
+    }
+
+    function clearDropsNearLocation(lat, lng) {
+      let drops = getDrops();
+      drops = drops.filter(d => !coordsMatch(d.lat, d.lng, lat, lng));
+      saveDrops(drops);
+    }
+
+    // ─── Render ─────────────────────────────────────────────────────
+    function renderDrops() {
+      const listEl = document.getElementById('pinList');
+      if (userLat === null || userLng === null) {
+        listEl.innerHTML = '<p style="text-align:center;color:#555;padding:20px;">Waiting for GPS...</p>';
+        return;
+      }
+
+      const drops = getDrops().filter(d => coordsMatch(d.lat, d.lng, userLat, userLng));
+
+      if (drops.length === 0) {
+        listEl.innerHTML = '<p style="text-align:center;color:#555;padding:20px;">No drops within ~500 m yet — be the first! ⚽</p>';
+        return;
+      }
+
+      listEl.innerHTML = '';
+
+      const groups = {};
+      drops.forEach(d => {
+        const key = `${d.lat.toFixed(5)},${d.lng.toFixed(5)}`;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(d);
+      });
+
+      Object.entries(groups).forEach(([key, group]) => {
+        const [lat, lng] = key.split(',').map(Number);
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'location-group';
+
+        groupDiv.innerHTML = `
+          <div class="location-header">📍 ${lat.toFixed(5)}, ${lng.toFixed(5)} (within ~500 m)</div>
+        `;
+
+        group.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        group.forEach(drop => {
+          const pin = document.createElement('div');
+          pin.className = 'pin';
+          pin.innerHTML = `
+            <div class="pin-header">${drop.name}</div>
+            <div class="pin-msg">${drop.msg}</div>
+            <div class="pin-time">${new Date(drop.timestamp).toLocaleString()}</div>
+          `;
+          groupDiv.appendChild(pin);
+        });
+
+        listEl.appendChild(groupDiv);
       });
     }
 
-    async function addLocalDrop(drop) {
-      const tx = db.transaction(STORE_NAME, 'readwrite');
-      await tx.objectStore(STORE_NAME).add(drop);
-      return new Promise(r => tx.oncomplete = r);
-    }
-
-    async function getLocalDrops() {
-      const tx = db.transaction(STORE_NAME, 'readonly');
-      const drops = await tx.objectStore(STORE_NAME).getAll();
-      return drops;
-    }
-
-    function roundCoord(n) { return Number(n.toFixed(6)); }
-
-    // ─── Real-time local sync across tabs (Broadcast Channel) ───────
-    const channel = new BroadcastChannel('root-donate-drops-local');
-
-    channel.onmessage = async (event) => {
-      if (event.data === 'local-updated') {
-        await renderDrops();
-        showStatus('Local drop updated from another tab ⚡', 'success');
-      }
-    };
-
-    function broadcastLocalUpdate() {
-      channel.postMessage('local-updated');
-    }
-
-    // ─── Render (shared + local) ────────────────────────────────────
-    async function renderDrops() {
-      const listEl = document.getElementById('pinList');
-      listEl.innerHTML = '<p style="text-align:center;color:#555;padding:20px;">Loading drops...</p>';
-
-      try {
-        let { data: sharedDrops, error } = await supabase
-          .from('drops')
-          .select('*')
-          .order('timestamp', { ascending: false });
-
-        if (error) throw error;
-
-        const local = await getLocalDrops();
-        const allDrops = [...(sharedDrops || []), ...local.filter(l => !sharedDrops?.some(s => s.timestamp === l.timestamp))];
-
-        listEl.innerHTML = allDrops.length === 0 
-          ? '<p style="text-align:center;color:#555;padding:20px;">No drops yet — be the first! ⚽</p>'
-          : '';
-
-        const groups = {};
-        allDrops.forEach(d => {
-          const key = `${d.lat},${d.lng}`;
-          groups[key] = groups[key] || [];
-          groups[key].push(d);
-        });
-
-        const sortedGroups = Object.entries(groups)
-          .sort(([,a], [,b]) => Math.max(...b.map(d=> new Date(d.timestamp))) - Math.max(...a.map(d=> new Date(d.timestamp))));
-
-        sortedGroups.forEach(([key, group]) => {
-          const [lat, lng] = key.split(',').map(Number);
-          const groupDiv = document.createElement('div');
-          groupDiv.className = 'location-group';
-
-          groupDiv.innerHTML = `
-            <div class="location-header">📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}</div>
-          `;
-
-          group.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-          group.forEach(drop => {
-            const pin = document.createElement('div');
-            pin.className = 'pin';
-            pin.innerHTML = `
-              <div class="pin-header">${drop.name || 'Anonymous'}</div>
-              <div class="pin-msg">${drop.msg || '(no message)'}</div>
-              <div class="pin-time">${new Date(drop.timestamp).toLocaleString()}</div>
-            `;
-            groupDiv.appendChild(pin);
-          });
-
-          listEl.appendChild(groupDiv);
-        });
-
-      } catch (err) {
-        console.error(err);
-        listEl.innerHTML = '<p style="text-align:center;color:#f66;">Error loading drops — check connection</p>';
-      }
-    }
-
-    // ─── UI Helpers ─────────────────────────────────────────────────
+    // ─── UI ─────────────────────────────────────────────────────────
     const statusEl = document.getElementById('status');
-    function showStatus(text, cls='') {
+    function showStatus(text, cls = '') {
       statusEl.textContent = text;
       statusEl.className = cls;
       setTimeout(() => { statusEl.textContent = ''; statusEl.className = ''; }, 5000);
     }
 
-    // ─── Init ───────────────────────────────────────────────────────
-    (async () => {
-      try {
-        await openDB();
-        await renderDrops();
-        broadcastLocalUpdate();  // Let other tabs know we loaded (optional but nice)
+    const locInfoEl = document.getElementById('locationInfo');
 
-        // Real-time Supabase subscription
-        supabase
-          .channel('drops-channel')
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'drops' }, payload => {
-            renderDrops();
-            showStatus('New drop received! ⚽', 'success');
-          })
-          .subscribe();
-
-      } catch (err) {
-        showStatus('Failed to connect — check Supabase config', 'error');
+    function updateLocationInfo() {
+      if (userLat === null || userLng === null) {
+        locInfoEl.innerHTML = 'Waiting for precise location...';
+        locInfoEl.style.color = '#777';
+      } else {
+        locInfoEl.innerHTML = `📍 Current: ${userLat.toFixed(5)}, ${userLng.toFixed(5)} (seeing drops within ~500 m)`;
+        locInfoEl.style.color = '#0f5';
       }
-    })();
+    }
 
-    // ─── Location ───────────────────────────────────────────────────
-    let userLat = 53.4631, userLng = -2.2913;
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        pos => { 
-          userLat = pos.coords.latitude; 
-          userLng = pos.coords.longitude; 
-          showStatus('Location acquired!', 'success'); 
+    // ─── Geolocation watch ──────────────────────────────────────────
+    function startWatchingLocation() {
+      if (!navigator.geolocation) {
+        showStatus('Geolocation not supported', 'error');
+        locInfoEl.textContent = 'Geolocation not available';
+        return;
+      }
+
+      navigator.geolocation.watchPosition(
+        pos => {
+          userLat = pos.coords.latitude;
+          userLng = pos.coords.longitude;
+          updateLocationInfo();
+          renderDrops();
         },
-        () => showStatus('Location access denied — using Old Trafford fallback', 'error')
+        err => {
+          showStatus('Location access denied or unavailable', 'error');
+          locInfoEl.textContent = 'Location not available';
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 5000
+        }
       );
     }
 
-    // ─── Drop Message ───────────────────────────────────────────────
-    document.getElementById('dropBtn').addEventListener('click', async () => {
-      const name = document.getElementById('name').value.trim() || 'Anonymous';
-      const msg  = document.getElementById('msg').value.trim();
-
-      if (!msg) return showStatus('Please write a message first ⚽', 'error');
-
-      const lat = roundCoord(userLat);
-      const lng = roundCoord(userLng);
-      const timestamp = new Date().toISOString();
-
-      const drop = { name, msg, lat, lng, timestamp };
-
-      try {
-        const { error } = await supabase.from('drops').insert([drop]);
-        if (error) throw error;
-
-        await addLocalDrop({ ...drop, id: Date.now() });
-        broadcastLocalUpdate();  // Notify other tabs instantly
-
-        document.getElementById('msg').value = '';
-        await renderDrops();
-        showStatus('Message dropped live! ⚽', 'success');
-      } catch (err) {
-        console.error(err);
-        showStatus('Failed to drop message — try again', 'error');
+    // ─── Events ─────────────────────────────────────────────────────
+    document.getElementById('dropBtn').addEventListener('click', () => {
+      if (userLat === null || userLng === null) {
+        showStatus('Waiting for GPS first', 'error');
+        return;
       }
+      const name = document.getElementById('name').value.trim();
+      const msg  = document.getElementById('msg').value.trim();
+      if (!msg) {
+        showStatus('Write a message first ⚽', 'error');
+        return;
+      }
+      addDrop(name, msg, userLat, userLng);
+      document.getElementById('msg').value = '';
+      renderDrops();
+      showStatus('Dropped! Visible in ~500 m area 📍', 'success');
     });
 
-    // ─── Clear Local Only ───────────────────────────────────────────
-    document.getElementById('clearBtn').addEventListener('click', async () => {
-      if (!confirm('Clear local drops only? (Server drops stay)')) return;
-      const tx = db.transaction(STORE_NAME, 'readwrite');
-      tx.objectStore(STORE_NAME).clear();
-      await new Promise(r => tx.oncomplete = r);
-      broadcastLocalUpdate();  // Notify other tabs
-      await renderDrops();
-      showStatus('Local drops cleared', 'success');
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      if (userLat === null || userLng === null) {
+        showStatus('No location to clear', 'error');
+        return;
+      }
+      if (!confirm('Clear ALL drops within ~500 m of here?')) return;
+      clearDropsNearLocation(userLat, userLng);
+      renderDrops();
+      showStatus('Area drops cleared 🗑️', 'success');
     });
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_KEY) renderDrops();
+    });
+
+    // ─── Init ───────────────────────────────────────────────────────
+    startWatchingLocation();
+    updateLocationInfo();
+    renderDrops();
   </script>
 </body>
 </html>

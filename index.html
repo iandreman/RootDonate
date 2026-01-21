@@ -167,16 +167,11 @@
 
   <script>
     // ─── EmailJS Config ─────────────────────────────────────────────
-    // VERY IMPORTANT:
-    // 1. Go to https://dashboard.emailjs.com/admin/account
-    // 2. Copy your **Public Key** and replace the string below
-    // 3. Create/get your Service ID and Template ID in EmailJS dashboard
-    //    → Service = Email provider connection
-    //    → Template = the email layout/message you want to receive
-    emailjs.init({ publicKey: "1oXeNo5ZXiRcipyWo" });  // ← REPLACE THIS !
+    //  MUST REPLACE THESE THREE VALUES ───────────────────────────────
+    emailjs.init({ publicKey: "YOUR_PUBLIC_KEY_HERE" });   // ← from Account page
 
-    const SERVICE_ID  = "amql3dos";       // ← REPLACE with your Service ID
-    const TEMPLATE_ID = "template_c7rzyrq"; // ← REPLACE with your Template ID
+    const SERVICE_ID  = "YOUR_SERVICE_ID_HERE";            // ← from Email Services
+    const TEMPLATE_ID = "YOUR_TEMPLATE_ID_HERE";           // ← from Email Templates
 
     // ─── Map Setup ──────────────────────────────────────────────────
     const map = L.map('map', {
@@ -211,7 +206,6 @@
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
           updateGPS(userLat, userLng);
-          // map.setView([userLat, userLng], 15); // auto-follow can be annoying — commented out
         },
         err => {
           console.warn('Geolocation error:', err.code, err.message);
@@ -235,7 +229,7 @@
         .bindPopup(popupContent);
     }
 
-    // Demo markers – remove or comment out when going live
+    // Demo markers – remove when live if you want clean map
     [
       { lat: 53.4631, lng: -2.2913, text: "Hello from Carrington! ⚽ #MUFC" },
       { lat: 53.4650, lng: -2.2850, text: "Training day vibes" },
@@ -246,7 +240,7 @@
     const sendBtn  = document.getElementById('sendEmail');
     const statusEl = document.getElementById('status');
 
-    function sendMessage() {
+    async function sendMessage() {
       const name    = document.getElementById('name').value.trim()    || 'Anonymous';
       const email   = document.getElementById('email').value.trim()   || 'no-reply@example.com';
       const message = document.getElementById('message').value.trim();
@@ -254,10 +248,7 @@
       if (!message) {
         statusEl.textContent = 'Please write a message first ⚽';
         statusEl.className = 'error';
-        setTimeout(() => {
-          statusEl.textContent = 'Today • @iandreme • Drop your message';
-          statusEl.className = '';
-        }, 4500);
+        setTimeout(resetStatus, 4500);
         return;
       }
 
@@ -277,25 +268,25 @@
         subject:     `Map Drop from ${name} #MUFC`
       };
 
-      emailjs.send(SERVICE_ID, TEMPLATE_ID, params)
-        .then(() => {
-          statusEl.textContent = 'Sent successfully! Pin added ⚽';
-          statusEl.className = 'success';
-          addMarker(userLat, userLng, `${name}: ${message.substring(0,60)}${message.length > 60 ? '...' : ''}`);
-          document.getElementById('message').value = '';
-        })
-        .catch(err => {
-          console.error('EmailJS failed:', err);
-          statusEl.textContent = `Failed – ${err.text || err.message || 'see console (F12)'}`;
-          statusEl.className = 'error';
-        })
-        .finally(() => {
-          sendBtn.disabled = false;
-          setTimeout(() => {
-            statusEl.textContent = 'Today • @iandreme • Drop your message';
-            statusEl.className = '';
-          }, 7000);
-        });
+      try {
+        await emailjs.send(SERVICE_ID, TEMPLATE_ID, params);
+        statusEl.textContent = 'Sent successfully! Pin added ⚽';
+        statusEl.className = 'success';
+        addMarker(userLat, userLng, `${name}: ${message.substring(0,60)}${message.length > 60 ? '...' : ''}`);
+        document.getElementById('message').value = '';
+      } catch (err) {
+        console.error('EmailJS error:', err);
+        statusEl.textContent = `Failed – ${err.text || err.message || 'check console (F12)'}`;
+        statusEl.className = 'error';
+      } finally {
+        sendBtn.disabled = false;
+        setTimeout(resetStatus, 7000);
+      }
+    }
+
+    function resetStatus() {
+      statusEl.textContent = 'Today • @iandreme • Drop your message';
+      statusEl.className = '';
     }
 
     // ─── Event Listeners ────────────────────────────────────────────
@@ -307,12 +298,11 @@
       statusEl.className = 'success';
       setTimeout(() => {
         map.invalidateSize();
-        statusEl.textContent = 'Today • @iandreme • Drop your message';
-        statusEl.className = '';
+        resetStatus();
       }, 1200);
     });
 
-    // ─── Fix Leaflet size issues (especially mobile) ────────────────
+    // ─── Fix Leaflet size issues ────────────────────────────────────
     function fixMapSize() {
       setTimeout(() => map.invalidateSize(), 100);
       setTimeout(() => map.invalidateSize(), 400);

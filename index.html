@@ -23,6 +23,9 @@
     #map {
       height: 100%;
       width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
     }
     .overlay {
       position: absolute;
@@ -90,7 +93,7 @@
   </div>
 
   <script>
-    // ─── Map & Icon Setup ───────────────────────────────────────────
+    // ─── Map Setup ──────────────────────────────────────────────────
     const map = L.map('map', { zoomControl: true }).setView([53.4631, -2.2913], 14);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -104,6 +107,16 @@
       iconSize: [16, 16],
       iconAnchor: [8, 8]
     });
+
+    // Force size fix multiple times (common reliable workaround)
+    function fixMapSize() {
+      setTimeout(() => map.invalidateSize(), 100);
+      setTimeout(() => map.invalidateSize(), 300);
+      setTimeout(() => map.invalidateSize(), 800);
+    }
+
+    window.addEventListener('load', fixMapSize);
+    window.addEventListener('resize', fixMapSize);
 
     // ─── LocalStorage ───────────────────────────────────────────────
     const STORAGE_KEY = 'mufcMapPins';
@@ -128,8 +141,8 @@
 
     // ─── Marker Add ─────────────────────────────────────────────────
     function addMarker(lat, lng, name, msg, isNew = false) {
-      const safeName = name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const safeMsg  = msg.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const safeName = name.replace(/</g, '&lt;').replace(/>/g, '&gt;') || 'Anonymous';
+      const safeMsg  = msg.replace(/</g, '&lt;').replace(/>/g, '&gt;') || '(no message)';
       const popup = `
         <b>${safeName}</b><br>
         ${safeMsg}<br>
@@ -138,16 +151,9 @@
       L.marker([lat, lng], { icon: greenDot }).addTo(map).bindPopup(popup);
     }
 
-    // ─── Load Pins Once Map is Ready ────────────────────────────────
-    map.whenReady(() => {
-      const pins = loadPins();
-      pins.forEach(p => {
-        addMarker(p.lat, p.lng, p.name, p.msg);
-      });
-
-      // Fix any initial sizing glitches
-      setTimeout(() => map.invalidateSize(), 200);
-    });
+    // Load pins right away (map exists now)
+    const pins = loadPins();
+    pins.forEach(p => addMarker(p.lat, p.lng, p.name, p.msg));
 
     // ─── User Location ──────────────────────────────────────────────
     let userLat = 53.4631;
@@ -159,9 +165,10 @@
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
           map.setView([userLat, userLng], 15);
-          showStatus('Centered on your location', 'success');
+          fixMapSize(); // extra fix after recenter
+          showStatus('Centered on your location ⚽', 'success');
         },
-        () => showStatus('Location access denied — using Old Trafford', 'error')
+        () => showStatus('Location denied — using Old Trafford fallback', 'error')
       );
     }
 
@@ -171,7 +178,7 @@
     function showStatus(text, className = '') {
       statusEl.textContent = text;
       statusEl.className = className;
-      setTimeout(() => { statusEl.textContent = ''; statusEl.className = ''; }, 4000);
+      setTimeout(() => { statusEl.textContent = ''; statusEl.className = ''; }, 5000);
     }
 
     // ─── Drop Pin ───────────────────────────────────────────────────
@@ -180,7 +187,7 @@
       const msg  = document.getElementById('msg').value.trim();
 
       if (!msg) {
-        showStatus('Please write a message first ⚽', 'error');
+        showStatus('Write a message first ⚽', 'error');
         return;
       }
 
@@ -190,24 +197,22 @@
       addMarker(lat, lng, name, msg, true);
 
       const newPin = { lat, lng, name, msg };
-      const pins = [...loadPins(), newPin];
-      savePins(pins);
+      const updatedPins = [...loadPins(), newPin];
+      savePins(updatedPins);
 
       map.setView([lat, lng], 16);
       document.getElementById('msg').value = '';
-      showStatus('Pin dropped & saved! ⚽', 'success');
+      showStatus('Pin dropped & saved locally! ⚽', 'success');
+      fixMapSize(); // ensure after zoom
     });
 
     // ─── Clear All ──────────────────────────────────────────────────
     document.getElementById('clearBtn').addEventListener('click', () => {
-      if (confirm('Clear ALL saved pins?')) {
+      if (confirm('Clear ALL saved pins? This cannot be undone.')) {
         localStorage.removeItem(STORAGE_KEY);
-        location.reload(); // simplest way to refresh markers
+        location.reload();
       }
     });
-
-    // Resize fix
-    window.addEventListener('resize', () => map.invalidateSize());
   </script>
 </body>
 </html>

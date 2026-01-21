@@ -3,193 +3,168 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RootDonate - Live X Posts Map • Carrick Era @ MUFC – GPS Nodes from Email</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5p5QbskXk=" crossorigin="anonymous" />
+  <title>RootDonate • Live GPS Posts Map – Carrick Era #MUFC</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5p5QbskXk=" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <style>
-    body, html { margin: 0; height: 100%; background: #000; color: #fff; font-family: system-ui, sans-serif; }
-    #map-container { position: relative; height: 80vh; }
-    #map { height: 100%; }
-    .header { position: absolute; top: 12px; left: 0; right: 0; text-align: center; pointer-events: none; z-index: 1000; }
-    h1 { font-size: 2.8rem; font-weight: 900; letter-spacing: -1px; background: linear-gradient(90deg, #0af, #0f5, #f90); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 10px; background: rgba(0, 0, 0, 0.8); text-align: center; font-size: 0.9rem; z-index: 1000; }
-    button { padding: 10px 20px; background: #1d9bf0; border: none; color: white; border-radius: 9999px; cursor: pointer; margin: 5px; font-weight: 600; }
-    button:hover { background: #1a8cd8; }
-    input { margin: 5px; padding: 8px 12px; border-radius: 6px; border: 1px solid #333; background: #222; color: #fff; font-size: 1rem; }
-    label { pointer-events: all; margin-right: 8px; }
-    .post-section { margin-top: 10px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; }
-    #gpsStatus { font-size: 0.9rem; color: #0f5; margin-left: 10px; }
+    body, html { margin:0; height:100%; background:#000; color:#eee; font-family:system-ui,sans-serif; }
+    #map { height:100%; }
+    .overlay {
+      position: absolute; top:10px; left:50%; transform:translateX(-50%);
+      z-index:1000; background:rgba(0,0,0,0.7); padding:12px 20px; border-radius:12px;
+      text-align:center; pointer-events:all; max-width:90%;
+    }
+    h1 { margin:0 0 8px; font-size:2.4rem; background:linear-gradient(90deg,#0af,#0f5,#f90); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    input, button { margin:6px 4px; padding:8px 14px; border-radius:8px; border:1px solid #444; background:#222; color:#fff; }
+    button { background:#1d9bf0; border:none; cursor:pointer; font-weight:600; }
+    button:hover { background:#0c85d0; }
+    #status, #gpsStatus { font-size:0.9rem; color:#0f5; margin:4px; }
+    .hidden { display:none; }
   </style>
 </head>
 <body>
-  <div id="map-container">
-    <div id="map"></div>
+  <div id="map"></div>
 
-    <div class="header" style="pointer-events: all;">
-      <h1>RootDonate</h1>
-      <label for="keyword">Search Keyword:</label>
-      <input id="keyword" placeholder="e.g., training, Carrington, Amad" aria-label="Search keyword" />
-      <button id="loadButton">Load X Posts</button>
-      <button id="zoomButton">Zoom to Carrington</button>
-      <button id="refreshEmailPosts">Refresh Email Posts</button>
-
-      <div class="post-section">
-        <label for="postText">Your Post:</label>
-        <input id="postText" placeholder="Type your post..." style="min-width: 220px;" aria-label="Post text" />
-        <label for="hasMedia">Include Media?</label>
-        <input type="checkbox" id="hasMedia" aria-label="Include media" />
-        <button id="addPostButton">Add Post to Map & Email</button>
-        <span id="gpsStatus">GPS Status: Checking...</span>
-      </div>
+  <div class="overlay">
+    <h1>RootDonate</h1>
+    <div>
+      <input id="keyword" placeholder="Filter e.g. training, Amad, Carrington" />
+      <button id="filterBtn">Filter</button>
+      <button id="clearFilter">Clear</button>
     </div>
-
-    <footer>
-      <span id="status">Jan 21, 2026 ~09:33 GMT • @iandreme (Swagga Rico) • #MUFC Carrick Era • Email → GPS Nodes</span>
-    </footer>
+    <div>
+      <input id="postText" placeholder="Your shoutout..." style="width:240px;" />
+      <label><input type="checkbox" id="hasMedia"> + Media?</label>
+      <button id="addPostButton">Drop on Map & Email</button>
+    </div>
+    <div>
+      <button id="refreshEmailPosts">Refresh Email Posts</button>
+      <button id="zoomButton">Zoom Carrington</button>
+      <span id="gpsStatus">GPS: checking...</span>
+    </div>
+    <div id="status">Jan 21, 2026 • @iandreme • Email → GPS Nodes • #MUFC</div>
   </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-
   <script>
-    // EmailJS – replace with your keys
-    emailjs.init({ publicKey: "1oXeNo5ZXiRcipyWo" });
+    emailjs.init({ publicKey: "1oXeNo5ZXiRcipyWo" }); // ← keep yours or generate new one
 
-    // Map setup
-    const map = L.map('map').setView([53.4631, -2.2913], 11);
+    const map = L.map('map').setView([53.4631, -2.2913], 12);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '© OpenStreetMap & CARTO'
     }).addTo(map);
 
-    // Clustering
-    const markers = L.markerClusterGroup({
-      maxClusterRadius: 50,
-      spiderfyOnMaxZoom: true
-    });
+    const markers = L.markerClusterGroup({ maxClusterRadius: 60 });
     map.addLayer(markers);
 
-    // Icons (simple colored circles – customize as you like)
     const emailIcon = L.divIcon({
       className: 'email-marker',
-      html: '<div style="background:#0f5;width:24px;height:24px;border-radius:50%;border:3px solid #fff;"></div>',
-      iconSize: [24, 24],
-      iconAnchor: [12, 12]
+      html: '<div style="background:#0f5;width:20px;height:20px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 8px #0f5;"></div>',
+      iconSize: [20, 20],
+      iconAnchor: [10, 10]
     });
 
-    let userMarker = null;
-    let currentLat = 53.4631;
-    let currentLng = -2.2913;
-    let gpsActive = false;
+    let userLat = 53.4631, userLng = -2.2913;
+    let gpsOK = false;
 
-    // GPS tracking (optional – for your own location)
+    // GPS
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
-        currentLat = pos.coords.latitude;
-        currentLng = pos.coords.longitude;
-        gpsActive = true;
-        document.getElementById('gpsStatus').textContent = `GPS: ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
-        if (userMarker) userMarker.setLatLng([currentLat, currentLng]);
-        else {
-          userMarker = L.marker([currentLat, currentLng], { icon: emailIcon }).addTo(markers)
-            .bindPopup('Your Location (live GPS)');
-        }
-      }, err => {
-        document.getElementById('gpsStatus').textContent = 'GPS: Off / Permission denied';
-      }, { enableHighAccuracy: true });
+        userLat = pos.coords.latitude;
+        userLng = pos.coords.longitude;
+        gpsOK = true;
+        document.getElementById('gpsStatus').textContent = `GPS: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}`;
+      }, () => {
+        document.getElementById('gpsStatus').textContent = 'GPS off / denied – using default';
+      }, { enableHighAccuracy: true, timeout: 8000 });
     }
 
-    // Clean & validate coords
     function cleanCoords(latStr, lngStr) {
-      if (!latStr || !lngStr) return { lat: currentLat, lng: currentLng };
-
-      // Autocorrect: comma → dot, remove ° / spaces / typos
-      latStr = latStr.replace(',', '.').replace('°', '').replace(/\s/g, '').trim();
-      lngStr = lngStr.replace(',', '.').replace('°', '').replace(/\s/g, '').trim();
-
-      let lat = parseFloat(latStr);
-      let lng = parseFloat(lngStr);
-
-      // Fallbacks & safety
-      if (isNaN(lat) || Math.abs(lat) > 90) lat = currentLat;
-      if (isNaN(lng) || Math.abs(lng) > 180) lng = currentLng;
-
-      // Round to reasonable precision
-      lat = Math.round(lat * 100000) / 100000;
-      lng = Math.round(lng * 100000) / 100000;
-
-      return { lat, lng };
+      if (!latStr || !lngStr) return { lat: userLat, lng: userLng };
+      latStr = latStr.replace(/[^0-9.-]/g, '').trim();
+      lngStr = lngStr.replace(/[^0-9.-]/g, '').trim();
+      let lat = parseFloat(latStr) || userLat;
+      let lng = parseFloat(lngStr) || userLng;
+      if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return { lat: userLat, lng: userLng };
+      return { lat: +lat.toFixed(6), lng: +lng.toFixed(6) };
     }
 
-    function addPostMarker(lat, lng, user, text, url, hasMedia) {
+    function addMarker(lat, lng, user, text, hasMedia = false) {
       const popup = `
         <b>${user}</b><br>
-        ${text || 'No text'}<br>
+        ${text || '(no text)'}<br>
         ${hasMedia ? '📸 Has media' : ''}<br>
         <small>${new Date().toLocaleString()}</small>
-        ${url !== '#' ? `<br><a href="${url}" target="_blank">View on X</a>` : ''}
       `;
       L.marker([lat, lng], { icon: emailIcon })
         .addTo(markers)
         .bindPopup(popup);
     }
 
-    // Load from public JSON (email-derived)
-    async function loadEmailPosts() {
+    async function loadEmailPosts(filter = '') {
       try {
-        const resp = await fetch('https://rootdonate.com'); // ← CHANGE THIS
-        if (!resp.ok) throw new Error('Network error');
+        // Replace with your real JSON endpoint when ready (e.g. rootdonate.com/api/posts.json)
+        const resp = await fetch('https://rootdonate.com'); // or a real CORS-enabled JSON
+        if (!resp.ok) throw new Error('fetch failed');
         const posts = await resp.json();
 
-        markers.clearLayers(); // optional: clear old ones, or keep accumulating
+        markers.clearLayers();
 
         posts.forEach(p => {
-          const { lat, lng } = cleanCoords(p.lat?.toString(), p.lng?.toString());
-          addPostMarker(
-            lat, lng,
-            p.u || 'Email Post',
-            p.t || 'Untitled',
-            p.url || '#',
-            p.hasMedia || false
-          );
+          const txt = (p.t || '').toLowerCase();
+          if (filter && !txt.includes(filter.toLowerCase())) return;
+
+          const { lat, lng } = cleanCoords(p.lat, p.lng);
+          addMarker(lat, lng, p.u || 'Email Node', p.t || '—', p.hasMedia);
         });
 
-        document.getElementById('status').textContent += ' • Loaded clean email posts!';
-      } catch (err) {
-        console.error(err);
-        document.getElementById('status').textContent += ' • Failed to load email posts';
+        document.getElementById('status').textContent += ' • Loaded!';
+      } catch (e) {
+        console.error(e);
+        document.getElementById('status').textContent += ' • Load failed (check endpoint)';
       }
     }
 
-    // Manual add + email send
-    document.getElementById('addPostButton').addEventListener('click', () => {
+    // Add post
+    document.getElementById('addPostButton').onclick = () => {
       const text = document.getElementById('postText').value.trim();
-      if (!text) return alert('Enter some text!');
+      if (!text) return alert('Type something first!');
 
       const hasMedia = document.getElementById('hasMedia').checked;
 
-      // Add to map at current GPS or default
-      addPostMarker(currentLat, currentLng, '@iandreme', text, '#', hasMedia);
+      addMarker(userLat, userLng, '@iandreme', text, hasMedia);
 
-      // Send via EmailJS (you set up template with lat/lng/text)
       emailjs.send('service_amql3dos', 'template_cyl5hjt', {
-        text: text,
-        lat: currentLat.toFixed(6),
-        lng: currentLng.toFixed(6),
+        text,
+        lat: userLat.toFixed(6),
+        lng: userLng.toFixed(6),
         hasMedia: hasMedia ? 'Yes' : 'No',
-        from_name: 'RootDonate User'
+        from_name: 'RootDonate Drop'
       }).then(() => {
-        alert('Post added to map & emailed!');
+        alert('Dropped on map + emailed!');
         document.getElementById('postText').value = '';
-      }).catch(err => alert('Email failed: ' + err.text));
-    });
+      }).catch(err => {
+        alert('EmailJS failed: ' + (err.text || 'check console'));
+        console.error(err);
+      });
+    };
 
-    // Buttons
-    document.getElementById('refreshEmailPosts').addEventListener('click', loadEmailPosts);
-    document.getElementById('zoomButton').addEventListener('click', () => map.setView([53.4631, -2.2913], 15));
+    // Filter
+    document.getElementById('filterBtn').onclick = () => {
+      const kw = document.getElementById('keyword').value.trim();
+      loadEmailPosts(kw);
+    };
+    document.getElementById('clearFilter').onclick = () => {
+      document.getElementById('keyword').value = '';
+      loadEmailPosts();
+    };
 
-    // Initial load
+    document.getElementById('refreshEmailPosts').onclick = () => loadEmailPosts(document.getElementById('keyword').value);
+    document.getElementById('zoomButton').onclick = () => map.setView([53.4631, -2.2913], 15);
+
+    // Start
     loadEmailPosts();
   </script>
 </body>

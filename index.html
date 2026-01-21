@@ -147,14 +147,8 @@
     <h1>Root Donate Map</h1>
     <div id="gps">GPS: checking...</div>
     <div id="status">Today • @iandreme • Drop your message</div>
-
-    <input type="text"    id="name"    placeholder="Your name (optional)"    autocomplete="name" />
-    <input type="email"   id="email"   placeholder="Your email (optional)"   autocomplete="email" />
-    <textarea id="message" placeholder="Your message... #MUFC" autocomplete="on" autocorrect="on" autocapitalize="sentences"></textarea>
-
     <div class="buttons">
       <button id="refresh">Center map</button>
-      <button id="sendEmail">Send location + message</button>
     </div>
   </div>
 
@@ -172,7 +166,7 @@
       zoomSnap: 0.5
     }).setView([53.4631, -2.2913], 13);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://.tile.openstreetmap.org/.png', {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19
     }).addTo(map);

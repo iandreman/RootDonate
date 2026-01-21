@@ -118,4 +118,30 @@
       status.className = '';
       status.textContent = 'Showing test markers...';
 
-      // Clear​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​
+      // Clear existing (except your own adds)
+      map.eachLayer(layer => {
+        if (layer instanceof L.Marker) map.removeLayer(layer);
+      });
+
+      // Dummy hello world posts around Carrington
+      const tests = [
+        { lat: 53.4631, lng: -2.2913, text: "Hello World from Carrington! ⚽ #MUFC" },
+        { lat: 53.465,  lng: -2.285,  text: "Training day vibes" },
+        { lat: 53.460,  lng: -2.295,  text: "Carrick masterclass loading..." }
+      ];
+
+      tests.forEach(t => addMarker(t.lat, t.lng, t.text, false));
+      setTimeout(() => {
+        status.textContent = 'Test markers loaded • Add your own!';
+      }, 1200);
+    };
+
+    document.getElementById('zoom').onclick = () => {
+      map.setView([53.4631, -2.2913], 15);
+    };
+
+    // Optional: auto-add a hello world marker on load
+    addMarker(53.4631, -2.2913, "Hello World! Drop your message →", false);
+  </script>
+</body>
+</html>

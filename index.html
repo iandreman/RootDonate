@@ -6,7 +6,11 @@
   <title>Root Donate Drops • Real-Time #MUFC</title>
 
   <!-- Supabase JS client -->
-  <script src="[https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2](https://cdn.jsdelivr.net/npm/[@supabase](https://x.com/supabase)/supabase-js@2)"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Leaflet for maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
     /* Your existing styles here – unchanged for brevity */
@@ -32,6 +36,7 @@
     .pin-header { font-weight:bold; color:#55ff99; margin-bottom:6px; }
     .pin-msg { margin:8px 0 10px; white-space:pre-wrap; line-height:1.4; }
     .pin-time { font-size:0.82em; color:#777; text-align:right; margin-top:6px; }
+    #map { height: 400px; margin: 20px 0; border-radius: 8px; border: 1px solid #333; }
   </style>
 </head>
 <body>
@@ -39,7 +44,9 @@
   <div class="container">
     <h1>Root Donate Drops ⚽ #MUFC (Real-Time)</h1>
 
-    <input type="text" id="name" placeholder="Name / [@handle](https://x.com/handle)" value="[@iandreme](https://x.com/iandreme)" />
+    <div id="map"></div>
+
+    <input type="text" id="name" placeholder="Name / @handle" value="@iandreme" />
     <textarea id="msg" placeholder="Your message / donation note / shoutout..."></textarea>
     
     <div class="buttons">
@@ -54,7 +61,7 @@
 
   <script>
     // ─── Supabase Config ────────────────────────────────────────────
-    const SUPABASE_URL    = 'ekdiarbztipvogxversx';          // ← Replace
+    const SUPABASE_URL    = 'ekdiarbztipvogxversx';          // ← Replace with your Supabase URL (e.g., https://<this>.supabase.co)
     const SUPABASE_ANON   = 'sb_publishable_b_PuReasRGPXbHcbmY8xTA_6CoxfEgH';     // ← Replace with your anon key
 
     const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -92,10 +99,20 @@
 
     function roundCoord(n) { return Number(n.toFixed(6)); }
 
+    // ─── Map Initialization ─────────────────────────────────────────
+    let map = L.map('map').setView([53.4631, -2.2913], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let markers = L.layerGroup().addTo(map);
+
     // ─── Render (shared + local) ────────────────────────────────────
     async function renderDrops() {
       const listEl = document.getElementById('pinList');
       listEl.innerHTML = '<p style="text-align:center;color:#555;padding:20px;">Loading drops...</p>';
+
+      markers.clearLayers();
 
       try {
         // Fetch shared from Supabase
@@ -122,27 +139,51 @@
           groups[key].push(d);
         });
 
-        Object.entries(groups)
-          .sort(([,a], [,b]) => Math.max(...b.map(d=>d.timestamp)) - Math.max(...a.map(d=>d.timestamp)))
-          .forEach(([key, group]) => {
-            const [lat, lng] = key.split(',').map(Number);
-            const groupDiv = document.createElement('div');
-            groupDiv.className = 'location-group';
-            groupDiv.innerHTML = `<div class="location-header">📍 ${lat}, ${lng}</div>`;
+        const sortedGroups = Object.entries(groups)
+          .sort(([,a], [,b]) => Math.max(...b.map(d=>d.timestamp)) - Math.max(...a.map(d=>d.timestamp)));
 
-            group.forEach(drop => {
-              const pin = document.createElement('div');
-              pin.className = 'pin';
-              pin.innerHTML = `
-                <div class="pin-header">${drop.name || 'Anonymous'}</div>
-                <div class="pin-msg">${drop.msg || '(no message)'}</div>
-                <div class="pin-time">${new Date(drop.timestamp).toLocaleString()}</div>
-              `;
-              groupDiv.appendChild(pin);
-            });
+        // Render list
+        sortedGroups.forEach(([key, group]) => {
+          const [lat, lng] = key.split(',').map(Number);
+          const groupDiv = document.createElement('div');
+          groupDiv.className = 'location-group';
+          groupDiv.innerHTML = `<div class="location-header">📍 ${lat}, ${lng}</div>`;
 
-            listEl.appendChild(groupDiv);
+          group.forEach(drop => {
+            const pin = document.createElement('div');
+            pin.className = 'pin';
+            pin.innerHTML = `
+              <div class="pin-header">${drop.name || 'Anonymous'}</div>
+              <div class="pin-msg">${drop.msg || '(no message)'}</div>
+              <div class="pin-time">${new Date(drop.timestamp).toLocaleString()}</div>
+            `;
+            groupDiv.appendChild(pin);
           });
+
+          listEl.appendChild(groupDiv);
+        });
+
+        // Render map pins
+        const bounds = L.latLngBounds();
+        sortedGroups.forEach(([key, group]) => {
+          const [lat, lng] = key.split(',').map(Number);
+          let popupContent = `<b>📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}</b><br><hr>`;
+
+          group.sort((a, b) => b.timestamp - a.timestamp).forEach(drop => {
+            popupContent += `<b>${drop.name || 'Anonymous'}</b><br>${drop.msg || '(no message)'}<br><small>${new Date(drop.timestamp).toLocaleString()}</small><br><hr>`;
+          });
+
+          const marker = L.marker([lat, lng]).bindPopup(popupContent);
+          markers.addLayer(marker);
+          bounds.extend([lat, lng]);
+        });
+
+        if (sortedGroups.length > 0) {
+          map.fitBounds(bounds, { padding: [50, 50] });
+        } else {
+          map.setView([53.4631, -2.2913], 13);
+        }
+
       } catch (err) {
         console.error(err);
         listEl.innerHTML = '<p style="text-align:center;color:#f66;">Error loading drops</p>';
@@ -227,3 +268,4 @@
   </script>
 </body>
 </html>
+```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

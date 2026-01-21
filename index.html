@@ -3,102 +3,117 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Hello World • Map Pin Drop • #MUFC</title>
+  <title>Pin Drop Map • Saved Locally • #MUFC</title>
 
-  <!-- Leaflet CSS + JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5p5QbskXk=" crossorigin="anonymous" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
 
   <style>
-    body, html {
+    html, body {
       margin: 0;
       padding: 0;
       height: 100%;
-      font-family: Arial, sans-serif;
+      width: 100%;
       background: #000;
       color: #eee;
+      font-family: Arial, Helvetica, sans-serif;
     }
     #map {
-      height: 70%;
+      height: 100%;
       width: 100%;
     }
-    .form-box {
-      padding: 20px;
-      background: #111;
+    .overlay {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      background: rgba(17,17,17,0.85);
+      backdrop-filter: blur(6px);
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
       text-align: center;
+      max-width: 90%;
+      width: 380px;
     }
     input, textarea {
-      width: 90%;
-      max-width: 400px;
+      width: 100%;
       padding: 10px;
       margin: 8px 0;
-      border-radius: 6px;
       border: 1px solid #444;
+      border-radius: 6px;
       background: #222;
       color: white;
+      font-size: 1em;
     }
+    textarea { resize: vertical; min-height: 60px; }
     button {
-      padding: 12px 30px;
-      background: #00cc44;
-      color: black;
+      padding: 10px 20px;
+      margin: 6px;
       border: none;
-      border-radius: 8px;
-      font-size: 1.1em;
+      border-radius: 6px;
+      font-weight: bold;
       cursor: pointer;
+      transition: all 0.2s;
     }
-    button:hover {
-      background: #00ff55;
+    #dropBtn   { background: #00cc44; color: black; }
+    #dropBtn:hover   { background: #00ff55; }
+    #clearBtn  { background: #cc0000; color: white; }
+    #clearBtn:hover  { background: #ff3333; }
+    #status {
+      margin: 8px 0;
+      min-height: 1.2em;
+      font-size: 0.95em;
     }
-    h1 {
-      margin: 10px 0;
-      color: #00ff55;
-    }
-    small {
-      color: #aaa;
-    }
+    .success { color: #0f5; }
+    .error   { color: #f66; }
   </style>
 </head>
 <body>
 
-  <h1>Hello World Map • Pins Saved Locally ⚽ #MUFC</h1>
-
   <div id="map"></div>
 
-  <div class="form-box">
-    <input type="text" id="name" placeholder="Your name / @handle" value="@iandreme" />
-    <textarea id="msg" placeholder="Short message..." rows="2"></textarea>
-    <button onclick="dropPin()">Drop Pin → Map</button>
+  <div class="overlay">
+    <h2>Pin Drop Map ⚽ #MUFC</h2>
+    <input type="text" id="name" placeholder="Name / @handle" value="@iandreme" />
+    <textarea id="msg" placeholder="Your message..."></textarea>
+    
+    <div>
+      <button id="dropBtn">Drop Pin</button>
+      <button id="clearBtn">Clear All Pins</button>
+    </div>
+    
+    <div id="status"></div>
   </div>
 
   <script>
-    // ─── Map Setup ──────────────────────────────────────────────────
-    const map = L.map('map').setView([53.4631, -2.2913], 14);
+    // ─── Map & Icon Setup ───────────────────────────────────────────
+    const map = L.map('map', { zoomControl: true }).setView([53.4631, -2.2913], 14);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19
     }).addTo(map);
 
-    // Green dot icon
     const greenDot = L.divIcon({
-      html: '<div style="background:#0f5; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px #0f5;"></div>',
-      className: '',
+      className: 'custom-green-dot',
+      html: '<div style="background:#0f5;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 0 10px #0f5;"></div>',
       iconSize: [16, 16],
       iconAnchor: [8, 8]
     });
 
-    // ─── LocalStorage Helpers ───────────────────────────────────────
-    const STORAGE_KEY = 'mapPins';
+    // ─── LocalStorage ───────────────────────────────────────────────
+    const STORAGE_KEY = 'mufcMapPins';
 
     function loadPins() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return [];
-
       try {
-        return JSON.parse(saved);
+        const saved = localStorage.getItem(STORAGE_KEY);
+        return saved ? JSON.parse(saved) : [];
       } catch (e) {
-        console.warn('Invalid saved pins data', e);
+        console.warn('Pins parse error:', e);
         return [];
       }
     }
@@ -107,73 +122,92 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(pins));
     }
 
-    // ─── Add Marker Function ────────────────────────────────────────
-    function addMarker(lat, lng, name, msg, isNew = false) {
-      const popup = `
-        <b>Hello from ${name}</b><br>
-        ${msg}<br>
-        <small>#MUFC ${isNew ? '· just now' : ''}</small>
-      `;
-      L.marker([lat, lng], { icon: greenDot })
-        .addTo(map)
-        .bindPopup(popup);
+    function roundCoord(num) {
+      return Number(num.toFixed(6));
     }
 
-    // ─── Load Existing Pins on Start ────────────────────────────────
-    const pins = loadPins();
-    pins.forEach(p => {
-      addMarker(p.lat, p.lng, p.name, p.msg);
+    // ─── Marker Add ─────────────────────────────────────────────────
+    function addMarker(lat, lng, name, msg, isNew = false) {
+      const safeName = name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const safeMsg  = msg.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const popup = `
+        <b>${safeName}</b><br>
+        ${safeMsg}<br>
+        <small>#MUFC ${isNew ? '· just now' : ''}</small>
+      `;
+      L.marker([lat, lng], { icon: greenDot }).addTo(map).bindPopup(popup);
+    }
+
+    // ─── Load Pins Once Map is Ready ────────────────────────────────
+    map.whenReady(() => {
+      const pins = loadPins();
+      pins.forEach(p => {
+        addMarker(p.lat, p.lng, p.name, p.msg);
+      });
+
+      // Fix any initial sizing glitches
+      setTimeout(() => map.invalidateSize(), 200);
     });
 
-    // Try to get user location once
+    // ─── User Location ──────────────────────────────────────────────
     let userLat = 53.4631;
     let userLng = -2.2913;
 
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(pos => {
-        userLat = pos.coords.latitude;
-        userLng = pos.coords.longitude;
-        map.setView([userLat, userLng], 15);
-      }, () => {
-        // fallback already set
-      });
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          userLat = pos.coords.latitude;
+          userLng = pos.coords.longitude;
+          map.setView([userLat, userLng], 15);
+          showStatus('Centered on your location', 'success');
+        },
+        () => showStatus('Location access denied — using Old Trafford', 'error')
+      );
     }
 
-    // ─── Drop New Pin ───────────────────────────────────────────────
-    function dropPin() {
+    // ─── UI Helpers ─────────────────────────────────────────────────
+    const statusEl = document.getElementById('status');
+
+    function showStatus(text, className = '') {
+      statusEl.textContent = text;
+      statusEl.className = className;
+      setTimeout(() => { statusEl.textContent = ''; statusEl.className = ''; }, 4000);
+    }
+
+    // ─── Drop Pin ───────────────────────────────────────────────────
+    document.getElementById('dropBtn').addEventListener('click', () => {
       const name = document.getElementById('name').value.trim() || 'Anonymous';
       const msg  = document.getElementById('msg').value.trim();
 
       if (!msg) {
-        alert('Write a short message first ⚽');
+        showStatus('Please write a message first ⚽', 'error');
         return;
       }
 
-      const lat = userLat;
-      const lng = userLng;
+      const lat = roundCoord(userLat);
+      const lng = roundCoord(userLng);
 
-      // Add to map
       addMarker(lat, lng, name, msg, true);
 
-      // Save to localStorage
       const newPin = { lat, lng, name, msg };
-      const updatedPins = [...loadPins(), newPin];
-      savePins(updatedPins);
+      const pins = [...loadPins(), newPin];
+      savePins(pins);
 
-      // Optional: zoom to it
       map.setView([lat, lng], 16);
-
-      // Clear message only (keep name)
       document.getElementById('msg').value = '';
+      showStatus('Pin dropped & saved! ⚽', 'success');
+    });
 
-      alert('Pin dropped & saved locally! ⚽ (persists after refresh)');
-    }
+    // ─── Clear All ──────────────────────────────────────────────────
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      if (confirm('Clear ALL saved pins?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload(); // simplest way to refresh markers
+      }
+    });
 
-    // Optional: starter/demo pin if no pins exist yet
-    if (pins.length === 0) {
-      addMarker(53.4631, -2.2913, '@iandreme', 'Hello world from Old Trafford!');
-    }
+    // Resize fix
+    window.addEventListener('resize', () => map.invalidateSize());
   </script>
-
 </body>
 </html>

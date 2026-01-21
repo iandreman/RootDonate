@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -34,14 +34,14 @@
       overflow: hidden;
       background: var(--dark);
       color: var(--light);
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     #map {
       height: 100%;
       width: 100%;
       position: absolute;
-      top: 0; left: 0;
+      inset: 0;
       z-index: 1;
     }
 
@@ -108,17 +108,18 @@
       font-weight: 600;
       font-size: 1rem;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.25s ease;
+      touch-action: manipulation;
     }
 
-    button:hover {
+    button:hover, button:active {
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(0,0,0,0.5);
     }
 
     #refresh   { background: #333; color: #ddd; }
     #sendEmail { background: var(--success); color: #000; }
-    #sendEmail:disabled { opacity: 0.55; cursor: not-allowed; }
+    #sendEmail:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
     #status, #gps {
       font-size: 0.96rem;
@@ -131,7 +132,10 @@
     .success { color: var(--success) !important; }
 
     @media (max-width: 520px) {
-      .overlay { padding: 1.3rem 1.5rem; width: 96%; }
+      .overlay {
+        padding: 1.3rem 1.5rem;
+        width: 96%;
+      }
     }
   </style>
 </head>
@@ -144,8 +148,8 @@
     <div id="gps">GPS: checking...</div>
     <div id="status">Today • @iandreme • Drop your message</div>
 
-    <input type="text" id="name" placeholder="Your name (optional)" autocomplete="name" />
-    <input type="email" id="email" placeholder="Your email (optional)" autocomplete="email" />
+    <input type="text"    id="name"    placeholder="Your name (optional)"    autocomplete="name" />
+    <input type="email"   id="email"   placeholder="Your email (optional)"   autocomplete="email" />
     <textarea id="message" placeholder="Your message... #MUFC" autocomplete="on" autocorrect="on" autocapitalize="sentences"></textarea>
 
     <div class="buttons">
@@ -155,8 +159,8 @@
   </div>
 
   <script>
-    // ─── Config ───────────────────────────────────────
-    // Replace these with YOUR real EmailJS values!
+    // ─── EmailJS Config ───────────────────────────────
+    // IMPORTANT: Replace with YOUR OWN keys!
     emailjs.init({ publicKey: "1oXeNo5ZXiRcipyWo" });
 
     const SERVICE_ID  = "amql3dos";
@@ -170,9 +174,7 @@
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19,
-      tileSize: 256,
-      zoomOffset: 0
+      maxZoom: 19
     }).addTo(map);
 
     const greenDot = L.divIcon({
@@ -190,6 +192,7 @@
       document.getElementById('gps').textContent = `GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
     }
 
+    // ─── Geolocation ──────────────────────────────────
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(
         pos => {
@@ -197,38 +200,39 @@
           userLng = pos.coords.longitude;
           updateGPS(userLat, userLng);
           map.setView([userLat, userLng], 15);
-          setTimeout(() => map.invalidateSize(), 150);
         },
         err => {
           console.warn('Geolocation error:', err.code, err.message);
-          document.getElementById('gps').textContent = 'GPS unavailable — using Old Trafford';
+          document.getElementById('gps').textContent = 'GPS unavailable — using Old Trafford coords';
         },
         { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
       );
     } else {
-      document.getElementById('gps').textContent = 'Geolocation not supported';
+      document.getElementById('gps').textContent = 'Geolocation not supported by browser';
     }
 
     // ─── Markers ──────────────────────────────────────
     function addMarker(lat, lng, text = '') {
-      const popup = `
+      const popupContent = `
         <b>@iandreme</b><br>
         ${text || '(no message)'}<br>
         <small>${new Date().toLocaleString()}</small>
       `;
-      L.marker([lat, lng], { icon: greenDot }).addTo(map).bindPopup(popup);
+      L.marker([lat, lng], { icon: greenDot })
+        .addTo(map)
+        .bindPopup(popupContent);
     }
 
-    // Test markers
+    // Demo markers (you can remove these later)
     [
       { lat: 53.4631, lng: -2.2913, text: "Hello from Carrington! ⚽ #MUFC" },
       { lat: 53.4650, lng: -2.2850, text: "Training day vibes" },
       { lat: 53.4600, lng: -2.2950, text: "Carrick masterclass incoming..." }
-    ].forEach(t => addMarker(t.lat, t.lng, t.text));
+    ].forEach(m => addMarker(m.lat, m.lng, m.text));
 
-    // ─── Send Logic ───────────────────────────────────
-    const sendBtn = document.getElementById('sendEmail');
-    const statusEl = document.getElementById('status');
+    // ─── Send Message ─────────────────────────────────
+    const sendBtn   = document.getElementById('sendEmail');
+    const statusEl  = document.getElementById('status');
 
     function sendMessage() {
       const name    = document.getElementById('name').value.trim()    || 'Anonymous';
@@ -238,7 +242,7 @@
       if (!message) {
         statusEl.textContent = 'Please write a message first';
         statusEl.className = 'error';
-        setTimeout(() => { statusEl.textContent = ''; statusEl.className = ''; }, 4000);
+        setTimeout(() => { statusEl.textContent = ''; statusEl.className = ''; }, 4500);
         return;
       }
 
@@ -258,11 +262,8 @@
         subject:     `Map Drop from ${name} #MUFC`
       };
 
-      console.log('Attempting to send:', params);
-
       emailjs.send(SERVICE_ID, TEMPLATE_ID, params)
         .then(res => {
-          console.log('EmailJS success:', res.status, res.text);
           statusEl.textContent = 'Sent successfully! ⚽';
           statusEl.className = 'success';
           addMarker(userLat, userLng, `${name}: ${message.substring(0,60)}${message.length > 60 ? '...' : ''}`);
@@ -270,9 +271,7 @@
         })
         .catch(err => {
           console.error('EmailJS failed:', err);
-          console.log('Status:', err.status);
-          console.log('Text:', err.text || err.message);
-          statusEl.innerHTML = `Failed – check console (F12)<br>${err.text || err.message || 'Unknown error'}`;
+          statusEl.innerHTML = `Failed – ${err.text || err.message || 'check console (F12)'}`;
           statusEl.className = 'error';
         })
         .finally(() => {
@@ -290,23 +289,20 @@
     document.getElementById('refresh').addEventListener('click', () => {
       map.setView([userLat, userLng], 15);
       statusEl.textContent = 'Centered on your location';
-      setTimeout(() => map.invalidateSize(), 200);
+      setTimeout(() => map.invalidateSize(), 180);
     });
 
-    // ─── Map size fixes (very important for Leaflet) ──
+    // ─── Fix Leaflet size issues (mobile especially) ──
     function fixMapSize() {
-      setTimeout(() => map.invalidateSize({ animate: false }), 100);
-      setTimeout(() => map.invalidateSize(), 400);
-      setTimeout(() => map.invalidateSize(), 900);
-      setTimeout(() => map.invalidateSize(), 1800);
+      setTimeout(() => map.invalidateSize(), 120);
+      setTimeout(() => map.invalidateSize(), 450);
+      setTimeout(() => map.invalidateSize(), 1200);
     }
 
-    window.addEventListener('load', fixMapSize);
+    window.addEventListener('load',   fixMapSize);
     window.addEventListener('resize', fixMapSize);
     fixMapSize();
-
-    // One final kick after everything settles
-    setTimeout(fixMapSize, 2500);
+    setTimeout(fixMapSize, 2800);
   </script>
 </body>
 </html>

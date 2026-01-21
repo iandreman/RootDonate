@@ -68,8 +68,8 @@
 
   <script>
     // ─── Supabase Config ────────────────────────────────────────────
-    const SUPABASE_URL  = 'https://ekdiarbztipvogxversx.supabase.co';  // ← Fix if needed
-    const SUPABASE_ANON = 'sb_publishable_b_PuReasRGPXbHcbmY8xTA_6CoxfEgH';  // ← Replace with real anon key
+    const SUPABASE_URL  = 'https://ekdiarbztipvogxversx.supabase.co';
+    const SUPABASE_ANON = 'sb_publishable_b_PuReasRGPXbHcbmY8xTA_6CoxfEgH';  // ← Replace with your real anon key
 
     const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
@@ -106,13 +106,26 @@
 
     function roundCoord(n) { return Number(n.toFixed(6)); }
 
+    // ─── Real-time local sync across tabs (Broadcast Channel) ───────
+    const channel = new BroadcastChannel('root-donate-drops-local');
+
+    channel.onmessage = async (event) => {
+      if (event.data === 'local-updated') {
+        await renderDrops();
+        showStatus('Local drop updated from another tab ⚡', 'success');
+      }
+    };
+
+    function broadcastLocalUpdate() {
+      channel.postMessage('local-updated');
+    }
+
     // ─── Render (shared + local) ────────────────────────────────────
     async function renderDrops() {
       const listEl = document.getElementById('pinList');
       listEl.innerHTML = '<p style="text-align:center;color:#555;padding:20px;">Loading drops...</p>';
 
       try {
-        // Fetch shared from Supabase
         let { data: sharedDrops, error } = await supabase
           .from('drops')
           .select('*')
@@ -120,7 +133,6 @@
 
         if (error) throw error;
 
-        // Merge with local drops
         const local = await getLocalDrops();
         const allDrops = [...(sharedDrops || []), ...local.filter(l => !sharedDrops?.some(s => s.timestamp === l.timestamp))];
 
@@ -128,7 +140,6 @@
           ? '<p style="text-align:center;color:#555;padding:20px;">No drops yet — be the first! ⚽</p>'
           : '';
 
-        // Group by GPS coordinates
         const groups = {};
         allDrops.forEach(d => {
           const key = `${d.lat},${d.lng}`;
@@ -136,7 +147,6 @@
           groups[key].push(d);
         });
 
-        // Sort groups by most recent drop in each location
         const sortedGroups = Object.entries(groups)
           .sort(([,a], [,b]) => Math.max(...b.map(d=> new Date(d.timestamp))) - Math.max(...a.map(d=> new Date(d.timestamp))));
 
@@ -149,7 +159,6 @@
             <div class="location-header">📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}</div>
           `;
 
-          // Sort drops in this location (newest first)
           group.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
 
           group.forEach(drop => {
@@ -185,8 +194,9 @@
       try {
         await openDB();
         await renderDrops();
+        broadcastLocalUpdate();  // Let other tabs know we loaded (optional but nice)
 
-        // Real-time subscription
+        // Real-time Supabase subscription
         supabase
           .channel('drops-channel')
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'drops' }, payload => {
@@ -194,6 +204,7 @@
             showStatus('New drop received! ⚽', 'success');
           })
           .subscribe();
+
       } catch (err) {
         showStatus('Failed to connect — check Supabase config', 'error');
       }
@@ -230,6 +241,7 @@
         if (error) throw error;
 
         await addLocalDrop({ ...drop, id: Date.now() });
+        broadcastLocalUpdate();  // Notify other tabs instantly
 
         document.getElementById('msg').value = '';
         await renderDrops();
@@ -246,6 +258,7 @@
       const tx = db.transaction(STORE_NAME, 'readwrite');
       tx.objectStore(STORE_NAME).clear();
       await new Promise(r => tx.oncomplete = r);
+      broadcastLocalUpdate();  // Notify other tabs
       await renderDrops();
       showStatus('Local drops cleared', 'success');
     });

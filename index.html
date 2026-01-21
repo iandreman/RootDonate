@@ -147,7 +147,7 @@
       el.innerHTML = `Loaded <strong>${timelinePoints.length}</strong> history pins • ${nearby} nearby`;
     }
 
-    // ─── Parser for 2026 on-device Timeline.json (string coords) ────────
+    // ─── Improved Parser – checks all common 2026 locations for string coords ────────
     function parseTimeline(json) {
       const pts = [];
       console.log('JSON root keys:', Object.keys(json || {}));
@@ -165,21 +165,32 @@
       const extractCoord = (obj) => {
         let lat, lng, acc = '?', ts = obj.startTime || obj.endTime || obj.timestamp || '';
 
+        // All common places where Google puts the string coord in 2026 exports
         let locStr = '';
-        if (obj.topCandidate) locStr = obj.topCandidate.placeLocation || obj.topCandidate.latLng || '';
-        if (obj.visit?.topCandidate) locStr = obj.visit.topCandidate.placeLocation || obj.visit.topCandidate.latLng || locStr;
-        if (obj.placeVisit?.topCandidate) locStr = obj.placeVisit.topCandidate.placeLocation || obj.placeVisit.topCandidate.latLng || locStr;
-        if (!locStr) locStr = obj.placeLocation || obj.latLng || '';
+        if (obj.placeLocation) locStr = obj.placeLocation;
+        if (obj.latLng) locStr = obj.latLng;
+        if (obj.topCandidate) {
+          locStr = obj.topCandidate.placeLocation || obj.topCandidate.latLng || locStr;
+        }
+        if (obj.visit?.topCandidate) {
+          locStr = obj.visit.topCandidate.placeLocation || obj.visit.topCandidate.latLng || locStr;
+        }
+        if (obj.placeVisit?.topCandidate) {
+          locStr = obj.placeVisit.topCandidate.placeLocation || obj.placeVisit.topCandidate.latLng || locStr;
+        }
+        if (obj.startLocation) locStr = obj.startLocation.placeLocation || obj.startLocation.latLng || locStr;
+        if (obj.endLocation) locStr = obj.endLocation.placeLocation || obj.endLocation.latLng || locStr;
 
         if (locStr) {
           const coord = cleanAndParse(locStr);
           if (coord) {
             lat = coord.lat;
             lng = coord.lng;
-            console.log('Found pin:', lat.toFixed(6), lng.toFixed(6), 'from:', locStr);
+            console.log('Found echo pin:', lat.toFixed(6), lng.toFixed(6), 'from:', locStr);
           }
         }
 
+        // Rare classic E7 format fallback
         if (!lat && obj.latitudeE7 && obj.longitudeE7) {
           lat = obj.latitudeE7 / 1e7;
           lng = obj.longitudeE7 / 1e7;
@@ -192,25 +203,27 @@
         return null;
       };
 
+      // Main processing
       if (json?.semanticSegments?.length) {
         console.log(`Found ${json.semanticSegments.length} semanticSegments`);
         json.semanticSegments.forEach(s => {
-          if (s.visit || s.placeVisit) {
-            const target = s.visit || s.placeVisit;
+          // Visit / placeVisit / activity
+          if (s.visit || s.placeVisit || s.activitySegment) {
+            const target = s.visit || s.placeVisit || s.activitySegment || s;
             const coord = extractCoord(target);
             if (coord) pts.push({ type: 'history', ...coord });
           }
+          // Frequent places
           if (s.userLocationProfile?.frequentPlaces?.length) {
             s.userLocationProfile.frequentPlaces.forEach(place => {
               const coord = extractCoord(place);
               if (coord) pts.push({ type: 'history', ...coord });
             });
           }
-          const coord = extractCoord(s);
-          if (coord) pts.push({ type: 'history', ...coord });
         });
       }
 
+      // Deep fallback search
       function deepSearch(o) {
         if (typeof o !== 'object' || o === null) return;
         const coord = extractCoord(o);
@@ -219,6 +232,7 @@
       }
       deepSearch(json);
 
+      // Deduplicate & sort newest first
       const unique = [...new Map(pts.map(p => [`${round(p.lat)},${round(p.lng)}`, p])).values()];
       unique.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       console.log(`Parsed ${unique.length} GPS pins total`);
@@ -243,15 +257,15 @@
           showStatus('0 pins – check F12 Console', 'error');
           document.getElementById('pinList').insertAdjacentHTML('afterbegin', `
             <div class="zero-history">
-              <strong>No GPS pins detected</strong><br><br>
-              • Press F12 → Console tab – look for "Found pin:" or "Parsed X GPS pins"<br>
-              • If "semanticSegments" appears but 0 pins → file may lack coords<br>
-              • Search file for "," or "°" – share matching line if found<br>
-              • Manual drops also show as pins!
+              <strong>No GPS pins / echoes detected</strong><br><br>
+              • Press F12 → Console tab – look for "Found echo pin:" or "Parsed X GPS pins"<br>
+              • If "semanticSegments" appears but 0 pins → your export may not contain coordinates<br>
+              • Search file for "," or "°" – share a line with coords if you find one<br>
+              • Dropped messages will still show as green pins!
             </div>
           `);
         } else {
-          showStatus(`Loaded ${timelinePoints.length} GPS pins ✓`, 'success');
+          showStatus(`Loaded ${timelinePoints.length} GPS pins / echoes ✓`, 'success');
         }
 
         updateHistoryStats();
@@ -265,7 +279,7 @@
       }
     }
 
-    // ─── Local Storage Drops ────────────────────────────────────────────────────────
+    // ─── Drops (localStorage) ───────────────────────────────────────────────────────
     function getDrops() {
       try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
       catch { return []; }

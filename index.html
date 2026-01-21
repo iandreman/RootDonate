@@ -80,7 +80,7 @@
   <div id="map"></div>
 
   <div class="overlay">
-    <h2>Pin Drop Map ⚽ #MUFC</h2>
+    <h2>Root Donate Map ⚽</h2>
     <input type="text" id="name" placeholder="Name / @handle" value="@iandreme" />
     <textarea id="msg" placeholder="Your message..."></textarea>
     
@@ -96,10 +96,32 @@
     // ─── Map Setup ──────────────────────────────────────────────────
     const map = L.map('map', { zoomControl: true }).setView([53.4631, -2.2913], 14);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    // Choose ONE tile provider below (swap easily)
+
+    // Recommended: OSM France HOT style – reliable, fast, no key needed
+    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | HOT',
       maxZoom: 19
     }).addTo(map);
+
+    // Alternative 1: CartoDB Positron (clean, light style)
+    // L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    //   attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors & CARTO',
+    //   subdomains: 'abcd',
+    //   maxZoom: 20
+    // }).addTo(map);
+
+    // Alternative 2: Stadia Maps OSM Bright (vibrant, modern)
+    // L.tileLayer('https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png', {
+    //   attribution: '© OpenStreetMap contributors & Stadia Maps',
+    //   maxZoom: 20
+    // }).addTo(map);
+
+    // Alternative 3: CyclOSM (great for paths/terrain detail)
+    // L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
+    //   attribution: '© OpenStreetMap contributors | CyclOSM',
+    //   maxZoom: 20
+    // }).addTo(map);
 
     const greenDot = L.divIcon({
       className: 'custom-green-dot',
@@ -108,7 +130,7 @@
       iconAnchor: [8, 8]
     });
 
-    // Force size fix multiple times (common reliable workaround)
+    // Force size fix (kept for safety)
     function fixMapSize() {
       setTimeout(() => map.invalidateSize(), 100);
       setTimeout(() => map.invalidateSize(), 300);
@@ -151,7 +173,7 @@
       L.marker([lat, lng], { icon: greenDot }).addTo(map).bindPopup(popup);
     }
 
-    // Load pins right away (map exists now)
+    // Load pins
     const pins = loadPins();
     pins.forEach(p => addMarker(p.lat, p.lng, p.name, p.msg));
 
@@ -165,7 +187,7 @@
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
           map.setView([userLat, userLng], 15);
-          fixMapSize(); // extra fix after recenter
+          fixMapSize();
           showStatus('Centered on your location ⚽', 'success');
         },
         () => showStatus('Location denied — using Old Trafford fallback', 'error')
@@ -203,7 +225,7 @@
       map.setView([lat, lng], 16);
       document.getElementById('msg').value = '';
       showStatus('Pin dropped & saved locally! ⚽', 'success');
-      fixMapSize(); // ensure after zoom
+      fixMapSize();
     });
 
     // ─── Clear All ──────────────────────────────────────────────────

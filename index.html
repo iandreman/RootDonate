@@ -13,7 +13,6 @@
       --accent: #00ff55;
       --accent-dark: #00cc44;
       --danger: #ff3333;
-      --info: #1e90ff;
       --export: #ff6600;
       --surface: #111;
       --surface-alt: #1a1a1a;
@@ -260,7 +259,7 @@
           updateLocInfo();
           renderAll();
         },
-        err => showStatus(`GPS error: ${err.message} – try outdoors`, 'error'),
+        err => showStatus(`GPS error: ${err.message} — try outdoors`, 'error'),
         { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
       );
 

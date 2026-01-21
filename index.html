@@ -3,132 +3,248 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Hello World • Email → GPS Map • #MUFC</title>
+  <title>Root Donate Map • Email → GPS • #MUFC</title>
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5p5QbskXk=" crossorigin="anonymous"/>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
   <style>
-    body, html { margin:0; padding:0; height:100%; background:#000; color:#eee; font-family:system-ui, sans-serif; }
-    #map { height:100%; }
+    :root {
+      --primary: #1d9bf0;
+      --success: #0f5;
+      --error: #f66;
+      --dark: #000;
+      --dark-2: #111;
+      --gray: #444;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: var(--dark);
+      color: #eee;
+      font-family: system-ui, sans-serif;
+    }
+
+    #map {
+      height: 100%;
+    }
+
     .overlay {
-      position: absolute; top:10px; left:50%; transform:translateX(-50%);
-      z-index:1000; background:rgba(0,0,0,0.75); padding:16px 24px; border-radius:12px;
-      text-align:center; max-width:90%; box-shadow:0 4px 15px rgba(0,200,100,0.2);
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      background: rgba(0,0,0,0.78);
+      padding: 16px 24px;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 90%;
+      box-shadow: 0 4px 20px rgba(0,200,100,0.15);
     }
-    h1 { margin:0 0 12px; font-size:2.4rem; background:linear-gradient(90deg, #0af, #0f5, #f90); -webkit-background-clip:text; background-clip:text; color:transparent; }
-    input, textarea { 
-      display:block; margin:8px auto; padding:10px; width:90%; max-width:400px;
-      border-radius:8px; border:1px solid #444; background:#111; color:#eee; font-size:1rem;
+
+    h1 {
+      margin: 0 0 0.8em;
+      font-size: 2.3rem;
+      background: linear-gradient(90deg, #0af, #0f5, #f90);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
-    textarea { resize:vertical; height:80px; }
-    button { 
-      margin:8px 6px; padding:10px 20px; border-radius:8px; border:none;
-      background:#1d9bf0; color:white; font-weight:600; cursor:pointer;
+
+    input, textarea {
+      display: block;
+      margin: 10px auto;
+      padding: 10px 12px;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 8px;
+      border: 1px solid var(--gray);
+      background: var(--dark-2);
+      color: #eee;
+      font-size: 1rem;
+      font-family: inherit;
     }
-    button:hover { background:#0c85d0; }
-    #sendEmail { background:#0f5; }
-    #sendEmail:hover { background:#0c3; }
-    #status, #gps { font-size:0.95rem; color:#0f5; margin:10px 0; min-height:1.4em; }
-    .error  { color:#f66 !important; }
-    .success { color:#0f5 !important; }
+
+    textarea {
+      resize: vertical;
+      min-height: 86px;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 10px 22px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.98rem;
+      transition: background 0.15s;
+    }
+
+    button:hover {
+      filter: brightness(1.08);
+    }
+
+    #refresh {
+      background: #444;
+      color: #ddd;
+    }
+
+    #sendEmail {
+      background: var(--success);
+      color: black;
+    }
+
+    #status, #gps {
+      font-size: 0.94rem;
+      margin: 10px 0;
+      min-height: 1.4em;
+      color: var(--success);
+    }
+
+    .error  { color: var(--error) !important; }
+    .success { color: var(--success) !important; }
+
+    .dot {
+      background: var(--success);
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 3px solid white;
+      box-shadow: 0 0 12px var(--success);
+    }
   </style>
 </head>
 <body>
+
   <div id="map"></div>
 
   <div class="overlay">
     <h1>Root Donate Map</h1>
+
     <div id="gps">GPS: checking...</div>
-    <div id="status">Jan 21, 2026 • @iandreme • Email → Map demo</div>
+    <div id="status">Jan 21, 2026 • @iandreme • Email → Map</div>
+
+    <input type="text" id="name" placeholder="Your name (optional)" />
+    <input type="email" id="email" placeholder="Your email (optional)" />
+    <textarea id="message" placeholder="Your message... #MUFC"></textarea>
+
+    <div class="buttons">
+      <button id="refresh">Center map</button>
+      <button id="sendEmail">Send location + message</button>
+    </div>
   </div>
 
   <script>
-    // ────────────────────────────────────────────────
-    // Replace these with YOUR EmailJS values
-    emailjs.init({ publicKey: "1oXeNo5ZXiRcipyWo" });  // ← your public key
+    // ─── Config ───────────────────────────────────────
+    emailjs.init({ publicKey: "1oXeNo5ZXiRcipyWo" });
 
-    const SERVICE_ID   = "amql3dos";     // e.g. service_abc123
-    const TEMPLATE_ID  = "template_u6wxza9";    // e.g. template_xyz789
-    // ────────────────────────────────────────────────
+    const SERVICE_ID  = "amql3dos";
+    const TEMPLATE_ID = "template_u6wxza9";
 
-    const map = L.map('map').setView([53.4631, -2.2913], 13);
+    // ─── Map setup ────────────────────────────────────
+    const map = L.map('map', {
+      zoomControl: true,
+      zoomSnap: 0.25
+    }).setView([53.4631, -2.2913], 13);
+
     L.tileLayer('https://{s}.basemaps.cartocdn.com/{z}/{x}/{y}{r}.png', {
       attribution: '© OpenStreetMap & CARTO'
     }).addTo(map);
 
     const greenDot = L.divIcon({
       className: 'dot',
-      html: '<div style="background:#0f5;width:18px;height:18px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 10px #0f5;"></div>',
-      iconSize: [18,18],
-      iconAnchor: [9,9]
+      iconSize: [18, 18],
+      iconAnchor: [9, 9]
     });
 
-    let myLat = 53.4631;
-    let myLng = -2.2913;
+    // ─── State ────────────────────────────────────────
+    let userLat = 53.4631;
+    let userLng = -2.2913;
 
-    // Watch real user location
-    if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(pos => {
-        myLat = pos.coords.latitude;
-        myLng = pos.coords.longitude;
-        document.getElementById('gps').textContent = `GPS: ${myLat.toFixed(5)}, ${myLng.toFixed(5)}`;
-      }, () => {
-        document.getElementById('gps').textContent = 'GPS unavailable — using Carrington default';
-      }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
-    } else {
-      document.getElementById('gps').textContent = 'No geolocation support in this browser';
+    // ─── Geolocation ──────────────────────────────────
+    function updateGPSDisplay(lat, lng) {
+      document.getElementById('gps').textContent =
+        `GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
     }
 
-    // Add marker helper
-    function addMarker(lat, lng, text, hasMedia = false) {
-      const popup = `
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(
+        pos => {
+          userLat = pos.coords.latitude;
+          userLng = pos.coords.longitude;
+          updateGPSDisplay(userLat, userLng);
+        },
+        () => {
+          document.getElementById('gps').textContent = 'GPS unavailable — using default';
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+      );
+    } else {
+      document.getElementById('gps').textContent = 'Geolocation not supported';
+    }
+
+    // ─── Helpers ──────────────────────────────────────
+    function addMarker(lat, lng, text = '', hasMedia = false) {
+      const popupContent = `
         <b>@iandreme</b><br>
         ${text || '(no message)'}<br>
         ${hasMedia ? '📸 Has media' : ''}<br>
         <small>${new Date().toLocaleString()}</small>
       `;
-      L.marker([lat, lng], { icon: greenDot }).addTo(map).bindPopup(popup);
+      L.marker([lat, lng], { icon: greenDot })
+        .addTo(map)
+        .bindPopup(popupContent);
     }
 
-    // Clear markers (except base layer)
     function clearMarkers() {
       map.eachLayer(layer => {
-        if (layer instanceof L.Marker) map.removeLayer(layer);
+        if (layer instanceof L.Marker) {
+          map.removeLayer(layer);
+        }
       });
     }
 
-    // Load dummy/test markers
     function loadTestMarkers() {
       clearMarkers();
       const tests = [
         { lat: 53.4631, lng: -2.2913, text: "Hello World from Carrington! ⚽ #MUFC" },
-        { lat: 53.465,  lng: -2.285,  text: "Training day vibes" },
-        { lat: 53.460,  lng: -2.295,  text: "Carrick masterclass loading..." }
+        { lat: 53.4650, lng: -2.2850, text: "Training day vibes" },
+        { lat: 53.4600, lng: -2.2950, text: "Carrick masterclass loading..." }
       ];
-      tests.forEach(t => addMarker(t.lat, t.lng, t.text, false));
-      setTimeout(() => {
-        document.getElementById('status').textContent = 'Test markers loaded • Send your own!';
-      }, 1200);
+      tests.forEach(t => addMarker(t.lat, t.lng, t.text));
     }
 
-    // Initial load
-    loadTestMarkers();
-    addMarker(53.4631, -2.2913, "Hello World! Send your message →", false);
-
-    // ─── Send Email ───────────────────────────────────────
-    document.getElementById('sendEmail').addEventListener('click', () => {
+    // ─── UI actions ───────────────────────────────────
+    function sendMessage() {
       const name    = document.getElementById('name').value.trim()    || 'Anonymous';
       const email   = document.getElementById('email').value.trim()   || 'no-reply@example.com';
       const message = document.getElementById('message').value.trim();
 
-      const status = document.getElementById('status');
+      const statusEl = document.getElementById('status');
 
       if (!message) {
-        status.textContent = 'Please enter a message!';
-        status.className = 'error';
-        setTimeout(() => { status.textContent = 'Ready'; status.className = ''; }, 4000);
+        statusEl.textContent = 'Please write a message';
+        statusEl.className = 'error';
+        setTimeout(() => { statusEl.textContent = ''; statusEl.className = ''; }, 4000);
         return;
       }
 
@@ -136,45 +252,48 @@
         from_name:    name,
         reply_to:     email,
         message:      message,
-        latitude:     myLat.toFixed(6),
-        longitude:    myLng.toFixed(6),
-        gps_text:    `GPS: ${myLat.toFixed(5)}, ${myLng.toFixed(5)}`,
+        latitude:     userLat.toFixed(6),
+        longitude:    userLng.toFixed(6),
+        gps_text:    `GPS: ${userLat.toFixed(5)}, ${userLng.toFixed(5)}`,
         user_handle:  '@iandreme',
         timestamp:    new Date().toLocaleString(),
         subject:      `Map Drop from ${name} #MUFC`
       };
 
-      status.textContent = 'Sending...';
-      status.className = '';
+      statusEl.textContent = 'Sending...';
+      statusEl.className = '';
 
       emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams)
-        .then((response) => {
-          console.log('SUCCESS', response.status, response.text);
-          status.textContent = 'Email sent successfully! Thanks ⚽';
-          status.className = 'success';
-          // Also show on map
-          addMarker(myLat, myLng, `${name}: ${message.substring(0,60)}${message.length>60?'...':''}`, false);
-          // Optional: clear input
+        .then(() => {
+          statusEl.textContent = 'Message sent! ⚽ Thank you';
+          statusEl.className = 'success';
+          addMarker(userLat, userLng, `${name}: ${message.substring(0, 60)}${message.length > 60 ? '...' : ''}`);
           document.getElementById('message').value = '';
         })
-        .catch((err) => {
-          console.error('FAILED', err);
-          status.textContent = 'Failed to send – check console or try again';
-          status.className = 'error';
+        .catch(err => {
+          console.error(err);
+          statusEl.textContent = 'Failed to send – please try again';
+          statusEl.className = 'error';
         })
         .finally(() => {
           setTimeout(() => {
-            status.textContent = 'Jan 21, 2026 • @iandreme • Email → Map demo';
-            status.className = '';
+            statusEl.textContent = 'Jan 21, 2026 • @iandreme • Email → Map';
+            statusEl.className = '';
           }, 6000);
         });
+    }
+
+    // ─── Event listeners ──────────────────────────────
+    document.getElementById('sendEmail').addEventListener('click', sendMessage);
+
+    document.getElementById('refresh').addEventListener('click', () => {
+      map.setView([userLat, userLng], 15);
+      document.getElementById('status').textContent = 'Map centered on your position';
     });
 
-    // Refresh / re-center button
-    document.getElementById('refresh').addEventListener('click', () => {
-      map.setView([myLat, myLng], 15);
-      document.getElementById('status').textContent = 'Map centered on current position';
-    });
+    // ─── Init ─────────────────────────────────────────
+    loadTestMarkers();
+    addMarker(53.4631, -2.2913, "Hello World! Drop your message ↓", false);
   </script>
 </body>
 </html>

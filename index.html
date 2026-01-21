@@ -14,15 +14,25 @@
     #map { height:100%; }
     .overlay {
       position: absolute; top:10px; left:50%; transform:translateX(-50%);
-      z-index:1000; background:rgba(0,0,0,0.75); padding:12px 20px; border-radius:12px;
+      z-index:1000; background:rgba(0,0,0,0.75); padding:16px 24px; border-radius:12px;
       text-align:center; max-width:90%; box-shadow:0 4px 15px rgba(0,200,100,0.2);
     }
-    h1 { margin:0 0 8px; font-size:2.2rem; background:linear-gradient(90deg, #0af, #0f5, #f90); -webkit-background-clip:text; background-clip:text; color:transparent; }
-    input, button { margin:5px; padding:8px 14px; border-radius:8px; border:1px solid #444; background:#222; color:#fff; }
-    button { background:#1d9bf0; border:none; cursor:pointer; font-weight:600; }
+    h1 { margin:0 0 12px; font-size:2.4rem; background:linear-gradient(90deg, #0af, #0f5, #f90); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    input, textarea { 
+      display:block; margin:8px auto; padding:10px; width:90%; max-width:400px;
+      border-radius:8px; border:1px solid #444; background:#111; color:#eee; font-size:1rem;
+    }
+    textarea { resize:vertical; height:80px; }
+    button { 
+      margin:8px 6px; padding:10px 20px; border-radius:8px; border:none;
+      background:#1d9bf0; color:white; font-weight:600; cursor:pointer;
+    }
     button:hover { background:#0c85d0; }
-    #status, #gps { font-size:0.9rem; color:#0f5; margin:6px 0; }
-    .error { color:#f66; }
+    #sendEmail { background:#0f5; }
+    #sendEmail:hover { background:#0c3; }
+    #status, #gps { font-size:0.95rem; color:#0f5; margin:10px 0; min-height:1.4em; }
+    .error  { color:#f66 !important; }
+    .success { color:#0f5 !important; }
   </style>
 </head>
 <body>
@@ -30,20 +40,26 @@
 
   <div class="overlay">
     <h1>Hello World Map</h1>
-    <div>
-      <input id="msg" placeholder="Your message / shoutout..." style="width:220px;"/>
-      <label><input type="checkbox" id="media"> Has media?</label>
-    </div>
-    <button id="add">Add to Map + Email</button>
-    <button id="refresh">Refresh (test posts)</button>
-    <button id="zoom">Zoom to Carrington</button>
+
+    <input type="text" id="name" placeholder="Your name (optional)" />
+    <input type="email" id="email" placeholder="Your email (optional – for reply)" />
+    <textarea id="message" placeholder="Your message... Drop a #MUFC thought ⚽" rows="3"></textarea>
+
+    <button id="sendEmail">Send Email with GPS</button>
+    <button id="refresh">Refresh / Center</button>
+
     <div id="gps">GPS: checking...</div>
     <div id="status">Jan 21, 2026 • @iandreme • Email → Map demo</div>
   </div>
 
   <script>
-    // Replace with **your own** EmailJS values
+    // ────────────────────────────────────────────────
+    // Replace these with YOUR EmailJS values
     emailjs.init({ publicKey: "1oXeNo5ZXiRcipyWo" });  // ← your public key
+
+    const SERVICE_ID   = "amql3dos";     // e.g. service_abc123
+    const TEMPLATE_ID  = "template_u6wxza9";    // e.g. template_xyz789
+    // ────────────────────────────────────────────────
 
     const map = L.map('map').setView([53.4631, -2.2913], 13);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -52,7 +68,7 @@
 
     const greenDot = L.divIcon({
       className: 'dot',
-      html: '<div style="background:#0f5;width:18px;height:18px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 8px #0f5;"></div>',
+      html: '<div style="background:#0f5;width:18px;height:18px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 10px #0f5;"></div>',
       iconSize: [18,18],
       iconAnchor: [9,9]
     });
@@ -60,20 +76,21 @@
     let myLat = 53.4631;
     let myLng = -2.2913;
 
-    // Try to get real location
+    // Watch real user location
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         myLat = pos.coords.latitude;
         myLng = pos.coords.longitude;
         document.getElementById('gps').textContent = `GPS: ${myLat.toFixed(5)}, ${myLng.toFixed(5)}`;
       }, () => {
-        document.getElementById('gps').textContent = 'GPS off — using default (Carrington)';
-      }, { enableHighAccuracy: true, timeout: 8000 });
+        document.getElementById('gps').textContent = 'GPS unavailable — using Carrington default';
+      }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
     } else {
-      document.getElementById('gps').textContent = 'No GPS support';
+      document.getElementById('gps').textContent = 'No geolocation support in this browser';
     }
 
-    function addMarker(lat, lng, text, hasMedia) {
+    // Add marker helper
+    function addMarker(lat, lng, text, hasMedia = false) {
       const popup = `
         <b>@iandreme</b><br>
         ${text || '(no message)'}<br>
@@ -83,65 +100,89 @@
       L.marker([lat, lng], { icon: greenDot }).addTo(map).bindPopup(popup);
     }
 
-    // Add your message
-    document.getElementById('add').onclick = () => {
-      const text = document.getElementById('msg').value.trim();
-      if (!text) {
-        alert('Write something first!');
-        return;
-      }
-
-      const hasMedia = document.getElementById('media').checked;
-
-      // Show on map
-      addMarker(myLat, myLng, text, hasMedia);
-
-      // Send via EmailJS
-      emailjs.send('service_amql3dos', 'template_cyl5hjt', {  // ← change service & template IDs
-        text: text,
-        lat: myLat.toFixed(6),
-        lng: myLng.toFixed(6),
-        hasMedia: hasMedia ? 'Yes' : 'No',
-        from_name: 'Hello World Map User'
-      }).then(() => {
-        alert('Added to map + emailed successfully!');
-        document.getElementById('msg').value = '';
-      }).catch(err => {
-        alert('Email failed – check console & EmailJS setup');
-        console.error('EmailJS error:', err);
-      });
-    };
-
-    // Test / dummy refresh
-    document.getElementById('refresh').onclick = () => {
-      const status = document.getElementById('status');
-      status.className = '';
-      status.textContent = 'Showing test markers...';
-
-      // Clear existing (except your own adds)
+    // Clear markers (except base layer)
+    function clearMarkers() {
       map.eachLayer(layer => {
         if (layer instanceof L.Marker) map.removeLayer(layer);
       });
+    }
 
-      // Dummy hello world posts around Carrington
+    // Load dummy/test markers
+    function loadTestMarkers() {
+      clearMarkers();
       const tests = [
         { lat: 53.4631, lng: -2.2913, text: "Hello World from Carrington! ⚽ #MUFC" },
         { lat: 53.465,  lng: -2.285,  text: "Training day vibes" },
         { lat: 53.460,  lng: -2.295,  text: "Carrick masterclass loading..." }
       ];
-
       tests.forEach(t => addMarker(t.lat, t.lng, t.text, false));
       setTimeout(() => {
-        status.textContent = 'Test markers loaded • Add your own!';
+        document.getElementById('status').textContent = 'Test markers loaded • Send your own!';
       }, 1200);
-    };
+    }
 
-    document.getElementById('zoom').onclick = () => {
-      map.setView([53.4631, -2.2913], 15);
-    };
+    // Initial load
+    loadTestMarkers();
+    addMarker(53.4631, -2.2913, "Hello World! Send your message →", false);
 
-    // Optional: auto-add a hello world marker on load
-    addMarker(53.4631, -2.2913, "Hello World! Drop your message →", false);
+    // ─── Send Email ───────────────────────────────────────
+    document.getElementById('sendEmail').addEventListener('click', () => {
+      const name    = document.getElementById('name').value.trim()    || 'Anonymous';
+      const email   = document.getElementById('email').value.trim()   || 'no-reply@example.com';
+      const message = document.getElementById('message').value.trim();
+
+      const status = document.getElementById('status');
+
+      if (!message) {
+        status.textContent = 'Please enter a message!';
+        status.className = 'error';
+        setTimeout(() => { status.textContent = 'Ready'; status.className = ''; }, 4000);
+        return;
+      }
+
+      const templateParams = {
+        from_name:    name,
+        reply_to:     email,
+        message:      message,
+        latitude:     myLat.toFixed(6),
+        longitude:    myLng.toFixed(6),
+        gps_text:    `GPS: ${myLat.toFixed(5)}, ${myLng.toFixed(5)}`,
+        user_handle:  '@iandreme',
+        timestamp:    new Date().toLocaleString(),
+        subject:      `Map Drop from ${name} #MUFC`
+      };
+
+      status.textContent = 'Sending...';
+      status.className = '';
+
+      emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams)
+        .then((response) => {
+          console.log('SUCCESS', response.status, response.text);
+          status.textContent = 'Email sent successfully! Thanks ⚽';
+          status.className = 'success';
+          // Also show on map
+          addMarker(myLat, myLng, `${name}: ${message.substring(0,60)}${message.length>60?'...':''}`, false);
+          // Optional: clear input
+          document.getElementById('message').value = '';
+        })
+        .catch((err) => {
+          console.error('FAILED', err);
+          status.textContent = 'Failed to send – check console or try again';
+          status.className = 'error';
+        })
+        .finally(() => {
+          setTimeout(() => {
+            status.textContent = 'Jan 21, 2026 • @iandreme • Email → Map demo';
+            status.className = '';
+          }, 6000);
+        });
+    });
+
+    // Refresh / re-center button
+    document.getElementById('refresh').addEventListener('click', () => {
+      map.setView([myLat, myLng], 15);
+      document.getElementById('status').textContent = 'Map centered on current position';
+    });
   </script>
 </body>
 </html>

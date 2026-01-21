@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RootDonate • Live GPS Posts Map – Carrick Era #MUFC</title>
+  <title>RootDonate • GPS Posts Map – Carrick Era #MUFC</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5p5QbskXk=" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
@@ -13,15 +13,16 @@
     body, html { margin:0; height:100%; background:#000; color:#eee; font-family:system-ui,sans-serif; }
     #map { height:100%; }
     .overlay {
-      position: absolute; top:10px; left:50%; transform:translateX(-50%);
-      z-index:1000; background:rgba(0,0,0,0.7); padding:12px 20px; border-radius:12px;
-      text-align:center; pointer-events:all; max-width:90%; box-shadow:0 4px 20px rgba(0,255,136,0.2);
+      position: absolute; top:12px; left:50%; transform:translateX(-50%);
+      z-index:1000; background:rgba(0,0,0,0.75); padding:14px 24px; border-radius:16px;
+      text-align:center; max-width:92%; box-shadow:0 6px 24px rgba(0,255,136,0.15);
     }
-    h1 { margin:0 0 8px; font-size:2.4rem; background:linear-gradient(90deg,#0af,#0f5,#f90); -webkit-background-clip:text; background-clip:text; color:transparent; }
-    input, button { margin:6px 4px; padding:8px 14px; border-radius:8px; border:1px solid #444; background:#222; color:#fff; }
-    button { background:#1d9bf0; border:none; cursor:pointer; font-weight:600; }
+    h1 { margin:0 0 10px; font-size:2.5rem; background:linear-gradient(90deg,#0af,#0f5,#f90); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    input, button { margin:6px 5px; padding:9px 16px; border-radius:10px; border:1px solid #555; background:#1a1a1a; color:#fff; font-size:1rem; }
+    button { background:#1d9bf0; border:none; cursor:pointer; font-weight:700; }
     button:hover { background:#0c85d0; }
-    #status, #gpsStatus { font-size:0.9rem; color:#0f5; margin:4px; }
+    #status, #gpsStatus { font-size:0.92rem; color:#0f5; margin:6px 0; display:block; }
+    .error { color:#f55 !important; }
   </style>
 </head>
 <body>
@@ -30,25 +31,25 @@
   <div class="overlay">
     <h1>RootDonate</h1>
     <div>
-      <input id="keyword" placeholder="Filter e.g. training, Amad, Carrington" />
+      <input id="keyword" placeholder="Filter posts (e.g. Amad, training)" />
       <button id="filterBtn">Filter</button>
       <button id="clearFilter">Clear</button>
     </div>
     <div>
-      <input id="postText" placeholder="Your shoutout..." style="width:240px;" />
-      <label><input type="checkbox" id="hasMedia"> + Media?</label>
-      <button id="addPostButton">Drop on Map & Email</button>
+      <input id="postText" placeholder="Your shoutout / message..." style="width:260px;" />
+      <label style="white-space:nowrap;"><input type="checkbox" id="hasMedia"> + Media?</label>
+      <button id="addPostButton">Drop & Email</button>
     </div>
     <div>
       <button id="refreshEmailPosts">Refresh Email Posts</button>
-      <button id="zoomButton">Zoom Carrington</button>
+      <button id="zoomButton">Zoom to Carrington</button>
       <span id="gpsStatus">GPS: checking...</span>
     </div>
-    <div id="status">Jan 21, 2026 • @iandreme • Email → GPS Nodes • #MUFC</div>
+    <div id="status">Jan 21, 2026 • @iandreme • #MUFC Carrick Era • Email → GPS</div>
   </div>
 
   <script>
-    emailjs.init({ publicKey: "1oXeNo5ZXiRcipyWo" }); // ← your EmailJS public key
+    emailjs.init({ publicKey: "1oXeNo5ZXiRcipyWo" });
 
     const map = L.map('map').setView([53.4631, -2.2913], 12);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -60,170 +61,148 @@
 
     const emailIcon = L.divIcon({
       className: 'email-marker',
-      html: '<div style="background:#0f5;width:20px;height:20px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 8px #0f5;"></div>',
-      iconSize: [20, 20],
-      iconAnchor: [10, 10]
+      html: '<div style="background:#0f5;width:22px;height:22px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 10px #0f5;"></div>',
+      iconSize: [22, 22],
+      iconAnchor: [11, 11]
     });
 
     let userLat = 53.4631, userLng = -2.2913;
-    let gpsOK = false;
 
-    // GPS tracking
+    // GPS
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         userLat = pos.coords.latitude;
         userLng = pos.coords.longitude;
-        gpsOK = true;
         document.getElementById('gpsStatus').textContent = `GPS: ${userLat.toFixed(5)}, ${userLng.toFixed(5)}`;
       }, err => {
-        let msg = 'GPS off / denied – using Carrington default';
-        if (err.code === 3) msg += ' (timeout)';
-        document.getElementById('gpsStatus').textContent = msg;
-      }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
+        document.getElementById('gpsStatus').textContent = 'GPS unavailable – using default';
+      }, { enableHighAccuracy: true, timeout: 12000 });
+    } else {
+      document.getElementById('gpsStatus').textContent = 'No GPS support';
     }
 
-    // Super forgiving coordinate cleaner/autocorrect
+    // Robust coord parser
     function cleanCoords(latInput, lngInput) {
-      if (!latInput || !lngInput) {
-        return { lat: userLat, lng: userLng };
+      if (!latInput || !lngInput) return { lat: userLat, lng: userLng };
+
+      function dmsToDec(str, isLat = true) {
+        const regex = /([+-]?\d+(?:\.\d+)?)[°dº]?[\s-]*(\d+(?:\.\d+)?)?['’′]?[\s-]*(\d+(?:\.\d+)?)?["″]?[\s-]*([NSEW])?/i;
+        const m = str.match(regex);
+        if (!m) return NaN;
+        let d = parseFloat(m[1]) || 0;
+        let min = parseFloat(m[2]) || 0;
+        let s = parseFloat(m[3]) || 0;
+        let dir = (m[4] || '').toUpperCase();
+        let dec = d + min/60 + s/3600;
+        if (dir && ['S','W'].includes(dir)) dec = -dec;
+        return dec;
       }
 
-      // Helper: DMS → decimal (e.g. 53°27'50" N)
-      function dmsToDecimal(str, isLat = true) {
-        const regex = /([+-]?\d+(?:\.\d+)?)[°d]?\s*(\d+(?:\.\d+)?)?['′]?\s*(\d+(?:\.\d+)?)?["″]?([NSEW])?/i;
-        const match = str.match(regex);
-        if (!match) return NaN;
+      let latStr = String(latInput).replace(/,/g, '.').replace(/[^0-9.\-°'″NSEWºd\s]/gi, '').trim();
+      let lngStr = String(lngInput).replace(/,/g, '.').replace(/[^0-9.\-°'″NSEWºd\s]/gi, '').trim();
 
-        let deg = parseFloat(match[1]) || 0;
-        let min = parseFloat(match[2]) || 0;
-        let sec = parseFloat(match[3]) || 0;
-        let dir = (match[4] || '').toUpperCase();
+      let lat = dmsToDec(latStr, true);
+      let lng = dmsToDec(lngStr, false);
 
-        let decimal = deg + min / 60 + sec / 3600;
+      if (isNaN(lat)) lat = parseFloat(latStr);
+      if (isNaN(lng)) lng = parseFloat(lngStr);
 
-        // Apply direction
-        if (dir && ['S','W'].includes(dir)) decimal = -decimal;
+      lat = isNaN(lat) || Math.abs(lat) > 90  ? userLat : +lat.toFixed(6);
+      lng = isNaN(lng) || Math.abs(lng) > 180 ? userLng : +lng.toFixed(6);
 
-        return decimal;
-      }
-
-      // Clean strings: comma → dot, keep numbers/dots/minus/°'"/NSEW/space
-      let latStr = (latInput + '').replace(/,/g, '.').replace(/[^0-9.\-°'″NSEWd ]/gi, ' ').trim();
-      let lngStr = (lngInput + '').replace(/,/g, '.').replace(/[^0-9.\-°'″NSEWd ]/gi, ' ').trim();
-
-      // Try DMS parse first
-      let lat = dmsToDecimal(latStr, true);
-      let lng = dmsToDecimal(lngStr, false);
-
-      // Fallback to simple number parse
-      if (isNaN(lat)) lat = parseFloat(latStr) || userLat;
-      if (isNaN(lng)) lng = parseFloat(lngStr) || userLng;
-
-      // Safety bounds
-      if (Math.abs(lat) > 90 || isNaN(lat)) lat = userLat;
-      if (Math.abs(lng) > 180 || isNaN(lng)) lng = userLng;
-
-      return {
-        lat: +lat.toFixed(6),
-        lng: +lng.toFixed(6)
-      };
+      return { lat, lng };
     }
 
     function addMarker(lat, lng, user, text, hasMedia = false) {
       const popup = `
-        <b>${user}</b><br>
-        ${text || '(no text)'}<br>
-        ${hasMedia ? '📸 Has media' : ''}<br>
+        <b>${user}</b><br>${text || '(empty)'}<br>
+        ${hasMedia ? '📸 Media included' : ''}<br>
         <small>${new Date().toLocaleString()}</small>
       `;
-      L.marker([lat, lng], { icon: emailIcon })
-        .addTo(markers)
-        .bindPopup(popup);
+      L.marker([lat, lng], { icon: emailIcon }).addTo(markers).bindPopup(popup);
     }
 
     async function loadEmailPosts(filter = '') {
+      const statusEl = document.getElementById('status');
+      statusEl.className = '';
+      statusEl.textContent = 'Loading email posts...';
+
       try {
-        // CHANGE THIS to your real JSON endpoint when ready!
-        // e.g. 'https://rootdonate.com/api/posts.json' or wherever your backend serves the array
-        const resp = await fetch('https://rootdonate.com');
-        if (!resp.ok) {
-          throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-        }
-        const posts = await resp.json();
+        // ────────────────────────────────────────────────
+        // REPLACE THIS LINE with your REAL endpoint when ready
+        // For testing: use dummy data below instead of fetch
+        // const resp = await fetch('https://rootdonate.com');
+        // if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        // const posts = await resp.json();
+
+        // TEMP: dummy posts so map isn't empty (remove when backend works)
+        const posts = [
+          { lat: "53.4631", lng: "-2.2913", t: "Carrington training vibes #MUFC", u: "@iandreme", hasMedia: true },
+          { lat: "53.47",   lng: "-2.28",   t: "Amad Diallo masterclass incoming", u: "FanNode", hasMedia: false },
+          { lat: "53.45",   lng: "-2.30",   t: "Carrick ball playing masterclass", u: "@MUFC", hasMedia: true },
+          { lat: "53.480",  lng: "-2.242",  t: "Old Trafford roar!", u: "RedDevil", hasMedia: false }
+        ];
 
         markers.clearLayers();
 
         let added = 0;
         posts.forEach(p => {
-          const txt = (p.t || p.text || p.message || '').toLowerCase();
+          const txt = (p.t || p.text || '').toLowerCase();
           if (filter && !txt.includes(filter.toLowerCase())) return;
 
-          const latSrc = p.lat ?? p.latitude ?? p.Lat ?? p.coords?.lat ?? '';
-          const lngSrc = p.lng ?? p.longitude ?? p.Lng ?? p.coords?.lng ?? '';
+          const { lat, lng } = cleanCoords(p.lat ?? p.latitude, p.lng ?? p.longitude);
 
-          const { lat, lng } = cleanCoords(latSrc, lngSrc);
-
-          addMarker(
-            lat, lng,
+          addMarker(lat, lng,
             p.u || p.user || p.from || 'Email Node',
-            p.t || p.text || p.message || '—',
-            !!p.hasMedia || !!p.media || !!p.image
+            p.t || p.text || '—',
+            !!p.hasMedia
           );
           added++;
         });
 
-        document.getElementById('status').textContent = 
-          `Jan 21, 2026 • @iandreme • Loaded ${added} email GPS nodes • #MUFC`;
+        statusEl.textContent = `Loaded ${added} posts (dummy mode – backend coming soon) • #MUFC`;
       } catch (e) {
-        console.error('Load error:', e);
-        document.getElementById('status').textContent = 
-          `Load failed: ${e.message} (check endpoint)`;
+        console.error(e);
+        statusEl.className = 'error';
+        statusEl.textContent = `Failed to load: ${e.message} (rootdonate.com is 503 – set up JSON endpoint)`;
       }
     }
 
-    // Add your own post
+    // Add post button
     document.getElementById('addPostButton').onclick = () => {
       const text = document.getElementById('postText').value.trim();
-      if (!text) return alert('Type something first!');
+      if (!text) return alert('Enter a message!');
 
       const hasMedia = document.getElementById('hasMedia').checked;
 
       addMarker(userLat, userLng, '@iandreme', text, hasMedia);
 
       emailjs.send('service_amql3dos', 'template_cyl5hjt', {
-        text,
+        text, 
         lat: userLat.toFixed(6),
         lng: userLng.toFixed(6),
         hasMedia: hasMedia ? 'Yes' : 'No',
-        from_name: 'RootDonate Drop'
+        from_name: 'RootDonate User'
       }).then(() => {
-        alert('Dropped on map + emailed!');
+        alert('Posted to map + sent to email!');
         document.getElementById('postText').value = '';
       }).catch(err => {
-        alert('EmailJS failed: ' + (err.text || 'check console'));
+        alert('Email send failed – check EmailJS config');
         console.error(err);
       });
     };
 
-    // Filter controls
-    document.getElementById('filterBtn').onclick = () => {
-      const kw = document.getElementById('keyword').value.trim();
-      loadEmailPosts(kw);
-    };
+    // Filter
+    document.getElementById('filterBtn').onclick = () => loadEmailPosts(document.getElementById('keyword').value.trim());
     document.getElementById('clearFilter').onclick = () => {
       document.getElementById('keyword').value = '';
       loadEmailPosts();
     };
+    document.getElementById('refreshEmailPosts').onclick = () => loadEmailPosts(document.getElementById('keyword').value.trim());
 
-    document.getElementById('refreshEmailPosts').onclick = () => {
-      loadEmailPosts(document.getElementById('keyword').value);
-    };
+    document.getElementById('zoomButton').onclick = () => map.setView([53.4631, -2.2913], 15);
 
-    document.getElementById('zoomButton').onclick = () => {
-      map.setView([53.4631, -2.2913], 15);
-    };
-
-    // Initial load
+    // Start
     loadEmailPosts();
   </script>
 </body>

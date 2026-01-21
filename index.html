@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Drops • Local Echoes (~500 m) — Timeless Pins [2026 Fixed]</title>
+  <title>Root Drops • Local Echoes (~500 m) — Timeless Pins [2026]</title>
   <meta name="description" content="Drop messages tied to your exact location. Visible only within ~500 m. Load GPS history to see your past footsteps."/>
 
   <style>
@@ -75,7 +75,7 @@
 <body>
 
   <div class="container">
-    <h1>Root Drops • Local Echoes (~500 m) [2026 Fixed]</h1>
+    <h1>Root Drops • Local Echoes (~500 m)</h1>
 
     <div class="info-box" id="locationInfo">Waiting for GPS fix… (10–120s first time, go outside if slow)</div>
 
@@ -108,17 +108,19 @@
   </div>
 
   <script>
-    // Config
+    // ──────────────────────────────────────────────────────────────
+    // Config & Helpers
+    // ──────────────────────────────────────────────────────────────
     const STORAGE_KEY       = 'root-donate-drops-v2';
     const COORD_PRECISION   = 6;
-    const MATCH_TOLERANCE   = 0.0045;
+    const MATCH_TOLERANCE   = 0.0045; // ≈500 m
 
-    let userLat = null, userLng = null;
+    let userLat = null;
+    let userLng = null;
     let timelinePoints = [];
 
-    // Helpers
     const round = n => Number(n.toFixed(COORD_PRECISION));
-    const coordsMatch = (a,b,c,d) => Math.abs(a - c) <= MATCH_TOLERANCE && Math.abs(b - d) <= MATCH_TOLERANCE;
+    const coordsMatch = (a, b, c, d) => Math.abs(a - c) <= MATCH_TOLERANCE && Math.abs(b - d) <= MATCH_TOLERANCE;
 
     function showStatus(msg, type = '') {
       const el = document.getElementById('status');
@@ -142,10 +144,10 @@
       const el = document.getElementById('historyStats');
       if (timelinePoints.length === 0) return;
       const nearby = timelinePoints.filter(p => userLat && coordsMatch(p.lat, p.lng, userLat, userLng)).length;
-      el.innerHTML = `Loaded <strong>${timelinePoints.length}</strong> history pins total • ${nearby} nearby`;
+      el.innerHTML = `Loaded <strong>${timelinePoints.length}</strong> history pins • ${nearby} nearby`;
     }
 
-    // ─── FIXED PARSER FOR 2026 ON-DEVICE Timeline.json ───────────────────────────
+    // ─── Parser for 2026 on-device Timeline.json (string coords) ────────
     function parseTimeline(json) {
       const pts = [];
       console.log('JSON root keys:', Object.keys(json || {}));
@@ -154,27 +156,19 @@
         if (typeof str !== 'string') return null;
         const cleaned = str.replace(/°/g, '').replace(/[^0-9.,-]/g, '').trim();
         if (!cleaned.includes(',')) return null;
-        const parts = cleaned.split(',').map(s => s.trim());
-        if (parts.length < 2) return null;
-        const lat = parseFloat(parts[0]);
-        const lng = parseFloat(parts[1]);
-        return (!isNaN(lat) && !isNaN(lng)) ? {lat, lng} : null;
+        const [latStr, lngStr] = cleaned.split(',').map(s => s.trim());
+        const lat = parseFloat(latStr);
+        const lng = parseFloat(lngStr);
+        return (!isNaN(lat) && !isNaN(lng)) ? { lat, lng } : null;
       };
 
       const extractCoord = (obj) => {
         let lat, lng, acc = '?', ts = obj.startTime || obj.endTime || obj.timestamp || '';
 
-        // Target placeLocation in topCandidate (common in 2026 exports)
         let locStr = '';
-        if (obj.topCandidate) {
-          locStr = obj.topCandidate.placeLocation || obj.topCandidate.latLng || '';
-        }
-        if (obj.visit && obj.visit.topCandidate) {
-          locStr = obj.visit.topCandidate.placeLocation || obj.visit.topCandidate.latLng || locStr;
-        }
-        if (obj.placeVisit && obj.placeVisit.topCandidate) {
-          locStr = obj.placeVisit.topCandidate.placeLocation || obj.placeVisit.topCandidate.latLng || locStr;
-        }
+        if (obj.topCandidate) locStr = obj.topCandidate.placeLocation || obj.topCandidate.latLng || '';
+        if (obj.visit?.topCandidate) locStr = obj.visit.topCandidate.placeLocation || obj.visit.topCandidate.latLng || locStr;
+        if (obj.placeVisit?.topCandidate) locStr = obj.placeVisit.topCandidate.placeLocation || obj.placeVisit.topCandidate.latLng || locStr;
         if (!locStr) locStr = obj.placeLocation || obj.latLng || '';
 
         if (locStr) {
@@ -186,7 +180,6 @@
           }
         }
 
-        // Rare E7
         if (!lat && obj.latitudeE7 && obj.longitudeE7) {
           lat = obj.latitudeE7 / 1e7;
           lng = obj.longitudeE7 / 1e7;
@@ -199,30 +192,25 @@
         return null;
       };
 
-      // Main loop: semanticSegments
       if (json?.semanticSegments?.length) {
         console.log(`Found ${json.semanticSegments.length} semanticSegments`);
         json.semanticSegments.forEach(s => {
-          // Visit / placeVisit
           if (s.visit || s.placeVisit) {
             const target = s.visit || s.placeVisit;
             const coord = extractCoord(target);
             if (coord) pts.push({ type: 'history', ...coord });
           }
-          // Frequent places
           if (s.userLocationProfile?.frequentPlaces?.length) {
             s.userLocationProfile.frequentPlaces.forEach(place => {
               const coord = extractCoord(place);
               if (coord) pts.push({ type: 'history', ...coord });
             });
           }
-          // Direct in segment
           const coord = extractCoord(s);
           if (coord) pts.push({ type: 'history', ...coord });
         });
       }
 
-      // Deep fallback scan
       function deepSearch(o) {
         if (typeof o !== 'object' || o === null) return;
         const coord = extractCoord(o);
@@ -231,9 +219,8 @@
       }
       deepSearch(json);
 
-      // Dedupe & sort (newest first)
       const unique = [...new Map(pts.map(p => [`${round(p.lat)},${round(p.lng)}`, p])).values()];
-      unique.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+      unique.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       console.log(`Parsed ${unique.length} GPS pins total`);
       return unique;
     }
@@ -257,10 +244,10 @@
           document.getElementById('pinList').insertAdjacentHTML('afterbegin', `
             <div class="zero-history">
               <strong>No GPS pins detected</strong><br><br>
-              • Press F12 → Console tab now – look for "Found pin:" or "Parsed X GPS pins"<br>
-              • If console says "Found semanticSegments" but 0 pins → export may have no coords (common issue)<br>
-              • Search file for "," or "°" (in text editor) – paste line with coords here if found<br>
-              • Drop manual messages – they show as pins too!
+              • Press F12 → Console tab – look for "Found pin:" or "Parsed X GPS pins"<br>
+              • If "semanticSegments" appears but 0 pins → file may lack coords<br>
+              • Search file for "," or "°" – share matching line if found<br>
+              • Manual drops also show as pins!
             </div>
           `);
         } else {
@@ -278,11 +265,174 @@
       }
     }
 
-    // ─── Rest of your code (addDrop, clearNearby, exportJson, renderAll, events, etc.) ───
-    // Paste your existing functions here: tryReopen, getDrops, saveDrops, addDrop, clearNearby, exportJson, renderAll,
-    // event listeners (dropBtn.onclick, clearBtn.onclick, exportJsonBtn.onclick, dropZone events, fileInput.onchange, reloadHistoryBtn.onclick, storage listener)
+    // ─── Local Storage Drops ────────────────────────────────────────────────────────
+    function getDrops() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+      catch { return []; }
+    }
 
-    // GPS with better feedback
+    function saveDrops(drops) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(drops));
+      window.dispatchEvent(new Event('storage'));
+    }
+
+    function addDrop(name, msg, lat, lng) {
+      const drops = getDrops();
+      drops.push({
+        type: 'drop',
+        name: name.trim() || 'Anonymous',
+        msg: msg.trim() || '(empty)',
+        lat: round(lat),
+        lng: round(lng),
+        timestamp: new Date().toISOString()
+      });
+      saveDrops(drops);
+    }
+
+    function clearNearby(lat, lng) {
+      const kept = getDrops().filter(d => !coordsMatch(d.lat, d.lng, lat, lng));
+      saveDrops(kept);
+    }
+
+    // ─── Export ─────────────────────────────────────────────────────────────────────
+    function exportJson() {
+      if (!userLat) return showStatus('No location yet', 'error');
+
+      const drops = getDrops().filter(d => coordsMatch(d.lat, d.lng, userLat, userLng));
+      const hist  = timelinePoints.filter(p => coordsMatch(p.lat, p.lng, userLat, userLng));
+      const all   = [...drops, ...hist];
+
+      if (!all.length) return showStatus('Nothing nearby to export', 'error');
+
+      const data = {
+        metadata: {
+          exported: new Date().toISOString(),
+          center: { lat: round(userLat), lng: round(userLng), radius_m: 500 },
+          counts: { total: all.length, drops: drops.length, history: hist.length }
+        },
+        pins: all.map(p => {
+          const base = {
+            type: p.type,
+            lat: round(p.lat),
+            lng: round(p.lng),
+            timestamp: p.timestamp || null
+          };
+          if (p.type === 'drop') {
+            base.name = p.name;
+            base.message = p.msg;
+          } else {
+            base.accuracy_m = p.accuracy !== '?' ? Number(p.accuracy) : null;
+          }
+          return base;
+        }).sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0))
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `root-echo_${new Date().toISOString().slice(0,10)}_500m.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      showStatus(`Exported ${all.length} echoes`, 'success');
+    }
+
+    // ─── Render ─────────────────────────────────────────────────────────────────────
+    function renderAll() {
+      const list = document.getElementById('pinList');
+      if (!userLat) {
+        list.innerHTML = '<p style="text-align:center;color:#555;padding:3rem 1rem;">Waiting for GPS…</p>';
+        return;
+      }
+
+      const drops = getDrops().filter(d => coordsMatch(d.lat, d.lng, userLat, userLng));
+      const hist  = timelinePoints.filter(p => coordsMatch(p.lat, p.lng, userLat, userLng));
+
+      list.innerHTML = '';
+
+      if (!drops.length && !hist.length) {
+        list.innerHTML = '<p style="text-align:center;color:#555;padding:3rem 1rem;">No echoes or footprints nearby yet</p>';
+        return;
+      }
+
+      const groups = {};
+      [...drops, ...hist].forEach(p => {
+        const k = `${round(p.lat)},${round(p.lng)}`;
+        groups[k] = groups[k] || [];
+        groups[k].push(p);
+      });
+
+      Object.entries(groups).forEach(([k, items]) => {
+        const [lat, lng] = k.split(',').map(Number);
+        const group = document.createElement('div');
+        group.className = 'location-group';
+        group.innerHTML = `<div class="location-header">📍 ${lat.toFixed(6)}, ${lng.toFixed(6)} (${items.length})</div>`;
+
+        items.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(p => {
+          const pin = document.createElement('div');
+          pin.className = `pin ${p.type}`;
+          const isDrop = p.type === 'drop';
+          pin.innerHTML = `
+            <div class="pin-header">${isDrop ? p.name : 'Footprint'}</div>
+            <div class="pin-msg">${isDrop ? p.msg : `≈${p.accuracy || '?'}m accuracy`}</div>
+            <div class="pin-time">${new Date(p.timestamp).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</div>
+          `;
+          group.appendChild(pin);
+        });
+
+        list.appendChild(group);
+      });
+    }
+
+    // ─── Event Listeners ────────────────────────────────────────────────────────────
+    document.getElementById('dropBtn').onclick = () => {
+      if (!userLat) return showStatus('Waiting for GPS…', 'error');
+      const name = document.getElementById('name').value.trim();
+      const msg  = document.getElementById('msg').value.trim();
+      if (!msg) return showStatus('Message required', 'error');
+      addDrop(name, msg, userLat, userLng);
+      document.getElementById('msg').value = '';
+      renderAll();
+      showStatus('Dropped — visible ~500 m', 'success');
+    };
+
+    document.getElementById('clearBtn').onclick = () => {
+      if (!userLat) return showStatus('No location fix', 'error');
+      if (!confirm('Erase all drops in this ~500 m area?')) return;
+      clearNearby(userLat, userLng);
+      renderAll();
+      showStatus('Area cleared', 'success');
+    };
+
+    document.getElementById('exportJsonBtn').onclick = exportJson;
+
+    const zone = document.getElementById('dropZone');
+    zone.onclick = () => document.getElementById('fileInput').click();
+    zone.ondragover = zone.ondragenter = e => { e.preventDefault(); zone.classList.add('dragover'); };
+    zone.ondragleave = zone.ondrop = e => { e.preventDefault(); zone.classList.remove('dragover'); };
+    zone.ondrop = e => { const f = e.dataTransfer?.files?.[0]; if (f) loadFile(f); };
+    document.getElementById('fileInput').onchange = e => { const f = e.target.files?.[0]; if (f) loadFile(f); };
+
+    document.getElementById('reloadHistoryBtn').onclick = async () => {
+      if ('showOpenFilePicker' in window) {
+        try {
+          const [handle] = await window.showOpenFilePicker({
+            types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }],
+            multiple: false
+          });
+          await loadFile(handle);
+        } catch (e) {
+          if (e.name !== 'AbortError') showStatus('File picker cancelled', '');
+        }
+      } else {
+        showStatus('File picker not supported in this browser', 'error');
+      }
+    };
+
+    window.addEventListener('storage', renderAll);
+
+    // ─── GPS ────────────────────────────────────────────────────────────────────────
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(
         pos => {
@@ -296,63 +446,15 @@
         { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
       );
       setTimeout(() => {
-        if (userLat === null) showStatus('GPS still waiting… Move outside or toggle location', 'error');
+        if (userLat === null) showStatus('GPS still waiting… Move to open area or toggle location', 'error');
       }, 60000);
     } else {
-      showStatus('Geolocation not supported', 'error');
+      showStatus('Geolocation not supported in this browser', 'error');
     }
 
-    // Init
+    // ─── Init ───────────────────────────────────────────────────────────────────────
     updateLocInfo();
     renderAll();
-    // setTimeout(tryReopen, 1000);  // Uncomment if you have tryReopen defined
-
-    // Example minimal renderAll (expand with your full version)
-    function renderAll() {
-      const list = document.getElementById('pinList');
-      if (!userLat) {
-        list.innerHTML = '<p style="text-align:center;color:#555;padding:3rem 1rem;">Waiting for GPS…</p>';
-        return;
-      }
-      const drops = getDrops ? getDrops().filter(d => coordsMatch(d.lat, d.lng, userLat, userLng)) : [];
-      const hist  = timelinePoints.filter(p => coordsMatch(p.lat, p.lng, userLat, userLng));
-
-      if (!drops.length && !hist.length) {
-        list.innerHTML = '<p style="text-align:center;color:#555;padding:3rem 1rem;">No pins nearby yet</p>';
-        return;
-      }
-
-      list.innerHTML = '';
-      const groups = {};
-      [...drops, ...hist].forEach(p => {
-        const k = `${round(p.lat)},${round(p.lng)}`;
-        groups[k] = groups[k] || [];
-        groups[k].push(p);
-      });
-
-      Object.entries(groups).forEach(([k, items]) => {
-        const [lat, lng] = k.split(',').map(Number);
-        const group = document.createElement('div');
-        group.className = 'location-group';
-        group.innerHTML = `<div class="location-header">📍 ${lat.toFixed(6)}, ${lng.toFixed(6)} (${items.length})</div>`;
-        items.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(p => {
-          const pin = document.createElement('div');
-          pin.className = `pin ${p.type}`;
-          const isDrop = p.type === 'drop';
-          pin.innerHTML = `
-            <div class="pin-header">${isDrop ? p.name : 'Footprint'}</div>
-            <div class="pin-msg">${isDrop ? p.msg : `≈${p.accuracy || '?'}m`}</div>
-            <div class="pin-time">${new Date(p.timestamp).toLocaleString([], {dateStyle:'medium', timeStyle:'short'})}</div>
-          `;
-          group.appendChild(pin);
-        });
-        list.appendChild(group);
-      });
-    }
-
-    // Add your other functions (getDrops, addDrop, etc.) below if missing
-    function getDrops() { return []; } // Placeholder - replace with your localStorage code
-    // ...
   </script>
 </body>
 </html>

@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Donate Drops • Saved Locally • #MUFC</title>
+  <title>Root Donate Drops • Map View • #MUFC</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5n/N0ZDv4=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
   <style>
     html, body {
@@ -15,14 +20,14 @@
       font-family: Arial, Helvetica, sans-serif;
     }
     .container {
-      max-width: 500px;
+      max-width: 600px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 16px;
     }
     h1 {
       text-align: center;
       color: #00ff55;
-      margin-bottom: 10px;
+      margin: 10px 0 6px;
     }
     input, textarea {
       width: 100%;
@@ -33,15 +38,17 @@
       background: #111;
       color: white;
       font-size: 1em;
+      box-sizing: border-box;
     }
-    textarea { resize: vertical; min-height: 80px; }
+    textarea { resize: vertical; min-height: 90px; }
+
     .buttons {
       text-align: center;
-      margin: 15px 0;
+      margin: 16px 0;
     }
     button {
-      padding: 12px 24px;
-      margin: 0 8px;
+      padding: 12px 28px;
+      margin: 0 10px;
       border: none;
       border-radius: 8px;
       font-weight: bold;
@@ -52,14 +59,24 @@
     #dropBtn:hover   { background: #00ff55; }
     #clearBtn  { background: #cc0000; color: white; }
     #clearBtn:hover  { background: #ff3333; }
+
     #status {
       text-align: center;
       margin: 10px 0;
-      min-height: 1.4em;
+      min-height: 1.3em;
       font-size: 0.95em;
     }
     .success { color: #0f5; }
     .error   { color: #f66; }
+
+    #map {
+      height: 420px;
+      border: 1px solid #333;
+      border-radius: 10px;
+      margin: 16px 0;
+      background: #111;
+    }
+
     .pin-list {
       margin-top: 20px;
     }
@@ -81,6 +98,7 @@
     }
     .pin-msg {
       margin: 8px 0;
+      white-space: pre-wrap;
     }
     .pin-time {
       font-size: 0.8em;
@@ -104,18 +122,21 @@
     
     <div id="status"></div>
 
+    <div id="map"></div>
+
     <div class="pin-list" id="pinList"></div>
   </div>
 
   <script>
     const STORAGE_KEY = 'rootDonateDrops';
 
+    // ─── Load / Save ────────────────────────────────────────────────
     function loadDrops() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
         return saved ? JSON.parse(saved) : [];
       } catch (e) {
-        console.warn('Drops parse error:', e);
+        console.warn('Parse error:', e);
         return [];
       }
     }
@@ -128,10 +149,31 @@
       return Number(num.toFixed(6));
     }
 
+    // ─── Map Setup ──────────────────────────────────────────────────
+    let map = L.map('map', {
+      zoomControl: true,
+      attributionControl: false
+    }).setView([53.4631, -2.2913], 15); // Old Trafford fallback
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    let markers = L.markerClusterGroup({
+      maxClusterRadius: 50,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false
+    });
+    map.addLayer(markers);
+
+    // ─── Render pins on map + list ──────────────────────────────────
     function renderDrops() {
       const drops = loadDrops();
       const listEl = document.getElementById('pinList');
       listEl.innerHTML = '';
+
+      markers.clearLayers();
 
       if (drops.length === 0) {
         listEl.innerHTML = '<p style="text-align:center;color:#555;">No drops yet — be the first! ⚽</p>';
@@ -139,6 +181,21 @@
       }
 
       drops.forEach(drop => {
+        // Map marker
+        const marker = L.marker([drop.lat, drop.lng], {
+          title: drop.name || 'Anonymous'
+        });
+
+        const popupContent = `
+          <b>${drop.name || 'Anonymous'}</b><br>
+          ${drop.msg.replace(/\n/g, '<br>')}<br><br>
+          <small>${new Date(drop.timestamp).toLocaleString()}</small>
+        `;
+        marker.bindPopup(popupContent);
+
+        markers.addLayer(marker);
+
+        // List item
         const div = document.createElement('div');
         div.className = 'pin';
         div.innerHTML = `
@@ -149,6 +206,12 @@
         `;
         listEl.appendChild(div);
       });
+
+      // Auto-fit bounds if there are drops
+      if (drops.length > 0) {
+        const group = L.featureGroup(drops.map(d => L.marker([d.lat, d.lng])));
+        map.fitBounds(group.getBounds(), { padding: [60, 60] });
+      }
     }
 
     // ─── UI Helpers ─────────────────────────────────────────────────
@@ -164,7 +227,7 @@
     renderDrops();
 
     // ─── User Location ──────────────────────────────────────────────
-    let userLat = 53.4631;
+    let userLat = 53.4631;  // Old Trafford
     let userLng = -2.2913;
 
     if (navigator.geolocation) {
@@ -172,9 +235,10 @@
         pos => {
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
-          showStatus('Location ready — drop away! ⚽', 'success');
+          map.setView([userLat, userLng], 16);
+          showStatus('Location acquired — drop away! ⚽', 'success');
         },
-        () => showStatus('Location denied — using Old Trafford fallback', 'error')
+        () => showStatus('Location denied — using Old Trafford', 'error')
       );
     }
 
@@ -184,7 +248,7 @@
       const msg  = document.getElementById('msg').value.trim();
 
       if (!msg) {
-        showStatus('Write a message first ⚽', 'error');
+        showStatus('Write something first ⚽', 'error');
         return;
       }
 
@@ -193,20 +257,20 @@
       const timestamp = Date.now();
 
       const newDrop = { name, msg, lat, lng, timestamp };
-      const updatedDrops = [...loadDrops(), newDrop];
-      saveDrops(updatedDrops);
+      const updated = [...loadDrops(), newDrop];
+      saveDrops(updated);
 
       document.getElementById('msg').value = '';
       renderDrops();
-      showStatus('Dropped & saved locally! ⚽', 'success');
+      showStatus('Dropped! Saved locally ⚽', 'success');
     });
 
     // ─── Clear All ──────────────────────────────────────────────────
     document.getElementById('clearBtn').addEventListener('click', () => {
-      if (confirm('Clear ALL saved drops?')) {
+      if (confirm('Delete ALL drops forever?')) {
         localStorage.removeItem(STORAGE_KEY);
         renderDrops();
-        showStatus('All drops cleared!', 'success');
+        showStatus('Everything cleared!', 'success');
       }
     });
   </script>

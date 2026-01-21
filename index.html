@@ -2,64 +2,136 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RootDonate Live X Vibes • Carrick Era @ MUFC – Real GPS Nodes from X</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5p5QbskXk=" crossorigin="anonymous" />
   <style>
-    #result { margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 8px; white-space: pre-wrap; }
-    button { padding: 10px 20px; background: #1d9bf0; border: none; color: white; border-radius: 9999px; cursor: pointer; margin: 5px; }
-    button:hover { background: #1a8cd8; }
-    body, html { margin:0; height:100%; background:#000; color:#fff; font-family:system-ui,sans-serif; overflow:auto; }
-    #map-container { position:relative; height:80vh; }
-    #map { height:100%; }
-    .header { position:absolute; top:12px; left:0; right:0; text-align:center; pointer-events:none; z-index:1000; }
-    h1 { font-size:2.8rem; font-weight:900; letter-spacing:-1px; background:linear-gradient(90deg,#0af,#0f5,#f90); -webkit-background-clip:text; background-clip:text; color:transparent; }
-    footer { position:absolute; bottom:0; left:0; right:0; padding:10px; background:rgba(0,0,0,0.8); text-align:center; font-size:0.9rem; z-index:1000; }
-    input { margin: 5px; padding: 8px; border-radius: 4px; border: 1px solid #333; background: #222; color: #fff; }
-    label { pointer-events: all; }
+    body, html {
+      margin: 0;
+      height: 100%;
+      background: #000;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      overflow: auto;
+    }
+    #map-container {
+      position: relative;
+      height: 80vh;
+    }
+    #map {
+      height: 100%;
+    }
+    .header {
+      position: absolute;
+      top: 12px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      pointer-events: none;
+      z-index: 1000;
+    }
+    h1 {
+      font-size: 2.8rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(90deg, #0af, #0f5, #f90);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.8);
+      text-align: center;
+      font-size: 0.9rem;
+      z-index: 1000;
+    }
+    #result {
+      margin: 20px 15px;
+      padding: 15px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
+    button {
+      padding: 10px 20px;
+      background: #1d9bf0;
+      border: none;
+      color: white;
+      border-radius: 9999px;
+      cursor: pointer;
+      margin: 5px;
+      font-weight: 600;
+    }
+    button:hover {
+      background: #1a8cd8;
+    }
+    input {
+      margin: 5px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background: #222;
+      color: #fff;
+      font-size: 1rem;
+    }
+    label {
+      pointer-events: all;
+      margin-right: 8px;
+    }
   </style>
 </head>
 <body>
   <div id="map-container">
     <div id="map"></div>
+
     <div class="header" style="pointer-events: all;">
       <h1>RootDonate</h1>
       <label for="keyword">Search Keyword:</label>
-      <input id="keyword" placeholder="e.g. training, Carrington, Amad">
-      <button id="loadButton" onclick="handleAction()">Load Real X GPS Vibes</button>
-      <button onclick="map.setView([53.4631, -2.2913], 14, {animate: true, duration: 1.5})">Zoom to Carrington 🔥</button>
+      <input id="keyword" placeholder="e.g. training, Carrington, Amad" />
+      <button id="loadButton">Load Real X GPS Vibes</button>
+      <button id="zoomButton">Zoom to Carrington 🔥</button>
     </div>
+
     <footer>
-      <span id="status">Jan 14 2026 ~23:45 GMT • @iandreme (Swagga Rico) • #MUFC Carrick Era • Real X Posts as Internet GPS Nodes</span>
+      <span id="status">Jan 21 2026 ~07:00 GMT • @iandreme (Swagga Rico) • #MUFC Carrick Era • Real X Posts as Internet GPS Nodes</span>
     </footer>
   </div>
 
   <div id="result"></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
   <script>
-    // ── Map Setup ── Wider starting view (level 11)
+    // ── Map Setup ──
     const map = L.map('map').setView([53.4631, -2.2913], 11);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '© OpenStreetMap & CARTO'
     }).addTo(map);
 
-    // Your marker (Swagga Rico)
+    // Custom icons
     const youIcon = L.divIcon({
       html: '<div style="width:56px;height:56px;border-radius:50%;overflow:hidden;border:3px solid #0af;box-shadow:0 0 12px #0af"><img src="https://pbs.twimg.com/profile_images/1452130026212765700/q9iBQMu8_400x400.jpg" style="width:100%;height:100%;object-fit:cover"></div>',
-      iconSize: [56, 56], iconAnchor: [28, 28], className: ''
+      iconSize: [56, 56],
+      iconAnchor: [28, 28],
+      className: ''
     });
 
-    // X post marker
     const xIcon = L.divIcon({
       html: '<div style="background:#000;border:2px solid #1da1f2;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#1da1f2;font-weight:bold">X</div>',
-      iconSize: [44, 44], iconAnchor: [22, 22], className: ''
+      iconSize: [44, 44],
+      iconAnchor: [22, 22],
+      className: ''
     });
 
     const postsLayer = L.layerGroup().addTo(map);
     let youMarker = null;
 
-    // ── Real X posts (Jan 14 2026) – Carrington focus ──
+    // ── Real X posts data (Carrick Era – update dates/IDs as needed) ──
     const realXPosts = [
       { u: 'SkySportsPL', t: 'Michael Carrick takes charge of training for the first time with his new coaching staff at Manchester United🔴', url: 'https://x.com/SkySportsPL/status/2011484158585905614', lat: 53.4631, lng: -2.2913, hasMedia: true },
       { u: 'UtdDistrict', t: '🚨📸 | Michael Carrick takes his FIRST #mufc training session! 🔥', url: 'https://x.com/UtdDistrict/status/2011476199164260513', lat: 53.4631, lng: -2.2913, hasMedia: true },
@@ -76,15 +148,16 @@
 
     function showYou(lat, lng) {
       if (youMarker) youMarker.remove();
-      youMarker = L.marker([lat, lng], {icon: youIcon}).addTo(map)
-        .bindPopup("You • @iandreme • Swagga Rico (UK IP)", {autoClose: false}).openPopup();
-      map.flyTo([lat, lng], 13, {duration: 1.5});
+      youMarker = L.marker([lat, lng], { icon: youIcon }).addTo(map)
+        .bindPopup("You • @iandreme • Swagga Rico (UK IP)", { autoClose: false }).openPopup();
+      map.flyTo([lat, lng], 13, { duration: 1.5 });
     }
 
     function addXNode(lat, lng, username, text, url, hasMedia) {
       const jitterLat = lat + (Math.random() - 0.5) * 0.006;
       const jitterLng = lng + (Math.random() - 0.5) * 0.009;
-      const marker = L.marker([jitterLat, jitterLng], {icon: xIcon}).addTo(postsLayer);
+
+      const marker = L.marker([jitterLat, jitterLng], { icon: xIcon }).addTo(postsLayer);
       marker.bindPopup(`
         <b>@${username}</b><br>
         ${text.slice(0, 140)}${text.length > 140 ? '...' : ''}<br>
@@ -98,30 +171,35 @@
       postsLayer.clearLayers();
       document.getElementById('status').textContent = 'Pulling real Carrick Era X posts as GPS nodes...';
 
-      let filtered = realXPosts.filter(p => 
-        !keyword || 
-        p.t.toLowerCase().includes(keyword.toLowerCase().trim()) || 
+      const filtered = realXPosts.filter(p =>
+        !keyword ||
+        p.t.toLowerCase().includes(keyword.toLowerCase().trim()) ||
         p.u.toLowerCase().includes(keyword.toLowerCase().trim())
       );
 
       filtered.forEach(p => addXNode(p.lat, p.lng, p.u, p.t, p.url, p.hasMedia));
 
-      document.getElementById('status').textContent = 
-        `${filtered.length} real X GPS nodes loaded • Carrick's first training vibes • Sourced from X today • Jan 14 2026`;
+      document.getElementById('status').textContent =
+        `${filtered.length} real X GPS nodes loaded • Carrick's first training vibes • Sourced from X • Jan 21 2026`;
     }
 
-    async function handleAction() {
+    // Event listeners
+    document.getElementById('loadButton').addEventListener('click', () => {
       const keyword = document.getElementById('keyword').value.trim();
-      await loadVibes(keyword);
-    }
+      loadVibes(keyword);
+    });
 
-    // Your location fallback to Carrington
+    document.getElementById('zoomButton').addEventListener('click', () => {
+      map.setView([53.4631, -2.2913], 14, { animate: true, duration: 1.5 });
+    });
+
+    // Geolocation → fallback to Carrington
     navigator.geolocation.getCurrentPosition(
       pos => showYou(pos.coords.latitude, pos.coords.longitude),
       () => showYou(53.4631, -2.2913)
     );
 
-    // Auto-load on start
+    // Auto-load on page start
     setTimeout(() => loadVibes(), 1200);
   </script>
 </body>

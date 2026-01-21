@@ -12,6 +12,7 @@
       --text: #e0e0e0;
       --accent: #00ff55;
       --accent-dark: #00cc44;
+      --footprint: #3399ff;
       --danger: #ff3333;
       --info: #1e90ff;
       --export: #ff6600;
@@ -86,25 +87,36 @@
       margin:1rem 0; font-size:0.95rem; line-height:1.45; border:1px solid #222;
     }
 
+    .stats {
+      text-align:center; color:#888; font-size:0.9rem; margin:0.5rem 0 1.5rem;
+    }
+
     .pin-list { margin-top:1.5rem; }
-    .location-group { margin-bottom:2rem; }
+    .location-group { margin-bottom:2.2rem; border-radius:12px; overflow:hidden; }
     .location-header {
-      background:var(--surface-alt); padding:0.8rem 1.1rem;
-      border-radius:12px 12px 0 0; font-weight:600; color:var(--accent);
-      border:1px solid var(--border); border-bottom:none;
+      background:var(--surface-alt); padding:0.9rem 1.2rem;
+      font-weight:600; color:var(--accent); border:1px solid var(--border); border-bottom:none;
     }
     .pin {
       background:var(--surface); border:1px solid var(--border); border-top:none;
-      padding:1.1rem 1.3rem;
+      padding:1.2rem 1.4rem;
     }
     .pin:not(:last-child) { border-bottom:1px solid #1e1e1e; }
-    .pin-header { font-weight:600; color:#88ffbb; margin-bottom:0.4rem; }
-    .pin-msg { white-space:pre-wrap; line-height:1.45; margin:0.5rem 0; }
-    .pin-time { font-size:0.82rem; color:#666; text-align:right; margin-top:0.5rem; }
+    .pin-header { font-weight:700; margin-bottom:0.5rem; }
+    .drop .pin-header { color:#88ffbb; }
+    .footprint .pin-header { color:var(--footprint); }
+    .pin-msg { white-space:pre-wrap; line-height:1.5; margin:0.6rem 0; font-size:0.97rem; }
+    .pin-time { font-size:0.84rem; color:#777; text-align:right; margin-top:0.6rem; }
+
+    .zero-history {
+      background:#1a1a00; border:1px solid #664400; border-radius:12px;
+      padding:1.5rem; margin:2rem 0; color:#ffcc66; text-align:center;
+      line-height:1.6;
+    }
 
     @media (max-width:500px) {
       .container { padding:1rem; }
-      h1 { font-size:1.5rem; }
+      h1 { font-size:1.6rem; }
       button { min-width:120px; padding:0.8rem 1.4rem; }
     }
   </style>
@@ -138,6 +150,8 @@
 
     <div id="status"></div>
 
+    <div id="historyStats" class="stats"></div>
+
     <div class="section-title">Nearby Echoes & Footprints (~500 m)</div>
     <div class="pin-list" id="pinList"></div>
   </div>
@@ -148,7 +162,7 @@
     // ──────────────────────────────────────────────────────────────
     const STORAGE_KEY       = 'root-donate-drops-v2';
     const COORD_PRECISION   = 6;
-    const MATCH_TOLERANCE   = 0.0045; // ≈500 m at equator (conservative)
+    const MATCH_TOLERANCE   = 0.0045; // ≈500 m
 
     const DB_NAME    = 'RootEchoDB';
     const STORE_NAME = 'files';
@@ -192,7 +206,7 @@
       const el = document.getElementById('status');
       el.textContent = msg;
       el.className = type ? `visible ${type}` : 'visible';
-      setTimeout(() => el.className = '', 7000);
+      setTimeout(() => el.className = '', 8000);
     }
 
     function updateLocInfo() {
@@ -204,6 +218,16 @@
         el.innerHTML = `📍 ${userLat.toFixed(6)}, ${userLng.toFixed(6)} <small>(~500 m radius)</small>`;
         el.style.color = 'var(--accent)';
       }
+    }
+
+    function updateHistoryStats() {
+      const el = document.getElementById('historyStats');
+      if (timelinePoints.length === 0) {
+        el.innerHTML = '';
+        return;
+      }
+      const nearby = timelinePoints.filter(p => coordsMatch(p.lat, p.lng, userLat, userLng)).length;
+      el.innerHTML = `Loaded <strong>${timelinePoints.length}</strong> history points total • ${nearby} nearby`;
     }
 
     // ─── Parse Google Timeline JSON ──────────────────────────────────
@@ -218,7 +242,7 @@
             } else if (typeof p.point === 'string') {
               [lat, lng] = p.point.split(',').map(Number);
             }
-            if (lat && lng) {
+            if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
               pts.push({
                 type: 'history',
                 lat, lng,
@@ -264,8 +288,26 @@
         const text = await file.text();
         const data = JSON.parse(text);
         timelinePoints = parseTimeline(data);
-        showStatus(`Loaded ${timelinePoints.length} history points`, 'success');
+        
+        if (timelinePoints.length === 0) {
+          showStatus('0 points found — check file format', 'error');
+          document.getElementById('pinList').insertAdjacentHTML('afterbegin', `
+            <div class="zero-history">
+              <strong>No history points detected</strong><br><br>
+              Common reasons:<br>
+              • Wrong file (should contain "latitudeE7" or "latE7")<br>
+              • Location History was off during that period<br>
+              • Export was KML / ZIP instead of JSON<br><br>
+              Try re-downloading from takeout.google.com → Location History (JSON)
+            </div>
+          `);
+        } else {
+          showStatus(`Loaded ${timelinePoints.length} history points ✓`, 'success');
+        }
+        
+        updateHistoryStats();
         renderAll();
+        document.getElementById('pinList').scrollIntoView({ behavior: 'smooth', block: 'start' });
         return true;
       } catch (err) {
         showStatus('Invalid or corrupted JSON', 'error');
@@ -377,19 +419,20 @@
     function renderAll() {
       const list = document.getElementById('pinList');
       if (!userLat) {
-        list.innerHTML = '<p style="text-align:center;color:#555;padding:2rem;">Waiting for location…</p>';
+        list.innerHTML = '<p style="text-align:center;color:#555;padding:3rem 1rem;">Waiting for GPS…</p>';
         return;
       }
 
       const drops = getDrops().filter(d => coordsMatch(d.lat, d.lng, userLat, userLng));
       const hist  = timelinePoints.filter(p => coordsMatch(p.lat, p.lng, userLat, userLng));
 
+      list.innerHTML = '';
+
       if (!drops.length && !hist.length) {
-        list.innerHTML = '<p style="text-align:center;color:#555;padding:2rem;">No echoes nearby yet</p>';
+        list.innerHTML = '<p style="text-align:center;color:#555;padding:3rem 1rem;">No echoes or footprints in this area yet</p>';
         return;
       }
 
-      list.innerHTML = '';
       const groups = {};
       [...drops, ...hist].forEach(p => {
         const k = `${round(p.lat)},${round(p.lng)}`;
@@ -405,11 +448,11 @@
 
         items.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(p => {
           const pin = document.createElement('div');
-          pin.className = 'pin';
+          pin.className = `pin ${p.type}`;
           const isDrop = p.type === 'drop';
           pin.innerHTML = `
             <div class="pin-header">${isDrop ? p.name : 'Footprint'}</div>
-            <div class="pin-msg">${isDrop ? p.msg : `Accuracy ≈${p.accuracy}m`}</div>
+            <div class="pin-msg">${isDrop ? p.msg : `≈${p.accuracy}m accuracy`}</div>
             <div class="pin-time">${new Date(p.timestamp).toLocaleString([], {dateStyle:'medium', timeStyle:'short'})}</div>
           `;
           group.appendChild(pin);
@@ -461,6 +504,7 @@
           userLng = pos.coords.longitude;
           updateLocInfo();
           renderAll();
+          updateHistoryStats();
         },
         () => showStatus('Location permission denied', 'error'),
         { enableHighAccuracy: true, timeout: 12000, maximumAge: 4000 }
@@ -472,7 +516,7 @@
     // Init
     updateLocInfo();
     renderAll();
-    setTimeout(tryReopen, 800);
+    setTimeout(tryReopen, 1000);
   </script>
 </body>
 </html>

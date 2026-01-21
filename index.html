@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Donate Map • Email → GPS • #MUFC</title>
+  <title>Root Donate Map • Drop Message → GPS • #MUFC</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5p5QbskXk=" crossorigin="anonymous"/>
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5p5QbskXk=" crossorigin="anonymous" />
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
@@ -17,28 +17,31 @@
     :root {
       --primary: #1d9bf0;
       --success: #0f5;
-      --error:   #f66;
+      --error:   #ff6666;
       --dark:    #000;
-      --dark-2:  #111;
+      --dark-2:  #0f0f0f;
       --gray:    #444;
+      --light:   #eeeeee;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     html, body {
       margin: 0;
       padding: 0;
       height: 100vh;
-      width:  100vw;
+      width: 100vw;
       overflow: hidden;
       background: var(--dark);
-      color: #eee;
-      font-family: system-ui, sans-serif;
+      color: var(--light);
+      font-family: system-ui, -apple-system, sans-serif;
     }
 
     #map {
-      height: 100vh;
-      width:  100vw;
+      height: 100%;
+      width: 100%;
     }
 
     .overlay {
@@ -47,19 +50,23 @@
       left: 50%;
       transform: translateX(-50%);
       z-index: 1000;
-      background: rgba(0,0,0,0.78);
-      padding: 16px 24px;
-      border-radius: 12px;
+      background: rgba(15, 15, 15, 0.82);
+      backdrop-filter: blur(6px);
+      padding: 1.5rem 2rem;
+      border-radius: 16px;
       text-align: center;
-      max-width: 90%;
-      box-shadow: 0 4px 20px rgba(0,200,100,0.15);
+      max-width: 92%;
+      width: 420px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 6px 24px rgba(0, 255, 80, 0.12);
       pointer-events: auto;
     }
 
     h1 {
-      margin: 0 0 0.8em;
-      font-size: 2.3rem;
-      background: linear-gradient(90deg, #0af, #0f5, #f90);
+      margin: 0 0 1rem;
+      font-size: clamp(1.8rem, 6vw, 2.4rem);
+      background: linear-gradient(90deg, #00aaff, #00ff55, #ffaa00);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
@@ -67,46 +74,71 @@
 
     input, textarea {
       display: block;
-      margin: 10px auto;
-      padding: 10px 12px;
+      margin: 0.8rem auto;
+      padding: 0.8rem 1rem;
       width: 100%;
-      max-width: 420px;
-      border-radius: 8px;
       border: 1px solid var(--gray);
+      border-radius: 10px;
       background: var(--dark-2);
-      color: #eee;
+      color: var(--light);
       font-size: 1rem;
       font-family: inherit;
+      transition: border-color 0.2s;
     }
 
-    textarea { resize: vertical; min-height: 86px; }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--success);
+      box-shadow: 0 0 0 3px rgba(0,255,85,0.15);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
 
     .buttons {
       display: flex;
-      justify-content: center;
-      gap: 12px;
       flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1.2rem;
     }
 
     button {
-      padding: 10px 22px;
-      border-radius: 8px;
+      padding: 0.75rem 1.6rem;
       border: none;
+      border-radius: 10px;
       font-weight: 600;
-      cursor: pointer;
       font-size: 0.98rem;
-      transition: all 0.15s;
+      cursor: pointer;
+      transition: all 0.18s ease;
     }
 
-    button:hover { filter: brightness(1.1); }
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
 
-    #refresh   { background: #444; color: #ddd; }
-    #sendEmail { background: var(--success); color: black; }
+    #refresh {
+      background: #333;
+      color: #ccc;
+    }
+
+    #sendEmail {
+      background: var(--success);
+      color: #000;
+    }
+
+    #sendEmail:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
 
     #status, #gps {
-      font-size: 0.94rem;
-      margin: 10px 0;
-      min-height: 1.4em;
+      font-size: 0.92rem;
+      margin: 0.8rem 0;
+      min-height: 1.5em;
       color: var(--success);
     }
 
@@ -115,10 +147,18 @@
 
     .dot {
       background: var(--success);
-      width: 18px; height: 18px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
       border: 3px solid white;
-      box-shadow: 0 0 12px var(--success);
+      box-shadow: 0 0 14px var(--success);
+    }
+
+    @media (max-width: 500px) {
+      .overlay {
+        padding: 1.2rem 1.4rem;
+        width: 94%;
+      }
     }
   </style>
 </head>
@@ -130,11 +170,11 @@
     <h1>Root Donate Map</h1>
 
     <div id="gps">GPS: checking...</div>
-    <div id="status">Jan 21, 2026 • @iandreme • Email → Map</div>
+    <div id="status">Today • @iandreme • Drop your message</div>
 
-    <input type="text"    id="name"    placeholder="Your name (optional)" />
-    <input type="email"   id="email"   placeholder="Your email (optional)" />
-    <textarea id="message" placeholder="Your message... #MUFC"></textarea>
+    <input type="text" id="name" placeholder="Your name (optional)" autocomplete="name" autocorrect="on" />
+    <input type="email" id="email" placeholder="Your email (optional)" autocomplete="email" autocorrect="off" />
+    <textarea id="message" placeholder="Your message... #MUFC" autocomplete="on" autocorrect="on" autocapitalize="sentences"></textarea>
 
     <div class="buttons">
       <button id="refresh">Center map</button>
@@ -144,30 +184,22 @@
 
   <script>
     // ─── Config ───────────────────────────────────────
-    // ↓↓↓ REPLACE THESE WITH YOUR OWN VALUES FROM https://dashboard.emailjs.com ↓↓↓
-    emailjs.init({ publicKey: "1oXeNo5ZXiRcipyWo" });   // ← YOUR public key here!
+    // REPLACE THESE WITH YOUR OWN EmailJS credentials!
+    emailjs.init({ publicKey: "YOUR_PUBLIC_KEY_HERE" });
 
-    const SERVICE_ID  = "amql3dos";     // ← YOUR service ID
-    const TEMPLATE_ID = "template_u6wxza9";  // ← YOUR template ID
-    // ↑↑↑ If send still fails → check console for 400/401 errors ↑↑↑
+    const SERVICE_ID  = "YOUR_SERVICE_ID";
+    const TEMPLATE_ID = "YOUR_TEMPLATE_ID";
 
-    // ─── Map setup ────────────────────────────────────
+    // ─── Map Setup ────────────────────────────────────
     const map = L.map('map', {
       zoomControl: true,
-      zoomSnap: 0.25
+      zoomSnap: 0.5
     }).setView([53.4631, -2.2913], 13);
 
-    // Using CARTO basemap (fallback to OSM if tiles fail)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/{z}/{x}/{y}{r}.png', {
       attribution: '© OpenStreetMap & CARTO',
       maxZoom: 19
     }).addTo(map);
-
-    // Alternative (uncomment if CARTO tiles don't load):
-    // L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    //   attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    //   maxZoom: 19
-    // }).addTo(map);
 
     const greenDot = L.divIcon({
       className: 'dot',
@@ -180,9 +212,8 @@
     let userLng = -2.2913;
 
     // ─── Geolocation ──────────────────────────────────
-    function updateGPSDisplay(lat, lng) {
-      document.getElementById('gps').textContent =
-        `GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    function updateGPS(lat, lng) {
+      document.getElementById('gps').textContent = `GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
     }
 
     if (navigator.geolocation) {
@@ -190,28 +221,25 @@
         pos => {
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
-          updateGPSDisplay(userLat, userLng);
+          updateGPS(userLat, userLng);
         },
-        err => {
-          console.warn('Geolocation error:', err);
+        () => {
           document.getElementById('gps').textContent = 'GPS unavailable — using default';
         },
-        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     } else {
       document.getElementById('gps').textContent = 'Geolocation not supported';
     }
 
-    // ─── Helpers ──────────────────────────────────────
+    // ─── Marker Helpers ───────────────────────────────
     function addMarker(lat, lng, text = '') {
       const popup = `
         <b>@iandreme</b><br>
         ${text || '(no message)'}<br>
         <small>${new Date().toLocaleString()}</small>
       `;
-      L.marker([lat, lng], { icon: greenDot })
-        .addTo(map)
-        .bindPopup(popup);
+      L.marker([lat, lng], { icon: greenDot }).addTo(map).bindPopup(popup);
     }
 
     function clearMarkers() {
@@ -223,29 +251,34 @@
     function loadTestMarkers() {
       clearMarkers();
       const tests = [
-        { lat: 53.4631, lng: -2.2913, text: "Hello World from Carrington! ⚽ #MUFC" },
+        { lat: 53.4631, lng: -2.2913, text: "Hello from Carrington! ⚽ #MUFC" },
         { lat: 53.4650, lng: -2.2850, text: "Training day vibes" },
-        { lat: 53.4600, lng: -2.2950, text: "Carrick masterclass loading..." }
+        { lat: 53.4600, lng: -2.2950, text: "Carrick masterclass incoming..." }
       ];
       tests.forEach(t => addMarker(t.lat, t.lng, t.text));
     }
 
-    // ─── Send logic ───────────────────────────────────
+    // ─── Send Logic ───────────────────────────────────
+    const sendBtn = document.getElementById('sendEmail');
+    const statusEl = document.getElementById('status');
+
     function sendMessage() {
       const name    = document.getElementById('name').value.trim()    || 'Anonymous';
       const email   = document.getElementById('email').value.trim()   || 'no-reply@example.com';
       const message = document.getElementById('message').value.trim();
 
-      const statusEl = document.getElementById('status');
-
       if (!message) {
-        statusEl.textContent = 'Please write a message';
+        statusEl.textContent = 'Please enter a message';
         statusEl.className = 'error';
         setTimeout(() => { statusEl.textContent = ''; statusEl.className = ''; }, 4000);
         return;
       }
 
-      const templateParams = {
+      sendBtn.disabled = true;
+      statusEl.textContent = 'Sending...';
+      statusEl.className = '';
+
+      const params = {
         from_name:   name,
         reply_to:    email,
         message:     message,
@@ -257,57 +290,42 @@
         subject:     `Map Drop from ${name} #MUFC`
       };
 
-      statusEl.textContent = 'Sending...';
-      statusEl.className = '';
-
-      emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams)
-        .then((response) => {
-          console.log('EmailJS success:', response.status, response.text);
-          statusEl.textContent = 'Message sent! ⚽ Thank you';
+      emailjs.send(SERVICE_ID, TEMPLATE_ID, params)
+        .then(() => {
+          statusEl.textContent = 'Sent successfully! ⚽';
           statusEl.className = 'success';
-          addMarker(userLat, userLng, `${name}: ${message.substring(0,60)}${message.length>60?'...':''}`);
+          addMarker(userLat, userLng, `${name}: ${message.substring(0,60)}${message.length > 60 ? '...' : ''}`);
           document.getElementById('message').value = '';
         })
         .catch(err => {
-          console.error('EmailJS failed:', err);
-          console.log('Status:', err.status);
-          console.log('Response text:', err.text);
-          let msg = 'Failed to send';
-          if (err.status === 400 || err.status === 401) {
-            msg += ' — check public key / service / template IDs in EmailJS dashboard';
-          }
-          statusEl.textContent = msg + ' (see console)';
+          console.error('EmailJS error:', err);
+          statusEl.textContent = 'Failed to send – check console';
           statusEl.className = 'error';
         })
         .finally(() => {
+          sendBtn.disabled = false;
           setTimeout(() => {
-            statusEl.textContent = 'Jan 21, 2026 • @iandreme • Email → Map';
+            statusEl.textContent = 'Today • @iandreme • Drop your message';
             statusEl.className = '';
-          }, 7000);
+          }, 6000);
         });
     }
 
-    // ─── Event listeners ──────────────────────────────
+    // ─── Event Listeners ──────────────────────────────
     document.getElementById('sendEmail').addEventListener('click', sendMessage);
 
     document.getElementById('refresh').addEventListener('click', () => {
       map.setView([userLat, userLng], 15);
-      document.getElementById('status').textContent = 'Map centered on your position';
+      statusEl.textContent = 'Centered on your location';
     });
 
     // ─── Init ─────────────────────────────────────────
     loadTestMarkers();
-    addMarker(53.4631, -2.2913, "Hello World! Drop your message ↓");
+    addMarker(53.4631, -2.2913, "Hello World! Drop your message below ↓");
 
-    // Critical fix for blank/gray map (especially with overlay)
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 300);
-
-    // Also call on window resize (good practice)
-    window.addEventListener('resize', () => {
-      setTimeout(() => map.invalidateSize(), 150);
-    });
+    // Fix blank map issue
+    setTimeout(() => map.invalidateSize(), 400);
+    window.addEventListener('resize', () => setTimeout(() => map.invalidateSize(), 200));
   </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Drops • Local Echoes (~500 m) — Timeless Pins</title>
+  <title>Root Drops • Local Echoes (~500 m) — Timeless Pins [Updated Parser]</title>
   <meta name="description" content="Drop messages tied to your exact location. Visible only within ~500 m. Load GPS history to see your past footsteps."/>
 
   <style>
@@ -25,25 +25,18 @@
     html, body { height:100%; background:var(--bg); color:var(--text); font-family:system-ui, -apple-system, sans-serif; line-height:1.5; }
     .container { max-width:640px; margin:0 auto; padding:1.5rem; }
 
-    h1 {
-      text-align:center; color:var(--accent); margin:1rem 0 1.5rem;
-      font-size:1.8rem; letter-spacing:-0.02em; font-weight:700;
-      text-shadow:0 0 20px rgba(0,255,85,0.15);
-    }
+    h1 { text-align:center; color:var(--accent); margin:1rem 0 1.5rem; font-size:1.8rem; font-weight:700; text-shadow:0 0 20px rgba(0,255,85,0.15); }
 
     input, textarea {
       width:100%; padding:0.9rem 1rem; margin:0.6rem 0;
       background:#0d0d0d; border:1px solid var(--border); border-radius:12px;
-      color:white; font-size:1rem; transition:border-color 0.2s;
+      color:white; font-size:1rem;
     }
     input:focus, textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,255,85,0.12); }
 
-    textarea { min-height:100px; resize:vertical; }
+    textarea { min-height:120px; resize:vertical; }
 
-    .buttons {
-      display:flex; flex-wrap:wrap; gap:0.8rem; justify-content:center;
-      margin:1.2rem 0;
-    }
+    .buttons { display:flex; flex-wrap:wrap; gap:0.8rem; justify-content:center; margin:1.2rem 0; }
     button {
       padding:0.85rem 1.8rem; border:none; border-radius:12px;
       font-weight:600; cursor:pointer; transition:all 0.22s ease;
@@ -57,50 +50,29 @@
     #reloadHistoryBtn { background:var(--info); color:white; }
     #exportJsonBtn    { background:var(--export); color:white; }
 
-    #status {
-      text-align:center; min-height:1.3em; font-size:0.92rem; margin:0.8rem 0;
-      opacity:0; transition:opacity 0.4s;
-    }
+    #status { text-align:center; min-height:1.3em; font-size:0.92rem; margin:0.8rem 0; opacity:0; transition:opacity 0.4s; }
     #status.visible { opacity:1; }
     .success { color:#0f5; }
     .error   { color:#f66; }
 
-    .section-title {
-      color:var(--accent); font-size:1.15rem; font-weight:600;
-      text-align:center; margin:2rem 0 0.8rem;
-      opacity:0.9;
-    }
+    .section-title { color:var(--accent); font-size:1.15rem; font-weight:600; text-align:center; margin:2rem 0 0.8rem; opacity:0.9; }
 
     #dropZone {
       border:2px dashed var(--accent); border-radius:16px;
       padding:3rem 1rem; text-align:center; margin:1.5rem 0;
-      cursor:pointer; background:#0a0a0a; transition:all 0.25s;
+      cursor:pointer; background:#0a0a0a;
     }
-    #dropZone.dragover {
-      background:#111; border-color:var(--accent-dark);
-      box-shadow:0 0 25px rgba(0,255,85,0.08);
-    }
+    #dropZone.dragover { background:#111; border-color:var(--accent-dark); box-shadow:0 0 25px rgba(0,255,85,0.08); }
     #dropZone p { color:#888; margin:0.5rem 0; }
 
-    .info-box {
-      background:#181818; padding:1rem 1.2rem; border-radius:12px;
-      margin:1rem 0; font-size:0.95rem; line-height:1.45; border:1px solid #222;
-    }
+    .info-box { background:#181818; padding:1rem 1.2rem; border-radius:12px; margin:1rem 0; font-size:0.95rem; line-height:1.45; border:1px solid #222; }
 
-    .stats {
-      text-align:center; color:#888; font-size:0.9rem; margin:0.5rem 0 1.5rem;
-    }
+    .stats { text-align:center; color:#888; font-size:0.9rem; margin:0.5rem 0 1.5rem; }
 
     .pin-list { margin-top:1.5rem; }
     .location-group { margin-bottom:2.2rem; border-radius:12px; overflow:hidden; }
-    .location-header {
-      background:var(--surface-alt); padding:0.9rem 1.2rem;
-      font-weight:600; color:var(--accent); border:1px solid var(--border); border-bottom:none;
-    }
-    .pin {
-      background:var(--surface); border:1px solid var(--border); border-top:none;
-      padding:1.2rem 1.4rem;
-    }
+    .location-header { background:var(--surface-alt); padding:0.9rem 1.2rem; font-weight:600; color:var(--accent); border:1px solid var(--border); border-bottom:none; }
+    .pin { background:var(--surface); border:1px solid var(--border); border-top:none; padding:1.2rem 1.4rem; }
     .pin:not(:last-child) { border-bottom:1px solid #1e1e1e; }
     .pin-header { font-weight:700; margin-bottom:0.5rem; }
     .drop .pin-header { color:#88ffbb; }
@@ -110,8 +82,7 @@
 
     .zero-history {
       background:#1a1a00; border:1px solid #664400; border-radius:12px;
-      padding:1.5rem; margin:2rem 0; color:#ffcc66; text-align:center;
-      line-height:1.6;
+      padding:1.5rem; margin:2rem 0; color:#ffcc66; text-align:center; line-height:1.6;
     }
 
     @media (max-width:500px) {
@@ -124,7 +95,7 @@
 <body>
 
   <div class="container">
-    <h1>Root Drops • Local Echoes (~500 m)</h1>
+    <h1>Root Drops • Local Echoes (~500 m) [2026 Parser]</h1>
 
     <div class="info-box" id="locationInfo">Waiting for location…</div>
 
@@ -157,9 +128,7 @@
   </div>
 
   <script>
-    // ──────────────────────────────────────────────────────────────
     // Config
-    // ──────────────────────────────────────────────────────────────
     const STORAGE_KEY       = 'root-donate-drops-v2';
     const COORD_PRECISION   = 6;
     const MATCH_TOLERANCE   = 0.0045; // ≈500 m
@@ -172,7 +141,7 @@
     let timelinePoints = [];
     let db = null;
 
-    // ─── IndexedDB ───────────────────────────────────────────────────
+    // IndexedDB handle persistence (unchanged)
     async function openDB() {
       if (db) return db;
       return new Promise((res, rej) => {
@@ -198,7 +167,7 @@
       } catch { return null; }
     }
 
-    // ─── Helpers ─────────────────────────────────────────────────────
+    // Helpers
     const round = n => Number(n.toFixed(COORD_PRECISION));
     const coordsMatch = (a,b,c,d) => Math.abs(a-c) <= MATCH_TOLERANCE && Math.abs(b-d) <= MATCH_TOLERANCE;
 
@@ -206,7 +175,7 @@
       const el = document.getElementById('status');
       el.textContent = msg;
       el.className = type ? `visible ${type}` : 'visible';
-      setTimeout(() => el.className = '', 8000);
+      setTimeout(() => el.className = '', 10000);
     }
 
     function updateLocInfo() {
@@ -226,107 +195,159 @@
         el.innerHTML = '';
         return;
       }
-      const nearby = timelinePoints.filter(p => coordsMatch(p.lat, p.lng, userLat, userLng)).length;
+      const nearby = timelinePoints.filter(p => userLat && coordsMatch(p.lat, p.lng, userLat, userLng)).length;
       el.innerHTML = `Loaded <strong>${timelinePoints.length}</strong> history points total • ${nearby} nearby`;
     }
 
-    // ─── Parse Google Timeline JSON ──────────────────────────────────
+    // ─── IMPROVED Parse Google Timeline JSON (2025–2026 formats) ──────────────────────────────────
     function parseTimeline(json) {
       const pts = [];
-      if (json?.semanticSegments) {
+      console.log('JSON root keys:', Object.keys(json)); // Debug: see top-level structure
+
+      // Helper to extract lat/lng from various nested locations
+      const extractCoord = (obj) => {
+        let lat, lng, acc, ts;
+        if (obj.latitudeE7 && obj.longitudeE7) {
+          lat = obj.latitudeE7 / 1e7;
+          lng = obj.longitudeE7 / 1e7;
+          acc = obj.accuracy || obj.accuracyMeters;
+          ts = obj.timestampMs || obj.time;
+        } else if (obj.centerLatE7 && obj.centerLngE7) {
+          lat = obj.centerLatE7 / 1e7;
+          lng = obj.centerLngE7 / 1e7;
+          acc = obj.accuracyMeters || '?';
+          ts = obj.duration?.startTimestampMs || obj.timestampMs;
+        } else if (obj.latE7 && obj.lngE7) {
+          lat = obj.latE7 / 1e7;
+          lng = obj.lngE7 / 1e7;
+          acc = obj.accuracyMeters || '?';
+          ts = obj.timestamp || obj.time;
+        }
+        if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+          return { lat, lng, accuracy: acc || '?', timestamp: ts ? new Date(ts).toISOString() : '' };
+        }
+        return null;
+      };
+
+      // 1. Old flat locations array
+      if (json?.locations?.length) {
+        console.log('Found old "locations" array');
+        json.locations.forEach(l => {
+          const coord = extractCoord(l);
+          if (coord) pts.push({ type: 'history', ...coord });
+        });
+      }
+
+      // 2. Old semanticSegments / timelinePath
+      if (json?.semanticSegments?.length) {
+        console.log('Found "semanticSegments"');
         json.semanticSegments.forEach(s => {
           s.timelinePath?.forEach(p => {
-            let lat, lng;
-            if (p.latE7 && p.lngE7) {
-              lat = p.latE7 / 1e7; lng = p.lngE7 / 1e7;
-            } else if (typeof p.point === 'string') {
-              [lat, lng] = p.point.split(',').map(Number);
-            }
-            if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
-              pts.push({
-                type: 'history',
-                lat, lng,
-                timestamp: p.time || s.startTime || s.endTime || '',
-                accuracy: p.accuracyMeters || s.accuracyMeters || '?'
-              });
-            }
+            const coord = extractCoord(p);
+            if (coord) pts.push({ type: 'history', ...coord });
           });
-        });
-      } else if (json?.locations) {
-        json.locations.forEach(l => {
-          if (l.latitudeE7 && l.longitudeE7) {
-            pts.push({
-              type: 'history',
-              lat: l.latitudeE7 / 1e7,
-              lng: l.longitudeE7 / 1e7,
-              timestamp: l.timestampMs ? new Date(+l.timestampMs).toISOString() : '',
-              accuracy: l.accuracy || '?'
-            });
-          }
+          // Also check activity/visit endpoints if path missing
+          if (s.activity?.length) s.activity.forEach(a => {
+            const coord = extractCoord(a);
+            if (coord) pts.push({ type: 'history', ...coord });
+          });
+          const visitCoord = extractCoord(s.visit || s.placeVisit);
+          if (visitCoord) pts.push({ type: 'history', ...visitCoord });
         });
       }
-      pts.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-      return pts;
+
+      // 3. Newer: timelineObjects (common in monthly / device exports)
+      if (json?.timelineObjects?.length) {
+        console.log('Found "timelineObjects" (newer format)');
+        json.timelineObjects.forEach(obj => {
+          // placeVisit
+          if (obj.placeVisit) {
+            const coord = extractCoord(obj.placeVisit.location || obj.placeVisit.centerLatE7 && obj.placeVisit);
+            if (coord) pts.push({ type: 'history', ...coord });
+          }
+          // activitySegment (often has path)
+          if (obj.activitySegment) {
+            obj.activitySegment.simplifiedRawPath?.points?.forEach(pt => {
+              const coord = extractCoord(pt);
+              if (coord) pts.push({ type: 'history', ...coord });
+            });
+            // Or activity endpoints
+            const start = extractCoord(obj.activitySegment.startLocation || obj.activitySegment);
+            if (start) pts.push({ type: 'history', ...start });
+            const end = extractCoord(obj.activitySegment.endLocation || obj.activitySegment);
+            if (end) pts.push({ type: 'history', ...end });
+          }
+          // Fallback any nested location
+          const coord = extractCoord(obj);
+          if (coord) pts.push({ type: 'history', ...coord });
+        });
+      }
+
+      // 4. Last resort: recursive deep search for any latE7/latitudeE7
+      function deepSearch(o) {
+        if (typeof o !== 'object' || o === null) return;
+        const coord = extractCoord(o);
+        if (coord) pts.push({ type: 'history', ...coord });
+        Object.values(o).forEach(deepSearch);
+      }
+      deepSearch(json);
+
+      // Dedupe & sort
+      const unique = [...new Map(pts.map(p => [`${p.lat.toFixed(6)},${p.lng.toFixed(6)}`, p])).values()];
+      unique.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+      console.log(`Parsed ${unique.length} valid points`);
+      return unique;
     }
 
-    // ─── File Loading ────────────────────────────────────────────────
+    // File loading (unchanged except better 0-points feedback)
     async function loadFile(src) {
       let file;
-      try {
-        file = src.kind === 'file' ? await src.getFile() : src;
-      } catch {
-        showStatus('File access denied', 'error');
-        return false;
+      try { file = src.kind === 'file' ? await src.getFile() : src; } catch {
+        showStatus('File access denied', 'error'); return false;
       }
-
       if (!file.name?.toLowerCase().endsWith('.json')) {
-        showStatus('Please select a .json file', 'error');
-        return false;
+        showStatus('Please select a .json file', 'error'); return false;
       }
-
       try {
         const text = await file.text();
         const data = JSON.parse(text);
         timelinePoints = parseTimeline(data);
-        
+
         if (timelinePoints.length === 0) {
-          showStatus('0 points found — check file format', 'error');
+          showStatus('0 points found — likely new Google format', 'error');
           document.getElementById('pinList').insertAdjacentHTML('afterbegin', `
             <div class="zero-history">
-              <strong>No history points detected</strong><br><br>
-              Common reasons:<br>
-              • Wrong file (should contain "latitudeE7" or "latE7")<br>
-              • Location History was off during that period<br>
-              • Export was KML / ZIP instead of JSON<br><br>
-              Try re-downloading from takeout.google.com → Location History (JSON)
+              <strong>No GPS points detected</strong><br><br>
+              In 2025–2026 Google exports often use a new structure.<br>
+              • Open DevTools (F12) → Console tab to see detected format<br>
+              • If no "latitudeE7" anywhere, try exporting from phone Settings > Location > Timeline > Export<br>
+              • Or use takeout.google.com again (select only Location History)<br><br>
+              Paste first 100–200 lines of your JSON here if still 0 — I can fix parser!
             </div>
           `);
         } else {
           showStatus(`Loaded ${timelinePoints.length} history points ✓`, 'success');
         }
-        
+
         updateHistoryStats();
         renderAll();
         document.getElementById('pinList').scrollIntoView({ behavior: 'smooth', block: 'start' });
         return true;
       } catch (err) {
-        showStatus('Invalid or corrupted JSON', 'error');
+        showStatus('Invalid/corrupted JSON', 'error');
         console.error(err);
         return false;
       }
     }
 
+    // Rest of script unchanged (tryReopen, addDrop, clearNearby, exportJson, renderAll, events, GPS watch, init)
     async function tryReopen() {
       if (!('showOpenFilePicker' in window)) return false;
-
       let handle = await getSavedHandle();
-      if (handle) {
-        if (await loadFile(handle)) {
-          showStatus('Re-opened previous timeline', 'success');
-          return true;
-        }
+      if (handle && await loadFile(handle)) {
+        showStatus('Re-opened previous timeline', 'success');
+        return true;
       }
-
       try {
         [handle] = await window.showOpenFilePicker({
           types: [{ description:'JSON', accept:{'application/json':['.json']} }],
@@ -342,7 +363,6 @@
       return false;
     }
 
-    // ─── Drop / Clear ────────────────────────────────────────────────
     function getDrops() {
       try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
       catch { return []; }
@@ -371,14 +391,11 @@
       saveDrops(kept);
     }
 
-    // ─── Export JSON ─────────────────────────────────────────────────
     function exportJson() {
       if (!userLat) return showStatus('No location yet', 'error');
-
       const drops = getDrops().filter(d => coordsMatch(d.lat, d.lng, userLat, userLng));
       const hist  = timelinePoints.filter(p => coordsMatch(p.lat, p.lng, userLat, userLng));
       const all   = [...drops, ...hist];
-
       if (!all.length) return showStatus('Nothing nearby to export', 'error');
 
       const data = {
@@ -411,11 +428,9 @@
       a.download = `root-echo_${new Date().toISOString().slice(0,10)}_500m.json`;
       a.click();
       URL.revokeObjectURL(url);
-
       showStatus(`Exported ${all.length} echoes`, 'success');
     }
 
-    // ─── Render ──────────────────────────────────────────────────────
     function renderAll() {
       const list = document.getElementById('pinList');
       if (!userLat) {
@@ -462,7 +477,7 @@
       });
     }
 
-    // ─── Event Listeners ─────────────────────────────────────────────
+    // Events
     document.getElementById('dropBtn').onclick = () => {
       if (!userLat) return showStatus('Waiting for GPS…', 'error');
       const name = document.getElementById('name').value.trim();
@@ -484,7 +499,6 @@
 
     document.getElementById('exportJsonBtn').onclick = exportJson;
 
-    // File drop / click
     const zone = document.getElementById('dropZone');
     zone.onclick = () => document.getElementById('fileInput').click();
     zone.ondragover = zone.ondragenter = e => { e.preventDefault(); zone.classList.add('dragover'); };
@@ -496,7 +510,6 @@
 
     window.addEventListener('storage', renderAll);
 
-    // GPS
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(
         pos => {

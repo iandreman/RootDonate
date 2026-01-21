@@ -15,14 +15,13 @@
     .overlay {
       position: absolute; top:10px; left:50%; transform:translateX(-50%);
       z-index:1000; background:rgba(0,0,0,0.7); padding:12px 20px; border-radius:12px;
-      text-align:center; pointer-events:all; max-width:90%;
+      text-align:center; pointer-events:all; max-width:90%; box-shadow:0 4px 20px rgba(0,255,136,0.2);
     }
     h1 { margin:0 0 8px; font-size:2.4rem; background:linear-gradient(90deg,#0af,#0f5,#f90); -webkit-background-clip:text; background-clip:text; color:transparent; }
     input, button { margin:6px 4px; padding:8px 14px; border-radius:8px; border:1px solid #444; background:#222; color:#fff; }
     button { background:#1d9bf0; border:none; cursor:pointer; font-weight:600; }
     button:hover { background:#0c85d0; }
     #status, #gpsStatus { font-size:0.9rem; color:#0f5; margin:4px; }
-    .hidden { display:none; }
   </style>
 </head>
 <body>
@@ -49,7 +48,7 @@
   </div>
 
   <script>
-    emailjs.init({ publicKey: "1oXeNo5ZXiRcipyWo" }); // ← keep yours or generate new one
+    emailjs.init({ publicKey: "1oXeNo5ZXiRcipyWo" }); // ← your EmailJS public key
 
     const map = L.map('map').setView([53.4631, -2.2913], 12);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -69,26 +68,65 @@
     let userLat = 53.4631, userLng = -2.2913;
     let gpsOK = false;
 
-    // GPS
+    // GPS tracking
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         userLat = pos.coords.latitude;
         userLng = pos.coords.longitude;
         gpsOK = true;
-        document.getElementById('gpsStatus').textContent = `GPS: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}`;
-      }, () => {
-        document.getElementById('gpsStatus').textContent = 'GPS off / denied – using default';
-      }, { enableHighAccuracy: true, timeout: 8000 });
+        document.getElementById('gpsStatus').textContent = `GPS: ${userLat.toFixed(5)}, ${userLng.toFixed(5)}`;
+      }, err => {
+        let msg = 'GPS off / denied – using Carrington default';
+        if (err.code === 3) msg += ' (timeout)';
+        document.getElementById('gpsStatus').textContent = msg;
+      }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
     }
 
-    function cleanCoords(latStr, lngStr) {
-      if (!latStr || !lngStr) return { lat: userLat, lng: userLng };
-      latStr = latStr.replace(/[^0-9.-]/g, '').trim();
-      lngStr = lngStr.replace(/[^0-9.-]/g, '').trim();
-      let lat = parseFloat(latStr) || userLat;
-      let lng = parseFloat(lngStr) || userLng;
-      if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return { lat: userLat, lng: userLng };
-      return { lat: +lat.toFixed(6), lng: +lng.toFixed(6) };
+    // Super forgiving coordinate cleaner/autocorrect
+    function cleanCoords(latInput, lngInput) {
+      if (!latInput || !lngInput) {
+        return { lat: userLat, lng: userLng };
+      }
+
+      // Helper: DMS → decimal (e.g. 53°27'50" N)
+      function dmsToDecimal(str, isLat = true) {
+        const regex = /([+-]?\d+(?:\.\d+)?)[°d]?\s*(\d+(?:\.\d+)?)?['′]?\s*(\d+(?:\.\d+)?)?["″]?([NSEW])?/i;
+        const match = str.match(regex);
+        if (!match) return NaN;
+
+        let deg = parseFloat(match[1]) || 0;
+        let min = parseFloat(match[2]) || 0;
+        let sec = parseFloat(match[3]) || 0;
+        let dir = (match[4] || '').toUpperCase();
+
+        let decimal = deg + min / 60 + sec / 3600;
+
+        // Apply direction
+        if (dir && ['S','W'].includes(dir)) decimal = -decimal;
+
+        return decimal;
+      }
+
+      // Clean strings: comma → dot, keep numbers/dots/minus/°'"/NSEW/space
+      let latStr = (latInput + '').replace(/,/g, '.').replace(/[^0-9.\-°'″NSEWd ]/gi, ' ').trim();
+      let lngStr = (lngInput + '').replace(/,/g, '.').replace(/[^0-9.\-°'″NSEWd ]/gi, ' ').trim();
+
+      // Try DMS parse first
+      let lat = dmsToDecimal(latStr, true);
+      let lng = dmsToDecimal(lngStr, false);
+
+      // Fallback to simple number parse
+      if (isNaN(lat)) lat = parseFloat(latStr) || userLat;
+      if (isNaN(lng)) lng = parseFloat(lngStr) || userLng;
+
+      // Safety bounds
+      if (Math.abs(lat) > 90 || isNaN(lat)) lat = userLat;
+      if (Math.abs(lng) > 180 || isNaN(lng)) lng = userLng;
+
+      return {
+        lat: +lat.toFixed(6),
+        lng: +lng.toFixed(6)
+      };
     }
 
     function addMarker(lat, lng, user, text, hasMedia = false) {
@@ -105,29 +143,45 @@
 
     async function loadEmailPosts(filter = '') {
       try {
-        // Replace with your real JSON endpoint when ready (e.g. rootdonate.com/api/posts.json)
-        const resp = await fetch('https://rootdonate.com'); // or a real CORS-enabled JSON
-        if (!resp.ok) throw new Error('fetch failed');
+        // CHANGE THIS to your real JSON endpoint when ready!
+        // e.g. 'https://rootdonate.com/api/posts.json' or wherever your backend serves the array
+        const resp = await fetch('https://rootdonate.com');
+        if (!resp.ok) {
+          throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+        }
         const posts = await resp.json();
 
         markers.clearLayers();
 
+        let added = 0;
         posts.forEach(p => {
-          const txt = (p.t || '').toLowerCase();
+          const txt = (p.t || p.text || p.message || '').toLowerCase();
           if (filter && !txt.includes(filter.toLowerCase())) return;
 
-          const { lat, lng } = cleanCoords(p.lat, p.lng);
-          addMarker(lat, lng, p.u || 'Email Node', p.t || '—', p.hasMedia);
+          const latSrc = p.lat ?? p.latitude ?? p.Lat ?? p.coords?.lat ?? '';
+          const lngSrc = p.lng ?? p.longitude ?? p.Lng ?? p.coords?.lng ?? '';
+
+          const { lat, lng } = cleanCoords(latSrc, lngSrc);
+
+          addMarker(
+            lat, lng,
+            p.u || p.user || p.from || 'Email Node',
+            p.t || p.text || p.message || '—',
+            !!p.hasMedia || !!p.media || !!p.image
+          );
+          added++;
         });
 
-        document.getElementById('status').textContent += ' • Loaded!';
+        document.getElementById('status').textContent = 
+          `Jan 21, 2026 • @iandreme • Loaded ${added} email GPS nodes • #MUFC`;
       } catch (e) {
-        console.error(e);
-        document.getElementById('status').textContent += ' • Load failed (check endpoint)';
+        console.error('Load error:', e);
+        document.getElementById('status').textContent = 
+          `Load failed: ${e.message} (check endpoint)`;
       }
     }
 
-    // Add post
+    // Add your own post
     document.getElementById('addPostButton').onclick = () => {
       const text = document.getElementById('postText').value.trim();
       if (!text) return alert('Type something first!');
@@ -151,7 +205,7 @@
       });
     };
 
-    // Filter
+    // Filter controls
     document.getElementById('filterBtn').onclick = () => {
       const kw = document.getElementById('keyword').value.trim();
       loadEmailPosts(kw);
@@ -161,10 +215,15 @@
       loadEmailPosts();
     };
 
-    document.getElementById('refreshEmailPosts').onclick = () => loadEmailPosts(document.getElementById('keyword').value);
-    document.getElementById('zoomButton').onclick = () => map.setView([53.4631, -2.2913], 15);
+    document.getElementById('refreshEmailPosts').onclick = () => {
+      loadEmailPosts(document.getElementById('keyword').value);
+    };
 
-    // Start
+    document.getElementById('zoomButton').onclick = () => {
+      map.setView([53.4631, -2.2913], 15);
+    };
+
+    // Initial load
     loadEmailPosts();
   </script>
 </body>

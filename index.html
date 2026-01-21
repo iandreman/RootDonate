@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Root Drops • Local Echoes (~500 m)</title>
-  <meta name="description" content="Drop messages tied to your exact location. Visible only within ~500 m."/>
+  <meta name="description" content="Drop messages tied to your exact location. Visible only within ~500 m. Share via email."/>
 
   <style>
     :root {
@@ -27,16 +27,18 @@
 
     input, textarea { width:100%; padding:0.9rem 1rem; margin:0.6rem 0; background:#0d0d0d; border:1px solid var(--border); border-radius:12px; color:white; font-size:1rem; }
     input:focus, textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,255,85,0.12); }
-    textarea { min-height:120px; resize:vertical; }
+    textarea { min-height:140px; resize:vertical; }
 
     .buttons { display:flex; flex-wrap:wrap; gap:0.8rem; justify-content:center; margin:1.2rem 0; }
-    button { padding:0.85rem 1.8rem; border:none; border-radius:12px; font-weight:600; cursor:pointer; transition:all 0.22s ease; min-width:140px; font-size:0.95rem; }
+    button { padding:0.85rem 1.8rem; border:none; border-radius:12px; font-weight:600; cursor:pointer; transition:all 0.22s ease; min-width:160px; font-size:0.95rem; }
     button:hover { transform:translateY(-1px); }
-    #dropBtn   { background:var(--accent-dark); color:#000; }
-    #dropBtn:hover   { background:var(--accent); }
-    #clearBtn  { background:#991111; color:white; }
-    #clearBtn:hover  { background:var(--danger); }
-    #exportJsonBtn    { background:var(--export); color:white; }
+    #dropBtn     { background:var(--accent-dark); color:#000; }
+    #dropBtn:hover     { background:var(--accent); }
+    #clearBtn    { background:#991111; color:white; }
+    #clearBtn:hover    { background:var(--danger); }
+    #exportJsonBtn   { background:var(--export); color:white; }
+    #emailPinBtn { background:#1e40af; color:white; }
+    #emailPinBtn:hover { background:#3b82f6; }
 
     #status { text-align:center; min-height:1.3em; font-size:0.92rem; margin:0.8rem 0; opacity:0; transition:opacity 0.4s; }
     #status.visible { opacity:1; }
@@ -57,7 +59,7 @@
     .pin-msg { white-space:pre-wrap; line-height:1.5; margin:0.6rem 0; font-size:0.97rem; }
     .pin-time { font-size:0.84rem; color:#777; text-align:right; margin-top:0.6rem; }
 
-    @media (max-width:500px) { .container { padding:1rem; } h1 { font-size:1.6rem; } button { min-width:120px; padding:0.8rem 1.4rem; } }
+    @media (max-width:500px) { .container { padding:1rem; } h1 { font-size:1.6rem; } button { min-width:140px; padding:0.8rem 1.4rem; } }
   </style>
 </head>
 <body>
@@ -69,7 +71,7 @@
 
     <div class="section-title">Leave a Message (Visible ~500 m)</div>
     <input type="text" id="name" placeholder="Name / @handle" value="@iandreme" />
-    <textarea id="msg" placeholder="Your shout, memory, warning…"></textarea>
+    <textarea id="msg" placeholder="Your shout, memory, warning, poem… (will be emailed too if you choose)"></textarea>
 
     <div class="buttons">
       <button id="dropBtn">Drop Message</button>
@@ -77,13 +79,18 @@
     </div>
 
     <div class="buttons" style="margin-top:0.4rem;">
-      <button id="exportJsonBtn">↓ Export My Nearby Drops (JSON)</button>
+      <button id="exportJsonBtn">↓ Export Nearby Drops (JSON)</button>
+      <button id="emailPinBtn">✉️ Email This GPS Pin</button>
     </div>
 
     <div id="status"></div>
 
-    <div class="section-title">Your Nearby Drops (~500 m)</div>
+    <div class="section-title">Nearby Drops (~500 m)</div>
     <div class="pin-list" id="pinList"></div>
+
+    <div class="info-box" style="margin-top:3rem; font-size:0.9rem; color:#888; text-align:center;">
+      <small>Pure offline • localStorage only • messages stay local & physical • share pins via email • no servers, no traces 🌱</small>
+    </div>
   </div>
 
   <script>
@@ -92,7 +99,7 @@
     // ──────────────────────────────────────────────────────────────
     const STORAGE_KEY       = 'root-donate-drops-v2';
     const COORD_PRECISION   = 6;
-    const MATCH_TOLERANCE   = 0.0045; // ≈500 m
+    const MATCH_TOLERANCE   = 0.0045; // ≈500 meters
 
     let userLat = null;
     let userLng = null;
@@ -147,41 +154,70 @@
       saveDrops(kept);
     }
 
-    // ─── Export ─────────────────────────────────────────────────────────────────────
+    // ─── Export JSON ────────────────────────────────────────────────────────────────
     function exportJson() {
       if (!userLat) return showStatus('No location yet', 'error');
 
       const drops = getDrops().filter(d => coordsMatch(d.lat, d.lng, userLat, userLng));
-
       if (!drops.length) return showStatus('No drops nearby to export', 'error');
 
       const data = {
-        metadata: {
-          exported: new Date().toISOString(),
-          center: { lat: round(userLat), lng: round(userLng), radius_m: 500 },
-          count: drops.length
-        },
-        drops: drops.map(d => ({
-          name: d.name,
-          message: d.msg,
-          lat: d.lat,
-          lng: d.lng,
-          timestamp: d.timestamp
-        })).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        metadata: { exported: new Date().toISOString(), center: { lat: round(userLat), lng: round(userLng), radius_m: 500 }, count: drops.length },
+        drops: drops.map(d => ({ name: d.name, message: d.msg, lat: d.lat, lng: d.lng, timestamp: d.timestamp }))
+                   .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
       };
 
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `my-drops_${new Date().toISOString().slice(0,10)}_500m.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      a.href = url; a.download = `root-drops_${new Date().toISOString().slice(0,10)}_500m.json`;
+      a.click(); URL.revokeObjectURL(url);
 
       showStatus(`Exported ${drops.length} drops`, 'success');
     }
 
-    // ─── Render ─────────────────────────────────────────────────────────────────────
+    // ─── Email GPS Pin ──────────────────────────────────────────────────────────────
+    function emailCurrentPin() {
+      if (!userLat || !userLng) return showStatus('Need GPS fix first', 'error');
+
+      const name = document.getElementById('name').value.trim() || 'Anonymous';
+      const msg  = document.getElementById('msg').value.trim();
+
+      const subject = msg 
+        ? `Root Drop @ ${userLat.toFixed(6)},${userLng.toFixed(6)}`
+        : `GPS Pin • ${name} • ${new Date().toLocaleDateString()}`;
+
+      const geoUri    = `geo:${userLat.toFixed(6)},${userLng.toFixed(6)}`;
+      const gmapsLink = `https://www.google.com/maps?q=${userLat.toFixed(6)},${userLng.toFixed(6)}`;
+
+      const body = [
+        `From: ${name}`,
+        `Dropped: ${new Date().toLocaleString()}`,
+        ``,
+        msg || "(No message — just pinning the spot)",
+        ``,
+        `📍 Location: ${geoUri}   (tap on mobile to open maps pin)`,
+        ``,
+        `Web fallback: ${gmapsLink}`,
+        ``,
+        `To read / reply:`,
+        `• Open Root Drops page`,
+        `• Allow location`,
+        `• See echoes when within ~500 m`,
+        ``,
+        `Root Drops • Local Echoes • Offline-first • @iandreme`,
+        `https://your-domain-or-github-pages-link-here (optional)`
+      ].join('\r\n');
+
+      const mailto = `mailto:?
+subject=${encodeURIComponent(subject)}
+&body=${encodeURIComponent(body)}`;
+
+      window.open(mailto, '_blank');
+      showStatus('Email ready — send or forward the pin ✉️', 'success');
+    }
+
+    // ─── Render Nearby Drops ────────────────────────────────────────────────────────
     function renderAll() {
       const list = document.getElementById('pinList');
       if (!userLat) {
@@ -190,11 +226,10 @@
       }
 
       const drops = getDrops().filter(d => coordsMatch(d.lat, d.lng, userLat, userLng));
-
       list.innerHTML = '';
 
       if (!drops.length) {
-        list.innerHTML = '<p style="text-align:center;color:#555;padding:3rem 1rem;">No drops in this area yet — drop one!</p>';
+        list.innerHTML = '<p style="text-align:center;color:#555;padding:3rem 1rem;">No drops here yet — be the first 🌱</p>';
         return;
       }
 
@@ -211,7 +246,7 @@
         group.className = 'location-group';
         group.innerHTML = `<div class="location-header">📍 ${lat.toFixed(6)}, ${lng.toFixed(6)} (${items.length})</div>`;
 
-        items.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(d => {
+        items.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).forEach(d => {
           const pin = document.createElement('div');
           pin.className = 'pin drop';
           pin.innerHTML = `
@@ -247,10 +282,11 @@
     };
 
     document.getElementById('exportJsonBtn').onclick = exportJson;
+    document.getElementById('emailPinBtn').onclick = emailCurrentPin;
 
     window.addEventListener('storage', renderAll);
 
-    // ─── GPS ────────────────────────────────────────────────────────────────────────
+    // ─── GPS Watch ──────────────────────────────────────────────────────────────────
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(
         pos => {

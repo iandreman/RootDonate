@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Donate • Local Echoes (~500 m)</title>
-  <meta name="description" content="Drop messages tied to your exact location. Visible only within ~500 m. Load GPS history to see your past footsteps."/>
+  <title>Root Drops • Local Echoes (~500 m)</title>
+  <meta name="description" content="Drop messages tied to your exact location. Visible only within ~500 m."/>
 
   <style>
     :root {
@@ -12,7 +12,6 @@
       --text: #e0e0e0;
       --accent: #00ff55;
       --accent-dark: #00cc44;
-      --footprint: #3399ff;
       --danger: #ff3333;
       --info: #1e90ff;
       --export: #ff6600;
@@ -38,7 +37,6 @@
     #dropBtn:hover   { background:var(--accent); }
     #clearBtn  { background:#991111; color:white; }
     #clearBtn:hover  { background:var(--danger); }
-    #reloadHistoryBtn { background:var(--info); color:white; }
     #exportJsonBtn    { background:var(--export); color:white; }
 
     #status { text-align:center; min-height:1.3em; font-size:0.92rem; margin:0.8rem 0; opacity:0; transition:opacity 0.4s; }
@@ -48,13 +46,7 @@
 
     .section-title { color:var(--accent); font-size:1.15rem; font-weight:600; text-align:center; margin:2rem 0 0.8rem; opacity:0.9; }
 
-    #dropZone { border:2px dashed var(--accent); border-radius:16px; padding:3rem 1rem; text-align:center; margin:1.5rem 0; cursor:pointer; background:#0a0a0a; }
-    #dropZone.dragover { background:#111; border-color:var(--accent-dark); box-shadow:0 0 25px rgba(0,255,85,0.08); }
-    #dropZone p { color:#888; margin:0.5rem 0; }
-
     .info-box { background:#181818; padding:1rem 1.2rem; border-radius:12px; margin:1rem 0; font-size:0.95rem; line-height:1.45; border:1px solid #222; }
-
-    .stats { text-align:center; color:#888; font-size:0.9rem; margin:0.5rem 0 1.5rem; }
 
     .pin-list { margin-top:1.5rem; }
     .location-group { margin-bottom:2.2rem; border-radius:12px; overflow:hidden; }
@@ -63,11 +55,8 @@
     .pin:not(:last-child) { border-bottom:1px solid #1e1e1e; }
     .pin-header { font-weight:700; margin-bottom:0.5rem; }
     .drop .pin-header { color:#88ffbb; }
-    .footprint .pin-header { color:var(--footprint); }
     .pin-msg { white-space:pre-wrap; line-height:1.5; margin:0.6rem 0; font-size:0.97rem; }
     .pin-time { font-size:0.84rem; color:#777; text-align:right; margin-top:0.6rem; }
-
-    .zero-history { background:#1a1a00; border:1px solid #664400; border-radius:12px; padding:1.5rem; margin:2rem 0; color:#ffcc66; text-align:center; line-height:1.6; }
 
     @media (max-width:500px) { .container { padding:1rem; } h1 { font-size:1.6rem; } button { min-width:120px; padding:0.8rem 1.4rem; } }
   </style>
@@ -75,7 +64,7 @@
 <body>
 
   <div class="container">
-    <h1>Root Donate • Local Echoes (~500 m)</h1>
+    <h1>Root Drops • Local Echoes (~500 m)</h1>
 
     <div class="info-box" id="locationInfo">Waiting for GPS fix… (10–120s first time, go outside if slow)</div>
 
@@ -85,25 +74,16 @@
 
     <div class="buttons">
       <button id="dropBtn">Drop Message</button>
-      <button id="clearBtn">Clear Drops (~500 m)</button>
-    </div>
-
-    <div class="section-title">Load Your Footprints (Timeline.json)</div>
-    <div id="dropZone">
-      <p>Drag & drop Timeline.json here<br>or tap to choose file</p>
-      <input type="file" id="fileInput" accept=".json" hidden>
+      <button id="clearBtn">Clear My Drops (~500 m)</button>
     </div>
 
     <div class="buttons" style="margin-top:0.4rem;">
-      <button id="reloadHistoryBtn">↻ Reopen Previous Timeline</button>
-      <button id="exportJsonBtn">↓ Export Nearby Echoes (JSON)</button>
+      <button id="exportJsonBtn">↓ Export My Nearby Drops (JSON)</button>
     </div>
 
     <div id="status"></div>
 
-    <div id="historyStats" class="stats"></div>
-
-    <div class="section-title">Nearby Echoes & Footprints (~500 m)</div>
+    <div class="section-title">Your Nearby Drops (~500 m)</div>
     <div class="pin-list" id="pinList"></div>
   </div>
 
@@ -117,7 +97,6 @@
 
     let userLat = null;
     let userLng = null;
-    let timelinePoints = [];
 
     const round = n => Number(n.toFixed(COORD_PRECISION));
     const coordsMatch = (a, b, c, d) => Math.abs(a - c) <= MATCH_TOLERANCE && Math.abs(b - d) <= MATCH_TOLERANCE;
@@ -126,7 +105,7 @@
       const el = document.getElementById('status');
       el.textContent = msg;
       el.className = type ? `visible ${type}` : 'visible';
-      setTimeout(() => el.className = '', 12000);
+      setTimeout(() => el.className = '', 10000);
     }
 
     function updateLocInfo() {
@@ -140,146 +119,7 @@
       }
     }
 
-    function updateHistoryStats() {
-      const el = document.getElementById('historyStats');
-      if (timelinePoints.length === 0) return;
-      const nearby = timelinePoints.filter(p => userLat && coordsMatch(p.lat, p.lng, userLat, userLng)).length;
-      el.innerHTML = `Loaded <strong>${timelinePoints.length}</strong> history pins • ${nearby} nearby`;
-    }
-
-    // ─── Improved Parser – checks all common 2026 locations for string coords ────────
-    function parseTimeline(json) {
-      const pts = [];
-      console.log('JSON root keys:', Object.keys(json || {}));
-
-      const cleanAndParse = (str) => {
-        if (typeof str !== 'string') return null;
-        const cleaned = str.replace(/°/g, '').replace(/[^0-9.,-]/g, '').trim();
-        if (!cleaned.includes(',')) return null;
-        const [latStr, lngStr] = cleaned.split(',').map(s => s.trim());
-        const lat = parseFloat(latStr);
-        const lng = parseFloat(lngStr);
-        return (!isNaN(lat) && !isNaN(lng)) ? { lat, lng } : null;
-      };
-
-      const extractCoord = (obj) => {
-        let lat, lng, acc = '?', ts = obj.startTime || obj.endTime || obj.timestamp || '';
-
-        // All common places where Google puts the string coord in 2026 exports
-        let locStr = '';
-        if (obj.placeLocation) locStr = obj.placeLocation;
-        if (obj.latLng) locStr = obj.latLng;
-        if (obj.topCandidate) {
-          locStr = obj.topCandidate.placeLocation || obj.topCandidate.latLng || locStr;
-        }
-        if (obj.visit?.topCandidate) {
-          locStr = obj.visit.topCandidate.placeLocation || obj.visit.topCandidate.latLng || locStr;
-        }
-        if (obj.placeVisit?.topCandidate) {
-          locStr = obj.placeVisit.topCandidate.placeLocation || obj.placeVisit.topCandidate.latLng || locStr;
-        }
-        if (obj.startLocation) locStr = obj.startLocation.placeLocation || obj.startLocation.latLng || locStr;
-        if (obj.endLocation) locStr = obj.endLocation.placeLocation || obj.endLocation.latLng || locStr;
-
-        if (locStr) {
-          const coord = cleanAndParse(locStr);
-          if (coord) {
-            lat = coord.lat;
-            lng = coord.lng;
-            console.log('Found echo pin:', lat.toFixed(6), lng.toFixed(6), 'from:', locStr);
-          }
-        }
-
-        // Rare classic E7 format fallback
-        if (!lat && obj.latitudeE7 && obj.longitudeE7) {
-          lat = obj.latitudeE7 / 1e7;
-          lng = obj.longitudeE7 / 1e7;
-          acc = obj.accuracyMeters || '?';
-        }
-
-        if (lat && lng) {
-          return { lat, lng, accuracy: acc, timestamp: ts ? new Date(ts).toISOString() : new Date().toISOString() };
-        }
-        return null;
-      };
-
-      // Main processing
-      if (json?.semanticSegments?.length) {
-        console.log(`Found ${json.semanticSegments.length} semanticSegments`);
-        json.semanticSegments.forEach(s => {
-          // Visit / placeVisit / activity
-          if (s.visit || s.placeVisit || s.activitySegment) {
-            const target = s.visit || s.placeVisit || s.activitySegment || s;
-            const coord = extractCoord(target);
-            if (coord) pts.push({ type: 'history', ...coord });
-          }
-          // Frequent places
-          if (s.userLocationProfile?.frequentPlaces?.length) {
-            s.userLocationProfile.frequentPlaces.forEach(place => {
-              const coord = extractCoord(place);
-              if (coord) pts.push({ type: 'history', ...coord });
-            });
-          }
-        });
-      }
-
-      // Deep fallback search
-      function deepSearch(o) {
-        if (typeof o !== 'object' || o === null) return;
-        const coord = extractCoord(o);
-        if (coord) pts.push({ type: 'history', ...coord });
-        Object.values(o).forEach(deepSearch);
-      }
-      deepSearch(json);
-
-      // Deduplicate & sort newest first
-      const unique = [...new Map(pts.map(p => [`${round(p.lat)},${round(p.lng)}`, p])).values()];
-      unique.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-      console.log(`Parsed ${unique.length} GPS pins total`);
-      return unique;
-    }
-
-    // ─── File Loading ────────────────────────────────────────────────────────────────
-    async function loadFile(src) {
-      let file;
-      try { file = src.kind === 'file' ? await src.getFile() : src; } catch {
-        showStatus('File access denied', 'error'); return false;
-      }
-      if (!file.name?.toLowerCase().endsWith('.json')) {
-        showStatus('Select a .json file', 'error'); return false;
-      }
-      try {
-        const text = await file.text();
-        const data = JSON.parse(text);
-        timelinePoints = parseTimeline(data);
-
-        if (timelinePoints.length === 0) {
-          showStatus('0 pins – check F12 Console', 'error');
-          document.getElementById('pinList').insertAdjacentHTML('afterbegin', `
-            <div class="zero-history">
-              <strong>No GPS pins / echoes detected</strong><br><br>
-              • Press F12 → Console tab – look for "Found echo pin:" or "Parsed X GPS pins"<br>
-              • If "semanticSegments" appears but 0 pins → your export may not contain coordinates<br>
-              • Search file for "," or "°" – share a line with coords if you find one<br>
-              • Dropped messages will still show as green pins!
-            </div>
-          `);
-        } else {
-          showStatus(`Loaded ${timelinePoints.length} GPS pins / echoes ✓`, 'success');
-        }
-
-        updateHistoryStats();
-        renderAll();
-        document.getElementById('pinList').scrollIntoView({ behavior: 'smooth' });
-        return true;
-      } catch (err) {
-        showStatus('Invalid JSON', 'error');
-        console.error(err);
-        return false;
-      }
-    }
-
-    // ─── Drops (localStorage) ───────────────────────────────────────────────────────
+    // ─── Drops (localStorage only) ─────────────────────────────────────────────────
     function getDrops() {
       try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
       catch { return []; }
@@ -313,43 +153,33 @@
       if (!userLat) return showStatus('No location yet', 'error');
 
       const drops = getDrops().filter(d => coordsMatch(d.lat, d.lng, userLat, userLng));
-      const hist  = timelinePoints.filter(p => coordsMatch(p.lat, p.lng, userLat, userLng));
-      const all   = [...drops, ...hist];
 
-      if (!all.length) return showStatus('Nothing nearby to export', 'error');
+      if (!drops.length) return showStatus('No drops nearby to export', 'error');
 
       const data = {
         metadata: {
           exported: new Date().toISOString(),
           center: { lat: round(userLat), lng: round(userLng), radius_m: 500 },
-          counts: { total: all.length, drops: drops.length, history: hist.length }
+          count: drops.length
         },
-        pins: all.map(p => {
-          const base = {
-            type: p.type,
-            lat: round(p.lat),
-            lng: round(p.lng),
-            timestamp: p.timestamp || null
-          };
-          if (p.type === 'drop') {
-            base.name = p.name;
-            base.message = p.msg;
-          } else {
-            base.accuracy_m = p.accuracy !== '?' ? Number(p.accuracy) : null;
-          }
-          return base;
-        }).sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0))
+        drops: drops.map(d => ({
+          name: d.name,
+          message: d.msg,
+          lat: d.lat,
+          lng: d.lng,
+          timestamp: d.timestamp
+        })).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
       };
 
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `root-echo_${new Date().toISOString().slice(0,10)}_500m.json`;
+      a.download = `my-drops_${new Date().toISOString().slice(0,10)}_500m.json`;
       a.click();
       URL.revokeObjectURL(url);
 
-      showStatus(`Exported ${all.length} echoes`, 'success');
+      showStatus(`Exported ${drops.length} drops`, 'success');
     }
 
     // ─── Render ─────────────────────────────────────────────────────────────────────
@@ -361,20 +191,19 @@
       }
 
       const drops = getDrops().filter(d => coordsMatch(d.lat, d.lng, userLat, userLng));
-      const hist  = timelinePoints.filter(p => coordsMatch(p.lat, p.lng, userLat, userLng));
 
       list.innerHTML = '';
 
-      if (!drops.length && !hist.length) {
-        list.innerHTML = '<p style="text-align:center;color:#555;padding:3rem 1rem;">No echoes or footprints nearby yet</p>';
+      if (!drops.length) {
+        list.innerHTML = '<p style="text-align:center;color:#555;padding:3rem 1rem;">No drops in this area yet — drop one!</p>';
         return;
       }
 
       const groups = {};
-      [...drops, ...hist].forEach(p => {
-        const k = `${round(p.lat)},${round(p.lng)}`;
+      drops.forEach(d => {
+        const k = `${round(d.lat)},${round(d.lng)}`;
         groups[k] = groups[k] || [];
-        groups[k].push(p);
+        groups[k].push(d);
       });
 
       Object.entries(groups).forEach(([k, items]) => {
@@ -383,14 +212,13 @@
         group.className = 'location-group';
         group.innerHTML = `<div class="location-header">📍 ${lat.toFixed(6)}, ${lng.toFixed(6)} (${items.length})</div>`;
 
-        items.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(p => {
+        items.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(d => {
           const pin = document.createElement('div');
-          pin.className = `pin ${p.type}`;
-          const isDrop = p.type === 'drop';
+          pin.className = 'pin drop';
           pin.innerHTML = `
-            <div class="pin-header">${isDrop ? p.name : 'Footprint'}</div>
-            <div class="pin-msg">${isDrop ? p.msg : `≈${p.accuracy || '?'}m accuracy`}</div>
-            <div class="pin-time">${new Date(p.timestamp).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</div>
+            <div class="pin-header">${d.name}</div>
+            <div class="pin-msg">${d.msg}</div>
+            <div class="pin-time">${new Date(d.timestamp).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</div>
           `;
           group.appendChild(pin);
         });
@@ -413,36 +241,13 @@
 
     document.getElementById('clearBtn').onclick = () => {
       if (!userLat) return showStatus('No location fix', 'error');
-      if (!confirm('Erase all drops in this ~500 m area?')) return;
+      if (!confirm('Erase all YOUR drops in this ~500 m area?')) return;
       clearNearby(userLat, userLng);
       renderAll();
-      showStatus('Area cleared', 'success');
+      showStatus('Your drops cleared', 'success');
     };
 
     document.getElementById('exportJsonBtn').onclick = exportJson;
-
-    const zone = document.getElementById('dropZone');
-    zone.onclick = () => document.getElementById('fileInput').click();
-    zone.ondragover = zone.ondragenter = e => { e.preventDefault(); zone.classList.add('dragover'); };
-    zone.ondragleave = zone.ondrop = e => { e.preventDefault(); zone.classList.remove('dragover'); };
-    zone.ondrop = e => { const f = e.dataTransfer?.files?.[0]; if (f) loadFile(f); };
-    document.getElementById('fileInput').onchange = e => { const f = e.target.files?.[0]; if (f) loadFile(f); };
-
-    document.getElementById('reloadHistoryBtn').onclick = async () => {
-      if ('showOpenFilePicker' in window) {
-        try {
-          const [handle] = await window.showOpenFilePicker({
-            types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }],
-            multiple: false
-          });
-          await loadFile(handle);
-        } catch (e) {
-          if (e.name !== 'AbortError') showStatus('File picker cancelled', '');
-        }
-      } else {
-        showStatus('File picker not supported in this browser', 'error');
-      }
-    };
 
     window.addEventListener('storage', renderAll);
 
@@ -454,13 +259,13 @@
           userLng = pos.coords.longitude;
           updateLocInfo();
           renderAll();
-          updateHistoryStats();
         },
         err => showStatus(`GPS error: ${err.message} – try outdoors`, 'error'),
         { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
       );
+
       setTimeout(() => {
-        if (userLat === null) showStatus('GPS still waiting… Move to open area or toggle location', 'error');
+        if (userLat === null) showStatus('GPS still waiting… Move outside or toggle location', 'error');
       }, 60000);
     } else {
       showStatus('Geolocation not supported in this browser', 'error');

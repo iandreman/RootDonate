@@ -55,37 +55,77 @@
       margin: 10px 0;
       color: #00ff55;
     }
+    small {
+      color: #aaa;
+    }
   </style>
 </head>
 <body>
 
-  <h1>Hello World Map • Drop a Pin ⚽ #MUFC</h1>
+  <h1>Hello World Map • Pins Saved Locally ⚽ #MUFC</h1>
 
   <div id="map"></div>
 
   <div class="form-box">
-    <input type="text" id="name" placeholder="Your name / @handle" />
+    <input type="text" id="name" placeholder="Your name / @handle" value="@iandreme" />
     <textarea id="msg" placeholder="Short message..." rows="2"></textarea>
     <button onclick="dropPin()">Drop Pin → Map</button>
   </div>
 
   <script>
-    // Basic Leaflet map centered on Old Trafford
+    // ─── Map Setup ──────────────────────────────────────────────────
     const map = L.map('map').setView([53.4631, -2.2913], 14);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
 
-    // Simple green dot icon
+    // Green dot icon
     const greenDot = L.divIcon({
       html: '<div style="background:#0f5; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px #0f5;"></div>',
-      className: '', // remove default shadow
+      className: '',
       iconSize: [16, 16],
       iconAnchor: [8, 8]
     });
 
-    // Try to get user location (optional)
+    // ─── LocalStorage Helpers ───────────────────────────────────────
+    const STORAGE_KEY = 'mapPins';
+
+    function loadPins() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return [];
+
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.warn('Invalid saved pins data', e);
+        return [];
+      }
+    }
+
+    function savePins(pins) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(pins));
+    }
+
+    // ─── Add Marker Function ────────────────────────────────────────
+    function addMarker(lat, lng, name, msg, isNew = false) {
+      const popup = `
+        <b>Hello from ${name}</b><br>
+        ${msg}<br>
+        <small>#MUFC ${isNew ? '· just now' : ''}</small>
+      `;
+      L.marker([lat, lng], { icon: greenDot })
+        .addTo(map)
+        .bindPopup(popup);
+    }
+
+    // ─── Load Existing Pins on Start ────────────────────────────────
+    const pins = loadPins();
+    pins.forEach(p => {
+      addMarker(p.lat, p.lng, p.name, p.msg);
+    });
+
+    // Try to get user location once
     let userLat = 53.4631;
     let userLng = -2.2913;
 
@@ -94,40 +134,45 @@
         userLat = pos.coords.latitude;
         userLng = pos.coords.longitude;
         map.setView([userLat, userLng], 15);
+      }, () => {
+        // fallback already set
       });
     }
 
-    // Function to drop pin
+    // ─── Drop New Pin ───────────────────────────────────────────────
     function dropPin() {
       const name = document.getElementById('name').value.trim() || 'Anonymous';
-      const msg  = document.getElementById('msg').value.trim()  || 'Hello world!';
+      const msg  = document.getElementById('msg').value.trim();
 
       if (!msg) {
         alert('Write a short message first ⚽');
         return;
       }
 
-      // Use user's approximate location (or fallback to Old Trafford)
       const lat = userLat;
       const lng = userLng;
 
-      // Add marker with popup
-      L.marker([lat, lng], { icon: greenDot })
-        .addTo(map)
-        .bindPopup(`<b>Hello from ${name}</b><br>${msg}<br><small>#MUFC</small>`);
+      // Add to map
+      addMarker(lat, lng, name, msg, true);
 
-      // Optional: zoom to new pin
+      // Save to localStorage
+      const newPin = { lat, lng, name, msg };
+      const updatedPins = [...loadPins(), newPin];
+      savePins(updatedPins);
+
+      // Optional: zoom to it
       map.setView([lat, lng], 16);
 
-      // Clear form
+      // Clear message only (keep name)
       document.getElementById('msg').value = '';
-      alert('Pin dropped! ⚽');
+
+      alert('Pin dropped & saved locally! ⚽ (persists after refresh)');
     }
 
-    // Demo starter pin
-    L.marker([53.4631, -2.2913], { icon: greenDot })
-      .addTo(map)
-      .bindPopup('<b>@iandreme</b><br>Hello world from Old Trafford! ⚽');
+    // Optional: starter/demo pin if no pins exist yet
+    if (pins.length === 0) {
+      addMarker(53.4631, -2.2913, '@iandreme', 'Hello world from Old Trafford!');
+    }
   </script>
 
 </body>

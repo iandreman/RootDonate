@@ -3,20 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Donate Drops • ~500 m GPS Pins (Local)</title>
+  <title>Phone GPS Timeline Pins • ~500 m Clusters (Local)</title>
 
   <style>
     html, body { margin:0; padding:0; height:100%; background:#000; color:#eee; font-family:Arial,Helvetica,sans-serif; }
     .container { max-width:580px; margin:0 auto; padding:20px; }
     h1 { text-align:center; color:#00ff55; margin:10px 0 16px; }
-    input, textarea { width:100%; padding:12px; margin:10px 0; border:1px solid #444; border-radius:8px; background:#111; color:white; font-size:1em; box-sizing:border-box; }
-    textarea { resize:vertical; min-height:100px; }
-    .buttons { text-align:center; margin:20px 0; display:flex; flex-wrap:wrap; justify-content:center; gap:12px; }
-    button { padding:13px 24px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; transition:all 0.2s; min-width:140px; }
-    #dropBtn   { background:#00cc44; color:black; }
-    #dropBtn:hover   { background:#00ff55; }
-    #clearBtn  { background:#cc0000; color:white; }
-    #clearBtn:hover  { background:#ff3333; }
+    input, textarea, button { width:100%; padding:12px; margin:10px 0; border:1px solid #444; border-radius:8px; background:#111; color:white; font-size:1em; box-sizing:border-box; }
+    button { cursor:pointer; transition:all 0.2s; min-width:140px; font-weight:bold; }
+    #uploadBtn { background:#3366ff; color:white; }
+    #uploadBtn:hover { background:#6699ff; }
     #status { text-align:center; margin:12px 0; min-height:1.4em; font-size:0.95em; }
     .success { color:#0f5; }
     .error   { color:#f66; }
@@ -39,18 +35,15 @@
 <body>
 
   <div class="container">
-    <h1>Root Donate Drops ⚽ #MUFC (~500 m Radius)</h1>
+    <h1>Phone GPS Timeline Pins ⚽ #MUFC (~500 m Clusters)</h1>
 
     <div class="info-box" id="locationInfo">
-      Waiting for location...
+      Waiting for current location...
     </div>
 
-    <input type="text" id="name" placeholder="Name / @handle" value="@iandreme" />
-    <textarea id="msg" placeholder="Your message / shoutout... (visible within ~500 m of drop location)"></textarea>
-    
-    <div class="buttons">
-      <button id="dropBtn">Drop Message</button>
-      <button id="clearBtn">Clear Drops in ~500 m</button>
+    <div class="buttons" style="display:flex; flex-wrap:wrap; justify-content:center; gap:12px;">
+      <button id="uploadBtn">Upload Timeline JSON</button>
+      <input type="file" id="fileInput" accept=".json" style="display:none;">
     </div>
     
     <div id="status"></div>
@@ -59,12 +52,12 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'root-donate-drops-local';
-    const COORD_PRECISION = 5;          // ~1.1 m grouping precision
-    const MATCH_TOLERANCE = 0.0045;     // ≈ 500 meters radius (tune here)
+    const COORD_PRECISION = 5;      // ~1.1 m grouping
+    const MATCH_TOLERANCE = 0.0045; // ≈500 meters
 
     let userLat = null;
     let userLng = null;
+    let timelinePoints = []; // {lat, lng, timestamp, accuracy?}
 
     // ─── Helpers ────────────────────────────────────────────────────
     function coordsMatch(aLat, aLng, bLat, bLng) {
@@ -75,80 +68,127 @@
       return Number(n.toFixed(COORD_PRECISION));
     }
 
-    function getDrops() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
-      } catch {
-        return [];
+    function showStatus(text, cls = '') {
+      const el = document.getElementById('status');
+      el.textContent = text;
+      el.className = cls;
+      setTimeout(() => { el.textContent = ''; el.className = ''; }, 6000);
+    }
+
+    const locInfoEl = document.getElementById('locationInfo');
+    function updateLocationInfo() {
+      if (userLat === null || userLng === null) {
+        locInfoEl.innerHTML = 'Waiting for precise GPS... (allow location access)';
+        locInfoEl.style.color = '#777';
+      } else {
+        locInfoEl.innerHTML = `📍 Current: ${userLat.toFixed(5)}, ${userLng.toFixed(5)} — showing nearby history (~500 m)`;
+        locInfoEl.style.color = '#0f5';
       }
     }
 
-    function saveDrops(drops) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(drops));
-      window.dispatchEvent(new Event('storage'));
+    // ─── Parse Google Timeline JSON (handles common 2025–2026 formats) ──
+    function parseTimelineJson(json) {
+      const points = [];
+
+      // 1. Newer on-device export: semanticSegments → timelinePath
+      if (json.semanticSegments) {
+        json.semanticSegments.forEach(seg => {
+          if (seg.timelinePath) {
+            seg.timelinePath.forEach(p => {
+              let lat, lng;
+              // Common: "point": "lat,lng" string
+              if (p.point && typeof p.point === 'string') {
+                const [latStr, lngStr] = p.point.split(',').map(s => s.trim());
+                lat = parseFloat(latStr);
+                lng = parseFloat(lngStr);
+              }
+              // Or latE7 / lngE7 if present
+              else if (p.latE7 && p.lngE7) {
+                lat = p.latE7 / 1e7;
+                lng = p.lngE7 / 1e7;
+              }
+              // Or nested point {latE7, lngE7}
+              else if (p.point && p.point.latE7 && p.point.lngE7) {
+                lat = p.point.latE7 / 1e7;
+                lng = p.point.lngE7 / 1e7;
+              }
+
+              if (!isNaN(lat) && !isNaN(lng)) {
+                points.push({
+                  lat,
+                  lng,
+                  timestamp: p.time || seg.startTime || seg.endTime || '',
+                  accuracy: p.accuracyMeters || seg.accuracyMeters || '?'
+                });
+              }
+            });
+          }
+          // Optional: also grab visit/place coords if you want stops (not paths)
+        });
+      }
+
+      // 2. Older Takeout style: flat "locations" array with latitudeE7
+      else if (json.locations) {
+        json.locations.forEach(loc => {
+          if (loc.latitudeE7 && loc.longitudeE7) {
+            points.push({
+              lat: loc.latitudeE7 / 1e7,
+              lng: loc.longitudeE7 / 1e7,
+              timestamp: loc.timestamp || loc.timestampMs ? new Date(Number(loc.timestampMs)).toISOString() : '',
+              accuracy: loc.accuracy || '?'
+            });
+          }
+        });
+      }
+
+      // Sort newest → oldest
+      points.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      return points;
     }
 
-    function addDrop(name, msg, lat, lng) {
-      const drops = getDrops();
-      drops.push({
-        name: name || 'Anonymous',
-        msg: msg || '(no message)',
-        lat: roundCoord(lat),
-        lng: roundCoord(lng),
-        timestamp: new Date().toISOString()
-      });
-      saveDrops(drops);
-    }
-
-    function clearDropsNearLocation(lat, lng) {
-      let drops = getDrops();
-      drops = drops.filter(d => !coordsMatch(d.lat, d.lng, lat, lng));
-      saveDrops(drops);
-    }
-
-    // ─── Render ─────────────────────────────────────────────────────
-    function renderDrops() {
+    // ─── Render nearby historical pins ──────────────────────────────
+    function renderPins() {
       const listEl = document.getElementById('pinList');
       if (userLat === null || userLng === null) {
-        listEl.innerHTML = '<p style="text-align:center;color:#555;padding:20px;">Waiting for GPS...</p>';
+        listEl.innerHTML = '<p style="text-align:center;color:#555;padding:20px;">Waiting for current GPS...</p>';
+        return;
+      }
+      if (timelinePoints.length === 0) {
+        listEl.innerHTML = '<p style="text-align:center;color:#555;padding:20px;">No history loaded — upload your Timeline JSON ⚽</p>';
         return;
       }
 
-      const drops = getDrops().filter(d => coordsMatch(d.lat, d.lng, userLat, userLng));
+      const nearby = timelinePoints.filter(p => coordsMatch(p.lat, p.lng, userLat, userLng));
 
-      if (drops.length === 0) {
-        listEl.innerHTML = '<p style="text-align:center;color:#555;padding:20px;">No drops within ~500 m yet — be the first! ⚽</p>';
+      if (nearby.length === 0) {
+        listEl.innerHTML = '<p style="text-align:center;color:#555;padding:20px;">No historical points within ~500 m of here</p>';
         return;
       }
 
-      listEl.innerHTML = '';
+      listEl.innerHTML = `<p style="text-align:center;color:#0f5;">${nearby.length} historical GPS points near you:</p>`;
 
       const groups = {};
-      drops.forEach(d => {
-        const key = `${d.lat.toFixed(5)},${d.lng.toFixed(5)}`;
+      nearby.forEach(p => {
+        const key = `${roundCoord(p.lat)},${roundCoord(p.lng)}`;
         if (!groups[key]) groups[key] = [];
-        groups[key].push(d);
+        groups[key].push(p);
       });
 
       Object.entries(groups).forEach(([key, group]) => {
         const [lat, lng] = key.split(',').map(Number);
         const groupDiv = document.createElement('div');
         groupDiv.className = 'location-group';
-
         groupDiv.innerHTML = `
-          <div class="location-header">📍 ${lat.toFixed(5)}, ${lng.toFixed(5)} (within ~500 m)</div>
+          <div class="location-header">📍 ${lat.toFixed(5)}, ${lng.toFixed(5)} (~500 m cluster • ${group.length} points)</div>
         `;
 
-        group.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-        group.forEach(drop => {
+        group.forEach(pt => {
           const pin = document.createElement('div');
           pin.className = 'pin';
           pin.innerHTML = `
-            <div class="pin-header">${drop.name}</div>
-            <div class="pin-msg">${drop.msg}</div>
-            <div class="pin-time">${new Date(drop.timestamp).toLocaleString()}</div>
+            <div class="pin-header">Fix @ ${pt.timestamp ? new Date(pt.timestamp).toLocaleString() : 'Unknown time'}</div>
+            <div class="pin-msg">Accuracy: ~${pt.accuracy}m</div>
+            <div class="pin-time">${pt.lat.toFixed(6)}, ${pt.lng.toFixed(6)}</div>
           `;
           groupDiv.appendChild(pin);
         });
@@ -157,90 +197,53 @@
       });
     }
 
-    // ─── UI ─────────────────────────────────────────────────────────
-    const statusEl = document.getElementById('status');
-    function showStatus(text, cls = '') {
-      statusEl.textContent = text;
-      statusEl.className = cls;
-      setTimeout(() => { statusEl.textContent = ''; statusEl.className = ''; }, 5000);
-    }
-
-    const locInfoEl = document.getElementById('locationInfo');
-
-    function updateLocationInfo() {
-      if (userLat === null || userLng === null) {
-        locInfoEl.innerHTML = 'Waiting for precise location...';
-        locInfoEl.style.color = '#777';
-      } else {
-        locInfoEl.innerHTML = `📍 Current: ${userLat.toFixed(5)}, ${userLng.toFixed(5)} (seeing drops within ~500 m)`;
-        locInfoEl.style.color = '#0f5';
-      }
-    }
-
-    // ─── Geolocation watch ──────────────────────────────────────────
+    // ─── Geolocation ────────────────────────────────────────────────
     function startWatchingLocation() {
       if (!navigator.geolocation) {
         showStatus('Geolocation not supported', 'error');
-        locInfoEl.textContent = 'Geolocation not available';
         return;
       }
-
       navigator.geolocation.watchPosition(
         pos => {
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
           updateLocationInfo();
-          renderDrops();
+          renderPins();
         },
         err => {
-          showStatus('Location access denied or unavailable', 'error');
-          locInfoEl.textContent = 'Location not available';
+          showStatus('Location denied or unavailable — check permissions', 'error');
         },
-        {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 5000
-        }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
       );
     }
 
-    // ─── Events ─────────────────────────────────────────────────────
-    document.getElementById('dropBtn').addEventListener('click', () => {
-      if (userLat === null || userLng === null) {
-        showStatus('Waiting for GPS first', 'error');
-        return;
-      }
-      const name = document.getElementById('name').value.trim();
-      const msg  = document.getElementById('msg').value.trim();
-      if (!msg) {
-        showStatus('Write a message first ⚽', 'error');
-        return;
-      }
-      addDrop(name, msg, userLat, userLng);
-      document.getElementById('msg').value = '';
-      renderDrops();
-      showStatus('Dropped! Visible in ~500 m area 📍', 'success');
+    // ─── File upload ────────────────────────────────────────────────
+    document.getElementById('uploadBtn').addEventListener('click', () => {
+      document.getElementById('fileInput').click();
     });
 
-    document.getElementById('clearBtn').addEventListener('click', () => {
-      if (userLat === null || userLng === null) {
-        showStatus('No location to clear', 'error');
-        return;
-      }
-      if (!confirm('Clear ALL drops within ~500 m of here?')) return;
-      clearDropsNearLocation(userLat, userLng);
-      renderDrops();
-      showStatus('Area drops cleared 🗑️', 'success');
-    });
-
-    window.addEventListener('storage', (e) => {
-      if (e.key === STORAGE_KEY) renderDrops();
+    document.getElementById('fileInput').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const json = JSON.parse(ev.target.result);
+          timelinePoints = parseTimelineJson(json);
+          showStatus(`Loaded ${timelinePoints.length} GPS points from history!`, 'success');
+          renderPins();
+        } catch (err) {
+          showStatus('Failed to parse JSON — check file/format', 'error');
+          console.error(err);
+        }
+      };
+      reader.readAsText(file);
     });
 
     // ─── Init ───────────────────────────────────────────────────────
     startWatchingLocation();
     updateLocationInfo();
-    renderDrops();
+    renderPins();
   </script>
 </body>
 </html>

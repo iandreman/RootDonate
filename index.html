@@ -3,126 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Donate Drops • IndexedDB • #MUFC</title>
+  <title>Root Donate Drops • Real-Time #MUFC</title>
+
+  <!-- Supabase JS client -->
+  <script src="[https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2](https://cdn.jsdelivr.net/npm/[@supabase](https://x.com/supabase)/supabase-js@2)"></script>
 
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: #000;
-      color: #eee;
-      font-family: Arial, Helvetica, sans-serif;
-    }
-    .container {
-      max-width: 580px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      color: #00ff55;
-      margin: 10px 0 16px;
-    }
-    input, textarea {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border: 1px solid #444;
-      border-radius: 8px;
-      background: #111;
-      color: white;
-      font-size: 1em;
-      box-sizing: border-box;
-    }
-    textarea { resize: vertical; min-height: 100px; }
-
-    .buttons {
-      text-align: center;
-      margin: 20px 0;
-    }
-    button {
-      padding: 13px 30px;
-      margin: 0 12px;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    #dropBtn   { background: #00cc44; color: black; }
-    #dropBtn:hover   { background: #00ff55; }
-    #clearBtn  { background: #cc0000; color: white; }
-    #clearBtn:hover  { background: #ff3333; }
-
-    #status {
-      text-align: center;
-      margin: 12px 0;
-      min-height: 1.4em;
-      font-size: 0.95em;
-    }
-    .success { color: #0f5; }
-    .error   { color: #f66; }
-
-    .pin-list {
-      margin-top: 16px;
-    }
-
-    .location-group {
-      margin-bottom: 28px;
-    }
-
-    .location-header {
-      background: #1a1a1a;
-      padding: 10px 14px;
-      border-radius: 8px 8px 0 0;
-      font-weight: bold;
-      color: #0f5;
-      border: 1px solid #333;
-      border-bottom: none;
-      font-size: 1.05em;
-    }
-
-    .pin {
-      background: #111;
-      border: 1px solid #333;
-      border-top: none;
-      padding: 14px 16px;
-      margin: 0;
-    }
-    .pin:not(:last-child) {
-      border-bottom: 1px solid #222;
-    }
-
-    .pin-header {
-      font-weight: bold;
-      color: #55ff99;
-      margin-bottom: 6px;
-    }
-    .pin-msg {
-      margin: 8px 0 10px;
-      white-space: pre-wrap;
-      line-height: 1.4;
-    }
-    .pin-time {
-      font-size: 0.82em;
-      color: #777;
-      text-align: right;
-      margin-top: 6px;
-    }
+    /* Your existing styles here – unchanged for brevity */
+    html, body { margin:0; padding:0; height:100%; background:#000; color:#eee; font-family:Arial,Helvetica,sans-serif; }
+    .container { max-width:580px; margin:0 auto; padding:20px; }
+    h1 { text-align:center; color:#00ff55; margin:10px 0 16px; }
+    input, textarea { width:100%; padding:12px; margin:10px 0; border:1px solid #444; border-radius:8px; background:#111; color:white; font-size:1em; box-sizing:border-box; }
+    textarea { resize:vertical; min-height:100px; }
+    .buttons { text-align:center; margin:20px 0; display:flex; flex-wrap:wrap; justify-content:center; gap:12px; }
+    button { padding:13px 24px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; transition:all 0.2s; min-width:140px; }
+    #dropBtn   { background:#00cc44; color:black; }
+    #dropBtn:hover   { background:#00ff55; }
+    #clearBtn  { background:#cc0000; color:white; }
+    #clearBtn:hover  { background:#ff3333; }
+    #status { text-align:center; margin:12px 0; min-height:1.4em; font-size:0.95em; }
+    .success { color:#0f5; }
+    .error   { color:#f66; }
+    .pin-list { margin-top:16px; }
+    .location-group { margin-bottom:28px; }
+    .location-header { background:#1a1a1a; padding:10px 14px; border-radius:8px 8px 0 0; font-weight:bold; color:#0f5; border:1px solid #333; border-bottom:none; font-size:1.05em; }
+    .pin { background:#111; border:1px solid #333; border-top:none; padding:14px 16px; margin:0; }
+    .pin:not(:last-child) { border-bottom:1px solid #222; }
+    .pin-header { font-weight:bold; color:#55ff99; margin-bottom:6px; }
+    .pin-msg { margin:8px 0 10px; white-space:pre-wrap; line-height:1.4; }
+    .pin-time { font-size:0.82em; color:#777; text-align:right; margin-top:6px; }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <h1>Root Donate Drops ⚽ #MUFC (IndexedDB)</h1>
+    <h1>Root Donate Drops ⚽ #MUFC (Real-Time)</h1>
 
-    <input type="text" id="name" placeholder="Name / @handle" value="@iandreme" />
+    <input type="text" id="name" placeholder="Name / [@handle](https://x.com/handle)" value="[@iandreme](https://x.com/iandreme)" />
     <textarea id="msg" placeholder="Your message / donation note / shoutout..."></textarea>
     
     <div class="buttons">
       <button id="dropBtn">Drop Message</button>
-      <button id="clearBtn">Clear All</button>
+      <button id="clearBtn">Clear All (Local Only)</button>
     </div>
     
     <div id="status"></div>
@@ -131,144 +53,107 @@
   </div>
 
   <script>
-    const DB_NAME    = 'RootDonateDropsDB';
+    // ─── Supabase Config ────────────────────────────────────────────
+    const SUPABASE_URL    = 'ekdiarbztipvogxversx';          // ← Replace
+    const SUPABASE_ANON   = 'sb_publishable_b_PuReasRGPXbHcbmY8xTA_6CoxfEgH';     // ← Replace with your anon key
+
+    const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    // ─── IndexedDB (local fallback) ─────────────────────────────────
+    const DB_NAME = 'RootDonateDropsDB';
     const DB_VERSION = 1;
     const STORE_NAME = 'drops';
-
     let db;
 
-    // Open / create DB
     function openDB() {
       return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-        request.onerror = () => {
-          reject(request.error);
-          showStatus('Database error — try refreshing', 'error');
-        };
-
-        request.onsuccess = () => {
-          db = request.result;
-          resolve(db);
-        };
-
-        request.onupgradeneeded = (event) => {
-          db = event.target.result;
-          if (!db.objectStoreNames.contains(STORE_NAME)) {
-            const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
-            store.createIndex('gps', ['lat', 'lng'], { unique: false });
-            store.createIndex('timestamp', 'timestamp', { unique: false });
-          }
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onerror = () => reject(req.error);
+        req.onsuccess = () => { db = req.result; resolve(); };
+        req.onupgradeneeded = e => {
+          const store = e.target.result.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+          store.createIndex('gps', ['lat', 'lng']);
+          store.createIndex('timestamp', 'timestamp');
         };
       });
     }
 
-    // Get all drops, sorted by timestamp desc
-    function getAllDrops() {
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_NAME, 'readonly');
-        const store = tx.objectStore(STORE_NAME);
-        const req = store.getAll();
-
-        req.onsuccess = () => resolve(req.result || []);
-        req.onerror = () => reject(req.error);
-      });
+    async function addLocalDrop(drop) {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      await tx.objectStore(STORE_NAME).add(drop);
+      return new Promise(r => tx.oncomplete = r);
     }
 
-    // Add new drop
-    function addDrop(drop) {
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        const store = tx.objectStore(STORE_NAME);
-        const req = store.add(drop);
-
-        req.onsuccess = () => resolve();
-        req.onerror = () => reject(req.error);
-      });
+    async function getLocalDrops() {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const drops = await tx.objectStore(STORE_NAME).getAll();
+      return drops;
     }
 
-    // Clear entire store
-    function clearAll() {
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        const store = tx.objectStore(STORE_NAME);
-        const req = store.clear();
+    function roundCoord(n) { return Number(n.toFixed(6)); }
 
-        req.onsuccess = () => resolve();
-        req.onerror = () => reject(req.error);
-      });
-    }
-
-    function roundCoord(num) {
-      return Number(num.toFixed(6));
-    }
-
+    // ─── Render (shared + local) ────────────────────────────────────
     async function renderDrops() {
       const listEl = document.getElementById('pinList');
-      listEl.innerHTML = '<p style="text-align:center; color:#555; padding:20px;">Loading drops...</p>';
+      listEl.innerHTML = '<p style="text-align:center;color:#555;padding:20px;">Loading drops...</p>';
 
       try {
-        const drops = await getAllDrops();
+        // Fetch shared from Supabase
+        let { data: sharedDrops, error } = await supabase
+          .from('drops')
+          .select('*')
+          .order('timestamp', { ascending: false });
 
-        listEl.innerHTML = '';
+        if (error) throw error;
 
-        if (drops.length === 0) {
-          listEl.innerHTML = '<p style="text-align:center; color:#555; padding:20px;">No drops yet — be the first! ⚽</p>';
-          return;
-        }
+        // Merge with local (optional: show local-only too)
+        const local = await getLocalDrops();
+        const allDrops = [...(sharedDrops || []), ...local.filter(l => !sharedDrops?.some(s => s.timestamp === l.timestamp))];
 
-        // Group by exact GPS
+        listEl.innerHTML = allDrops.length === 0 
+          ? '<p style="text-align:center;color:#555;padding:20px;">No drops yet — be the first! ⚽</p>'
+          : '';
+
+        // Group by GPS
         const groups = {};
-        drops.forEach(drop => {
-          const key = `${drop.lat},${drop.lng}`;
-          if (!groups[key]) groups[key] = [];
-          groups[key].push(drop);
+        allDrops.forEach(d => {
+          const key = `${d.lat},${d.lng}`;
+          groups[key] = groups[key] || [];
+          groups[key].push(d);
         });
 
-        // Sort groups by most recent drop
-        const sortedKeys = Object.keys(groups).sort((a, b) => {
-          const maxA = Math.max(...groups[a].map(d => d.timestamp));
-          const maxB = Math.max(...groups[b].map(d => d.timestamp));
-          return maxB - maxA;
-        });
+        Object.entries(groups)
+          .sort(([,a], [,b]) => Math.max(...b.map(d=>d.timestamp)) - Math.max(...a.map(d=>d.timestamp)))
+          .forEach(([key, group]) => {
+            const [lat, lng] = key.split(',').map(Number);
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'location-group';
+            groupDiv.innerHTML = `<div class="location-header">📍 ${lat}, ${lng}</div>`;
 
-        sortedKeys.forEach(key => {
-          const group = groups[key];
-          const [lat, lng] = key.split(',').map(Number);
+            group.forEach(drop => {
+              const pin = document.createElement('div');
+              pin.className = 'pin';
+              pin.innerHTML = `
+                <div class="pin-header">${drop.name || 'Anonymous'}</div>
+                <div class="pin-msg">${drop.msg || '(no message)'}</div>
+                <div class="pin-time">${new Date(drop.timestamp).toLocaleString()}</div>
+              `;
+              groupDiv.appendChild(pin);
+            });
 
-          const groupDiv = document.createElement('div');
-          groupDiv.className = 'location-group';
-
-          const header = document.createElement('div');
-          header.className = 'location-header';
-          header.textContent = `📍 ${lat}, ${lng}`;
-          groupDiv.appendChild(header);
-
-          group.forEach(drop => {
-            const pin = document.createElement('div');
-            pin.className = 'pin';
-            pin.innerHTML = `
-              <div class="pin-header">${drop.name || 'Anonymous'}</div>
-              <div class="pin-msg">${drop.msg || '(no message)'}</div>
-              <div class="pin-time">${new Date(drop.timestamp).toLocaleString()}</div>
-            `;
-            groupDiv.appendChild(pin);
+            listEl.appendChild(groupDiv);
           });
-
-          listEl.appendChild(groupDiv);
-        });
       } catch (err) {
         console.error(err);
-        listEl.innerHTML = '<p style="text-align:center; color:#f66;">Error loading drops</p>';
+        listEl.innerHTML = '<p style="text-align:center;color:#f66;">Error loading drops</p>';
       }
     }
 
     // ─── UI Helpers ─────────────────────────────────────────────────
     const statusEl = document.getElementById('status');
-
-    function showStatus(text, className = '') {
+    function showStatus(text, cls='') {
       statusEl.textContent = text;
-      statusEl.className = className;
+      statusEl.className = cls;
       setTimeout(() => { statusEl.textContent = ''; statusEl.className = ''; }, 5000);
     }
 
@@ -277,76 +162,67 @@
       try {
         await openDB();
         await renderDrops();
+
+        // Real-time subscription
+        supabase
+          .channel('drops-channel')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'drops' }, payload => {
+            renderDrops();  // Re-render on new drop
+            showStatus('New drop from the community! ⚽', 'success');
+          })
+          .subscribe();
       } catch (err) {
-        console.error('DB init failed:', err);
-        showStatus('Failed to open database — check browser permissions?', 'error');
+        showStatus('Failed to connect — check config?', 'error');
       }
     })();
 
-    // ─── User Location ──────────────────────────────────────────────
-    let userLat = 53.4631;   // Old Trafford
-    let userLng = -2.2913;
-
+    // ─── Location ───────────────────────────────────────────────────
+    let userLat = 53.4631, userLng = -2.2913;
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        pos => {
-          userLat = pos.coords.latitude;
-          userLng = pos.coords.longitude;
-          showStatus('Location ready — drop away! ⚽', 'success');
-        },
-        () => showStatus('Location denied — using Old Trafford fallback', 'error')
+        pos => { userLat = pos.coords.latitude; userLng = pos.coords.longitude; showStatus('Location ready!', 'success'); },
+        () => showStatus('Location denied — Old Trafford fallback', 'error')
       );
     }
 
-    // ─── Drop Message ───────────────────────────────────────────────
+    // ─── Drop ───────────────────────────────────────────────────────
     document.getElementById('dropBtn').addEventListener('click', async () => {
       const name = document.getElementById('name').value.trim() || 'Anonymous';
-      const msg  = document.getElementById('msg').value.trim();
+      const msg = document.getElementById('msg').value.trim();
 
-      if (!msg) {
-        showStatus('Write a message first ⚽', 'error');
-        return;
-      }
-
-      if (!db) {
-        showStatus('Database not ready yet — try again', 'error');
-        return;
-      }
+      if (!msg) return showStatus('Write something first ⚽', 'error');
 
       const lat = roundCoord(userLat);
       const lng = roundCoord(userLng);
-      const timestamp = Date.now();
+      const timestamp = new Date().toISOString();
 
-      const newDrop = { name, msg, lat, lng, timestamp };
+      const drop = { name, msg, lat, lng, timestamp };
 
       try {
-        await addDrop(newDrop);
+        // Save to Supabase (shared)
+        const { error } = await supabase.from('drops').insert([drop]);
+        if (error) throw error;
+
+        // Also save local for offline
+        await addLocalDrop({ ...drop, id: Date.now() });
+
         document.getElementById('msg').value = '';
         await renderDrops();
-        showStatus('Dropped & saved in IndexedDB! ⚽', 'success');
+        showStatus('Dropped live for everyone! ⚽', 'success');
       } catch (err) {
         console.error(err);
-        showStatus('Failed to save drop', 'error');
+        showStatus('Failed to drop — try again', 'error');
       }
     });
 
-    // ─── Clear All ──────────────────────────────────────────────────
+    // Clear All (local only – shared stays on server)
     document.getElementById('clearBtn').addEventListener('click', async () => {
-      if (!confirm('Clear ALL saved drops? This cannot be undone.')) return;
-
-      if (!db) {
-        showStatus('Database not ready', 'error');
-        return;
-      }
-
-      try {
-        await clearAll();
-        await renderDrops();
-        showStatus('All drops cleared from IndexedDB!', 'success');
-      } catch (err) {
-        console.error(err);
-        showStatus('Failed to clear drops', 'error');
-      }
+      if (!confirm('Clear your local drops? Shared ones stay.')) return;
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).clear();
+      await new Promise(r => tx.oncomplete = r);
+      await renderDrops();
+      showStatus('Local cleared!', 'success');
     });
   </script>
 </body>

@@ -84,27 +84,30 @@
       min-height: 220px;
     }
     #search-results { margin-top: 1rem; }
+    input#search-input { margin-bottom: 0.8rem; }
+    .note { font-size: 0.9rem; color: #888; margin: 0.6rem 0 1rem; }
   </style>
 </head>
 <body>
 
   <div class="container">
     <h1>Root Drops • Search & Email</h1>
-    <p class="intro">Add / search saved GPS pins • Copy HTML for email • Local only • v2026-01-22</p>
+    <p class="intro">Add / search your local GPS pins • Copy HTML for email • 100% browser storage • v2026-01-22</p>
 
     <div id="status"></div>
 
     <div class="section">
-      <h3 style="margin:0 0 1rem; color:#88ffcc;">Add New Drop (current location)</h3>
-      <input id="name" placeholder="Name/handle (optional)" value="Swagga Rico" />
-      <textarea id="msg" placeholder="Message / note..."></textarea>
+      <h3 style="margin:0 0 1rem; color:#88ffcc;">Add New Drop (uses current location)</h3>
+      <input id="name" placeholder="Name / handle (optional)" value="Swagga Rico" />
+      <textarea id="msg" placeholder="Message / note / directions..."></textarea>
       <button id="add-drop">Save Pin</button>
-      <button class="danger" onclick="clearAllDrops()">Clear All</button>
+      <button class="danger" onclick="clearAllDrops()">Clear All Pins</button>
     </div>
 
     <div class="section">
-      <h3 style="margin:0 0 1rem; color:#88ffcc;">Search All Saved Drops</h3>
-      <input id="search-input" placeholder="Keyword in name or message..." />
+      <h3 style="margin:0 0 0.6rem; color:#88ffcc;">Search All Saved Pins</h3>
+      <p class="note">Searches your local saved pins only (name, message, coords)</p>
+      <input id="search-input" placeholder="e.g. vibes, London, 51.507" autofocus />
       <button id="search-btn">Search</button>
       <div id="search-results"></div>
     </div>
@@ -115,13 +118,13 @@
     </div>
 
     <div id="preview">
-      <p style="text-align:center; color:#555; padding:3rem 0;">Select a pin to preview & copy email HTML</p>
+      <p style="text-align:center; color:#555; padding:3rem 0;">Select any pin above to preview & copy email-ready HTML card</p>
     </div>
   </div>
 
   <script>
     const STORAGE_KEY = 'root-drops-gps-email-v2026';
-    const NEARBY_RADIUS_DEG = 0.0045; // ≈500 m
+    const NEARBY_RADIUS_DEG = 0.0045; // ≈ 500 meters
 
     let userLat = null;
     let userLng = null;
@@ -178,9 +181,9 @@
       const html = generateEmailHTML(pin);
       document.getElementById('preview').innerHTML = html;
       navigator.clipboard.writeText(html).then(() => {
-        status('HTML copied → paste into email', 'success');
+        status('HTML copied – paste into email', 'success');
       }).catch(() => {
-        status('Copy failed – select text in preview', 'error');
+        status('Copy failed – select text in preview area', 'error');
       });
     }
 
@@ -195,14 +198,14 @@
     function addDrop() {
       const name = document.getElementById('name').value.trim() || 'Anonymous';
       const msg  = document.getElementById('msg').value.trim();
-      if (!msg) return status('Enter message', 'error');
-      if (!userLat || !userLng) return status('Location not ready', 'error');
+      if (!msg) return status('Please enter a message', 'error');
+      if (!userLat || !userLng) return status('Location not ready yet', 'error');
 
       const drops = getAllDrops();
       drops.push({ name, msg, lat: userLat, lng: userLng, timestamp: new Date().toISOString() });
       saveDrops(drops);
       document.getElementById('msg').value = '';
-      status('Saved ✓', 'success');
+      status('Pin saved ✓', 'success');
       renderNearby();
     }
 
@@ -238,22 +241,27 @@
 
     function searchDrops() {
       const term = document.getElementById('search-input').value.trim().toLowerCase();
-      if (!term) return status('Enter search term', 'error');
+      if (!term) {
+        document.getElementById('search-results').innerHTML = '<p style="text-align:center; color:#666; padding:1.5rem 0;">Enter a keyword to search</p>';
+        return;
+      }
 
       const drops = getAllDrops()
         .filter(d => 
           d.name.toLowerCase().includes(term) || 
           d.msg.toLowerCase().includes(term) ||
-          `${d.lat},${d.lng}`.includes(term)
+          `${d.lat.toFixed(6)},${d.lng.toFixed(6)}`.includes(term)
         )
         .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
 
       const container = document.getElementById('search-results');
       if (drops.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:#666; padding:1.5rem 0;">No matches found</p>';
+        container.innerHTML = '<p style="text-align:center; color:#666; padding:1.5rem 0;">No matching pins found in local storage</p>';
+        status('No results', 'error');
         return;
       }
-      let html = '<h4 style="color:#88ffcc; margin:1rem 0 0.8rem;">Search Results</h4>';
+
+      let html = '<h4 style="color:#88ffcc; margin:1.2rem 0 0.8rem;">Found ' + drops.length + ' match' + (drops.length === 1 ? '' : 'es') + '</h4>';
       drops.forEach(d => {
         const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
         html += `
@@ -267,36 +275,46 @@
           </div>`;
       });
       container.innerHTML = html;
-      status(`Found ${drops.length} match${drops.length === 1 ? '' : 'es'}`, 'success');
+      status('Search complete', 'success');
     }
 
     function clearAllDrops() {
-      if (!confirm('Delete ALL saved pins? Cannot undo.')) return;
+      if (!confirm('Delete ALL saved pins forever?')) return;
       localStorage.removeItem(STORAGE_KEY);
-      status('All cleared', 'success');
+      status('All local pins cleared', 'success');
       renderNearby();
       document.getElementById('search-results').innerHTML = '';
     }
 
+    // Event listeners
     document.getElementById('add-drop').onclick = addDrop;
     document.getElementById('search-btn').onclick = searchDrops;
 
+    // Press Enter in search box = search
+    document.getElementById('search-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        searchDrops();
+      }
+    });
+
+    // Load nearby on start
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         pos => {
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
-          status('Location ready', 'success');
+          status('Location ready • you can add & search pins', 'success');
           renderNearby();
         },
         err => {
-          status(`Location error: ${err.message}`, 'error');
-          document.getElementById('pins').innerHTML = '<p style="text-align:center; color:#f55; padding:2rem 0;">Location denied</p>';
+          status(`Location access issue: ${err.message}`, 'error');
+          document.getElementById('pins').innerHTML = '<p style="text-align:center; color:#f55; padding:2rem 0;">Location not available</p>';
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     } else {
-      status('Geolocation not supported', 'error');
+      status('Geolocation not supported in this browser', 'error');
     }
   </script>
 </body>

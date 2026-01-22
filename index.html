@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Root Donate • Search & Email GPS Pins</title>
+  <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     :root {
       --bg: #000;
@@ -86,18 +88,29 @@
     #search-results { margin-top: 1rem; }
     input#search-input { margin-bottom: 0.8rem; }
     .note { font-size: 0.9rem; color: #888; margin: 0.6rem 0 1rem; }
+    #p2p-status {
+      text-align: center;
+      font-weight: bold;
+      margin: 0.8rem 0;
+      padding: 0.6rem;
+      border-radius: 8px;
+      background: #0a1a0a;
+    }
+    #qr-container { text-align: center; margin: 1.2rem 0; }
+    #auto-push-toggle { margin: 0.8rem 0; }
   </style>
 </head>
 <body>
 
   <div class="container">
     <h1>Root Donate • Search & Email</h1>
-    <p class="intro">Add / search your local GPS pins • Copy HTML for email • 100% browser storage • v2026-01-22</p>
+    <p class="intro">Add / search GPS pins • Email-ready HTML • P2P sync on same WiFi • v2026-07</p>
 
+    <div id="p2p-status">P2P sync: disconnected</div>
     <div id="status"></div>
 
     <div class="section">
-      <h3 style="margin:0 0 1rem; color:#88ffcc;">Add New Drop (uses current location)</h3>
+      <h3 style="margin:0 0 1rem; color:#88ffcc;">Add New Drop</h3>
       <input id="name" placeholder="Name / handle (optional)" value="Swagga Rico" />
       <textarea id="msg" placeholder="Message / note / directions..."></textarea>
       <button id="add-drop">Save Pin</button>
@@ -105,8 +118,26 @@
     </div>
 
     <div class="section">
+      <h3 style="margin:0 0 0.6rem; color:#88ffcc;">Sync Pins on Same WiFi (P2P)</h3>
+      <p id="my-peer-id" class="note">Your Sync ID: connecting...</p>
+      
+      <div id="qr-container">
+        <canvas id="qrcode"></canvas>
+        <p class="note">Scan this QR on another device to connect quickly</p>
+      </div>
+
+      <button id="connect-peer">Connect to Friend (enter ID)</button>
+      
+      <label id="auto-push-toggle">
+        <input type="checkbox" id="auto-push" checked />
+        Auto-push new pins every 30s when connected
+      </label>
+
+      <p class="note">Both devices must open this page on same WiFi. After connect → pins push automatically if enabled.</p>
+    </div>
+
+    <div class="section">
       <h3 style="margin:0 0 0.6rem; color:#88ffcc;">Search All Saved Pins</h3>
-      <p class="note">Searches your local saved pins only (name, message, coords)</p>
       <input id="search-input" placeholder="e.g. vibes, London, 51.507" autofocus />
       <button id="search-btn">Search</button>
       <div id="search-results"></div>
@@ -118,22 +149,32 @@
     </div>
 
     <div id="preview">
-      <p style="text-align:center; color:#555; padding:3rem 0;">Select any pin above to preview & copy email-ready HTML card</p>
+      <p style="text-align:center; color:#555; padding:3rem 0;">Select a pin to preview & copy email-ready HTML</p>
     </div>
   </div>
 
   <script>
     const STORAGE_KEY = 'root-drops-gps-email-v2026';
-    const NEARBY_RADIUS_DEG = 0.0045; // ≈ 500 meters
+    const NEARBY_RADIUS_DEG = 0.0045; // ≈500m
+    const AUTO_PUSH_INTERVAL_MS = 30000; // 30 seconds
 
     let userLat = null;
     let userLng = null;
+    let peer = null;
+    let conn = null;
+    let autoPushInterval = null;
+    let hasConfirmedFirstSync = false;
+
+    const p2pStatus = document.getElementById('p2p-status');
+    const myPeerIdEl = document.getElementById('my-peer-id');
 
     function status(msg, cls = '') {
-      const el = document.getElementById('status');
-      el.textContent = msg;
-      el.className = cls;
-      setTimeout(() => { el.textContent = ''; el.className = ''; }, 4800);
+      document.getElementById('status').textContent = msg;
+      document.getElementById('status').className = cls;
+      setTimeout(() => {
+        document.getElementById('status').textContent = '';
+        document.getElementById('status').className = '';
+      }, 5000);
     }
 
     function escape(s) {
@@ -181,9 +222,9 @@
       const html = generateEmailHTML(pin);
       document.getElementById('preview').innerHTML = html;
       navigator.clipboard.writeText(html).then(() => {
-        status('HTML copied – paste into email', 'success');
+        status('HTML copied to clipboard', 'success');
       }).catch(() => {
-        status('Copy failed – select text in preview area', 'error');
+        status('Copy failed – long-press in preview', 'error');
       });
     }
 
@@ -197,21 +238,27 @@
 
     function addDrop() {
       const name = document.getElementById('name').value.trim() || 'Anonymous';
-      const msg  = document.getElementById('msg').value.trim();
-      if (!msg) return status('Please enter a message', 'error');
-      if (!userLat || !userLng) return status('Location not ready yet', 'error');
+      const msg = document.getElementById('msg').value.trim();
+      if (!msg) return status('Enter a message', 'error');
+      if (!userLat || !userLng) return status('Location not ready', 'error');
 
       const drops = getAllDrops();
-      drops.push({ name, msg, lat: userLat, lng: userLng, timestamp: new Date().toISOString() });
+      const newPin = { name, msg, lat: userLat, lng: userLng, timestamp: new Date().toISOString() };
+      drops.push(newPin);
       saveDrops(drops);
       document.getElementById('msg').value = '';
-      status('Pin saved ✓', 'success');
+      status('Pin saved', 'success');
       renderNearby();
+
+      // If connected and auto-push enabled → send immediately
+      if (conn && conn.open && document.getElementById('auto-push').checked) {
+        conn.send({ type: 'push', pin: newPin });
+      }
     }
 
     function renderNearby() {
       if (!userLat || !userLng) {
-        document.getElementById('pins').innerHTML = '<p style="text-align:center; color:#666; padding:2rem 0;">Waiting for location…</p>';
+        document.getElementById('pins').innerHTML = '<p style="text-align:center; color:#666;">Waiting for location…</p>';
         return;
       }
       const drops = getAllDrops()
@@ -220,7 +267,7 @@
 
       const container = document.getElementById('pins');
       if (drops.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:#666; padding:2rem 0;">No nearby drops (~500 m)</p>';
+        container.innerHTML = '<p style="text-align:center; color:#666;">No nearby drops</p>';
         return;
       }
       let html = '';
@@ -241,10 +288,7 @@
 
     function searchDrops() {
       const term = document.getElementById('search-input').value.trim().toLowerCase();
-      if (!term) {
-        document.getElementById('search-results').innerHTML = '<p style="text-align:center; color:#666; padding:1.5rem 0;">Enter a keyword to search</p>';
-        return;
-      }
+      if (!term) return;
 
       const drops = getAllDrops()
         .filter(d => 
@@ -256,12 +300,12 @@
 
       const container = document.getElementById('search-results');
       if (drops.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:#666; padding:1.5rem 0;">No matching pins found in local storage</p>';
+        container.innerHTML = '<p style="text-align:center; color:#666;">No matches</p>';
         status('No results', 'error');
         return;
       }
 
-      let html = '<h4 style="color:#88ffcc; margin:1.2rem 0 0.8rem;">Found ' + drops.length + ' match' + (drops.length === 1 ? '' : 'es') + '</h4>';
+      let html = `<h4 style="color:#88ffcc;">Found ${drops.length} match${drops.length === 1 ? '' : 'es'}</h4>`;
       drops.forEach(d => {
         const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
         html += `
@@ -275,46 +319,186 @@
           </div>`;
       });
       container.innerHTML = html;
-      status('Search complete', 'success');
+      status('Search done', 'success');
     }
 
     function clearAllDrops() {
-      if (!confirm('Delete ALL saved pins forever?')) return;
+      if (!confirm('Delete ALL pins?')) return;
       localStorage.removeItem(STORAGE_KEY);
-      status('All local pins cleared', 'success');
+      status('Pins cleared', 'success');
       renderNearby();
       document.getElementById('search-results').innerHTML = '';
+    }
+
+    // ──────────────────────────────────────────────
+    // P2P Sync Logic with automatic push
+    // ──────────────────────────────────────────────
+
+    let myPeerId = localStorage.getItem('root-donate-peer-id');
+    if (!myPeerId) {
+      myPeerId = 'rd-' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('root-donate-peer-id', myPeerId);
+    }
+    myPeerIdEl.textContent = `Your Sync ID: ${myPeerId}`;
+
+    // Generate QR code
+    new QRCode(document.getElementById("qrcode"), {
+      text: myPeerId,
+      width: 180,
+      height: 180,
+      colorDark: "#ffffff",
+      colorLight: "#000000",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+
+    peer = new Peer(myPeerId, {
+      config: { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] }
+    });
+
+    peer.on('open', () => {
+      p2pStatus.textContent = 'P2P ready – share ID or QR to sync';
+      p2pStatus.style.background = '#0a2a0a';
+    });
+
+    peer.on('connection', incomingConn => {
+      if (conn) conn.close(); // only one connection for simplicity
+      conn = incomingConn;
+      setupConnection();
+    });
+
+    function connectToPeer() {
+      const targetId = prompt("Enter friend's Sync ID:");
+      if (!targetId || targetId === myPeerId) return;
+      if (conn) conn.close();
+      conn = peer.connect(targetId);
+      setupConnection();
+    }
+
+    function setupConnection() {
+      conn.on('open', () => {
+        p2pStatus.textContent = 'Connected – ready to sync';
+        p2pStatus.style.background = '#1a4a1a';
+        status('Connection established', 'success');
+
+        // Send full list once on connect
+        conn.send({ type: 'full-sync', drops: getAllDrops() });
+
+        // Start auto-push if enabled
+        if (document.getElementById('auto-push').checked) {
+          startAutoPush();
+        }
+      });
+
+      conn.on('data', data => handleIncomingData(data));
+
+      conn.on('close', () => {
+        p2pStatus.textContent = 'Connection closed';
+        p2pStatus.style.background = '#2a0a0a';
+        stopAutoPush();
+      });
+
+      conn.on('error', err => {
+        p2pStatus.textContent = 'Connection error';
+        console.error(err);
+      });
+    }
+
+    function startAutoPush() {
+      stopAutoPush(); // prevent duplicates
+      autoPushInterval = setInterval(() => {
+        if (conn && conn.open) {
+          conn.send({ type: 'push-many', drops: getAllDrops() });
+        }
+      }, AUTO_PUSH_INTERVAL_MS);
+    }
+
+    function stopAutoPush() {
+      if (autoPushInterval) {
+        clearInterval(autoPushInterval);
+        autoPushInterval = null;
+      }
+    }
+
+    function handleIncomingData(data) {
+      if (data.type === 'full-sync' || data.type === 'push-many') {
+        let incoming = data.drops || [];
+        if (incoming.length === 0) return;
+
+        let local = getAllDrops();
+        const existing = new Set(local.map(d => d.timestamp));
+        let added = 0;
+
+        incoming.forEach(pin => {
+          if (!existing.has(pin.timestamp)) {
+            local.push(pin);
+            added++;
+          }
+        });
+
+        if (added > 0) {
+          local.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+          saveDrops(local);
+          renderNearby();
+
+          if (!hasConfirmedFirstSync) {
+            status(`Merged ${added} new pin${added === 1 ? '' : 's'}`, 'success');
+            hasConfirmedFirstSync = true;
+          } else {
+            status(`Auto-merged ${added} pin${added === 1 ? '' : 's'}`, 'success');
+          }
+        }
+      } else if (data.type === 'push') {
+        // Single pin push (e.g. after new drop)
+        const pin = data.pin;
+        if (!pin?.timestamp) return;
+        let local = getAllDrops();
+        if (!local.some(d => d.timestamp === pin.timestamp)) {
+          local.push(pin);
+          local.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+          saveDrops(local);
+          renderNearby();
+          status('Received new pin from peer', 'success');
+        }
+      }
     }
 
     // Event listeners
     document.getElementById('add-drop').onclick = addDrop;
     document.getElementById('search-btn').onclick = searchDrops;
+    document.getElementById('connect-peer').onclick = connectToPeer;
 
-    // Press Enter in search box = search
-    document.getElementById('search-input').addEventListener('keypress', function(e) {
+    document.getElementById('search-input').addEventListener('keypress', e => {
       if (e.key === 'Enter') {
         e.preventDefault();
         searchDrops();
       }
     });
 
-    // Load nearby on start
+    document.getElementById('auto-push').onchange = function() {
+      if (this.checked && conn && conn.open) {
+        startAutoPush();
+      } else {
+        stopAutoPush();
+      }
+    };
+
+    // Geolocation
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         pos => {
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
-          status('Location ready • you can add & search pins', 'success');
+          status('Location ready', 'success');
           renderNearby();
         },
         err => {
-          status(`Location access issue: ${err.message}`, 'error');
-          document.getElementById('pins').innerHTML = '<p style="text-align:center; color:#f55; padding:2rem 0;">Location not available</p>';
+          status(`Location error: ${err.message}`, 'error');
+          document.getElementById('pins').innerHTML = '<p style="text-align:center; color:#f55;">Location unavailable</p>';
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     } else {
-      status('Geolocation not supported in this browser', 'error');
+      status('Geolocation not supported', 'error');
     }
   </script>
 </body>

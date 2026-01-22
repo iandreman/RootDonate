@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Drops • Individual Pin to Email (HTML)</title>
+  <title>Root Drops • Single Pin → Email (HTML Copy)</title>
   <style>
     :root {
       --bg: #000;
@@ -17,71 +17,103 @@
       color: var(--text);
       font-family: system-ui, sans-serif;
       margin: 0;
-      padding: 1.5rem;
-      line-height: 1.6;
+      padding: 1rem;
+      line-height: 1.5;
     }
-    .container { max-width: 680px; margin: 0 auto; }
-    h1 { color: var(--accent); text-align: center; margin: 1rem 0 1.5rem; }
-    .intro { text-align: center; color: #888; margin-bottom: 2rem; font-size: 0.95rem; }
-    button {
-      background: #1e40af;
-      color: white;
-      border: none;
-      padding: 0.7rem 1.4rem;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      margin: 0.4rem 0;
-      transition: background 0.2s;
+    .container { max-width: 720px; margin: 0 auto; }
+    h1 {
+      color: var(--accent);
+      text-align: center;
+      margin: 1.2rem 0 0.8rem;
+      font-size: 1.8rem;
     }
-    button:hover { background: #3b82f6; }
+    .intro {
+      text-align: center;
+      color: #888;
+      margin-bottom: 1.5rem;
+      font-size: 0.92rem;
+    }
     #status {
       text-align: center;
-      margin: 1rem 0;
-      font-size: 0.95rem;
+      margin: 0.8rem 0;
+      font-size: 0.94rem;
       min-height: 1.3em;
     }
-    .success { color: #0f5; }
-    .error   { color: #f66; }
-    .pin-list { margin-top: 1.5rem; }
+    .success { color: #22ff88; }
+    .error   { color: #ff5555; }
+    .pin-list { margin: 1rem 0; }
     .pin {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 1.3rem;
-      margin: 1rem 0;
+      padding: 1.2rem;
+      margin-bottom: 1rem;
     }
-    .from { color: #88ffbb; font-weight: 700; font-size: 1.15rem; margin-bottom: 0.5rem; }
-    .msg { white-space: pre-wrap; margin: 0.8rem 0; font-size: 1.05rem; }
-    .meta { font-size: 0.9rem; color: #777; text-align: right; margin-top: 0.8rem; }
+    .from {
+      color: #88ffbb;
+      font-weight: 700;
+      font-size: 1.12rem;
+      margin-bottom: 0.5rem;
+    }
+    .msg {
+      white-space: pre-wrap;
+      margin: 0.7rem 0 1rem;
+      font-size: 1.02rem;
+    }
+    .meta {
+      font-size: 0.88rem;
+      color: #888;
+      text-align: right;
+    }
     .coords { font-family: monospace; color: #4cc9f0; }
+    button.email-btn {
+      background: #1e40af;
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.8rem;
+      transition: background 0.2s;
+    }
+    button.email-btn:hover { background: #3b82f6; }
+    #preview {
+      margin-top: 2.5rem;
+      padding-top: 2rem;
+      border-top: 1px solid #222;
+      min-height: 200px;
+    }
+    #preview .pin {
+      max-width: 580px;
+      margin: 0 auto;
+    }
   </style>
 </head>
 <body>
 
   <div class="container">
     <h1>Root Drops • Single Pin to Email</h1>
-    <p class="intro">Click any pin → copy HTML → paste into email</p>
+    <p class="intro">Click any pin → copy HTML → paste into your email client</p>
 
     <div id="status"></div>
 
-    <div class="pin-list" id="pinList"></div>
+    <div class="pin-list" id="pinList">
+      <p style="text-align:center; color:#555; padding:3rem 1rem;">Waiting for location…</p>
+    </div>
 
-    <div id="preview" style="margin-top:3rem; border-top:1px solid #222; padding-top:2rem;">
-      <p style="text-align:center; color:#555;">Select a pin above to see preview</p>
+    <div id="preview">
+      <p style="text-align:center; color:#555;">Click a pin above to preview & copy HTML</p>
     </div>
   </div>
 
   <script>
     const STORAGE_KEY     = 'root-donate-drops-v2';
     const COORD_PRECISION = 6;
-    const MATCH_TOLERANCE = 0.0045;
+    const MATCH_TOLERANCE = 0.0045; // ≈500 m
 
     let userLat = null;
     let userLng = null;
-
-    const round = n => Number(n.toFixed(COORD_PRECISION));
-    const coordsMatch = (a, b, c, d) => Math.abs(a - c) <= MATCH_TOLERANCE && Math.abs(b - d) <= MATCH_TOLERANCE;
 
     function showStatus(msg, type = '') {
       const el = document.getElementById('status');
@@ -95,17 +127,14 @@
       catch { return []; }
     }
 
-    function escapeHtml(unsafe) {
-      return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+      })[m]);
     }
 
-    function copySinglePinHtml(drop) {
-      const dt = new Date(drop.timestamp).toLocaleString([], {
+    function copyPinToClipboard(pin) {
+      const dt = new Date(pin.timestamp).toLocaleString([], {
         weekday: 'short', month: 'short', day: 'numeric',
         hour: '2-digit', minute: '2-digit'
       });
@@ -115,13 +144,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Root Drop – ${escapeHtml(drop.name || 'Anonymous')}</title>
+  <title>Root Drop – ${escapeHtml(pin.name || 'Anonymous')}</title>
   <style>
-    body { font-family: system-ui,sans-serif; background:#000; color:#e0e0e0; margin:2rem; line-height:1.6; }
-    .pin { background:#111; border:1px solid #333; border-radius:10px; padding:1.5rem; max-width:600px; margin:0 auto; }
+    body { font-family:system-ui,sans-serif; background:#000; color:#e0e0e0; margin:2rem; line-height:1.6; }
+    .pin { background:#111; border:1px solid #333; border-radius:12px; padding:1.5rem; max-width:600px; margin:0 auto; box-shadow:0 2px 12px rgba(0,255,85,0.08); }
     .from { color:#88ffbb; font-weight:700; font-size:1.3rem; margin-bottom:0.6rem; }
     .msg { white-space:pre-wrap; margin:1rem 0; font-size:1.1rem; }
-    .meta { font-size:0.95rem; color:#777; text-align:right; margin-top:1rem; }
+    .meta { font-size:0.95rem; color:#888; text-align:right; margin-top:1.2rem; }
     .coords { font-family:monospace; color:#4cc9f0; }
     a { color:#60a5fa; text-decoration:none; }
     a:hover { text-decoration:underline; }
@@ -129,39 +158,40 @@
 </head>
 <body>
   <div class="pin">
-    <div class="from">From: ${escapeHtml(drop.name || 'Anonymous')}</div>
-    <div class="msg">${escapeHtml(drop.msg)}</div>
+    <div class="from">From: ${escapeHtml(pin.name || 'Anonymous')}</div>
+    <div class="msg">${escapeHtml(pin.msg)}</div>
     <div class="meta">
       ${dt}<br>
-      <span class="coords">${drop.lat.toFixed(6)}, ${drop.lng.toFixed(6)}</span><br>
-      <a href="geo:${drop.lat.toFixed(6)},${drop.lng.toFixed(6)}">Open in Maps</a> • 
-      <a href="https://www.google.com/maps?q=${drop.lat.toFixed(6)},${drop.lng.toFixed(6)}">Google Maps</a>
+      <span class="coords">${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}</span><br>
+      <a href="geo:${pin.lat.toFixed(6)},${pin.lng.toFixed(6)}">Open in Maps</a> • 
+      <a href="https://www.google.com/maps?q=${pin.lat.toFixed(6)},${pin.lng.toFixed(6)}">Google Maps</a>
     </div>
   </div>
 </body>
 </html>`;
 
-      // Show preview
       document.getElementById('preview').innerHTML = html;
 
-      // Copy to clipboard
       navigator.clipboard.writeText(html).then(() => {
-        showStatus('HTML for this pin copied – paste into email!', 'success');
-      }).catch(() => {
-        showStatus('Copy failed – select & copy from preview', 'error');
+        showStatus('HTML copied – paste into email now!', 'success');
+      }).catch(err => {
+        showStatus('Copy failed – long-press / select text in preview', 'error');
+        console.warn(err);
       });
     }
 
-    function renderNearbyPins() {
-      if (!userLat || !userLng) {
-        document.getElementById('pinList').innerHTML = '<p style="text-align:center;color:#555;padding:3rem 0;">Waiting for location…</p>';
-        return;
-      }
+    function renderPins() {
+      if (!userLat || !userLng) return;
 
-      const drops = getDrops().filter(d => coordsMatch(d.lat, d.lng, userLat, userLng));
+      const drops = getDrops().filter(d => 
+        Math.abs(d.lat - userLat) <= MATCH_TOLERANCE && 
+        Math.abs(d.lng - userLng) <= MATCH_TOLERANCE
+      );
+
+      const listEl = document.getElementById('pinList');
 
       if (drops.length === 0) {
-        document.getElementById('pinList').innerHTML = '<p style="text-align:center;color:#555;padding:3rem 0;">No nearby pins (~500 m)</p>';
+        listEl.innerHTML = '<p style="text-align:center;color:#555;padding:4rem 1rem;">No nearby pins (~500 m)</p>';
         return;
       }
 
@@ -175,15 +205,15 @@
             <div class="from">${escapeHtml(d.name || 'Anonymous')}</div>
             <div class="msg">${escapeHtml(d.msg)}</div>
             <div class="meta">
-              ${dt} • ${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}<br>
-              <button onclick="copySinglePinHtml({name:'${escapeHtml(d.name || 'Anonymous')}', msg:'${escapeHtml(d.msg).replace(/'/g, "\\'")}', lat:${d.lat}, lng:${d.lng}, timestamp:'${d.timestamp}'})">
-                Email this pin (HTML)
-              </button>
+              ${dt} • ${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}
             </div>
+            <button class="email-btn" onclick="copyPinToClipboard({name:'${escapeHtml(d.name || 'Anonymous').replace(/'/g,"\\'")}',msg:'${escapeHtml(d.msg).replace(/'/g,"\\'")}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'})">
+              Copy HTML for Email
+            </button>
           </div>`;
       });
 
-      document.getElementById('pinList').innerHTML = html;
+      listEl.innerHTML = html;
     }
 
     if (navigator.geolocation) {
@@ -191,16 +221,16 @@
         pos => {
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
-          renderNearbyPins();
+          renderPins();
         },
         err => {
-          showStatus(`Location error: ${err.message}`, 'error');
-          document.getElementById('pinList').innerHTML = '<p style="text-align:center;color:#f66;">Cannot get location</p>';
+          showStatus(`Location failed: ${err.message}`, 'error');
+          document.getElementById('pinList').innerHTML = '<p style="text-align:center;color:#f66;padding:3rem 1rem;">Cannot get location</p>';
         },
-        { enableHighAccuracy: true, timeout: 15000 }
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
       );
     } else {
-      showStatus('Geolocation not supported', 'error');
+      showStatus('Geolocation not supported by browser', 'error');
     }
   </script>
 </body>

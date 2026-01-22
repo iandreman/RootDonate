@@ -3,117 +3,85 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Drops • Local Echoes (~500 m)</title>
-  <meta name="description" content="Drop messages tied to exact locations. Share individual pins via email."/>
-
+  <title>Root Drops • Email Pins (from localStorage)</title>
   <style>
     :root {
       --bg: #000;
       --text: #e0e0e0;
       --accent: #00ff55;
-      --accent-dark: #00cc44;
-      --danger: #ff3333;
-      --export: #ff6600;
       --surface: #111;
-      --surface-alt: #1a1a1a;
       --border: #333;
-      --email: #3b82f6;
     }
-
-    * { box-sizing: border-box; margin:0; padding:0; }
-    html, body { height:100%; background:var(--bg); color:var(--text); font-family:system-ui, -apple-system, sans-serif; line-height:1.5; }
-    .container { max-width:640px; margin:0 auto; padding:1.5rem; }
-
-    h1 { text-align:center; color:var(--accent); margin:1rem 0 1.5rem; font-size:1.8rem; font-weight:700; text-shadow:0 0 20px rgba(0,255,85,0.15); }
-
-    input, textarea { width:100%; padding:0.9rem 1rem; margin:0.6rem 0; background:#0d0d0d; border:1px solid var(--border); border-radius:12px; color:white; font-size:1rem; }
-    input:focus, textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,255,85,0.12); }
-    textarea { min-height:140px; resize:vertical; }
-
-    .buttons { display:flex; flex-wrap:wrap; gap:0.8rem; justify-content:center; margin:1.2rem 0; }
-    button { padding:0.85rem 1.8rem; border:none; border-radius:12px; font-weight:600; cursor:pointer; transition:all 0.22s ease; min-width:160px; font-size:0.95rem; }
-    button:hover { transform:translateY(-1px); }
-    #dropBtn     { background:var(--accent-dark); color:#000; }
-    #dropBtn:hover     { background:var(--accent); }
-    #clearBtn    { background:#991111; color:white; }
-    #clearBtn:hover    { background:var(--danger); }
-    #exportJsonBtn   { background:var(--export); color:white; }
-    #emailPinBtn { background:#1e40af; color:white; }
-    #emailPinBtn:hover { background:var(--email); }
-
-    #status { text-align:center; min-height:1.3em; font-size:0.92rem; margin:0.8rem 0; opacity:0; transition:opacity 0.4s; }
-    #status.visible { opacity:1; }
-    .success { color:#0f5; }
-    .error   { color:#f66; }
-
-    .section-title { color:var(--accent); font-size:1.15rem; font-weight:600; text-align:center; margin:2rem 0 0.8rem; opacity:0.9; }
-
-    .info-box { background:#181818; padding:1rem 1.2rem; border-radius:12px; margin:1rem 0; font-size:0.95rem; line-height:1.45; border:1px solid #222; }
-
-    .pin-list { margin-top:1.5rem; }
-    .location-group { margin-bottom:2.2rem; border-radius:12px; overflow:hidden; }
-    .location-header { background:var(--surface-alt); padding:0.9rem 1.2rem; font-weight:600; color:var(--accent); border:1px solid var(--border); border-bottom:none; }
-    .pin { background:var(--surface); border:1px solid var(--border); border-top:none; padding:1.2rem 1.4rem; position:relative; }
-    .pin:not(:last-child) { border-bottom:1px solid #1e1e1e; }
-    .pin-header { font-weight:700; margin-bottom:0.5rem; }
-    .drop .pin-header { color:#88ffbb; }
-    .pin-msg { white-space:pre-wrap; line-height:1.5; margin:0.6rem 0; font-size:0.97rem; }
-    .pin-time { font-size:0.84rem; color:#777; text-align:right; margin-top:0.6rem; }
-
-    .pin-actions { margin-top:0.9rem; text-align:right; }
-    .pin-email-btn {
-      background:var(--email);
-      color:white;
-      border:none;
-      padding:0.5rem 1rem;
-      border-radius:8px;
-      font-size:0.85rem;
-      cursor:pointer;
-      transition:background 0.2s;
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 1.5rem;
+      line-height: 1.6;
     }
-    .pin-email-btn:hover { background:#60a5fa; }
-
-    @media (max-width:500px) { .container { padding:1rem; } h1 { font-size:1.6rem; } button { min-width:140px; } }
+    .container { max-width: 680px; margin: 0 auto; }
+    h1 { color: var(--accent); text-align: center; margin: 1rem 0 2rem; font-size: 1.9rem; }
+    .intro { text-align: center; color: #888; margin-bottom: 2rem; font-size: 0.95rem; }
+    button {
+      background: #1e40af;
+      color: white;
+      border: none;
+      padding: 0.9rem 1.6rem;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 0.5rem;
+      transition: background 0.2s;
+    }
+    button:hover { background: #3b82f6; }
+    #status {
+      text-align: center;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+      min-height: 1.4em;
+    }
+    .success { color: #0f5; }
+    .error   { color: #f66; }
+    .pin {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.3rem;
+      margin: 1.2rem 0;
+    }
+    .from { color: #88ffbb; font-weight: 700; font-size: 1.15rem; margin-bottom: 0.5rem; }
+    .msg { white-space: pre-wrap; margin: 0.8rem 0; font-size: 1.05rem; }
+    .meta { font-size: 0.9rem; color: #777; text-align: right; margin-top: 0.8rem; }
+    .coords { font-family: monospace; color: #4cc9f0; }
+    a { color: #60a5fa; text-decoration: none; }
+    a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <h1>Root Drops • Local Echoes (~500 m)</h1>
+    <h1>Root Drops • GPS Pins to Email</h1>
+    <p class="intro">Loads your localStorage drops • formats as HTML • copy/paste or download for email</p>
 
-    <div class="info-box" id="locationInfo">Waiting for GPS fix…</div>
-
-    <div class="section-title">Leave a Message (Visible ~500 m)</div>
-    <input type="text" id="name" placeholder="Name / @handle" value="@iandreme" />
-    <textarea id="msg" placeholder="Your shout, memory, warning…"></textarea>
-
-    <div class="buttons">
-      <button id="dropBtn">Drop Message</button>
-      <button id="clearBtn">Clear My Drops (~500 m)</button>
-    </div>
-
-    <div class="buttons" style="margin-top:0.4rem;">
-      <button id="exportJsonBtn">↓ Export Nearby Drops (JSON)</button>
-      <button id="emailPinBtn">✉️ Email Current Location</button>
+    <div style="text-align:center; margin:2rem 0;">
+      <button id="generateBtn">Generate & Copy HTML Pins</button>
+      <button id="downloadBtn" disabled>Download HTML File</button>
     </div>
 
     <div id="status"></div>
 
-    <div class="section-title">Nearby Drops (~500 m)</div>
-    <div class="pin-list" id="pinList"></div>
-
-    <div class="info-box" style="margin-top:3rem; font-size:0.9rem; color:#888; text-align:center;">
-      <small>Offline • localStorage only • share individual pins via email • no servers 🌱</small>
-    </div>
+    <div id="preview" style="margin-top:2rem;"></div>
   </div>
 
   <script>
-    const STORAGE_KEY       = 'root-donate-drops-v2';
-    const COORD_PRECISION   = 6;
-    const MATCH_TOLERANCE   = 0.0045; // ~500 m
+    const STORAGE_KEY     = 'root-donate-drops-v2';
+    const COORD_PRECISION = 6;
+    const MATCH_TOLERANCE = 0.0045; // ~500 m
 
     let userLat = null;
     let userLng = null;
+    let generatedHtml = '';
 
     const round = n => Number(n.toFixed(COORD_PRECISION));
     const coordsMatch = (a, b, c, d) => Math.abs(a - c) <= MATCH_TOLERANCE && Math.abs(b - d) <= MATCH_TOLERANCE;
@@ -121,19 +89,8 @@
     function showStatus(msg, type = '') {
       const el = document.getElementById('status');
       el.textContent = msg;
-      el.className = type ? `visible ${type}` : 'visible';
-      setTimeout(() => el.className = '', 8000);
-    }
-
-    function updateLocInfo() {
-      const el = document.getElementById('locationInfo');
-      if (userLat == null) {
-        el.textContent = 'Waiting for GPS fix… (try outdoors)';
-        el.style.color = '#777';
-      } else {
-        el.innerHTML = `📍 ${userLat.toFixed(6)}, ${userLng.toFixed(6)} <small>(~500 m)</small>`;
-        el.style.color = 'var(--accent)';
-      }
+      el.className = type ? `success` : type === 'error' ? 'error' : '';
+      setTimeout(() => el.textContent = '', 6000);
     }
 
     function getDrops() {
@@ -141,182 +98,123 @@
       catch { return []; }
     }
 
-    function saveDrops(drops) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(drops));
-      window.dispatchEvent(new Event('storage'));
+    function escapeHtml(unsafe) {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
 
-    function addDrop(name, msg, lat, lng) {
-      const drops = getDrops();
-      drops.push({ name: name.trim() || 'Anonymous', msg: msg.trim() || '(empty)', lat: round(lat), lng: round(lng), timestamp: new Date().toISOString() });
-      saveDrops(drops);
-    }
-
-    function clearNearby(lat, lng) {
-      const kept = getDrops().filter(d => !coordsMatch(d.lat, d.lng, lat, lng));
-      saveDrops(kept);
-    }
-
-    function exportJson() {
-      if (!userLat) return showStatus('No location fix', 'error');
-      const drops = getDrops().filter(d => coordsMatch(d.lat, d.lng, userLat, userLng));
-      if (!drops.length) return showStatus('No nearby drops', 'error');
-
-      const data = {
-        metadata: { exported: new Date().toISOString(), center: { lat: round(userLat), lng: round(userLng), radius_m: 500 }, count: drops.length },
-        drops: drops.map(d => ({ name:d.name, message:d.msg, lat:d.lat, lng:d.lng, timestamp:d.timestamp }))
-                   .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))
-      };
-
-      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `root-drops_${new Date().toISOString().slice(0,10)}.json`;
-      a.click(); URL.revokeObjectURL(url);
-      showStatus(`Exported ${drops.length} drops`, 'success');
-    }
-
-    function sendEmailForDrop(drop) {
-      if (!userLat || !userLng) return showStatus('Need location fix', 'error');
-
-      const geoUri    = `geo:${drop.lat.toFixed(6)},${drop.lng.toFixed(6)}`;
-      const gmapsLink = `https://www.google.com/maps?q=${drop.lat.toFixed(6)},${drop.lng.toFixed(6)}`;
-
-      const subject = `Root Drop • ${drop.name} • ${drop.timestamp.split('T')[0]}`;
-
-      const body = [
-        `From: ${drop.name}`,
-        `Dropped: ${new Date(drop.timestamp).toLocaleString()}`,
-        ``,
-        drop.msg,
-        ``,
-        `📍 ${geoUri}   (tap on mobile → opens maps pin)`,
-        ``,
-        `Web: ${gmapsLink}`,
-        ``,
-        `Radius: ~500 m`,
-        `View / reply nearby → Root Drops app`,
-        ``,
-        `Offline local echoes • @iandreme`,
-      ].join('\r\n');
-
-      const mailto = `mailto:?
-subject=${encodeURIComponent(subject)}
-&body=${encodeURIComponent(body)}`;
-
-      window.open(mailto, '_blank');
-      showStatus('Email opened for this pin ✉️', 'success');
-    }
-
-    function renderAll() {
-      const list = document.getElementById('pinList');
-      if (!userLat) {
-        list.innerHTML = '<p style="text-align:center;color:#555;padding:3rem 1rem;">Waiting for GPS…</p>';
+    function generateHtmlPins() {
+      if (!navigator.geolocation) {
+        showStatus('Geolocation not supported', 'error');
         return;
       }
 
-      const drops = getDrops().filter(d => coordsMatch(d.lat, d.lng, userLat, userLng));
-      list.innerHTML = '';
-
-      if (!drops.length) {
-        list.innerHTML = '<p style="text-align:center;color:#555;padding:3rem 1rem;">No drops nearby yet 🌱</p>';
-        return;
-      }
-
-      const groups = {};
-      drops.forEach(d => {
-        const k = `${round(d.lat)},${round(d.lng)}`;
-        groups[k] = groups[k] || [];
-        groups[k].push(d);
-      });
-
-      Object.entries(groups).forEach(([k, items]) => {
-        const [lat, lng] = k.split(',').map(Number);
-        const group = document.createElement('div');
-        group.className = 'location-group';
-        group.innerHTML = `<div class="location-header">📍 ${lat.toFixed(6)}, ${lng.toFixed(6)} (${items.length})</div>`;
-
-        items.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).forEach(d => {
-          const pin = document.createElement('div');
-          pin.className = 'pin drop';
-          pin.innerHTML = `
-            <div class="pin-header">${d.name}</div>
-            <div class="pin-msg">${d.msg}</div>
-            <div class="pin-time">${new Date(d.timestamp).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</div>
-            <div class="pin-actions">
-              <button class="pin-email-btn" data-timestamp="${d.timestamp}">✉️ Email this pin</button>
-            </div>
-          `;
-          group.appendChild(pin);
-        });
-
-        list.appendChild(group);
-      });
-
-      // Attach listeners to the new buttons
-      document.querySelectorAll('.pin-email-btn').forEach(btn => {
-        btn.onclick = () => {
-          const ts = btn.dataset.timestamp;
-          const drop = drops.find(d => d.timestamp === ts);
-          if (drop) sendEmailForDrop(drop);
-        };
-      });
-    }
-
-    // ─── Current location email (draft / here) ────────────────────────────────
-    function emailCurrentLocation() {
-      if (!userLat || !userLng) return showStatus('Need GPS fix', 'error');
-
-      const name = document.getElementById('name').value.trim() || 'Anonymous';
-      const msg  = document.getElementById('msg').value.trim() || '(no message — just location)';
-
-      const fakeDrop = { name, msg, lat: userLat, lng: userLng, timestamp: new Date().toISOString() };
-      sendEmailForDrop(fakeDrop);
-    }
-
-    // ─── Event Listeners ────────────────────────────────────────────────────────
-    document.getElementById('dropBtn').onclick = () => {
-      if (!userLat) return showStatus('Waiting for GPS…', 'error');
-      const name = document.getElementById('name').value.trim();
-      const msg  = document.getElementById('msg').value.trim();
-      if (!msg) return showStatus('Message required', 'error');
-      addDrop(name, msg, userLat, userLng);
-      document.getElementById('msg').value = '';
-      renderAll();
-      showStatus('Dropped ✓', 'success');
-    };
-
-    document.getElementById('clearBtn').onclick = () => {
-      if (!userLat) return showStatus('No fix', 'error');
-      if (!confirm('Delete YOUR drops in this area?')) return;
-      clearNearby(userLat, userLng);
-      renderAll();
-      showStatus('Cleared', 'success');
-    };
-
-    document.getElementById('exportJsonBtn').onclick = exportJson;
-    document.getElementById('emailPinBtn').onclick = emailCurrentLocation;
-
-    window.addEventListener('storage', renderAll);
-
-    // ─── GPS ────────────────────────────────────────────────────────────────────
-    if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(
+      navigator.geolocation.getCurrentPosition(
         pos => {
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
-          updateLocInfo();
-          renderAll();
+
+          const drops = getDrops().filter(d => coordsMatch(d.lat, d.lng, userLat, userLng));
+          if (drops.length === 0) {
+            showStatus('No nearby pins in localStorage', 'error');
+            document.getElementById('preview').innerHTML = '<p style="text-align:center;color:#555;">No drops nearby (~500 m)</p>';
+            return;
+          }
+
+          drops.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+          const center = `${round(userLat)}, ${round(userLng)}`;
+          const exported = new Date().toLocaleString();
+
+          let html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Root Drops – ${drops.length} pins near ${center}</title>
+  <style>
+    body { font-family: system-ui,sans-serif; background:#000; color:#e0e0e0; margin:2rem; line-height:1.6; }
+    h1 { color:#00ff55; text-align:center; }
+    .intro { text-align:center; color:#888; margin:2rem 0; }
+    .pin { background:#111; border:1px solid #333; border-radius:10px; padding:1.3rem; margin:1.2rem 0; }
+    .from { color:#88ffbb; font-weight:700; font-size:1.15rem; margin-bottom:0.5rem; }
+    .msg { white-space:pre-wrap; margin:0.8rem 0; }
+    .meta { font-size:0.9rem; color:#777; text-align:right; margin-top:0.8rem; }
+    .coords { font-family:monospace; color:#4cc9f0; }
+    a { color:#60a5fa; text-decoration:none; }
+    a:hover { text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <h1>Root Drops • ${drops.length} GPS pins (~500 m)</h1>
+  <p class="intro">Exported ${exported} from ${center}<br><small>Offline local storage • @iandreme</small></p>
+  <hr style="border-color:#222;">`;
+
+          drops.forEach(d => {
+            const dt = new Date(d.timestamp).toLocaleString([], {dateStyle:'medium', timeStyle:'short'});
+            html += `
+  <div class="pin">
+    <div class="from">${escapeHtml(d.name || 'Anonymous')}</div>
+    <div class="msg">${escapeHtml(d.msg)}</div>
+    <div class="meta">
+      ${dt}<br>
+      <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span><br>
+      <a href="geo:${d.lat.toFixed(6)},${d.lng.toFixed(6)}">Open in Maps</a> • 
+      <a href="https://www.google.com/maps?q=${d.lat.toFixed(6)},${d.lng.toFixed(6)}">Google Maps</a>
+    </div>
+  </div>`;
+          });
+
+          html += `
+  <hr style="border-color:#222;">
+  <p style="text-align:center; color:#555; font-size:0.9rem;">Root Drops • Local Echoes • Share via email</p>
+</body>
+</html>`;
+
+          generatedHtml = html;
+
+          // Preview in page
+          document.getElementById('preview').innerHTML = html;
+
+          // Auto-download
+          const blob = new Blob([html], {type: 'text/html'});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `root-drops-pins-${new Date().toISOString().slice(0,10)}.html`;
+          a.click();
+          URL.revokeObjectURL(url);
+
+          // Copy to clipboard
+          navigator.clipboard.writeText(html).then(() => {
+            showStatus('HTML copied to clipboard + file downloaded – paste into email!', 'success');
+            document.getElementById('downloadBtn').disabled = false;
+          }).catch(() => {
+            showStatus('HTML generated & downloaded (clipboard copy failed)', 'success');
+          });
         },
         err => showStatus(`GPS error: ${err.message}`, 'error'),
-        { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 15000 }
       );
-    } else {
-      showStatus('Geolocation not supported', 'error');
     }
 
-    updateLocInfo();
-    renderAll();
+    document.getElementById('generateBtn').onclick = generateHtmlPins;
+
+    document.getElementById('downloadBtn').onclick = () => {
+      if (!generatedHtml) return;
+      const blob = new Blob([generatedHtml], {type: 'text/html'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `root-drops-pins-${new Date().toISOString().slice(0,10)}.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showStatus('HTML file downloaded again', 'success');
+    };
   </script>
 </body>
 </html>

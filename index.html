@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Drops • GPS Pin → Email</title>
+  <title>Root Drops • Search & Email GPS Pins</title>
   <style>
     :root {
       --bg: #000;
@@ -62,9 +62,7 @@
       margin: 0.5rem 0.5rem 0.5rem 0;
     }
     button:hover { background: #3b82f6; }
-    button.danger {
-      background: #7f1d1d;
-    }
+    button.danger { background: #7f1d1d; }
     button.danger:hover { background: #991b1b; }
     .pin {
       background: #0a0a0a;
@@ -85,34 +83,45 @@
       border-radius: 14px;
       min-height: 220px;
     }
+    #search-results { margin-top: 1rem; }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <h1>Root Drops • GPS → Email</h1>
-    <p class="intro">Save pins locally • Copy HTML cards perfect for email • v2026-01-22</p>
+    <h1>Root Drops • Search & Email</h1>
+    <p class="intro">Add / search saved GPS pins • Copy HTML for email • Local only • v2026-01-22</p>
 
     <div id="status"></div>
 
     <div class="section">
-      <h3 style="margin:0 0 1rem; color:#88ffcc;">Drop a new pin (uses your current location)</h3>
-      <input id="name" placeholder="Your name / handle (optional)" value="Swagga Rico" />
-      <textarea id="msg" placeholder="Message / note / directions..."></textarea>
+      <h3 style="margin:0 0 1rem; color:#88ffcc;">Add New Drop (current location)</h3>
+      <input id="name" placeholder="Name/handle (optional)" value="Swagga Rico" />
+      <textarea id="msg" placeholder="Message / note..."></textarea>
       <button id="add-drop">Save Pin</button>
-      <button class="danger" onclick="clearAllDrops()">Clear All My Drops</button>
+      <button class="danger" onclick="clearAllDrops()">Clear All</button>
     </div>
 
-    <div id="pins" class="section"></div>
+    <div class="section">
+      <h3 style="margin:0 0 1rem; color:#88ffcc;">Search All Saved Drops</h3>
+      <input id="search-input" placeholder="Keyword in name or message..." />
+      <button id="search-btn">Search</button>
+      <div id="search-results"></div>
+    </div>
+
+    <div id="nearby" class="section">
+      <h3 style="color:#88ffcc; margin:0.8rem 0 1.2rem;">Nearby Drops (~500 m)</h3>
+      <div id="pins"></div>
+    </div>
 
     <div id="preview">
-      <p style="text-align:center; color:#555; padding:3rem 0;">Select a pin above to preview & copy email-ready HTML</p>
+      <p style="text-align:center; color:#555; padding:3rem 0;">Select a pin to preview & copy email HTML</p>
     </div>
   </div>
 
   <script>
     const STORAGE_KEY = 'root-drops-gps-email-v2026';
-    const NEARBY_RADIUS_DEG = 0.0045; // ≈ 500 m
+    const NEARBY_RADIUS_DEG = 0.0045; // ≈500 m
 
     let userLat = null;
     let userLng = null;
@@ -130,14 +139,9 @@
 
     function generateEmailHTML(pin) {
       const date = new Date(pin.timestamp).toLocaleString('en-GB', {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
       });
-
       return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -173,63 +177,57 @@
     function copyPin(pin) {
       const html = generateEmailHTML(pin);
       document.getElementById('preview').innerHTML = html;
-
       navigator.clipboard.writeText(html).then(() => {
-        status('HTML copied → paste directly into email', 'success');
+        status('HTML copied → paste into email', 'success');
       }).catch(() => {
-        status('Copy failed – long-press & select in preview area', 'error');
+        status('Copy failed – select text in preview', 'error');
       });
+    }
+
+    function getAllDrops() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    }
+
+    function saveDrops(drops) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(drops));
     }
 
     function addDrop() {
       const name = document.getElementById('name').value.trim() || 'Anonymous';
       const msg  = document.getElementById('msg').value.trim();
+      if (!msg) return status('Enter message', 'error');
+      if (!userLat || !userLng) return status('Location not ready', 'error');
 
-      if (!msg) return status('Please enter a message', 'error');
-      if (!userLat || !userLng) return status('Location not available yet', 'error');
-
-      const drops = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-      drops.push({
-        name,
-        msg,
-        lat: userLat,
-        lng: userLng,
-        timestamp: new Date().toISOString()
-      });
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(drops));
+      const drops = getAllDrops();
+      drops.push({ name, msg, lat: userLat, lng: userLng, timestamp: new Date().toISOString() });
+      saveDrops(drops);
       document.getElementById('msg').value = '';
-      status('Pin saved ✓', 'success');
-      renderPins();
+      status('Saved ✓', 'success');
+      renderNearby();
     }
 
-    function renderPins() {
+    function renderNearby() {
       if (!userLat || !userLng) {
-        document.getElementById('pins').innerHTML = '<p style="text-align:center; color:#666; padding:3rem 0;">Waiting for location…</p>';
+        document.getElementById('pins').innerHTML = '<p style="text-align:center; color:#666; padding:2rem 0;">Waiting for location…</p>';
         return;
       }
-
-      const drops = (JSON.parse(localStorage.getItem(STORAGE_KEY)) || [])
+      const drops = getAllDrops()
         .filter(d => Math.abs(d.lat - userLat) <= NEARBY_RADIUS_DEG && Math.abs(d.lng - userLng) <= NEARBY_RADIUS_DEG)
         .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
 
       const container = document.getElementById('pins');
-
       if (drops.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:#666; padding:3rem 0;">No drops within ~500 m</p>';
+        container.innerHTML = '<p style="text-align:center; color:#666; padding:2rem 0;">No nearby drops (~500 m)</p>';
         return;
       }
-
-      let html = '<h3 style="color:#88ffcc; margin:0.8rem 0 1.2rem;">Nearby Drops</h3>';
+      let html = '';
       drops.forEach(d => {
         const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
         html += `
           <div class="pin">
             <div class="from">${escape(d.name)}</div>
             <div class="msg">${escape(d.msg)}</div>
-            <div class="meta">
-              ${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span>
-            </div>
+            <div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div>
             <button onclick="copyPin({name:'${escape(d.name).replace(/'/g,"\\'")}', msg:'${escape(d.msg).replace(/'/g,"\\'")}', lat:${d.lat}, lng:${d.lng}, timestamp:'${d.timestamp}'})">
               Copy Email HTML
             </button>
@@ -238,26 +236,62 @@
       container.innerHTML = html;
     }
 
+    function searchDrops() {
+      const term = document.getElementById('search-input').value.trim().toLowerCase();
+      if (!term) return status('Enter search term', 'error');
+
+      const drops = getAllDrops()
+        .filter(d => 
+          d.name.toLowerCase().includes(term) || 
+          d.msg.toLowerCase().includes(term) ||
+          `${d.lat},${d.lng}`.includes(term)
+        )
+        .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      const container = document.getElementById('search-results');
+      if (drops.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#666; padding:1.5rem 0;">No matches found</p>';
+        return;
+      }
+      let html = '<h4 style="color:#88ffcc; margin:1rem 0 0.8rem;">Search Results</h4>';
+      drops.forEach(d => {
+        const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+        html += `
+          <div class="pin">
+            <div class="from">${escape(d.name)}</div>
+            <div class="msg">${escape(d.msg)}</div>
+            <div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div>
+            <button onclick="copyPin({name:'${escape(d.name).replace(/'/g,"\\'")}', msg:'${escape(d.msg).replace(/'/g,"\\'")}', lat:${d.lat}, lng:${d.lng}, timestamp:'${d.timestamp}'})">
+              Copy Email HTML
+            </button>
+          </div>`;
+      });
+      container.innerHTML = html;
+      status(`Found ${drops.length} match${drops.length === 1 ? '' : 'es'}`, 'success');
+    }
+
     function clearAllDrops() {
-      if (!confirm('Delete ALL saved drops permanently?\nThis cannot be undone.')) return;
+      if (!confirm('Delete ALL saved pins? Cannot undo.')) return;
       localStorage.removeItem(STORAGE_KEY);
-      status('All drops cleared', 'success');
-      renderPins();
+      status('All cleared', 'success');
+      renderNearby();
+      document.getElementById('search-results').innerHTML = '';
     }
 
     document.getElementById('add-drop').onclick = addDrop;
+    document.getElementById('search-btn').onclick = searchDrops;
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         pos => {
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
-          status('Location acquired • ready to drop pins', 'success');
-          renderPins();
+          status('Location ready', 'success');
+          renderNearby();
         },
         err => {
-          status(`Location failed: ${err.message} • check browser permissions`, 'error');
-          document.getElementById('pins').innerHTML = '<p style="text-align:center; color:#f55; padding:3rem 0;">Location access denied</p>';
+          status(`Location error: ${err.message}`, 'error');
+          document.getElementById('pins').innerHTML = '<p style="text-align:center; color:#f55; padding:2rem 0;">Location denied</p>';
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );

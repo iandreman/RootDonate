@@ -3,30 +3,76 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Donate • GPS Tracker (Local Only)</title>
+  <title>Root Donate • GPS Tracker</title>
   <style>
-    :root { --bg:#000; --text:#e0e0e0; --accent:#00ff88; --surface:#0f0f0f; --border:#2a2a2a; --blue:#4cc9ff; }
-    body { background:var(--bg); color:var(--text); font-family:system-ui,sans-serif; margin:0; padding:1rem; line-height:1.55; }
-    .container { max-width:720px; margin:0 auto; }
-    h1 { color:var(--accent); text-align:center; margin:1.4rem 0 0.8rem; font-size:2.1rem; }
-    .intro { text-align:center; color:#777; margin-bottom:1.6rem; font-size:0.98rem; }
-    #status { text-align:center; margin:0.8rem 0; font-size:0.96rem; min-height:1.3em; }
-    .success { color:#0f8; } .error { color:#f55; }
-    .section { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.4rem; margin:1.2rem 0; }
-    input, textarea { width:100%; padding:0.7rem; margin:0.5rem 0; background:#1a1a1a; color:#eee; border:1px solid #444; border-radius:8px; font-size:1rem; box-sizing:border-box; }
-    textarea { min-height:110px; resize:vertical; }
-    button { background:#1d4ed8; color:white; border:none; padding:0.8rem 1.5rem; border-radius:8px; font-weight:600; cursor:pointer; margin:0.5rem 0.3rem 0.5rem 0; }
-    button:hover { background:#3b82f6; }
-    button.danger { background:#7f1d1d; } button.danger:hover { background:#991b1b; }
-    button.active { background:#059669; }
-    .pin { background:#0a0a0a; border:1px solid #222; border-radius:12px; padding:1.3rem; margin:1.1rem 0; }
-    .from { color:#88ffcc; font-weight:700; font-size:1.22rem; margin-bottom:0.5rem; }
-    .msg { white-space:pre-wrap; margin:0.9rem 0; font-size:1.05rem; }
-    .meta { font-size:0.92rem; color:#888; text-align:right; margin-top:0.9rem; }
-    .coords { font-family:monospace; color:var(--blue); font-weight:500; }
-    #preview { margin-top:2.5rem; padding:1.8rem; background:#050505; border:1px dashed #333; border-radius:14px; min-height:260px; overflow:auto; }
-    #search-results { margin-top:1rem; }
-    .map-img { width:100%; max-width:500px; border-radius:12px; margin:1rem 0; display:block; }
+    :root {
+      --bg: #000;
+      --text: #e0e0e0;
+      --accent: #00ff88;
+      --surface: #0f0f0f;
+      --border: #2a2a2a;
+      --blue: #4cc9ff;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 1rem;
+      line-height: 1.55;
+    }
+    .container { max-width: 720px; margin: 0 auto; }
+    h1 { color: var(--accent); text-align: center; margin: 1.4rem 0 0.8rem; font-size: 2.1rem; }
+    .intro { text-align: center; color: #777; margin-bottom: 1.6rem; font-size: 0.98rem; }
+    #status { text-align: center; margin: 0.8rem 0; font-size: 0.96rem; min-height: 1.3em; }
+    .success { color: #0f8; } .error { color: #f55; }
+    .section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.4rem; margin: 1.2rem 0; }
+    input, textarea {
+      width: 100%;
+      padding: 0.7rem;
+      margin: 0.5rem 0;
+      background: #1a1a1a;
+      color: #eee;
+      border: 1px solid #444;
+      border-radius: 8px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    textarea { min-height: 110px; resize: vertical; }
+    button {
+      background: #1d4ed8;
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 0.5rem 0.3rem 0.5rem 0;
+    }
+    button:hover { background: #3b82f6; }
+    button.danger { background: #7f1d1d; }
+    button.danger:hover { background: #991b1b; }
+    button.active { background: #059669; }
+    .pin {
+      background: #0a0a0a;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 1.3rem;
+      margin: 1.1rem 0;
+    }
+    .from { color: #88ffcc; font-weight: 700; font-size: 1.22rem; margin-bottom: 0.5rem; }
+    .msg { white-space: pre-wrap; margin: 0.9rem 0; font-size: 1.05rem; }
+    .meta { font-size: 0.92rem; color: #888; text-align: right; margin-top: 0.9rem; }
+    .coords { font-family: monospace; color: var(--blue); font-weight: 500; }
+    #preview {
+      margin-top: 2.5rem;
+      padding: 1.8rem;
+      background: #050505;
+      border: 1px dashed #333;
+      border-radius: 14px;
+      min-height: 260px;
+      overflow: auto;
+    }
   </style>
 </head>
 <body>
@@ -41,7 +87,7 @@
       <textarea id="msg" placeholder="Message / note... (optional for auto)"></textarea>
       <div style="margin-top:1rem;">
         <button id="add-drop">Save Manual Pin</button>
-        <button id="toggle-auto" class="">Toggle Auto-Track (off)</button>
+        <button id="toggle-auto">Toggle Auto-Track (off)</button>
         <button class="danger" onclick="clearAllDrops()">Clear All Pins</button>
       </div>
     </div>
@@ -59,16 +105,19 @@
     </div>
 
     <div id="preview">
-      <p style="text-align:center; color:#555; padding:4rem 0;">Click pin → Copy Email HTML or Social Snippet</p>
+      <p style="text-align:center; color:#555; padding:4rem 0;">
+        Select a pin above → copy formatted version
+      </p>
     </div>
   </div>
 
   <script>
     const STORAGE_KEY = 'root-gps-tracker-2026';
-    const AUTO_SAVE_INTERVAL_MS = 60000;
-    const NEARBY_RADIUS_DEG = 0.0045; // ~500m
+    const AUTO_SAVE_INTERVAL_MS = 60000;           // 1 min
+    const NEARBY_RADIUS_DEG = 0.0045;              // ~500 m at equator
 
-    let userLat = null, userLng = null;
+    let userLat = null;
+    let userLng = null;
     let watchId = null;
     let autoSaveInterval = null;
     let autoTracking = false;
@@ -81,49 +130,94 @@
       setTimeout(() => { statusEl.textContent = ''; statusEl.className = ''; }, 5000);
     }
 
-    function escape(s) {
-      return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[c]);
+    function escapeHTML(str) {
+      return (str || '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+      })[c]);
     }
 
-      let html = `<!DOCTYPE html>
+    function generateEmailHTML(pin) {
+      const name = pin.name || 'Anonymous';
+      const msg = pin.msg || '(auto-tracked position)';
+      const dt = new Date(pin.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+
+      return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📍 ${escape(pin.name||'Anon')} Drop</title>
+  <title>📍 ${escapeHTML(name)} Drop</title>
   <style>
-    body{font-family:system-ui,sans-serif;background:#000;color:#e0e0e0;margin:2rem;line-height:1.6;}
-    .card{background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:2rem;max-width:640px;margin:0 auto;}
-    .from{color:#88ffcc;font-weight:700;font-size:1.5rem;margin-bottom:1rem;}
-    .msg{white-space:pre-wrap;margin:1.4rem 0;font-size:1.2rem;}
-    .meta{font-size:1rem;color:#888;text-align:right;margin-top:1.6rem;}
-    .coords{font-family:monospace;color:#4cc9ff;font-weight:500;}
-    a{color:#60a5fa;text-decoration:none;margin:0 0.8em;}
-    a:hover{text-decoration:underline;}
-    img{max-width:100%;border-radius:12px;margin:1rem 0;}
+    body { font-family:system-ui,sans-serif; background:#000; color:#e0e0e0; margin:2rem; line-height:1.6; }
+    .card { background:#111; border:1px solid #2a2a2a; border-radius:16px; padding:2rem; max-width:640px; margin:0 auto; }
+    .from { color:#88ffcc; font-weight:700; font-size:1.5rem; margin-bottom:1rem; }
+    .msg { white-space:pre-wrap; margin:1.4rem 0; font-size:1.2rem; }
+    .meta { font-size:1rem; color:#888; text-align:right; margin-top:1.6rem; }
+    .coords { font-family:monospace; color:#4cc9ff; font-weight:500; }
   </style>
 </head>
 <body>
   <div class="card">
-    <div class="from">📍 From: ${escape(pin.name||'Anonymous')}</div>
-    <div class="msg">${escape(pin.msg || '(auto-tracked position)')}</div>
+    <div class="from">📍 From: ${escapeHTML(name)}</div>
+    <div class="msg">${escapeHTML(msg)}</div>
+    <div class="meta">${dt} • <span class="coords">${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}</span></div>
   </div>
 </body>
 </html>`;
-
-      return html;
     }
 
-    function getAllDrops() { 
-      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } 
-      catch { return []; } 
+    function generateSocialSnippet(pin) {
+      const name = pin.name || 'Anon';
+      const msgPart = pin.msg ? `\n${pin.msg}` : '';
+      const coords = `${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`;
+      const dt = new Date(pin.timestamp).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' });
+      return `📍 ${name}${pin.auto ? ' [auto]' : ''}${msgPart}\n${coords} • ${dt} #RootDonate`;
     }
-    function saveDrops(drops) { localStorage.setItem(STORAGE_KEY, JSON.stringify(drops)); }
+
+    async function copyToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        showStatus('Copied to clipboard!', 'success');
+      } catch (err) {
+        showStatus('Copy failed – try manually', 'error');
+        console.error(err);
+      }
+    }
+
+    function copyPin(pin, format) {
+      let content = '';
+      if (format === 'email') {
+        content = generateEmailHTML(pin);
+      } else if (format === 'social') {
+        content = generateSocialSnippet(pin);
+      }
+      if (content) copyToClipboard(content);
+    }
+
+    function getAllDrops() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveDrops(drops) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(drops));
+    }
 
     function savePin(name = 'Swagga Rico', msg = '', isAuto = false) {
       if (!userLat || !userLng) return showStatus('No GPS fix yet', 'error');
+
       const drops = getAllDrops();
-      const newPin = { name, msg: isAuto ? '' : msg, lat: userLat, lng: userLng, timestamp: new Date().toISOString(), auto: isAuto };
+      const newPin = {
+        name,
+        msg: isAuto ? '' : msg.trim(),
+        lat: userLat,
+        lng: userLng,
+        timestamp: new Date().toISOString(),
+        auto: isAuto
+      };
       drops.push(newPin);
       saveDrops(drops);
       showStatus(isAuto ? 'Auto-pin saved' : 'Pin saved', 'success');
@@ -157,19 +251,47 @@
     }
 
     function startWatching() {
-      if (navigator.geolocation) {
-        watchId = navigator.geolocation.watchPosition(
-          pos => {
-            userLat = pos.coords.latitude;
-            userLng = pos.coords.longitude;
-            renderNearby();
-          },
-          err => showStatus(`GPS error: ${err.message}`, 'error'),
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
-        );
-      } else {
+      if (!navigator.geolocation) {
         showStatus('Geolocation not supported', 'error');
+        return;
       }
+      watchId = navigator.geolocation.watchPosition(
+        pos => {
+          userLat = pos.coords.latitude;
+          userLng = pos.coords.longitude;
+          renderNearby();
+        },
+        err => showStatus(`GPS error: ${err.message}`, 'error'),
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
+      );
+    }
+
+    function renderPinList(containerId, drops, showCopyButtons = false) {
+      const container = document.getElementById(containerId);
+      if (drops.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#666;">No pins found</p>';
+        return;
+      }
+
+      let html = '';
+      drops.forEach(d => {
+        const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+        const label = d.auto ? '[auto]' : '';
+        html += `
+          <div class="pin">
+            <div class="from">${escapeHTML(d.name)} ${label}</div>
+            <div class="msg">${escapeHTML(d.msg || '(no note)')}</div>
+            <div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div>
+        `;
+        if (showCopyButtons) {
+          html += `
+            <button onclick='copyPin(${JSON.stringify(d)}, "email")'>Copy Email HTML</button>
+            <button onclick='copyPin(${JSON.stringify(d)}, "social")'>Copy Social Post</button>
+          `;
+        }
+        html += '</div>';
+      });
+      container.innerHTML = html;
     }
 
     function renderNearby() {
@@ -180,27 +302,9 @@
 
       const drops = getAllDrops()
         .filter(d => Math.abs(d.lat - userLat) <= NEARBY_RADIUS_DEG && Math.abs(d.lng - userLng) <= NEARBY_RADIUS_DEG)
-        .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-      const container = document.getElementById('pins');
-      if (drops.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#666;">No nearby pins</p>';
-        return;
-      }
-
-      let html = `<p style="color:#88ffcc; margin:0 0 1rem;">Nearby (${drops.length})</p>`;
-      drops.forEach(d => {
-        const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle:'medium', timeStyle:'short' });
-        const label = d.auto ? '[auto]' : '';
-        const safeName = escape(d.name).replace(/'/g, "\\'");
-        const safeMsg  = escape(d.msg || '(no note)').replace(/'/g, "\\'");
-        html += `<div class="pin">
-          <div class="from">${escape(d.name)} ${label}</div>
-          <div class="msg">${escape(d.msg || '(no note)')}</div>
-          <div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div>
-          </div>`;
-      });
-      container.innerHTML = html;
+      renderPinList('pins', drops, false);
     }
 
     function searchPins() {
@@ -211,36 +315,15 @@
       }
 
       const drops = getAllDrops()
-        .filter(d => 
-          d.name.toLowerCase().includes(term) || 
-          (d.msg || '').toLowerCase().includes(term) || 
+        .filter(d =>
+          d.name.toLowerCase().includes(term) ||
+          (d.msg || '').toLowerCase().includes(term) ||
           `${d.lat.toFixed(6)},${d.lng.toFixed(6)}`.includes(term)
         )
-        .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-      const container = document.getElementById('search-results');
-      if (drops.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#666;">No matches</p>';
-        showStatus('No results', 'error');
-        return;
-      }
-
-      let html = `<p style="color:#88ffcc; margin:0 0 1rem;">Found ${drops.length}</p>`;
-      drops.forEach(d => {
-        const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle:'medium', timeStyle:'short' });
-        const label = d.auto ? '[auto]' : '';
-        const safeName = escape(d.name).replace(/'/g, "\\'");
-        const safeMsg  = escape(d.msg || '(no note)').replace(/'/g, "\\'");
-        html += `<div class="pin">
-          <div class="from">${escape(d.name)} ${label}</div>
-          <div class="msg">${escape(d.msg || '(no note)')}</div>
-          <div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div>
-          <button onclick="copyPin({name:'${safeName}',msg:'${safeMsg}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'}, 'email')">Copy Email HTML</button>
-          <button onclick="copyPin({name:'${safeName}',msg:'${safeMsg}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'}, 'social')">Copy Social Post</button>
-        </div>`;
-      });
-      container.innerHTML = html;
-      showStatus(`Found ${drops.length}`, 'success');
+      renderPinList('search-results', drops, true);
+      showStatus(`Found ${drops.length}`, drops.length > 0 ? 'success' : 'error');
     }
 
     function clearAllDrops() {
@@ -251,7 +334,7 @@
       document.getElementById('search-results').innerHTML = '';
     }
 
-    // Events
+    // Event listeners
     document.getElementById('add-drop').onclick = addManualDrop;
     document.getElementById('toggle-auto').onclick = toggleAutoTrack;
     document.getElementById('search-btn').onclick = searchPins;
@@ -259,8 +342,16 @@
       if (e.key === 'Enter') searchPins();
     });
 
+    // Start
     startWatching();
     renderNearby();
   </script>
+
+  <!--
+    Future remote GPS support ideas:
+    • POST new pins to your server → fetch('/api/pins', {method:'POST', body: JSON.stringify(newPin)})
+    • GET remote pins → fetch('/api/pins?user=swagga').then(r=>r.json()).then(renderRemote)
+    • Add toggle for "Show remote pins" + merge local + remote in display
+  -->
 </body>
 </html>

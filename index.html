@@ -37,11 +37,6 @@
     input#search-input { margin-bottom: 0.8rem; }
     .note { font-size: 0.9rem; color: #888; margin: 0.6rem 0 1rem; }
     #p2p-status, #room-status { text-align: center; font-weight: bold; margin: 0.8rem 0; padding: 0.6rem; border-radius: 8px; }
-    #auto-push-toggle { margin: 0.8rem 0; }
-    #consent-section { border-color: #ffcc00; background: #1a1a00; }
-    #consent-section h3 { color: #ffcc00; }
-    #consent-section p { color: #ffdd77; }
-    #consent-section .note { color: #ff9999; }
   </style>
 </head>
 <body>
@@ -71,25 +66,12 @@
       <div id="search-results"></div>
     </div>
 
-    <div id="consent-section" class="section">
-      <h3 style="margin:0 0 1rem;">Consent: Share GPS Pins?</h3>
-      <p style="margin-bottom:1rem;">
-        <strong>Warning:</strong> Joining a room shares your saved pins (exact GPS coords) with others in the room.<br>
-        Only join trusted rooms. You control what/when to share.
-      </p>
-      <label style="display:flex; align-items:center; font-size:1.1rem; cursor:pointer;">
-        <input type="checkbox" id="share-consent" style="margin-right:0.8rem; transform:scale(1.4);" />
-        I consent to sharing my saved GPS pins over P2P in rooms.
-      </label>
-      <p class="note" style="margin-top:1rem;">Uncheck anytime to stop sharing. No auto-share without this checked.</p>
-    </div>
-
     <div class="section">
       <h3 style="margin:0 0 0.6rem; color:#88ffcc;">Sync via Room Code (P2P)</h3>
       <input id="room-code" placeholder="Room code (e.g. rico-drop-23)" style="margin-bottom:0.8rem;" />
       <button id="join-room">Join Room & Sync</button>
       <button id="leave-room" class="danger" style="display:none;">Leave Room</button>
-      <p class="note">Share code with friends on same WiFi/internet. Pins push if connected & auto enabled.</p>
+      <p class="note">Share code with friends on same WiFi/internet. Pins auto-push if connected.</p>
       <p id="my-peer-id" class="note">Your Sync ID: connecting...</p>
     </div>
 
@@ -117,12 +99,9 @@
     const p2pStatus = document.getElementById('p2p-status');
     const roomStatus = document.getElementById('room-status');
     const myPeerIdEl = document.getElementById('my-peer-id');
-    const consentCheck = document.getElementById('share-consent');
-    const joinBtn = document.getElementById('join-room');
-    const leaveBtn = document.getElementById('leave-room');
 
     // ── Ably Signaling ──
-    const ABLY_KEY = 'Exqsug.WFHsuQ:sM6yRLAsZhB3cbZYwblx5qdezyXryw3kLekpenb-Ves'; // ← PASTE YOUR KEY
+    const ABLY_KEY = 'YOUR_ABLY_API_KEY_HERE'; // ← PASTE YOUR KEY HERE
     const ably = new Ably.Realtime({ key: ABLY_KEY });
     let roomChannel = null;
     let currentRoom = null;
@@ -166,7 +145,7 @@
       status('Pin saved', 'success');
       renderNearby();
 
-      if (conn?.open && consentCheck.checked && document.getElementById('auto-push')?.checked) {
+      if (conn?.open && document.getElementById('auto-push')?.checked) {
         conn.send({ type: 'push', pin: newPin });
       }
     }
@@ -240,7 +219,7 @@
         p2pStatus.style.background = '#1a4a1a';
         status('P2P connected', 'success');
         conn.send({ type: 'full-sync', drops: getAllDrops() });
-        if (consentCheck.checked && document.getElementById('auto-push')?.checked) startAutoPush();
+        if (document.getElementById('auto-push')?.checked) startAutoPush();
       });
 
       conn.on('data', data => handleIncomingData(data));
@@ -255,7 +234,7 @@
     function startAutoPush() {
       stopAutoPush();
       autoPushInterval = setInterval(() => {
-        if (conn?.open && consentCheck.checked) conn.send({ type: 'push-many', drops: getAllDrops() });
+        if (conn?.open) conn.send({ type: 'push-many', drops: getAllDrops() });
       }, AUTO_PUSH_INTERVAL_MS);
     }
 
@@ -290,17 +269,7 @@
     }
 
     // ── Room Join/Leave ──
-    function updateSyncUI() {
-      const canSync = consentCheck.checked;
-      joinBtn.disabled = !canSync;
-      document.getElementById('auto-push-toggle').style.opacity = canSync ? '1' : '0.5';
-      if (!canSync && roomChannel) leaveRoom();
-    }
-
-    consentCheck.onchange = updateSyncUI;
-
     function joinRoom() {
-      if (!consentCheck.checked) return status('Consent required', 'error');
       currentRoom = document.getElementById('room-code').value.trim();
       if (!currentRoom) return status('Enter room code', 'error');
 
@@ -321,8 +290,8 @@
         setupConnection();
       });
 
-      joinBtn.style.display = 'none';
-      leaveBtn.style.display = 'inline-block';
+      document.getElementById('join-room').style.display = 'none';
+      document.getElementById('leave-room').style.display = 'inline-block';
     }
 
     function leaveRoom() {
@@ -333,13 +302,13 @@
       if (conn) conn.close();
       roomStatus.textContent = 'Room: not joined';
       roomStatus.style.background = '#2a0a0a';
-      joinBtn.style.display = 'inline-block';
-      leaveBtn.style.display = 'none';
+      document.getElementById('join-room').style.display = 'inline-block';
+      document.getElementById('leave-room').style.display = 'none';
       stopAutoPush();
     }
 
-    joinBtn.onclick = joinRoom;
-    leaveBtn.onclick = leaveRoom;
+    document.getElementById('join-room').onclick = joinRoom;
+    document.getElementById('leave-room').onclick = leaveRoom;
 
     // Event listeners
     document.getElementById('add-drop').onclick = addDrop;
@@ -361,8 +330,6 @@
     } else {
       status('Geolocation not supported', 'error');
     }
-
-    updateSyncUI();
   </script>
 </body>
 </html>

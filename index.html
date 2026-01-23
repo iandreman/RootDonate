@@ -23,7 +23,6 @@
     }
     .container { max-width: 720px; margin: 0 auto; }
     h1 { color: var(--accent); text-align: center; margin: 1.4rem 0 0.8rem; font-size: 2.1rem; }
-    .intro { text-align: center; color: #777; margin-bottom: 1.6rem; font-size: 0.98rem; }
     #status { text-align: center; margin: 0.8rem 0; font-size: 0.96rem; min-height: 1.3em; }
     .success { color: #0f8; } .error { color: #f55; }
     .section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.4rem; margin: 1.2rem 0; }
@@ -64,15 +63,6 @@
     .msg { white-space: pre-wrap; margin: 0.9rem 0; font-size: 1.05rem; }
     .meta { font-size: 0.92rem; color: #888; text-align: right; margin-top: 0.9rem; }
     .coords { font-family: monospace; color: var(--blue); font-weight: 500; }
-    #preview {
-      margin-top: 2.5rem;
-      padding: 1.8rem;
-      background: #050505;
-      border: 1px dashed #333;
-      border-radius: 14px;
-      min-height: 260px;
-      overflow: auto;
-    }
   </style>
 </head>
 <body>
@@ -103,21 +93,14 @@
       <h3 style="color:#88ffcc; margin:0.8rem 0 1.2rem;">Nearby Pins (~500 m)</h3>
       <div id="pins"></div>
     </div>
-
-    <div id="preview">
-      <p style="text-align:center; color:#555; padding:4rem 0;">
-        Select a pin above → copy formatted version
-      </p>
-    </div>
   </div>
 
   <script>
     const STORAGE_KEY = 'root-gps-tracker-2026';
-    const AUTO_SAVE_INTERVAL_MS = 60000;           // 1 min
-    const NEARBY_RADIUS_DEG = 0.0045;              // ~500 m at equator
+    const AUTO_SAVE_INTERVAL_MS = 60000;
+    const NEARBY_RADIUS_DEG = 0.0045; // ~500 m
 
-    let userLat = null;
-    let userLng = null;
+    let userLat = null, userLng = null;
     let watchId = null;
     let autoSaveInterval = null;
     let autoTracking = false;
@@ -137,41 +120,65 @@
     }
 
     function generateEmailHTML(pin) {
-      const name = pin.name || 'Anonymous';
-      const msg = pin.msg || '(auto-tracked position)';
-      const dt = new Date(pin.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+      const name    = pin.name || 'Anonymous';
+      const msg     = pin.msg || '(auto-tracked position)';
+      const dt      = new Date(pin.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+      const coords  = `${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`;
+      const autoTag = pin.auto ? ' [auto]' : '';
 
       return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📍 ${escapeHTML(name)} Drop</title>
+  <title>📍 ${escapeHTML(name)}${autoTag} Drop</title>
   <style>
     body { font-family:system-ui,sans-serif; background:#000; color:#e0e0e0; margin:2rem; line-height:1.6; }
     .card { background:#111; border:1px solid #2a2a2a; border-radius:16px; padding:2rem; max-width:640px; margin:0 auto; }
     .from { color:#88ffcc; font-weight:700; font-size:1.5rem; margin-bottom:1rem; }
     .msg { white-space:pre-wrap; margin:1.4rem 0; font-size:1.2rem; }
-    .meta { font-size:1rem; color:#888; text-align:right; margin-top:1.6rem; }
+    .meta { font-size:1rem; color:#888; text-align:right; margin:1.6rem 0 1.2rem; }
     .coords { font-family:monospace; color:#4cc9ff; font-weight:500; }
+    .footer { 
+      font-size:0.95rem; 
+      color:#777; 
+      text-align:center; 
+      margin-top:2.2rem; 
+      padding-top:1.2rem; 
+      border-top:1px solid #222; 
+    }
+    .footer a { color:#60a5fa; text-decoration:none; }
+    .footer a:hover { text-decoration:underline; }
   </style>
 </head>
 <body>
   <div class="card">
-    <div class="from">📍 From: ${escapeHTML(name)}</div>
+    <div class="from">📍 From: ${escapeHTML(name)}${autoTag}</div>
     <div class="msg">${escapeHTML(msg)}</div>
-    <div class="meta">${dt} • <span class="coords">${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}</span></div>
+    <div class="meta">${dt} • <span class="coords">${coords}</span></div>
+
+    <div class="footer">
+      Root Donate • Drop your roots where it matters 🌱<br>
+      Build the map together • <a href="https://x.com/iandreme">@iandreme</a><br>
+      Every pin counts 🗺️ #RootDonate
+    </div>
   </div>
 </body>
 </html>`;
     }
 
     function generateSocialSnippet(pin) {
-      const name = pin.name || 'Anon';
+      const name    = pin.name || 'Anon';
+      const autoTag = pin.auto ? ' [auto]' : '';
       const msgPart = pin.msg ? `\n${pin.msg}` : '';
-      const coords = `${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`;
-      const dt = new Date(pin.timestamp).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' });
-      return `📍 ${name}${pin.auto ? ' [auto]' : ''}${msgPart}\n${coords} • ${dt} #RootDonate`;
+      const coords  = `${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`;
+      const dt      = new Date(pin.timestamp).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' });
+
+      return `📍 ${name}${autoTag}${msgPart}
+${coords} • ${dt}
+
+Root Donate • Drop roots, grow the map 🌱🗺️
+@x iandreme • #RootDonate`;
     }
 
     async function copyToClipboard(text) {
@@ -195,11 +202,8 @@
     }
 
     function getAllDrops() {
-      try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-      } catch {
-        return [];
-      }
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+      catch { return []; }
     }
 
     function saveDrops(drops) {
@@ -208,7 +212,6 @@
 
     function savePin(name = 'Swagga Rico', msg = '', isAuto = false) {
       if (!userLat || !userLng) return showStatus('No GPS fix yet', 'error');
-
       const drops = getAllDrops();
       const newPin = {
         name,
@@ -346,12 +349,5 @@
     startWatching();
     renderNearby();
   </script>
-
-  <!--
-    Future remote GPS support ideas:
-    • POST new pins to your server → fetch('/api/pins', {method:'POST', body: JSON.stringify(newPin)})
-    • GET remote pins → fetch('/api/pins?user=swagga').then(r=>r.json()).then(renderRemote)
-    • Add toggle for "Show remote pins" + merge local + remote in display
-  -->
 </body>
 </html>

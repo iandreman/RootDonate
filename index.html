@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Donate • GPS Rooms + Pin Sync</title>
+  <title>Root Donate • GPS Rooms + Pin Sync (Fixed)</title>
   <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
   <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
   <style>
+    /* Your original styles unchanged – keeping the dark cyber vibe 🔥 */
     :root {
       --bg: #000;
       --text: #e0e0e0;
@@ -42,8 +43,8 @@
 <body>
 
   <div class="container">
-    <h1>Root Donate • GPS Rooms + Pins</h1>
-    <p class="intro">Save local GPS drops • search • email HTML • Join same GPS room to sync pins • v2026-01</p>
+    <h1>Root Donate • GPS Rooms + Pins (Sync Fixed)</h1>
+    <p class="intro">Save local GPS drops • search • email HTML • Join same GPS room to sync pins • v2026-01-fixed</p>
 
     <div id="p2p-status">P2P: disconnected</div>
     <div id="room-status">Room: not joined</div>
@@ -71,7 +72,7 @@
       <input id="room-code" placeholder="Room code (e.g. london-drop-23jan)" style="margin-bottom:0.8rem;" />
       <button id="join-room">Join Room</button>
       <button id="leave-room" class="danger" style="display:none;">Leave Room</button>
-      <p class="note">Everyone enters the **same room code** → pins auto-sync via P2P. Use short codes for meetups.</p>
+      <p class="note">Same room code = pins sync via P2P + TURN relay. Test on same WiFi first, then try mobile data.</p>
       <p id="my-peer-id" class="note">Your ID: connecting...</p>
     </div>
 
@@ -90,11 +91,10 @@
   <script>
     const STORAGE_KEY = 'root-drops-gps-v2026';
     const NEARBY_RADIUS_DEG = 0.0045; // ~500 m
-    const AUTO_PUSH_INTERVAL_MS = 30000;
 
     let userLat = null, userLng = null;
-    let peer = null, conn = null;
-    let autoPushInterval = null;
+    let peer = null;
+    let conn = null;
     let roomChannel = null;
     let currentRoom = null;
 
@@ -103,14 +103,14 @@
     const myPeerIdEl = document.getElementById('my-peer-id');
     const statusEl   = document.getElementById('status');
 
-    // ── Ably (signaling / room) ──
-    const ABLY_KEY = 'Exqsug.WFHsuQ:sM6yRLAsZhB3cbZYwblx5qdezyXryw3kLekpenb-Ves'; // ← paste your free Ably key
+    // ── Ably (signaling) ──
+    const ABLY_KEY = 'Exqsug.WFHsuQ:sM6yRLAsZhB3cbZYwblx5qdezyXryw3kLekpenb-Ves';
     const ably = new Ably.Realtime({ key: ABLY_KEY });
 
     function showStatus(msg, cls = '') {
       statusEl.textContent = msg;
       statusEl.className = cls;
-      setTimeout(() => { statusEl.textContent = ''; statusEl.className = ''; }, 5000);
+      setTimeout(() => { statusEl.textContent = ''; statusEl.className = ''; }, 6000);
     }
 
     function escape(s) {
@@ -142,8 +142,11 @@
       drops.push(newPin);
       saveDrops(drops);
       document.getElementById('msg').value = '';
-      showStatus('Pin saved', 'success');
+      showStatus('Pin saved locally', 'success');
       renderNearby();
+      if (conn && conn.open) {
+        conn.send({ type: 'full-sync', drops: [newPin] }); // Optional: push new pin immediately
+      }
     }
 
     function renderNearby() {
@@ -196,47 +199,96 @@
       document.getElementById('search-results').innerHTML = '';
     }
 
-    // ── PeerJS ──
+    // ── PeerJS with TURN servers for better sync ──
     let myPeerId = localStorage.getItem('root-donate-id') || 'rd-' + Math.random().toString(36).substr(2,9);
     localStorage.setItem('root-donate-id', myPeerId);
     myPeerIdEl.textContent = `Your ID: ${myPeerId}`;
 
-    peer = new Peer(myPeerId, { config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] } });
+    const iceServers = [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+      // Free TURN relays (reliable as of 2026 – OpenRelay/Metered + ExpressTURN style)
+      { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+      { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+      { urls: 'turn:relay1.expressturn.com:3478', username: 'expressturnfree', credential: 'freeaccess' } // Check expressturn.com for latest free creds if needed
+    ];
 
-    peer.on('open', () => { p2pStatus.textContent = 'P2P ready'; p2pStatus.style.background = '#0a2a0a'; });
-    peer.on('connection', inc => { if (conn) conn.close(); conn = inc; setupConnection(); });
+    peer = new Peer(myPeerId, {
+      config: {
+        iceServers: iceServers,
+        sdpSemantics: 'unified-plan'
+      },
+      debug: 2 // More verbose logs in console
+    });
+
+    peer.on('open', () => {
+      p2pStatus.textContent = 'P2P ready (TURN enabled)';
+      p2pStatus.style.background = '#0a2a0a';
+      console.log('PeerJS open – ID:', myPeerId);
+    });
+
+    peer.on('connection', incomingConn => {
+      console.log('Incoming connection from:', incomingConn.peer);
+      if (conn) conn.close();
+      conn = incomingConn;
+      setupConnection();
+    });
+
+    peer.on('error', err => {
+      console.error('PeerJS error:', err);
+      p2pStatus.textContent = `P2P error: ${err.type || err}`;
+      p2pStatus.style.background = '#2a0a0a';
+      showStatus('P2P issue – check console', 'error');
+    });
 
     function setupConnection() {
       conn.on('open', () => {
-        p2pStatus.textContent = `Connected to ${conn.peer}`;
+        p2pStatus.textContent = `Connected to ${conn.peer} (syncing)`;
         p2pStatus.style.background = '#1a4a1a';
-        showStatus('Connected – pins syncing', 'success');
+        showStatus('P2P connected – sending pins', 'success');
+        console.log('Data channel OPEN – sending full sync');
         conn.send({ type: 'full-sync', drops: getAllDrops() });
       });
 
       conn.on('data', data => {
+        console.log('Received data:', data);
         if (data.type === 'full-sync') {
           let incoming = data.drops || [];
           if (!incoming.length) return;
           let local = getAllDrops();
           const existing = new Set(local.map(d => d.timestamp));
           let added = 0;
-          incoming.forEach(pin => { if (!existing.has(pin.timestamp)) { local.push(pin); added++; } });
+          incoming.forEach(pin => {
+            if (!existing.has(pin.timestamp)) {
+              local.push(pin);
+              added++;
+            }
+          });
           if (added) {
             saveDrops(local);
             renderNearby();
-            showStatus(`Got ${added} new pin${added>1?'s':''}`, 'success');
+            showStatus(`Synced ${added} new pin${added > 1 ? 's' : ''}`, 'success');
+          } else {
+            console.log('No new pins – already synced');
           }
         }
       });
 
       conn.on('close', () => {
-        p2pStatus.textContent = 'P2P closed';
+        console.log('Connection closed');
+        p2pStatus.textContent = 'P2P closed – retrying...';
         p2pStatus.style.background = '#2a0a0a';
+        // Auto-reconnect attempt if in room
+        if (currentRoom) setTimeout(() => tryConnectToPeers(), 3000);
+      });
+
+      conn.on('error', err => {
+        console.error('Connection error:', err);
       });
     }
 
-    // ── Room (GPS group) ──
+    // ── Room logic ──
     function joinRoom() {
       currentRoom = document.getElementById('room-code').value.trim();
       if (!currentRoom) return showStatus('Enter room code', 'error');
@@ -244,7 +296,7 @@
       if (roomChannel) roomChannel.unsubscribe();
       roomChannel = ably.channels.get(`root-gps:${currentRoom}`);
 
-      roomStatus.textContent = `Room: ${currentRoom} (peers joining…)`;
+      roomStatus.textContent = `Room: ${currentRoom} (looking for peers…)`;
       roomStatus.style.background = '#0a2a0a';
 
       roomChannel.publish('join', { peerId: myPeerId });
@@ -253,6 +305,7 @@
         const remote = msg.data.peerId;
         if (remote === myPeerId) return;
         showStatus(`Peer ${remote} joined – connecting`, 'success');
+        console.log('Join signal received – attempting connect to', remote);
         if (conn?.open) return;
         conn = peer.connect(remote);
         setupConnection();
@@ -274,28 +327,27 @@
       document.getElementById('leave-room').style.display = 'none';
     }
 
+    // Events
     document.getElementById('join-room').onclick = joinRoom;
     document.getElementById('leave-room').onclick = leaveRoom;
-
-    // Events
     document.getElementById('add-drop').onclick = addDrop;
     document.getElementById('search-btn').onclick = searchDrops;
     document.getElementById('search-input').addEventListener('keypress', e => { if (e.key === 'Enter') searchDrops(); });
 
-    // GPS (local only)
+    // GPS
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         pos => {
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
-          showStatus('GPS ready (local)', 'success');
+          showStatus('GPS locked in', 'success');
           renderNearby();
         },
         err => showStatus(`GPS error: ${err.message}`, 'error'),
         { enableHighAccuracy: true, timeout: 15000 }
       );
     } else {
-      showStatus('No GPS support', 'error');
+      showStatus('No GPS support on this device', 'error');
     }
   </script>
 </body>

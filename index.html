@@ -25,29 +25,37 @@
     .meta { font-size:0.92rem; color:#888; text-align:right; margin-top:0.9rem; }
     .coords { font-family:monospace; color:var(--blue); font-weight:500; }
     #preview { margin-top:2.5rem; padding:1.8rem; background:#050505; border:1px dashed #333; border-radius:14px; min-height:260px; overflow:auto; }
+    #search-results { margin-top:1rem; }
   </style>
 </head>
 <body>
 
   <div class="container">
     <h1>Root Donate • GPS Tracker</h1>
-    <p class="intro">Local-only pins + auto-track while open • v2026</p>
+    <p class="intro">Local pins • auto-track while open • search & copy HTML • v2026</p>
 
     <div id="status"></div>
 
     <div class="section">
       <h3 style="margin:0 0 1rem; color:#88ffcc;">Add Manual Pin</h3>
       <input id="name" placeholder="Name / handle (optional)" value="Swagga Rico" />
-      <textarea id="msg" placeholder="Message / note... (optional for auto-tracks)"></textarea>
+      <textarea id="msg" placeholder="Message / note... (optional for auto)"></textarea>
       <div style="margin-top:1rem;">
         <button id="add-drop">Save Manual Pin</button>
         <button id="toggle-auto" class="">Toggle Auto-Track (off)</button>
-        <button class="danger" onclick="clearAllDrops()">Clear All</button>
+        <button class="danger" onclick="clearAllDrops()">Clear All Pins</button>
       </div>
     </div>
 
     <div class="section">
-      <h3 style="margin:0 0 0.6rem; color:#88ffcc;">Recent / Nearby Pins</h3>
+      <h3 style="margin:0 0 0.6rem; color:#88ffcc;">Search Pins</h3>
+      <input id="search-input" placeholder="Search name, note, coords..." autofocus />
+      <button id="search-btn">Search</button>
+      <div id="search-results"></div>
+    </div>
+
+    <div class="section">
+      <h3 style="color:#88ffcc; margin:0.8rem 0 1.2rem;">Nearby Pins (~500 m)</h3>
       <div id="pins"></div>
     </div>
 
@@ -58,8 +66,8 @@
 
   <script>
     const STORAGE_KEY = 'root-gps-tracker-2026';
-    const AUTO_SAVE_INTERVAL_MS = 60000; // 1 min – change as needed
-    const NEARBY_RADIUS_DEG = 0.0045; // ~500m
+    const AUTO_SAVE_INTERVAL_MS = 60000; // 1 min
+    const NEARBY_RADIUS_DEG = 0.0045; // ~500m at equator
 
     let userLat = null, userLng = null;
     let watchId = null;
@@ -86,25 +94,26 @@
     function copyPin(pin) {
       const html = generateEmailHTML(pin);
       document.getElementById('preview').innerHTML = html;
-      navigator.clipboard.writeText(html).then(() => showStatus('Copied HTML', 'success')).catch(() => showStatus('Copy failed', 'error'));
+      navigator.clipboard.writeText(html).then(() => showStatus('Copied to clipboard', 'success')).catch(() => showStatus('Copy failed', 'error'));
     }
 
     function getAllDrops() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } }
     function saveDrops(drops) { localStorage.setItem(STORAGE_KEY, JSON.stringify(drops)); }
 
     function savePin(name = 'Swagga Rico', msg = '', isAuto = false) {
-      if (!userLat || !userLng) return showStatus('No position yet', 'error');
+      if (!userLat || !userLng) return showStatus('No GPS fix yet', 'error');
       const drops = getAllDrops();
       const newPin = { name, msg: isAuto ? '' : msg, lat: userLat, lng: userLng, timestamp: new Date().toISOString(), auto: isAuto };
       drops.push(newPin);
       saveDrops(drops);
       showStatus(isAuto ? 'Auto-pin saved' : 'Pin saved', 'success');
-      renderPins();
+      renderNearby();
     }
 
     function addManualDrop() {
       const name = document.getElementById('name').value.trim() || 'Anonymous';
       const msg = document.getElementById('msg').value.trim();
+      if (!msg && !confirm('Save without message?')) return;
       savePin(name, msg, false);
       document.getElementById('msg').value = '';
     }
@@ -120,12 +129,11 @@
         autoSaveInterval = setInterval(() => {
           if (userLat && userLng) savePin('Swagga Rico', '', true);
         }, AUTO_SAVE_INTERVAL_MS);
-        showStatus('Auto-tracking ON – pins every ~1 min', 'success');
+        showStatus('Auto-tracking ON (~1 min intervals)', 'success');
       } else {
         if (autoSaveInterval) clearInterval(autoSaveInterval);
         showStatus('Auto-tracking OFF', 'success');
       }
-      renderPins();
     }
 
     function startWatching() {
@@ -134,17 +142,17 @@
           pos => {
             userLat = pos.coords.latitude;
             userLng = pos.coords.longitude;
-            renderPins(); // live update nearby/recent
+            renderNearby(); // live refresh nearby
           },
           err => showStatus(`GPS error: ${err.message}`, 'error'),
           { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
         );
       } else {
-        showStatus('No geolocation support', 'error');
+        showStatus('Geolocation not supported', 'error');
       }
     }
 
-    function renderPins() {
+    function renderNearby() {
       if (!userLat || !userLng) {
         document.getElementById('pins').innerHTML = '<p style="text-align:center;color:#666;">Waiting for GPS…</p>';
         return;
@@ -156,7 +164,7 @@
 
       const container = document.getElementById('pins');
       if (drops.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#666;">No nearby pins yet</p>';
+        container.innerHTML = '<p style="text-align:center;color:#666;">No nearby pins</p>';
         return;
       }
 
@@ -169,19 +177,57 @@
       container.innerHTML = html;
     }
 
+    function searchPins() {
+      const term = document.getElementById('search-input').value.trim().toLowerCase();
+      if (!term) {
+        document.getElementById('search-results').innerHTML = '<p style="text-align:center;color:#666;">Enter search term</p>';
+        return;
+      }
+
+      const drops = getAllDrops()
+        .filter(d => 
+          d.name.toLowerCase().includes(term) || 
+          (d.msg || '').toLowerCase().includes(term) || 
+          `${d.lat.toFixed(6)},${d.lng.toFixed(6)}`.includes(term)
+        )
+        .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      const container = document.getElementById('search-results');
+      if (drops.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#666;">No matches found</p>';
+        showStatus('No results', 'error');
+        return;
+      }
+
+      let html = `<p style="color:#88ffcc; margin:0 0 1rem;">Found ${drops.length} pins</p>`;
+      drops.forEach(d => {
+        const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle:'medium', timeStyle:'short' });
+        const label = d.auto ? '[auto]' : '';
+        html += `<div class="pin"><div class="from">${escape(d.name)} ${label}</div><div class="msg">${escape(d.msg || '(no note)')}</div><div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div><button onclick="copyPin({name:'${escape(d.name).replace(/'/g,"\\'")}',msg:'${escape(d.msg).replace(/'/g,"\\'")}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'})">Copy Email HTML</button></div>`;
+      });
+      container.innerHTML = html;
+      showStatus(`Found ${drops.length}`, 'success');
+    }
+
     function clearAllDrops() {
-      if (!confirm('Delete ALL local pins?')) return;
+      if (!confirm('Delete ALL local pins? This cannot be undone.')) return;
       localStorage.removeItem(STORAGE_KEY);
-      showStatus('All cleared', 'success');
-      renderPins();
+      showStatus('All pins cleared', 'success');
+      renderNearby();
+      document.getElementById('search-results').innerHTML = '';
     }
 
     // Events
     document.getElementById('add-drop').onclick = addManualDrop;
     document.getElementById('toggle-auto').onclick = toggleAutoTrack;
+    document.getElementById('search-btn').onclick = searchPins;
+    document.getElementById('search-input').addEventListener('keypress', e => {
+      if (e.key === 'Enter') searchPins();
+    });
 
-    // Start GPS watching immediately (for current position + auto if enabled later)
+    // Start GPS immediately
     startWatching();
+    renderNearby(); // initial draw
   </script>
 </body>
 </html>

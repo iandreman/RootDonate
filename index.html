@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Donate • GPS Rooms + Pins (Static TURN 2026)</title>
+  <title>Root Donate • GPS Rooms + Pins (Static TURN Fix)</title>
   <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
   <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
   <style>
@@ -36,40 +36,38 @@
 
   <div class="container">
     <h1>Root Donate • GPS Rooms + Pins</h1>
-    <p class="intro">GPS drops • remote P2P sync • Static TURN relay (2026 fix)</p>
+    <p class="intro">Save drops • remote sync via P2P • Static TURN relay (no signup)</p>
 
     <div id="p2p-status">P2P: disconnected</div>
     <div id="room-status">Room: not joined</div>
     <div id="status"></div>
 
     <div class="section">
-      <h3 style="margin:0 0 1rem; color:#88ffcc;">Add GPS Drop</h3>
+      <h3 style="margin:0 0 1rem; color:#88ffcc;">Add Drop</h3>
       <input id="name" placeholder="Name (optional)" value="Swagga Rico" />
       <textarea id="msg" placeholder="Message / note..."></textarea>
-      <div style="margin-top:1rem;">
-        <button id="add-drop">Save Pin</button>
-        <button class="danger" onclick="clearAllDrops()">Clear All</button>
-      </div>
+      <button id="add-drop" style="margin-top:1rem;">Save Pin</button>
+      <button class="danger" onclick="clearAllDrops()">Clear All</button>
     </div>
 
     <div class="section">
-      <h3 style="margin:0 0 0.6rem; color:#88ffcc;">Search Pins</h3>
-      <input id="search-input" placeholder="Search..." autofocus />
+      <h3 style="margin:0 0 0.6rem; color:#88ffcc;">Search</h3>
+      <input id="search-input" placeholder="Search name/note/coords..." autofocus />
       <button id="search-btn">Search</button>
       <div id="search-results"></div>
     </div>
 
     <div class="section">
-      <h3 style="margin:0 0 0.6rem; color:#88ffcc;">Join Room (Remote Sync)</h3>
-      <input id="room-code" placeholder="Room code e.g. uk-test-23jan" style="margin-bottom:0.8rem;" />
+      <h3 style="margin:0 0 0.6rem; color:#88ffcc;">Join Room (Sync Pins Remotely)</h3>
+      <input id="room-code" placeholder="Room code e.g. uk-swagga-test" style="margin-bottom:0.8rem;" />
       <button id="join-room">Join</button>
       <button id="leave-room" class="danger" style="display:none;">Leave</button>
-      <p class="note">Same code → pins sync remotely. Use same WiFi first. TURN static auth enabled (no signup). Check console F12 for ICE/TURN logs if stuck.</p>
+      <p class="note">Same code on both devices → pins sync. Start same WiFi. TURN static auth for mobile/cross-net. F12 Console for debug if fails.</p>
       <p id="my-peer-id" class="note">Your ID: connecting...</p>
     </div>
 
     <div id="nearby" class="section">
-      <h3 style="color:#88ffcc; margin:0.8rem 0 1.2rem;">Nearby Drops (~500m)</h3>
+      <h3 style="color:#88ffcc;">Nearby (~500m)</h3>
       <div id="pins"></div>
     </div>
 
@@ -79,7 +77,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'root-drops-gps-static-2026';
+    const STORAGE_KEY = 'root-drops-gps-staticturn';
     const NEARBY_RADIUS_DEG = 0.0045;
 
     let userLat = null, userLng = null;
@@ -99,7 +97,7 @@
     function showStatus(msg, cls = '') {
       statusEl.textContent = msg;
       statusEl.className = cls;
-      setTimeout(() => statusEl.textContent = '', 8000);
+      setTimeout(() => { statusEl.textContent = ''; statusEl.className = ''; }, 8000);
     }
 
     function escape(s) {
@@ -123,7 +121,7 @@
     function addDrop() {
       const name = document.getElementById('name').value.trim() || 'Anonymous';
       const msg = document.getElementById('msg').value.trim();
-      if (!msg) return showStatus('Enter message', 'error');
+      if (!msg) return showStatus('Add message', 'error');
       if (!userLat || !userLng) return showStatus('GPS not ready', 'error');
 
       const drops = getAllDrops();
@@ -156,7 +154,7 @@
 
     function searchDrops() {
       const term = document.getElementById('search-input').value.trim().toLowerCase();
-      if (!term) return document.getElementById('search-results').innerHTML = '<p style="text-align:center;color:#666;">Enter term</p>';
+      if (!term) return document.getElementById('search-results').innerHTML = '<p style="text-align:center;color:#666;">Enter search</p>';
 
       const drops = getAllDrops()
         .filter(d => d.name.toLowerCase().includes(term) || d.msg.toLowerCase().includes(term) || `${d.lat.toFixed(6)},${d.lng.toFixed(6)}`.includes(term))
@@ -196,46 +194,46 @@
       { urls: 'stun:stun2.l.google.com:19302' },
       { urls: 'turn:staticauth.openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayprojectsecret' },
       { urls: 'turn:staticauth.openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayprojectsecret' },
-      { urls: 'turn:staticauth.openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayprojectsecret' },
-      { urls: 'turn:staticauth.openrelay.metered.ca:80?transport=tcp', username: 'openrelayproject', credential: 'openrelayprojectsecret' }
+      { urls: 'turn:staticauth.openrelay.metered.ca:80?transport=tcp', username: 'openrelayproject', credential: 'openrelayprojectsecret' },
+      { urls: 'turn:staticauth.openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayprojectsecret' }
     ];
 
     peer = new Peer(myPeerId, {
-      config: { iceServers, sdpSemantics: 'unified-plan' },
+      config: { iceServers: iceServers, sdpSemantics: 'unified-plan' },
       debug: 3
     });
 
     peer.on('open', () => {
       p2pStatus.textContent = 'P2P ready (static TURN)';
       p2pStatus.style.background = '#0a2a0a';
-      console.log('Peer open - ID:', myPeerId);
+      console.log('Peer open - ready for connections');
     });
 
     peer.on('connection', inc => {
-      console.log('Incoming conn:', inc.peer);
+      console.log('Incoming connection from:', inc.peer);
       if (conn) conn.close();
       conn = inc;
       setupConnection();
     });
 
     peer.on('error', err => {
-      console.error('Peer error:', err);
-      p2pStatus.textContent = `P2P failed: ${err.type || err}`;
+      console.error('PeerJS error:', err.type, err.message || err);
+      p2pStatus.textContent = `P2P failed: ${err.type || 'check console'}`;
       p2pStatus.style.background = '#2a0a0a';
-      showStatus('P2P failed – see console', 'error');
+      showStatus('P2P failed – see console (F12)', 'error');
     });
 
     function setupConnection() {
       conn.on('open', () => {
-        p2pStatus.textContent = `Connected ${conn.peer} - syncing`;
+        p2pStatus.textContent = `Connected to ${conn.peer} - syncing pins`;
         p2pStatus.style.background = '#1a4a1a';
-        showStatus('Connected – pins syncing', 'success');
-        console.log('Data open - sending sync');
+        showStatus('Connected – pins syncing remotely', 'success');
+        console.log('Data channel open - sending full sync');
         conn.send({ type: 'full-sync', drops: getAllDrops() });
       });
 
       conn.on('data', data => {
-        console.log('Data received:', data);
+        console.log('Received data:', data);
         if (data.type === 'full-sync') {
           let incoming = data.drops || [];
           if (!incoming.length) return;
@@ -251,29 +249,30 @@
           if (added) {
             saveDrops(local);
             renderNearby();
-            showStatus(`Synced ${added} pins`, 'success');
+            showStatus(`Synced ${added} new pin${added > 1 ? 's' : ''}`, 'success');
+          } else {
+            console.log('No new pins to add');
           }
         }
       });
 
       conn.on('close', () => {
-        console.log('Conn closed');
+        console.log('Connection closed - retrying if in room');
         p2pStatus.textContent = 'P2P closed - retrying...';
         p2pStatus.style.background = '#2a0a0a';
         if (currentRoom) setTimeout(tryReconnect, 3000);
       });
 
-      conn.on('error', err => console.error('Conn err:', err));
+      conn.on('error', err => console.error('Connection error:', err));
     }
 
     function tryReconnect() {
-      showStatus('Retrying P2P...', 'success');
-      // Rely on join signals to trigger connect
+      showStatus('Retrying connection...', 'success');
     }
 
     function joinRoom() {
       currentRoom = document.getElementById('room-code').value.trim();
-      if (!currentRoom) return showStatus('Enter code', 'error');
+      if (!currentRoom) return showStatus('Enter room code', 'error');
 
       if (roomChannel) roomChannel.unsubscribe();
       roomChannel = ably.channels.get(`root-gps:${currentRoom}`);
@@ -286,9 +285,9 @@
       roomChannel.subscribe('join', msg => {
         const remote = msg.data.peerId;
         if (remote === myPeerId) return;
-        showStatus(`Peer ${remote} joined`, 'success');
-        console.log('Connecting to', remote);
-        if (conn?.open) return;
+        showStatus(`Peer ${remote} joined – connecting`, 'success');
+        console.log('Join signal - attempting connect to', remote);
+        if (conn && conn.open) return;
         conn = peer.connect(remote);
         setupConnection();
       });
@@ -320,20 +319,20 @@
         pos => {
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
-          showStatus('GPS ready', 'success');
+          showStatus('GPS locked in', 'success');
           renderNearby();
         },
-        err => showStatus(`GPS err: ${err.message}`, 'error'),
+        err => showStatus(`GPS error: ${err.message}`, 'error'),
         { enableHighAccuracy: true, timeout: 20000 }
       );
     } else {
-      showStatus('No GPS', 'error');
+      showStatus('No GPS support', 'error');
     }
 
-    // Extra debug: Log ICE state changes
-    if (conn) {
-      conn.on('iceconnectionstatechange', () => console.log('ICE state:', conn.iceConnectionState));
-    }
+    // Log ICE state for debug
+    setInterval(() => {
+      if (conn) console.log('Current ICE state:', conn.iceConnectionState || 'no conn');
+    }, 5000);
   </script>
 </body>
 </html>

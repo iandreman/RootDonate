@@ -15,28 +15,77 @@
       --border: #2a2a2a;
       --blue: #4cc9ff;
     }
-    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; padding: 1rem; line-height: 1.55; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 1rem;
+      line-height: 1.55;
+    }
     .container { max-width: 720px; margin: 0 auto; }
     h1 { color: var(--accent); text-align: center; margin: 1.4rem 0 0.8rem; font-size: 2.1rem; }
     .intro { text-align: center; color: #777; margin-bottom: 1.6rem; font-size: 0.98rem; }
     #status { text-align: center; margin: 0.8rem 0; font-size: 0.96rem; min-height: 1.3em; }
-    .success { color: #0f8; } .error { color: #f55; }
+    .success { color: #0f8; }
+    .error   { color: #f55; }
     .section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.4rem; margin: 1.2rem 0; }
-    input, textarea { width: 100%; padding: 0.7rem; margin: 0.5rem 0; background: #1a1a1a; color: #eee; border: 1px solid #444; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
+    input, textarea {
+      width: 100%;
+      padding: 0.7rem;
+      margin: 0.5rem 0;
+      background: #1a1a1a;
+      color: #eee;
+      border: 1px solid #444;
+      border-radius: 8px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
     textarea { min-height: 110px; resize: vertical; }
-    button { background: #1d4ed8; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin: 0.5rem 0.5rem 0.5rem 0; }
+    button {
+      background: #1d4ed8;
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 0.5rem 0.3rem 0.5rem 0;
+    }
     button:hover { background: #3b82f6; }
-    button.danger { background: #7f1d1d; } button.danger:hover { background: #991b1b; }
-    .pin { background: #0a0a0a; border: 1px solid #222; border-radius: 12px; padding: 1.3rem; margin: 1.1rem 0; }
+    button.danger { background: #7f1d1d; }
+    button.danger:hover { background: #991b1b; }
+    .pin {
+      background: #0a0a0a;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 1.3rem;
+      margin: 1.1rem 0;
+    }
     .from { color: #88ffcc; font-weight: 700; font-size: 1.22rem; margin-bottom: 0.5rem; }
     .msg { white-space: pre-wrap; margin: 0.9rem 0; font-size: 1.05rem; }
     .meta { font-size: 0.92rem; color: #888; text-align: right; margin-top: 0.9rem; }
     .coords { font-family: monospace; color: var(--blue); font-weight: 500; }
-    #preview { margin-top: 2.5rem; padding: 1.8rem; background: #050505; border: 1px dashed #333; border-radius: 14px; min-height: 260px; overflow: auto; }
+    #preview {
+      margin-top: 2.5rem;
+      padding: 1.8rem;
+      background: #050505;
+      border: 1px dashed #333;
+      border-radius: 14px;
+      min-height: 260px;
+      overflow: auto;
+    }
     #search-results { margin-top: 1rem; }
     input#search-input { margin-bottom: 0.8rem; }
     .note { font-size: 0.9rem; color: #888; margin: 0.6rem 0 1rem; }
-    #p2p-status, #room-status { text-align: center; font-weight: bold; margin: 0.8rem 0; padding: 0.6rem; border-radius: 8px; }
+    #p2p-status, #room-status {
+      text-align: center;
+      font-weight: bold;
+      margin: 0.8rem 0;
+      padding: 0.6rem;
+      border-radius: 8px;
+    }
+    #auto-push-toggle { margin: 0.8rem 0; display: flex; align-items: center; gap: 0.6rem; }
   </style>
 </head>
 <body>
@@ -71,7 +120,13 @@
       <input id="room-code" placeholder="Room code (e.g. rico-drop-23)" style="margin-bottom:0.8rem;" />
       <button id="join-room">Join Room & Sync</button>
       <button id="leave-room" class="danger" style="display:none;">Leave Room</button>
-      <p class="note">Share code with friends on same WiFi/internet. Pins auto-push if connected.</p>
+
+      <label id="auto-push-toggle">
+        <input type="checkbox" id="auto-push" checked />
+        Auto-push new pins every 30s when connected
+      </label>
+
+      <p class="note">Share the room code with friends (same WiFi or internet). Pins sync automatically once connected.</p>
       <p id="my-peer-id" class="note">Your Sync ID: connecting...</p>
     </div>
 
@@ -82,150 +137,228 @@
 
     <div id="preview">
       <p style="text-align:center; color:#555; padding:4rem 0;">
-        Click any pin's "Copy Email HTML" to preview & copy
+        Click any pin's "Copy Email HTML" button to preview & copy
       </p>
     </div>
   </div>
 
   <script>
     const STORAGE_KEY = 'root-drops-gps-email-v2026';
-    const NEARBY_RADIUS_DEG = 0.0045; // ~500m
+    const NEARBY_RADIUS_DEG = 0.0045; // ≈500m
     const AUTO_PUSH_INTERVAL_MS = 30000;
 
-    let userLat = null, userLng = null;
-    let peer = null, conn = null;
+    let userLat = null;
+    let userLng = null;
+    let peer = null;
+    let conn = null;
     let autoPushInterval = null;
-
-    const p2pStatus = document.getElementById('p2p-status');
-    const roomStatus = document.getElementById('room-status');
-    const myPeerIdEl = document.getElementById('my-peer-id');
-
-    // ── Ably Signaling ──
-    const ABLY_KEY = 'YOUR_ABLY_API_KEY_HERE'; // ← PASTE YOUR KEY HERE
-    const ably = new Ably.Realtime({ key: ABLY_KEY });
     let roomChannel = null;
     let currentRoom = null;
 
-    function status(msg, cls = '') {
-      const el = document.getElementById('status');
-      el.textContent = msg;
-      el.className = cls;
-      setTimeout(() => { el.textContent = ''; el.className = ''; }, 5000);
+    const p2pStatus    = document.getElementById('p2p-status');
+    const roomStatus   = document.getElementById('room-status');
+    const myPeerIdEl   = document.getElementById('my-peer-id');
+    const statusEl     = document.getElementById('status');
+
+    // ── Ably Signaling ──
+    const ABLY_KEY = 'Exqsug.WFHsuQ:sM6yRLAsZhB3cbZYwblx5qdezyXryw3kLekpenb-Ves'; // ← Replace with your real Ably API key
+    const ably = new Ably.Realtime({ key: ABLY_KEY });
+
+    function showStatus(msg, type = '') {
+      statusEl.textContent = msg;
+      statusEl.className = type;
+      setTimeout(() => { statusEl.textContent = ''; statusEl.className = ''; }, 5000);
     }
 
-    function escape(s) {
-      return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[c]);
+    function escapeHtml(s) {
+      return (s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[c]);
     }
 
     function generateEmailHTML(pin) {
-      const date = new Date(pin.timestamp).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-      return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Root Drop – ${escape(pin.name || 'Anonymous')}</title><style>body{font-family:system-ui,sans-serif;background:#000;color:#e0e0e0;margin:2.2rem;line-height:1.65;}.card{background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:2rem;max-width:640px;margin:0 auto;box-shadow:0 4px 20px rgba(0,255,120,0.08);}.from{color:#88ffcc;font-weight:700;font-size:1.45rem;margin-bottom:1rem;}.msg{white-space:pre-wrap;margin:1.4rem 0;font-size:1.18rem;}.meta{font-size:1rem;color:#888;text-align:right;margin-top:1.6rem;}.coords{font-family:monospace;color:#4cc9ff;font-weight:500;}a{color:#60a5fa;text-decoration:none;margin:0 0.6em;}a:hover{text-decoration:underline;}</style></head><body><div class="card"><div class="from">📍 From: ${escape(pin.name || 'Anonymous')}</div><div class="msg">${escape(pin.msg)}</div><div class="meta">${date}<br><span class="coords">${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}</span><br><br><a href="geo:${pin.lat.toFixed(6)},${pin.lng.toFixed(6)}">Open in Maps</a> • <a href="https://www.google.com/maps?q=${pin.lat.toFixed(6)},${pin.lng.toFixed(6)}">Google Maps</a></div></div></body></html>`;
+      const date = new Date(pin.timestamp).toLocaleString('en-GB', {
+        weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+      return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Root Drop – ${escapeHtml(pin.name || 'Anonymous')}</title>
+  <style>
+    body { font-family:system-ui,sans-serif; background:#000; color:#e0e0e0; margin:2.2rem; line-height:1.65; }
+    .card { background:#111; border:1px solid #2a2a2a; border-radius:16px; padding:2rem; max-width:640px; margin:0 auto; box-shadow:0 4px 20px rgba(0,255,120,0.08); }
+    .from { color:#88ffcc; font-weight:700; font-size:1.45rem; margin-bottom:1rem; }
+    .msg { white-space:pre-wrap; margin:1.4rem 0; font-size:1.18rem; }
+    .meta { font-size:1rem; color:#888; text-align:right; margin-top:1.6rem; }
+    .coords { font-family:monospace; color:#4cc9ff; font-weight:500; }
+    a { color:#60a5fa; text-decoration:none; margin:0 0.6em; }
+    a:hover { text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="from">📍 From: ${escapeHtml(pin.name || 'Anonymous')}</div>
+    <div class="msg">${escapeHtml(pin.msg)}</div>
+    <div class="meta">
+      ${date}<br>
+      <span class="coords">${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}</span><br><br>
+      <a href="geo:${pin.lat.toFixed(6)},${pin.lng.toFixed(6)}">Open in Maps</a> •
+      <a href="https://www.google.com/maps?q=${pin.lat.toFixed(6)},${pin.lng.toFixed(6)}">Google Maps</a>
+    </div>
+  </div>
+</body>
+</html>`;
     }
 
     function copyPin(pin) {
       const html = generateEmailHTML(pin);
       document.getElementById('preview').innerHTML = html;
-      navigator.clipboard.writeText(html).then(() => status('Email HTML copied', 'success')).catch(() => status('Copy failed', 'error'));
+      navigator.clipboard.writeText(html)
+        .then(() => showStatus('Email HTML copied to clipboard', 'success'))
+        .catch(() => showStatus('Copy failed – try selecting text manually', 'error'));
     }
 
-    function getAllDrops() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } }
-    function saveDrops(drops) { localStorage.setItem(STORAGE_KEY, JSON.stringify(drops)); }
+    function getAllDrops() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+      catch { return []; }
+    }
+
+    function saveDrops(drops) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(drops));
+    }
 
     function addDrop() {
       const name = document.getElementById('name').value.trim() || 'Anonymous';
       const msg = document.getElementById('msg').value.trim();
-      if (!msg) return status('Enter message', 'error');
-      if (!userLat || !userLng) return status('Location not ready', 'error');
+      if (!msg) return showStatus('Please enter a message', 'error');
+      if (!userLat || !userLng) return showStatus('Location not available yet', 'error');
 
       const drops = getAllDrops();
       const newPin = { name, msg, lat: userLat, lng: userLng, timestamp: new Date().toISOString() };
       drops.push(newPin);
       saveDrops(drops);
       document.getElementById('msg').value = '';
-      status('Pin saved', 'success');
+      showStatus('Pin saved', 'success');
       renderNearby();
 
-      if (conn?.open && document.getElementById('auto-push')?.checked) {
+      if (conn?.open && document.getElementById('auto-push').checked) {
         conn.send({ type: 'push', pin: newPin });
       }
     }
 
     function renderNearby() {
       if (!userLat || !userLng) {
-        document.getElementById('pins').innerHTML = '<p style="text-align:center;color:#666;">Waiting for location…</p>';
+        document.getElementById('pins').innerHTML = '<p style="text-align:center; color:#666;">Waiting for location…</p>';
         return;
       }
+
       const drops = getAllDrops()
         .filter(d => Math.abs(d.lat - userLat) <= NEARBY_RADIUS_DEG && Math.abs(d.lng - userLng) <= NEARBY_RADIUS_DEG)
-        .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
       const container = document.getElementById('pins');
       if (drops.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#666;">No nearby drops</p>';
+        container.innerHTML = '<p style="text-align:center; color:#666;">No nearby drops found</p>';
         return;
       }
+
       let html = '';
       drops.forEach(d => {
         const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
-        html += `<div class="pin"><div class="from">${escape(d.name)}</div><div class="msg">${escape(d.msg)}</div><div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div><button onclick="copyPin({name:'${escape(d.name).replace(/'/g,"\\'")}',msg:'${escape(d.msg).replace(/'/g,"\\'")}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'})">Copy Email HTML</button></div>`;
+        html += `
+          <div class="pin">
+            <div class="from">${escapeHtml(d.name)}</div>
+            <div class="msg">${escapeHtml(d.msg)}</div>
+            <div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div>
+            <button onclick="copyPin({name:'${escapeHtml(d.name).replace(/'/g,"\\'")}', msg:'${escapeHtml(d.msg).replace(/'/g,"\\'")}', lat:${d.lat}, lng:${d.lng}, timestamp:'${d.timestamp}'})">
+              Copy Email HTML
+            </button>
+          </div>`;
       });
       container.innerHTML = html;
     }
 
     function searchDrops() {
       const term = document.getElementById('search-input').value.trim().toLowerCase();
-      if (!term) return document.getElementById('search-results').innerHTML = '<p style="text-align:center;color:#666;">Enter search term</p>';
+      if (!term) {
+        document.getElementById('search-results').innerHTML = '<p style="text-align:center; color:#666;">Enter a search term</p>';
+        return;
+      }
 
       const drops = getAllDrops()
-        .filter(d => d.name.toLowerCase().includes(term) || d.msg.toLowerCase().includes(term) || `${d.lat.toFixed(6)},${d.lng.toFixed(6)}`.includes(term))
-        .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+        .filter(d =>
+          d.name.toLowerCase().includes(term) ||
+          d.msg.toLowerCase().includes(term) ||
+          `${d.lat.toFixed(6)},${d.lng.toFixed(6)}`.includes(term)
+        )
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
       const container = document.getElementById('search-results');
       if (drops.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#666;">No matches</p>';
-        status('No results', 'error');
+        container.innerHTML = '<p style="text-align:center; color:#666;">No matches found</p>';
+        showStatus('No results', 'error');
         return;
       }
-      let html = `<h4 style="color:#88ffcc;margin:0 0 1rem;">Found ${drops.length} pin${drops.length>1?'s':''}</h4>`;
+
+      let html = `<h4 style="color:#88ffcc; margin:0 0 1rem;">Found ${drops.length} pin${drops.length === 1 ? '' : 's'}</h4>`;
       drops.forEach(d => {
         const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
-        html += `<div class="pin"><div class="from">${escape(d.name)}</div><div class="msg">${escape(d.msg)}</div><div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div><button onclick="copyPin({name:'${escape(d.name).replace(/'/g,"\\'")}',msg:'${escape(d.msg).replace(/'/g,"\\'")}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'})">Copy Email HTML</button></div>`;
+        html += `
+          <div class="pin">
+            <div class="from">${escapeHtml(d.name)}</div>
+            <div class="msg">${escapeHtml(d.msg)}</div>
+            <div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div>
+            <button onclick="copyPin({name:'${escapeHtml(d.name).replace(/'/g,"\\'")}', msg:'${escapeHtml(d.msg).replace(/'/g,"\\'")}', lat:${d.lat}, lng:${d.lng}, timestamp:'${d.timestamp}'})">
+              Copy Email HTML
+            </button>
+          </div>`;
       });
       container.innerHTML = html;
-      status(`Found ${drops.length}`, 'success');
+      showStatus(`Found ${drops.length} match${drops.length === 1 ? '' : 'es'}`, 'success');
     }
 
     function clearAllDrops() {
-      if (!confirm('Delete ALL pins?')) return;
+      if (!confirm('Delete ALL saved pins? This cannot be undone.')) return;
       localStorage.removeItem(STORAGE_KEY);
-      status('Pins cleared', 'success');
+      showStatus('All pins cleared', 'success');
       renderNearby();
       document.getElementById('search-results').innerHTML = '';
     }
 
     // ── PeerJS Setup ──
-    let myPeerId = localStorage.getItem('root-donate-peer-id') || 'rd-' + Math.random().toString(36).substr(2,9);
+    let myPeerId = localStorage.getItem('root-donate-peer-id') || 'rd-' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('root-donate-peer-id', myPeerId);
     myPeerIdEl.textContent = `Your Sync ID: ${myPeerId}`;
 
-    peer = new Peer(myPeerId, { config: { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] } });
+    peer = new Peer(myPeerId, {
+      config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+    });
 
-    peer.on('open', () => { p2pStatus.textContent = 'P2P ready'; p2pStatus.style.background = '#0a2a0a'; });
-    peer.on('connection', inc => { if (conn) conn.close(); conn = inc; setupConnection(); });
+    peer.on('open', () => {
+      p2pStatus.textContent = 'P2P ready – share your ID or join a room';
+      p2pStatus.style.background = '#0a2a0a';
+    });
+
+    peer.on('connection', incoming => {
+      if (conn) conn.close();
+      conn = incoming;
+      setupConnection();
+    });
 
     function setupConnection() {
       conn.on('open', () => {
         p2pStatus.textContent = `Connected to ${conn.peer}`;
         p2pStatus.style.background = '#1a4a1a';
-        status('P2P connected', 'success');
+        showStatus('Connected – syncing pins', 'success');
         conn.send({ type: 'full-sync', drops: getAllDrops() });
-        if (document.getElementById('auto-push')?.checked) startAutoPush();
+        if (document.getElementById('auto-push').checked) startAutoPush();
       });
 
-      conn.on('data', data => handleIncomingData(data));
+      conn.on('data', handleIncomingData);
 
       conn.on('close', () => {
-        p2pStatus.textContent = 'P2P closed';
+        p2pStatus.textContent = 'Connection closed';
         p2pStatus.style.background = '#2a0a0a';
         stopAutoPush();
       });
@@ -234,11 +367,16 @@
     function startAutoPush() {
       stopAutoPush();
       autoPushInterval = setInterval(() => {
-        if (conn?.open) conn.send({ type: 'push-many', drops: getAllDrops() });
+        if (conn?.open) {
+          conn.send({ type: 'push-many', drops: getAllDrops() });
+        }
       }, AUTO_PUSH_INTERVAL_MS);
     }
 
-    function stopAutoPush() { if (autoPushInterval) clearInterval(autoPushInterval); autoPushInterval = null; }
+    function stopAutoPush() {
+      if (autoPushInterval) clearInterval(autoPushInterval);
+      autoPushInterval = null;
+    }
 
     function handleIncomingData(data) {
       if (data.type === 'full-sync' || data.type === 'push-many') {
@@ -247,12 +385,17 @@
         let local = getAllDrops();
         const existing = new Set(local.map(d => d.timestamp));
         let added = 0;
-        incoming.forEach(pin => { if (!existing.has(pin.timestamp)) { local.push(pin); added++; } });
-        if (added) {
-          local.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+        incoming.forEach(pin => {
+          if (!existing.has(pin.timestamp)) {
+            local.push(pin);
+            added++;
+          }
+        });
+        if (added > 0) {
+          local.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
           saveDrops(local);
           renderNearby();
-          status(`Merged ${added} new pin${added>1?'s':''}`, 'success');
+          showStatus(`Received ${added} new pin${added === 1 ? '' : 's'}`, 'success');
         }
       } else if (data.type === 'push') {
         const pin = data.pin;
@@ -260,23 +403,24 @@
         let local = getAllDrops();
         if (!local.some(d => d.timestamp === pin.timestamp)) {
           local.push(pin);
-          local.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+          local.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
           saveDrops(local);
           renderNearby();
-          status('New pin received', 'success');
+          showStatus('New pin received', 'success');
         }
       }
     }
 
-    // ── Room Join/Leave ──
+    // ── Room Join / Leave ──
     function joinRoom() {
       currentRoom = document.getElementById('room-code').value.trim();
-      if (!currentRoom) return status('Enter room code', 'error');
+      if (!currentRoom) return showStatus('Please enter a room code', 'error');
 
       if (roomChannel) roomChannel.unsubscribe();
+
       roomChannel = ably.channels.get(`root-donate:${currentRoom}`);
 
-      roomStatus.textContent = `Room: ${currentRoom} (waiting for peers)`;
+      roomStatus.textContent = `Room: ${currentRoom} (looking for peers…)`;
       roomStatus.style.background = '#0a2a0a';
 
       roomChannel.publish('peer-join', { peerId: myPeerId });
@@ -284,7 +428,7 @@
       roomChannel.subscribe('peer-join', msg => {
         const remoteId = msg.data.peerId;
         if (remoteId === myPeerId) return;
-        status(`Peer ${remoteId} joined – connecting`, 'success');
+        showStatus(`Peer detected (${remoteId}) – connecting…`, 'success');
         if (conn?.open) return;
         conn = peer.connect(remoteId);
         setupConnection();
@@ -313,7 +457,12 @@
     // Event listeners
     document.getElementById('add-drop').onclick = addDrop;
     document.getElementById('search-btn').onclick = searchDrops;
-    document.getElementById('search-input').addEventListener('keypress', e => { if (e.key === 'Enter') searchDrops(); });
+    document.getElementById('search-input').addEventListener('keypress', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        searchDrops();
+      }
+    });
 
     // Geolocation
     if (navigator.geolocation) {
@@ -321,14 +470,14 @@
         pos => {
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
-          status('Location ready', 'success');
+          showStatus('Location acquired', 'success');
           renderNearby();
         },
-        err => status(`Location error: ${err.message}`, 'error'),
+        err => showStatus(`Location error: ${err.message}`, 'error'),
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     } else {
-      status('Geolocation not supported', 'error');
+      showStatus('Geolocation not supported by this browser', 'error');
     }
   </script>
 </body>

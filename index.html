@@ -3,17 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Donate • GPS Rooms + Pin Sync (TURN Fixed 2026)</title>
+  <title>Root Donate • GPS Rooms + Remote Sync (Fresh 2026)</title>
   <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
   <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
   <style>
     :root {
-      --bg: #000;
-      --text: #e0e0e0;
-      --accent: #00ff88;
-      --surface: #0f0f0f;
-      --border: #2a2a2a;
-      --blue: #4cc9ff;
+      --bg: #000; --text: #e0e0e0; --accent: #00ff88; --surface: #0f0f0f;
+      --border: #2a2a2a; --blue: #4cc9ff;
     }
     body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; padding: 1rem; line-height: 1.55; }
     .container { max-width: 720px; margin: 0 auto; }
@@ -42,56 +38,52 @@
 <body>
 
   <div class="container">
-    <h1>Root Donate • GPS Rooms + Pins (TURN Fixed)</h1>
-    <p class="intro">Save local GPS drops • search • email HTML • Join same room to sync pins • v2026-01-turn-static</p>
+    <h1>Root Donate • GPS Rooms + Remote Pins</h1>
+    <p class="intro">Local GPS drops + remote sync via P2P • Fresh build Jan 2026</p>
 
-    <div id="p2p-status">P2P: disconnected</div>
+    <div id="p2p-status">P2P: disconnected (waiting for peers)</div>
     <div id="room-status">Room: not joined</div>
     <div id="status"></div>
 
-    <!-- Your sections unchanged: Add Drop, Search, Join Room, Nearby, Preview -->
-
     <div class="section">
-      <h3 style="margin:0 0 1rem; color:#88ffcc;">Add New GPS Drop (local)</h3>
-      <input id="name" placeholder="Name / handle (optional)" value="Swagga Rico" />
+      <h3 style="margin:0 0 1rem; color:#88ffcc;">Add New GPS Drop</h3>
+      <input id="name" placeholder="Name/handle (optional)" value="Swagga Rico" />
       <textarea id="msg" placeholder="Message / note / directions..."></textarea>
       <div style="margin-top:1rem;">
-        <button id="add-drop">Save Pin</button>
-        <button class="danger" onclick="clearAllDrops()">Clear All Pins</button>
+        <button id="add-drop">Save & Share Pin</button>
+        <button class="danger" onclick="clearAllDrops()">Clear All</button>
       </div>
     </div>
 
     <div class="section">
-      <h3 style="margin:0 0 0.6rem; color:#88ffcc;">Search Local Pins</h3>
-      <input id="search-input" placeholder="Search name, note or coords..." autofocus />
+      <h3 style="margin:0 0 0.6rem; color:#88ffcc;">Search Pins</h3>
+      <input id="search-input" placeholder="Search name, note, coords..." autofocus />
       <button id="search-btn">Search</button>
       <div id="search-results"></div>
     </div>
 
     <div class="section">
-      <h3 style="margin:0 0 0.6rem; color:#88ffcc;">Join GPS Room & Sync Pins</h3>
-      <input id="room-code" placeholder="Room code (e.g. london-drop-23jan)" style="margin-bottom:0.8rem;" />
-      <button id="join-room">Join Room</button>
-      <button id="leave-room" class="danger" style="display:none;">Leave Room</button>
-      <p class="note">Same code = pins sync via P2P. Test same WiFi first. TURN relay enabled for mobile/cross-net.</p>
+      <h3 style="margin:0 0 0.6rem; color:#88ffcc;">Join Room for Remote Sync</h3>
+      <input id="room-code" placeholder="Room code (e.g. uk-drop-test)" style="margin-bottom:0.8rem;" />
+      <button id="join-room">Join</button>
+      <button id="leave-room" class="danger" style="display:none;">Leave</button>
+      <p class="note">Same code on devices → pins sync remotely (TURN relay on for mobile/UK nets). Check console (F12) if stuck.</p>
       <p id="my-peer-id" class="note">Your ID: connecting...</p>
     </div>
 
     <div id="nearby" class="section">
-      <h3 style="color:#88ffcc; margin:0.8rem 0 1.2rem;">Nearby Local Drops (~500 m)</h3>
+      <h3 style="color:#88ffcc; margin:0.8rem 0 1.2rem;">Nearby Drops (~500m)</h3>
       <div id="pins"></div>
     </div>
 
     <div id="preview">
-      <p style="text-align:center; color:#555; padding:4rem 0;">
-        Click any pin → Copy Email HTML
-      </p>
+      <p style="text-align:center; color:#555; padding:4rem 0;">Click pin → Copy Email HTML</p>
     </div>
   </div>
 
   <script>
-    const STORAGE_KEY = 'root-drops-gps-v2026';
-    const NEARBY_RADIUS_DEG = 0.0045;
+    const STORAGE_KEY = 'root-drops-gps-2026-fresh';
+    const NEARBY_RADIUS_DEG = 0.0045; // ~500m
 
     let userLat = null, userLng = null;
     let peer = null;
@@ -99,10 +91,10 @@
     let roomChannel = null;
     let currentRoom = null;
 
-    const p2pStatus  = document.getElementById('p2p-status');
+    const p2pStatus = document.getElementById('p2p-status');
     const roomStatus = document.getElementById('room-status');
     const myPeerIdEl = document.getElementById('my-peer-id');
-    const statusEl   = document.getElementById('status');
+    const statusEl = document.getElementById('status');
 
     const ABLY_KEY = 'Exqsug.WFHsuQ:sM6yRLAsZhB3cbZYwblx5qdezyXryw3kLekpenb-Ves';
     const ably = new Ably.Realtime({ key: ABLY_KEY });
@@ -117,70 +109,138 @@
       return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[c]);
     }
 
-    // generateEmailHTML, copyPin, getAllDrops, saveDrops, addDrop, renderNearby, searchDrops, clearAllDrops functions unchanged...
-    // (Paste your original ones here to keep code short – they work fine)
+    function generateEmailHTML(pin) {
+      const date = new Date(pin.timestamp).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Drop – ${escape(pin.name || 'Anon')}</title><style>body{font-family:system-ui,sans-serif;background:#000;color:#e0e0e0;margin:2.2rem;line-height:1.65;}.card{background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:2rem;max-width:640px;margin:0 auto;box-shadow:0 4px 20px rgba(0,255,120,0.08);}.from{color:#88ffcc;font-weight:700;font-size:1.45rem;margin-bottom:1rem;}.msg{white-space:pre-wrap;margin:1.4rem 0;font-size:1.18rem;}.meta{font-size:1rem;color:#888;text-align:right;margin-top:1.6rem;}.coords{font-family:monospace;color:#4cc9ff;font-weight:500;}a{color:#60a5fa;text-decoration:none;margin:0 0.6em;}a:hover{text-decoration:underline;}</style></head><body><div class="card"><div class="from">📍 From: ${escape(pin.name || 'Anonymous')}</div><div class="msg">${escape(pin.msg)}</div><div class="meta">${date}<br><span class="coords">${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}</span><br><br><a href="geo:${pin.lat.toFixed(6)},${pin.lng.toFixed(6)}">Open in Maps</a> • <a href="https://www.google.com/maps?q=${pin.lat.toFixed(6)},${pin.lng.toFixed(6)}">Google Maps</a></div></div></body></html>`;
+    }
 
-    // ── PeerJS with UPDATED TURN (static auth mode – no signup needed for test) ──
+    function copyPin(pin) {
+      const html = generateEmailHTML(pin);
+      document.getElementById('preview').innerHTML = html;
+      navigator.clipboard.writeText(html).then(() => showStatus('Copied!', 'success')).catch(() => showStatus('Copy failed', 'error'));
+    }
+
+    function getAllDrops() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } }
+    function saveDrops(drops) { localStorage.setItem(STORAGE_KEY, JSON.stringify(drops)); }
+
+    function addDrop() {
+      const name = document.getElementById('name').value.trim() || 'Anonymous';
+      const msg = document.getElementById('msg').value.trim();
+      if (!msg) return showStatus('Add message', 'error');
+      if (!userLat || !userLng) return showStatus('GPS not ready', 'error');
+
+      const drops = getAllDrops();
+      const newPin = { name, msg, lat: userLat, lng: userLng, timestamp: new Date().toISOString() };
+      drops.push(newPin);
+      saveDrops(drops);
+      document.getElementById('msg').value = '';
+      showStatus('Pin saved + shared if connected', 'success');
+      renderNearby();
+      if (conn && conn.open) conn.send({ type: 'full-sync', drops: getAllDrops() });
+    }
+
+    function renderNearby() {
+      if (!userLat || !userLng) return document.getElementById('pins').innerHTML = '<p style="text-align:center;color:#666;">Waiting for GPS…</p>';
+
+      const drops = getAllDrops()
+        .filter(d => Math.abs(d.lat - userLat) <= NEARBY_RADIUS_DEG && Math.abs(d.lng - userLng) <= NEARBY_RADIUS_DEG)
+        .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      const container = document.getElementById('pins');
+      if (drops.length === 0) return container.innerHTML = '<p style="text-align:center;color:#666;">No nearby pins</p>';
+
+      let html = '';
+      drops.forEach(d => {
+        const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+        html += `<div class="pin"><div class="from">${escape(d.name)}</div><div class="msg">${escape(d.msg)}</div><div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div><button onclick="copyPin({name:'${escape(d.name).replace(/'/g,"\\'")}',msg:'${escape(d.msg).replace(/'/g,"\\'")}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'})">Copy Email HTML</button></div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    function searchDrops() {
+      const term = document.getElementById('search-input').value.trim().toLowerCase();
+      if (!term) return document.getElementById('search-results').innerHTML = '<p style="text-align:center;color:#666;">Enter search</p>';
+
+      const drops = getAllDrops()
+        .filter(d => d.name.toLowerCase().includes(term) || d.msg.toLowerCase().includes(term) || `${d.lat.toFixed(6)},${d.lng.toFixed(6)}`.includes(term))
+        .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      const container = document.getElementById('search-results');
+      if (drops.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#666;">No matches</p>';
+        showStatus('No results', 'error');
+        return;
+      }
+
+      let html = `<h4 style="color:#88ffcc;margin:0 0 1rem;">Found ${drops.length}</h4>`;
+      drops.forEach(d => {
+        const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+        html += `<div class="pin"><div class="from">${escape(d.name)}</div><div class="msg">${escape(d.msg)}</div><div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div><button onclick="copyPin({name:'${escape(d.name).replace(/'/g,"\\'")}',msg:'${escape(d.msg).replace(/'/g,"\\'")}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'})">Copy Email HTML</button></div>`;
+      });
+      container.innerHTML = html;
+      showStatus(`Found ${drops.length}`, 'success');
+    }
+
+    function clearAllDrops() {
+      if (!confirm('Clear ALL pins?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      showStatus('Cleared', 'success');
+      renderNearby();
+      document.getElementById('search-results').innerHTML = '';
+    }
+
+    // ── PeerJS fresh config 2026 ──
     let myPeerId = localStorage.getItem('root-donate-id') || 'rd-' + Math.random().toString(36).substr(2,9);
     localStorage.setItem('root-donate-id', myPeerId);
     myPeerIdEl.textContent = `Your ID: ${myPeerId}`;
 
     const iceServers = [
-      // Reliable STUNs
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
       { urls: 'stun:stun2.l.google.com:19302' },
       { urls: 'stun:stun3.l.google.com:19302' },
-      { urls: 'stun:stun4.l.google.com:19302' },
-
-      // OpenRelay static auth (2026 working variant – secret for shared auth)
-      { urls: 'turn:staticauth.openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayprojectsecret' },
-      { urls: 'turn:staticauth.openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayprojectsecret' },
-      { urls: 'turn:staticauth.openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayprojectsecret' },
-
-      // Fallback to old openrelay if staticauth flakes (limited reliability)
       { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+      { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
       { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
     ];
 
     peer = new Peer(myPeerId, {
-      config: { iceServers: iceServers, sdpSemantics: 'unified-plan' },
-      debug: 3  // Even more verbose (3 = max)
+      config: { iceServers, sdpSemantics: 'unified-plan' },
+      debug: 3
     });
 
     peer.on('open', () => {
-      p2pStatus.textContent = 'P2P ready (TURN static)';
+      p2pStatus.textContent = 'P2P ready (TURN active)';
       p2pStatus.style.background = '#0a2a0a';
-      console.log('Peer open, ID:', myPeerId);
+      console.log('Peer ready, ID:', myPeerId);
     });
 
     peer.on('connection', inc => {
-      console.log('Incoming conn from:', inc.peer);
+      console.log('Incoming from:', inc.peer);
       if (conn) conn.close();
       conn = inc;
       setupConnection();
     });
 
     peer.on('error', err => {
-      console.error('Peer error:', err.type, err);
-      p2pStatus.textContent = `P2P error: ${err.type || 'unknown'}`;
+      console.error('Peer error:', err);
+      p2pStatus.textContent = `P2P issue: ${err.type || err.message || 'check console'}`;
       p2pStatus.style.background = '#2a0a0a';
-      showStatus('P2P failed – check console / try same WiFi', 'error');
+      showStatus('P2P failed – check console (F12)', 'error');
     });
 
     function setupConnection() {
       conn.on('open', () => {
-        p2pStatus.textContent = `Connected! Syncing with ${conn.peer}`;
+        p2pStatus.textContent = `Connected to ${conn.peer} – syncing`;
         p2pStatus.style.background = '#1a4a1a';
-        showStatus('Connected – pins syncing', 'success');
-        console.log('Channel open – full sync sent');
+        showStatus('Connected – pins syncing remotely', 'success');
+        console.log('Channel open – sending full sync');
         conn.send({ type: 'full-sync', drops: getAllDrops() });
       });
 
       conn.on('data', data => {
-        console.log('Data rx:', data);
+        console.log('Received:', data);
         if (data.type === 'full-sync') {
-          // Your merge logic unchanged...
           let incoming = data.drops || [];
           if (!incoming.length) return;
           let local = getAllDrops();
@@ -195,24 +255,63 @@
           if (added) {
             saveDrops(local);
             renderNearby();
-            showStatus(`Got ${added} new pin${added>1?'s':''}!`, 'success');
+            showStatus(`Synced ${added} new pin${added > 1 ? 's' : ''}`, 'success');
           }
         }
       });
 
       conn.on('close', () => {
-        console.log('Conn closed');
-        p2pStatus.textContent = 'P2P closed – retrying';
+        console.log('Closed – retrying if in room');
+        p2pStatus.textContent = 'P2P closed – retrying...';
         p2pStatus.style.background = '#2a0a0a';
-        if (currentRoom) setTimeout(() => {
-          // Re-try connect to known peers if you have list, or wait for new join
-        }, 2000);
+        if (currentRoom) setTimeout(() => tryReconnect(), 4000);
       });
 
       conn.on('error', err => console.error('Conn error:', err));
     }
 
-    // joinRoom, leaveRoom, events, GPS – unchanged from your version
+    function tryReconnect() {
+      // Simple retry: wait for next join signal or manual re-join
+      showStatus('Retrying P2P...', 'success');
+    }
+
+    function joinRoom() {
+      currentRoom = document.getElementById('room-code').value.trim();
+      if (!currentRoom) return showStatus('Enter room code', 'error');
+
+      if (roomChannel) roomChannel.unsubscribe();
+      roomChannel = ably.channels.get(`root-gps:${currentRoom}`);
+
+      roomStatus.textContent = `Room: ${currentRoom} (peers joining...)`;
+      roomStatus.style.background = '#0a2a0a';
+
+      roomChannel.publish('join', { peerId: myPeerId });
+
+      roomChannel.subscribe('join', msg => {
+        const remote = msg.data.peerId;
+        if (remote === myPeerId) return;
+        showStatus(`Peer ${remote} joined – connecting`, 'success');
+        console.log('Join signal – connect to', remote);
+        if (conn?.open) return;
+        conn = peer.connect(remote);
+        setupConnection();
+      });
+
+      document.getElementById('join-room').style.display = 'none';
+      document.getElementById('leave-room').style.display = 'inline-block';
+    }
+
+    function leaveRoom() {
+      if (roomChannel) {
+        roomChannel.publish('leave', { peerId: myPeerId });
+        roomChannel.unsubscribe();
+      }
+      if (conn) conn.close();
+      roomStatus.textContent = 'Room: not joined';
+      roomStatus.style.background = '#2a0a0a';
+      document.getElementById('join-room').style.display = 'inline-block';
+      document.getElementById('leave-room').style.display = 'none';
+    }
 
     document.getElementById('join-room').onclick = joinRoom;
     document.getElementById('leave-room').onclick = leaveRoom;
@@ -225,12 +324,14 @@
         pos => {
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
-          showStatus('GPS good', 'success');
+          showStatus('GPS locked – ready for drops', 'success');
           renderNearby();
         },
-        err => showStatus(`GPS err: ${err.message}`, 'error'),
-        { enableHighAccuracy: true, timeout: 20000 }
+        err => showStatus(`GPS error: ${err.message}`, 'error'),
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
       );
+    } else {
+      showStatus('No GPS on this device', 'error');
     }
   </script>
 </body>

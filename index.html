@@ -63,6 +63,7 @@
     .msg { white-space: pre-wrap; margin: 0.9rem 0; font-size: 1.05rem; }
     .meta { font-size: 0.92rem; color: #888; text-align: right; margin-top: 0.9rem; }
     .coords { font-family: monospace; color: var(--blue); font-weight: 500; }
+    .coords:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -119,12 +120,18 @@
       })[c]);
     }
 
+    function getAppleMapsLink(lat, lng, name) {
+      const q = name ? `&q=${encodeURIComponent(name)}` : '';
+      return `https://maps.apple.com/?ll=${lat},${lng}${q}`;
+    }
+
     function generateEmailHTML(pin) {
       const name    = pin.name || 'Anonymous';
       const msg     = pin.msg || '(auto-tracked position)';
       const dt      = new Date(pin.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
       const coords  = `${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`;
       const autoTag = pin.auto ? ' [auto]' : '';
+      const mapLink = getAppleMapsLink(pin.lat, pin.lng, name);
 
       return `<!DOCTYPE html>
 <html lang="en">
@@ -138,7 +145,8 @@
     .from { color:#88ffcc; font-weight:700; font-size:1.5rem; margin-bottom:1rem; }
     .msg { white-space:pre-wrap; margin:1.4rem 0; font-size:1.2rem; }
     .meta { font-size:1rem; color:#888; text-align:right; margin:1.6rem 0 1.2rem; }
-    .coords { font-family:monospace; color:#4cc9ff; font-weight:500; }
+    .coords { font-family:monospace; color:#4cc9ff; font-weight:500; text-decoration:none; }
+    .coords:hover { text-decoration:underline; }
     .footer { 
       font-size:0.95rem; 
       color:#777; 
@@ -155,7 +163,7 @@
   <div class="card">
     <div class="from">📍 From: ${escapeHTML(name)}${autoTag}</div>
     <div class="msg">${escapeHTML(msg)}</div>
-    <div class="meta">${dt} • <span class="coords">${coords}</span></div>
+    <div class="meta">${dt} • <a href="${mapLink}" class="coords">${coords}</a></div>
 
     <div class="footer">
       Root Donate • Drop your roots where it matters 🌱<br>
@@ -173,9 +181,11 @@
       const msgPart = pin.msg ? `\n${pin.msg}` : '';
       const coords  = `${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`;
       const dt      = new Date(pin.timestamp).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' });
+      const mapLink = getAppleMapsLink(pin.lat, pin.lng, name);
 
       return `📍 ${name}${autoTag}${msgPart}
 ${coords} • ${dt}
+View in Maps: ${mapLink}
 
 Root Donate • Drop roots, grow the map 🌱🗺️
 @x iandreme • #RootDonate`;
@@ -280,11 +290,12 @@ Root Donate • Drop roots, grow the map 🌱🗺️
       drops.forEach(d => {
         const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
         const label = d.auto ? '[auto]' : '';
+        const mapLink = getAppleMapsLink(d.lat, d.lng, d.name);
         html += `
           <div class="pin">
             <div class="from">${escapeHTML(d.name)} ${label}</div>
             <div class="msg">${escapeHTML(d.msg || '(no note)')}</div>
-            <div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div>
+            <div class="meta">${dt} • <a href="${mapLink}" target="_blank" class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</a></div>
         `;
         if (showCopyButtons) {
           html += `
@@ -351,3 +362,4 @@ Root Donate • Drop roots, grow the map 🌱🗺️
   </script>
 </body>
 </html>
+```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

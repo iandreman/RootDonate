@@ -33,8 +33,6 @@
 
   <div class="container">
     <h1>Root Donate • GPS Tracker</h1>
-    <p class="intro">Local pins • auto-track • email + social ready • OpenStreetMap powered • v2026.2</p>
-
     <div id="status"></div>
 
     <div class="section">
@@ -86,15 +84,6 @@
     function escape(s) {
       return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[c]);
     }
-
-    function generateEmailHTML(pin) {
-      const date = new Date(pin.timestamp).toLocaleString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-      const lat = pin.lat.toFixed(6);
-      const lng = pin.lng.toFixed(6);
-      const osmUrl = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}`;
-      const appleUrl = `https://maps.apple.com/?ll=${lat},${lng}`;
-      // Free no-key OSM static map (via public renderer, size 500x300, zoom 15, marker)
-      const staticMapUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=15&size=500x300&markers=${lat},${lng},red`;
 
       let html = `<!DOCTYPE html>
 <html lang="en">
@@ -209,9 +198,7 @@
           <div class="from">${escape(d.name)} ${label}</div>
           <div class="msg">${escape(d.msg || '(no note)')}</div>
           <div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div>
-          <button onclick="copyPin({name:'${safeName}',msg:'${safeMsg}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'}, 'email')">Copy Email HTML</button>
-          <button onclick="copyPin({name:'${safeName}',msg:'${safeMsg}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'}, 'social')">Copy Social Post</button>
-        </div>`;
+          </div>`;
       });
       container.innerHTML = html;
     }

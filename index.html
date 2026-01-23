@@ -3,14 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Donate • GPS Rooms + Remote Sync (Fresh 2026)</title>
+  <title>Root Donate • GPS Rooms + Pins (Static TURN 2026)</title>
   <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
   <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
   <style>
-    :root {
-      --bg: #000; --text: #e0e0e0; --accent: #00ff88; --surface: #0f0f0f;
-      --border: #2a2a2a; --blue: #4cc9ff;
-    }
+    :root { --bg: #000; --text: #e0e0e0; --accent: #00ff88; --surface: #0f0f0f; --border: #2a2a2a; --blue: #4cc9ff; }
     body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; padding: 1rem; line-height: 1.55; }
     .container { max-width: 720px; margin: 0 auto; }
     h1 { color: var(--accent); text-align: center; margin: 1.4rem 0 0.8rem; font-size: 2.1rem; }
@@ -38,36 +35,36 @@
 <body>
 
   <div class="container">
-    <h1>Root Donate • GPS Rooms + Remote Pins</h1>
-    <p class="intro">Local GPS drops + remote sync via P2P • Fresh build Jan 2026</p>
+    <h1>Root Donate • GPS Rooms + Pins</h1>
+    <p class="intro">GPS drops • remote P2P sync • Static TURN relay (2026 fix)</p>
 
-    <div id="p2p-status">P2P: disconnected (waiting for peers)</div>
+    <div id="p2p-status">P2P: disconnected</div>
     <div id="room-status">Room: not joined</div>
     <div id="status"></div>
 
     <div class="section">
-      <h3 style="margin:0 0 1rem; color:#88ffcc;">Add New GPS Drop</h3>
-      <input id="name" placeholder="Name/handle (optional)" value="Swagga Rico" />
-      <textarea id="msg" placeholder="Message / note / directions..."></textarea>
+      <h3 style="margin:0 0 1rem; color:#88ffcc;">Add GPS Drop</h3>
+      <input id="name" placeholder="Name (optional)" value="Swagga Rico" />
+      <textarea id="msg" placeholder="Message / note..."></textarea>
       <div style="margin-top:1rem;">
-        <button id="add-drop">Save & Share Pin</button>
+        <button id="add-drop">Save Pin</button>
         <button class="danger" onclick="clearAllDrops()">Clear All</button>
       </div>
     </div>
 
     <div class="section">
       <h3 style="margin:0 0 0.6rem; color:#88ffcc;">Search Pins</h3>
-      <input id="search-input" placeholder="Search name, note, coords..." autofocus />
+      <input id="search-input" placeholder="Search..." autofocus />
       <button id="search-btn">Search</button>
       <div id="search-results"></div>
     </div>
 
     <div class="section">
-      <h3 style="margin:0 0 0.6rem; color:#88ffcc;">Join Room for Remote Sync</h3>
-      <input id="room-code" placeholder="Room code (e.g. uk-drop-test)" style="margin-bottom:0.8rem;" />
+      <h3 style="margin:0 0 0.6rem; color:#88ffcc;">Join Room (Remote Sync)</h3>
+      <input id="room-code" placeholder="Room code e.g. uk-test-23jan" style="margin-bottom:0.8rem;" />
       <button id="join-room">Join</button>
       <button id="leave-room" class="danger" style="display:none;">Leave</button>
-      <p class="note">Same code on devices → pins sync remotely (TURN relay on for mobile/UK nets). Check console (F12) if stuck.</p>
+      <p class="note">Same code → pins sync remotely. Use same WiFi first. TURN static auth enabled (no signup). Check console F12 for ICE/TURN logs if stuck.</p>
       <p id="my-peer-id" class="note">Your ID: connecting...</p>
     </div>
 
@@ -82,8 +79,8 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'root-drops-gps-2026-fresh';
-    const NEARBY_RADIUS_DEG = 0.0045; // ~500m
+    const STORAGE_KEY = 'root-drops-gps-static-2026';
+    const NEARBY_RADIUS_DEG = 0.0045;
 
     let userLat = null, userLng = null;
     let peer = null;
@@ -102,7 +99,7 @@
     function showStatus(msg, cls = '') {
       statusEl.textContent = msg;
       statusEl.className = cls;
-      setTimeout(() => { statusEl.textContent = ''; statusEl.className = ''; }, 8000);
+      setTimeout(() => statusEl.textContent = '', 8000);
     }
 
     function escape(s) {
@@ -117,7 +114,7 @@
     function copyPin(pin) {
       const html = generateEmailHTML(pin);
       document.getElementById('preview').innerHTML = html;
-      navigator.clipboard.writeText(html).then(() => showStatus('Copied!', 'success')).catch(() => showStatus('Copy failed', 'error'));
+      navigator.clipboard.writeText(html).then(() => showStatus('Copied', 'success')).catch(() => showStatus('Copy failed', 'error'));
     }
 
     function getAllDrops() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } }
@@ -126,7 +123,7 @@
     function addDrop() {
       const name = document.getElementById('name').value.trim() || 'Anonymous';
       const msg = document.getElementById('msg').value.trim();
-      if (!msg) return showStatus('Add message', 'error');
+      if (!msg) return showStatus('Enter message', 'error');
       if (!userLat || !userLng) return showStatus('GPS not ready', 'error');
 
       const drops = getAllDrops();
@@ -134,7 +131,7 @@
       drops.push(newPin);
       saveDrops(drops);
       document.getElementById('msg').value = '';
-      showStatus('Pin saved + shared if connected', 'success');
+      showStatus('Pin saved', 'success');
       renderNearby();
       if (conn && conn.open) conn.send({ type: 'full-sync', drops: getAllDrops() });
     }
@@ -147,19 +144,19 @@
         .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
 
       const container = document.getElementById('pins');
-      if (drops.length === 0) return container.innerHTML = '<p style="text-align:center;color:#666;">No nearby pins</p>';
+      if (drops.length === 0) return container.innerHTML = '<p style="text-align:center;color:#666;">No nearby</p>';
 
       let html = '';
       drops.forEach(d => {
         const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
-        html += `<div class="pin"><div class="from">${escape(d.name)}</div><div class="msg">${escape(d.msg)}</div><div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div><button onclick="copyPin({name:'${escape(d.name).replace(/'/g,"\\'")}',msg:'${escape(d.msg).replace(/'/g,"\\'")}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'})">Copy Email HTML</button></div>`;
+        html += `<div class="pin"><div class="from">${escape(d.name)}</div><div class="msg">${escape(d.msg)}</div><div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div><button onclick="copyPin({name:'${escape(d.name).replace(/'/g,"\\'")}',msg:'${escape(d.msg).replace(/'/g,"\\'")}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'})">Copy HTML</button></div>`;
       });
       container.innerHTML = html;
     }
 
     function searchDrops() {
       const term = document.getElementById('search-input').value.trim().toLowerCase();
-      if (!term) return document.getElementById('search-results').innerHTML = '<p style="text-align:center;color:#666;">Enter search</p>';
+      if (!term) return document.getElementById('search-results').innerHTML = '<p style="text-align:center;color:#666;">Enter term</p>';
 
       const drops = getAllDrops()
         .filter(d => d.name.toLowerCase().includes(term) || d.msg.toLowerCase().includes(term) || `${d.lat.toFixed(6)},${d.lng.toFixed(6)}`.includes(term))
@@ -175,21 +172,20 @@
       let html = `<h4 style="color:#88ffcc;margin:0 0 1rem;">Found ${drops.length}</h4>`;
       drops.forEach(d => {
         const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
-        html += `<div class="pin"><div class="from">${escape(d.name)}</div><div class="msg">${escape(d.msg)}</div><div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div><button onclick="copyPin({name:'${escape(d.name).replace(/'/g,"\\'")}',msg:'${escape(d.msg).replace(/'/g,"\\'")}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'})">Copy Email HTML</button></div>`;
+        html += `<div class="pin"><div class="from">${escape(d.name)}</div><div class="msg">${escape(d.msg)}</div><div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div><button onclick="copyPin({name:'${escape(d.name).replace(/'/g,"\\'")}',msg:'${escape(d.msg).replace(/'/g,"\\'")}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'})">Copy HTML</button></div>`;
       });
       container.innerHTML = html;
       showStatus(`Found ${drops.length}`, 'success');
     }
 
     function clearAllDrops() {
-      if (!confirm('Clear ALL pins?')) return;
+      if (!confirm('Clear all?')) return;
       localStorage.removeItem(STORAGE_KEY);
       showStatus('Cleared', 'success');
       renderNearby();
       document.getElementById('search-results').innerHTML = '';
     }
 
-    // ── PeerJS fresh config 2026 ──
     let myPeerId = localStorage.getItem('root-donate-id') || 'rd-' + Math.random().toString(36).substr(2,9);
     localStorage.setItem('root-donate-id', myPeerId);
     myPeerIdEl.textContent = `Your ID: ${myPeerId}`;
@@ -198,10 +194,10 @@
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
       { urls: 'stun:stun2.l.google.com:19302' },
-      { urls: 'stun:stun3.l.google.com:19302' },
-      { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-      { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-      { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
+      { urls: 'turn:staticauth.openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayprojectsecret' },
+      { urls: 'turn:staticauth.openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayprojectsecret' },
+      { urls: 'turn:staticauth.openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayprojectsecret' },
+      { urls: 'turn:staticauth.openrelay.metered.ca:80?transport=tcp', username: 'openrelayproject', credential: 'openrelayprojectsecret' }
     ];
 
     peer = new Peer(myPeerId, {
@@ -210,13 +206,13 @@
     });
 
     peer.on('open', () => {
-      p2pStatus.textContent = 'P2P ready (TURN active)';
+      p2pStatus.textContent = 'P2P ready (static TURN)';
       p2pStatus.style.background = '#0a2a0a';
-      console.log('Peer ready, ID:', myPeerId);
+      console.log('Peer open - ID:', myPeerId);
     });
 
     peer.on('connection', inc => {
-      console.log('Incoming from:', inc.peer);
+      console.log('Incoming conn:', inc.peer);
       if (conn) conn.close();
       conn = inc;
       setupConnection();
@@ -224,22 +220,22 @@
 
     peer.on('error', err => {
       console.error('Peer error:', err);
-      p2pStatus.textContent = `P2P issue: ${err.type || err.message || 'check console'}`;
+      p2pStatus.textContent = `P2P failed: ${err.type || err}`;
       p2pStatus.style.background = '#2a0a0a';
-      showStatus('P2P failed – check console (F12)', 'error');
+      showStatus('P2P failed – see console', 'error');
     });
 
     function setupConnection() {
       conn.on('open', () => {
-        p2pStatus.textContent = `Connected to ${conn.peer} – syncing`;
+        p2pStatus.textContent = `Connected ${conn.peer} - syncing`;
         p2pStatus.style.background = '#1a4a1a';
-        showStatus('Connected – pins syncing remotely', 'success');
-        console.log('Channel open – sending full sync');
+        showStatus('Connected – pins syncing', 'success');
+        console.log('Data open - sending sync');
         conn.send({ type: 'full-sync', drops: getAllDrops() });
       });
 
       conn.on('data', data => {
-        console.log('Received:', data);
+        console.log('Data received:', data);
         if (data.type === 'full-sync') {
           let incoming = data.drops || [];
           if (!incoming.length) return;
@@ -255,34 +251,34 @@
           if (added) {
             saveDrops(local);
             renderNearby();
-            showStatus(`Synced ${added} new pin${added > 1 ? 's' : ''}`, 'success');
+            showStatus(`Synced ${added} pins`, 'success');
           }
         }
       });
 
       conn.on('close', () => {
-        console.log('Closed – retrying if in room');
-        p2pStatus.textContent = 'P2P closed – retrying...';
+        console.log('Conn closed');
+        p2pStatus.textContent = 'P2P closed - retrying...';
         p2pStatus.style.background = '#2a0a0a';
-        if (currentRoom) setTimeout(() => tryReconnect(), 4000);
+        if (currentRoom) setTimeout(tryReconnect, 3000);
       });
 
-      conn.on('error', err => console.error('Conn error:', err));
+      conn.on('error', err => console.error('Conn err:', err));
     }
 
     function tryReconnect() {
-      // Simple retry: wait for next join signal or manual re-join
       showStatus('Retrying P2P...', 'success');
+      // Rely on join signals to trigger connect
     }
 
     function joinRoom() {
       currentRoom = document.getElementById('room-code').value.trim();
-      if (!currentRoom) return showStatus('Enter room code', 'error');
+      if (!currentRoom) return showStatus('Enter code', 'error');
 
       if (roomChannel) roomChannel.unsubscribe();
       roomChannel = ably.channels.get(`root-gps:${currentRoom}`);
 
-      roomStatus.textContent = `Room: ${currentRoom} (peers joining...)`;
+      roomStatus.textContent = `Room: ${currentRoom}`;
       roomStatus.style.background = '#0a2a0a';
 
       roomChannel.publish('join', { peerId: myPeerId });
@@ -290,8 +286,8 @@
       roomChannel.subscribe('join', msg => {
         const remote = msg.data.peerId;
         if (remote === myPeerId) return;
-        showStatus(`Peer ${remote} joined – connecting`, 'success');
-        console.log('Join signal – connect to', remote);
+        showStatus(`Peer ${remote} joined`, 'success');
+        console.log('Connecting to', remote);
         if (conn?.open) return;
         conn = peer.connect(remote);
         setupConnection();
@@ -324,14 +320,19 @@
         pos => {
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
-          showStatus('GPS locked – ready for drops', 'success');
+          showStatus('GPS ready', 'success');
           renderNearby();
         },
-        err => showStatus(`GPS error: ${err.message}`, 'error'),
-        { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+        err => showStatus(`GPS err: ${err.message}`, 'error'),
+        { enableHighAccuracy: true, timeout: 20000 }
       );
     } else {
-      showStatus('No GPS on this device', 'error');
+      showStatus('No GPS', 'error');
+    }
+
+    // Extra debug: Log ICE state changes
+    if (conn) {
+      conn.on('iceconnectionstatechange', () => console.log('ICE state:', conn.iceConnectionState));
     }
   </script>
 </body>

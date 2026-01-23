@@ -26,13 +26,14 @@
     .coords { font-family:monospace; color:var(--blue); font-weight:500; }
     #preview { margin-top:2.5rem; padding:1.8rem; background:#050505; border:1px dashed #333; border-radius:14px; min-height:260px; overflow:auto; }
     #search-results { margin-top:1rem; }
+    .map-img { width:100%; max-width:500px; border-radius:12px; margin:1rem 0; display:block; }
   </style>
 </head>
 <body>
 
   <div class="container">
     <h1>Root Donate • GPS Tracker</h1>
-    <p class="intro">Local pins • auto-track while open • search & copy HTML • v2026</p>
+    <p class="intro">Local pins • auto-track • email + social ready • OpenStreetMap powered • v2026.2</p>
 
     <div id="status"></div>
 
@@ -60,14 +61,14 @@
     </div>
 
     <div id="preview">
-      <p style="text-align:center; color:#555; padding:4rem 0;">Click pin → Copy Email HTML</p>
+      <p style="text-align:center; color:#555; padding:4rem 0;">Click pin → Copy Email HTML or Social Snippet</p>
     </div>
   </div>
 
   <script>
     const STORAGE_KEY = 'root-gps-tracker-2026';
-    const AUTO_SAVE_INTERVAL_MS = 60000; // 1 min
-    const NEARBY_RADIUS_DEG = 0.0045; // ~500m at equator
+    const AUTO_SAVE_INTERVAL_MS = 60000;
+    const NEARBY_RADIUS_DEG = 0.0045; // ~500m
 
     let userLat = null, userLng = null;
     let watchId = null;
@@ -88,16 +89,82 @@
 
     function generateEmailHTML(pin) {
       const date = new Date(pin.timestamp).toLocaleString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-      return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Drop – ${escape(pin.name||'Anon')}</title><style>body{font-family:system-ui,sans-serif;background:#000;color:#e0e0e0;margin:2.2rem;line-height:1.65;}.card{background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:2rem;max-width:640px;margin:0 auto;box-shadow:0 4px 20px rgba(0,255,120,0.08);}.from{color:#88ffcc;font-weight:700;font-size:1.45rem;margin-bottom:1rem;}.msg{white-space:pre-wrap;margin:1.4rem 0;font-size:1.18rem;}.meta{font-size:1rem;color:#888;text-align:right;margin-top:1.6rem;}.coords{font-family:monospace;color:#4cc9ff;font-weight:500;}a{color:#60a5fa;text-decoration:none;margin:0 0.6em;}a:hover{text-decoration:underline;}</style></head><body><div class="card"><div class="from">📍 From: ${escape(pin.name||'Anonymous')}</div><div class="msg">${escape(pin.msg||'(auto-tracked position)')}</div><div class="meta">${date}<br><span class="coords">${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}</span><br><br><a href="geo:${pin.lat.toFixed(6)},${pin.lng.toFixed(6)}">Open in Maps</a> • <a href="https://www.google.com/maps?q=${pin.lat.toFixed(6)},${pin.lng.toFixed(6)}">Google Maps</a></div></div></body></html>`;
+      const lat = pin.lat.toFixed(6);
+      const lng = pin.lng.toFixed(6);
+      const osmUrl = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}`;
+      const appleUrl = `https://maps.apple.com/?ll=${lat},${lng}`;
+      // Free no-key OSM static map (via public renderer, size 500x300, zoom 15, marker)
+      const staticMapUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=15&size=500x300&markers=${lat},${lng},red`;
+
+      let html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📍 ${escape(pin.name||'Anon')} Drop</title>
+  <style>
+    body{font-family:system-ui,sans-serif;background:#000;color:#e0e0e0;margin:2rem;line-height:1.6;}
+    .card{background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:2rem;max-width:640px;margin:0 auto;}
+    .from{color:#88ffcc;font-weight:700;font-size:1.5rem;margin-bottom:1rem;}
+    .msg{white-space:pre-wrap;margin:1.4rem 0;font-size:1.2rem;}
+    .meta{font-size:1rem;color:#888;text-align:right;margin-top:1.6rem;}
+    .coords{font-family:monospace;color:#4cc9ff;font-weight:500;}
+    a{color:#60a5fa;text-decoration:none;margin:0 0.8em;}
+    a:hover{text-decoration:underline;}
+    img{max-width:100%;border-radius:12px;margin:1rem 0;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="from">📍 From: ${escape(pin.name||'Anonymous')}</div>
+    <div class="msg">${escape(pin.msg || '(auto-tracked position)')}</div>
+    <img src="${staticMapUrl}" alt="Map location (OpenStreetMap)">
+    <div class="meta">
+      ${date}<br>
+      <span class="coords">${lat}, ${lng}</span><br><br>
+      <strong>Open in:</strong><br>
+      <a href="geo:${lat},${lng}">Device Maps</a> • 
+      <a href="${osmUrl}">OpenStreetMap</a> • 
+      <a href="${appleUrl}">Apple Maps</a>
+    </div>
+  </div>
+</body>
+</html>`;
+
+      return html;
     }
 
-    function copyPin(pin) {
-      const html = generateEmailHTML(pin);
-      document.getElementById('preview').innerHTML = html;
-      navigator.clipboard.writeText(html).then(() => showStatus('Copied to clipboard', 'success')).catch(() => showStatus('Copy failed', 'error'));
+    function generateSocialSnippet(pin) {
+      const lat = pin.lat.toFixed(6);
+      const lng = pin.lng.toFixed(6);
+      const date = new Date(pin.timestamp).toLocaleDateString('en-GB');
+      const osmLink = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}`;
+      return `📍 ${escape(pin.name || 'Swagga Rico')} • ${escape(pin.msg || 'Auto pin')}\n${date}\n${lat}, ${lng}\n${osmLink}\n#GPS #Location #OpenStreetMap`;
     }
 
-    function getAllDrops() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } }
+    function copyToClipboard(text, successMsg = 'Copied!') {
+      navigator.clipboard.writeText(text).then(() => showStatus(successMsg, 'success'))
+        .catch(() => showStatus('Copy failed', 'error'));
+    }
+
+    function copyPin(pin, type = 'email') {
+      let content = '';
+      let msg = '';
+      if (type === 'email') {
+        content = generateEmailHTML(pin);
+        document.getElementById('preview').innerHTML = content;
+        msg = 'Email HTML copied';
+      } else {
+        content = generateSocialSnippet(pin);
+        msg = 'Social snippet copied';
+      }
+      copyToClipboard(content, msg);
+    }
+
+    function getAllDrops() { 
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } 
+      catch { return []; } 
+    }
     function saveDrops(drops) { localStorage.setItem(STORAGE_KEY, JSON.stringify(drops)); }
 
     function savePin(name = 'Swagga Rico', msg = '', isAuto = false) {
@@ -129,7 +196,7 @@
         autoSaveInterval = setInterval(() => {
           if (userLat && userLng) savePin('Swagga Rico', '', true);
         }, AUTO_SAVE_INTERVAL_MS);
-        showStatus('Auto-tracking ON (~1 min intervals)', 'success');
+        showStatus('Auto-tracking ON (~1 min)', 'success');
       } else {
         if (autoSaveInterval) clearInterval(autoSaveInterval);
         showStatus('Auto-tracking OFF', 'success');
@@ -142,7 +209,7 @@
           pos => {
             userLat = pos.coords.latitude;
             userLng = pos.coords.longitude;
-            renderNearby(); // live refresh nearby
+            renderNearby();
           },
           err => showStatus(`GPS error: ${err.message}`, 'error'),
           { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
@@ -172,7 +239,15 @@
       drops.forEach(d => {
         const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle:'medium', timeStyle:'short' });
         const label = d.auto ? '[auto]' : '';
-        html += `<div class="pin"><div class="from">${escape(d.name)} ${label}</div><div class="msg">${escape(d.msg || '(no note)')}</div><div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div><button onclick="copyPin({name:'${escape(d.name).replace(/'/g,"\\'")}',msg:'${escape(d.msg).replace(/'/g,"\\'")}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'})">Copy Email HTML</button></div>`;
+        const safeName = escape(d.name).replace(/'/g, "\\'");
+        const safeMsg  = escape(d.msg || '(no note)').replace(/'/g, "\\'");
+        html += `<div class="pin">
+          <div class="from">${escape(d.name)} ${label}</div>
+          <div class="msg">${escape(d.msg || '(no note)')}</div>
+          <div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div>
+          <button onclick="copyPin({name:'${safeName}',msg:'${safeMsg}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'}, 'email')">Copy Email HTML</button>
+          <button onclick="copyPin({name:'${safeName}',msg:'${safeMsg}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'}, 'social')">Copy Social Post</button>
+        </div>`;
       });
       container.innerHTML = html;
     }
@@ -194,23 +269,31 @@
 
       const container = document.getElementById('search-results');
       if (drops.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#666;">No matches found</p>';
+        container.innerHTML = '<p style="text-align:center;color:#666;">No matches</p>';
         showStatus('No results', 'error');
         return;
       }
 
-      let html = `<p style="color:#88ffcc; margin:0 0 1rem;">Found ${drops.length} pins</p>`;
+      let html = `<p style="color:#88ffcc; margin:0 0 1rem;">Found ${drops.length}</p>`;
       drops.forEach(d => {
         const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle:'medium', timeStyle:'short' });
         const label = d.auto ? '[auto]' : '';
-        html += `<div class="pin"><div class="from">${escape(d.name)} ${label}</div><div class="msg">${escape(d.msg || '(no note)')}</div><div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div><button onclick="copyPin({name:'${escape(d.name).replace(/'/g,"\\'")}',msg:'${escape(d.msg).replace(/'/g,"\\'")}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'})">Copy Email HTML</button></div>`;
+        const safeName = escape(d.name).replace(/'/g, "\\'");
+        const safeMsg  = escape(d.msg || '(no note)').replace(/'/g, "\\'");
+        html += `<div class="pin">
+          <div class="from">${escape(d.name)} ${label}</div>
+          <div class="msg">${escape(d.msg || '(no note)')}</div>
+          <div class="meta">${dt} • <span class="coords">${d.lat.toFixed(6)}, ${d.lng.toFixed(6)}</span></div>
+          <button onclick="copyPin({name:'${safeName}',msg:'${safeMsg}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'}, 'email')">Copy Email HTML</button>
+          <button onclick="copyPin({name:'${safeName}',msg:'${safeMsg}',lat:${d.lat},lng:${d.lng},timestamp:'${d.timestamp}'}, 'social')">Copy Social Post</button>
+        </div>`;
       });
       container.innerHTML = html;
       showStatus(`Found ${drops.length}`, 'success');
     }
 
     function clearAllDrops() {
-      if (!confirm('Delete ALL local pins? This cannot be undone.')) return;
+      if (!confirm('Delete ALL local pins?')) return;
       localStorage.removeItem(STORAGE_KEY);
       showStatus('All pins cleared', 'success');
       renderNearby();
@@ -225,9 +308,8 @@
       if (e.key === 'Enter') searchPins();
     });
 
-    // Start GPS immediately
     startWatching();
-    renderNearby(); // initial draw
+    renderNearby();
   </script>
 </body>
 </html>

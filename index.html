@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Root Donate • Search & Email GPS Pins</title>
   <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     :root {
       --bg: #000;
@@ -113,8 +112,10 @@
       <h3 style="margin:0 0 1rem; color:#88ffcc;">Add New Drop</h3>
       <input id="name" placeholder="Name / handle (optional)" value="Swagga Rico" />
       <textarea id="msg" placeholder="Message / note / directions..."></textarea>
-      <button id="add-drop">Save Pin</button>
-      <button class="danger" onclick="clearAllDrops()">Clear All Pins</button>
+      <div style="margin-top:1rem;">
+        <button id="add-drop">Save Pin</button>
+        <button class="danger" onclick="clearAllDrops()">Clear All Pins</button>
+      </div>
     </div>
 
     <div class="section">
@@ -144,13 +145,15 @@
     </div>
 
     <div id="preview">
-      <p style="text-align:center; color:#555; padding:4rem 0;">Click any pin's "Copy Email HTML" button to preview & copy</p>
+      <p style="text-align:center; color:#555; padding:4rem 0;">
+        Click any pin's "Copy Email HTML" button to preview & copy
+      </p>
     </div>
   </div>
 
   <script>
     const STORAGE_KEY = 'root-drops-gps-email-v2026';
-    const NEARBY_RADIUS_DEG = 0.0045; // ≈500m
+    const NEARBY_RADIUS_DEG = 0.0045; // ≈500m at equator
     const AUTO_PUSH_INTERVAL_MS = 30000;
 
     let userLat = null;
@@ -217,12 +220,16 @@
       navigator.clipboard.writeText(html).then(() => {
         status('Email HTML copied – paste into email', 'success');
       }).catch(() => {
-        status('Copy failed – long-press in preview area', 'error');
+        status('Copy failed – long-press or select in preview', 'error');
       });
     }
 
     function getAllDrops() {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch {
+        return [];
+      }
     }
 
     function saveDrops(drops) {
@@ -243,7 +250,7 @@
       status('Pin saved', 'success');
       renderNearby();
 
-      if (conn && conn.open && document.getElementById('auto-push').checked) {
+      if (conn?.open && document.getElementById('auto-push').checked) {
         conn.send({ type: 'push', pin: newPin });
       }
     }
@@ -326,7 +333,7 @@
     }
 
     // ──────────────────────────────────────────────
-    // P2P Sync (unchanged)
+    // P2P with PeerJS
     // ──────────────────────────────────────────────
 
     let myPeerId = localStorage.getItem('root-donate-peer-id');
@@ -336,14 +343,12 @@
     }
     myPeerIdEl.textContent = `Your Sync ID: ${myPeerId}`;
 
-    });
-
     peer = new Peer(myPeerId, {
       config: { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] }
     });
 
     peer.on('open', () => {
-      p2pStatus.textContent = 'P2P ready – share ID or QR';
+      p2pStatus.textContent = 'P2P ready – share your ID to connect';
       p2pStatus.style.background = '#0a2a0a';
     });
 
@@ -387,7 +392,7 @@
     function startAutoPush() {
       stopAutoPush();
       autoPushInterval = setInterval(() => {
-        if (conn && conn.open) {
+        if (conn?.open) {
           conn.send({ type: 'push-many', drops: getAllDrops() });
         }
       }, AUTO_PUSH_INTERVAL_MS);
@@ -445,7 +450,7 @@
     });
 
     document.getElementById('auto-push').onchange = function() {
-      if (this.checked && conn && conn.open) startAutoPush();
+      if (this.checked && conn?.open) startAutoPush();
       else stopAutoPush();
     };
 

@@ -118,47 +118,11 @@
   <div class="card">
     <div class="from">📍 From: ${escape(pin.name||'Anonymous')}</div>
     <div class="msg">${escape(pin.msg || '(auto-tracked position)')}</div>
-    <img src="${staticMapUrl}" alt="Map location (OpenStreetMap)">
-    <div class="meta">
-      ${date}<br>
-      <span class="coords">${lat}, ${lng}</span><br><br>
-      <strong>Open in:</strong><br>
-      <a href="geo:${lat},${lng}">Device Maps</a> • 
-      <a href="${osmUrl}">OpenStreetMap</a> • 
-      <a href="${appleUrl}">Apple Maps</a>
-    </div>
   </div>
 </body>
 </html>`;
 
       return html;
-    }
-
-    function generateSocialSnippet(pin) {
-      const lat = pin.lat.toFixed(6);
-      const lng = pin.lng.toFixed(6);
-      const date = new Date(pin.timestamp).toLocaleDateString('en-GB');
-      const osmLink = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}`;
-      return `📍 ${escape(pin.name || 'Swagga Rico')} • ${escape(pin.msg || 'Auto pin')}\n${date}\n${lat}, ${lng}\n${osmLink}\n#GPS #Location #OpenStreetMap`;
-    }
-
-    function copyToClipboard(text, successMsg = 'Copied!') {
-      navigator.clipboard.writeText(text).then(() => showStatus(successMsg, 'success'))
-        .catch(() => showStatus('Copy failed', 'error'));
-    }
-
-    function copyPin(pin, type = 'email') {
-      let content = '';
-      let msg = '';
-      if (type === 'email') {
-        content = generateEmailHTML(pin);
-        document.getElementById('preview').innerHTML = content;
-        msg = 'Email HTML copied';
-      } else {
-        content = generateSocialSnippet(pin);
-        msg = 'Social snippet copied';
-      }
-      copyToClipboard(content, msg);
     }
 
     function getAllDrops() { 

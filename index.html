@@ -64,11 +64,29 @@
     .meta { font-size: 0.92rem; color: #888; text-align: right; margin-top: 0.9rem; }
     .coords { font-family: monospace; color: var(--blue); font-weight: 500; }
     .coords:hover { text-decoration: underline; }
+    .card {
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 640px;
+      margin: 2rem auto;
+    }
+    .footer {
+      font-size: 0.95rem;
+      color: #777;
+      text-align: center;
+      margin-top: 2.2rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid #222;
+    }
+    .footer a { color: #60a5fa; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
 
-  <div class="container">
+  <div class="container" id="main-container">
     <h1>Root Donate • Email GPS pins to share!</h1>
     <div id="status"></div>
 
@@ -107,6 +125,7 @@
     let autoTracking = false;
 
     const statusEl = document.getElementById('status');
+    const mainContainer = document.getElementById('main-container');
 
     function showStatus(msg, cls = '') {
       statusEl.textContent = msg;
@@ -147,14 +166,7 @@
     .meta { font-size:1rem; color:#888; text-align:right; margin:1.6rem 0 1.2rem; }
     .coords { font-family:monospace; color:#4cc9ff; font-weight:500; text-decoration:none; }
     .coords:hover { text-decoration:underline; }
-    .footer { 
-      font-size:0.95rem; 
-      color:#777; 
-      text-align:center; 
-      margin-top:2.2rem; 
-      padding-top:1.2rem; 
-      border-top:1px solid #222; 
-    }
+    .footer { font-size:0.95rem; color:#777; text-align:center; margin-top:2.2rem; padding-top:1.2rem; border-top:1px solid #222; }
     .footer a { color:#60a5fa; text-decoration:none; }
     .footer a:hover { text-decoration:underline; }
   </style>
@@ -164,7 +176,6 @@
     <div class="from">📍 From: ${escapeHTML(name)}${autoTag}</div>
     <div class="msg">${escapeHTML(msg)}</div>
     <div class="meta">${dt} • <a href="${mapLink}" class="coords">${coords}</a></div>
-
     <div class="footer">
       Root Donate • Drop your roots where it matters 🌱<br>
       Build the map together • <a href="https://x.com/iandreme">@iandreme</a><br>
@@ -191,6 +202,12 @@ Root Donate • Drop roots, grow the map 🌱🗺️
 @x iandreme • #RootDonate`;
     }
 
+    function generateShareUrl(pin) {
+      const pinJson = JSON.stringify(pin);
+      const encoded = btoa(pinJson);
+      return `${window.location.origin}${window.location.pathname}#pin=${encodeURIComponent(encoded)}`;
+    }
+
     async function copyToClipboard(text) {
       try {
         await navigator.clipboard.writeText(text);
@@ -203,11 +220,9 @@ Root Donate • Drop roots, grow the map 🌱🗺️
 
     function copyPin(pin, format) {
       let content = '';
-      if (format === 'email') {
-        content = generateEmailHTML(pin);
-      } else if (format === 'social') {
-        content = generateSocialSnippet(pin);
-      }
+      if (format === 'email') content = generateEmailHTML(pin);
+      else if (format === 'social') content = generateSocialSnippet(pin);
+      else if (format === 'url') content = generateShareUrl(pin);
       if (content) copyToClipboard(content);
     }
 
@@ -301,6 +316,7 @@ Root Donate • Drop roots, grow the map 🌱🗺️
           html += `
             <button onclick='copyPin(${JSON.stringify(d)}, "email")'>Copy Email HTML</button>
             <button onclick='copyPin(${JSON.stringify(d)}, "social")'>Copy Social Post</button>
+            <button onclick='copyPin(${JSON.stringify(d)}, "url")'>Copy Share URL</button>
           `;
         }
         html += '</div>';
@@ -348,6 +364,49 @@ Root Donate • Drop roots, grow the map 🌱🗺️
       document.getElementById('search-results').innerHTML = '';
     }
 
+    function renderSharedPin(pin) {
+      const name    = pin.name || 'Anonymous';
+      const msg     = pin.msg || '(auto-tracked position)';
+      const dt      = new Date(pin.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+      const coords  = `${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`;
+      const autoTag = pin.auto ? ' [auto]' : '';
+      const mapLink = getAppleMapsLink(pin.lat, pin.lng, name);
+
+      mainContainer.innerHTML = `
+        <div class="card">
+          <div class="from" style="color:#88ffcc; font-weight:700; font-size:1.5rem; margin-bottom:1rem;">📍 From: ${escapeHTML(name)}${autoTag}</div>
+          <div class="msg" style="white-space:pre-wrap; margin:1.4rem 0; font-size:1.2rem;">${escapeHTML(msg)}</div>
+          <div class="meta" style="font-size:1rem; color:#888; text-align:right; margin:1.6rem 0 1.2rem;">${dt} • <a href="${mapLink}" class="coords" style="font-family:monospace; color:#4cc9ff; font-weight:500; text-decoration:none;">${coords}</a></div>
+          <div class="footer">
+            Root Donate • Drop your roots where it matters 🌱<br>
+            Build the map together • <a href="https://x.com/iandreme">@iandreme</a><br>
+            Every pin counts 🗺️ #RootDonate
+          </div>
+        </div>
+        <div style="text-align:center; margin:2rem 0; color:#666;">
+          <button onclick="window.location.href = window.location.origin + window.location.pathname">← Back to Main Map</button>
+        </div>
+      `;
+    }
+
+    function checkForSharedPin() {
+      const hash = window.location.hash;
+      if (hash.startsWith('#pin=')) {
+        try {
+          const encoded = decodeURIComponent(hash.slice(5));
+          const pinJson = atob(encoded);
+          const pin = JSON.parse(pinJson);
+          renderSharedPin(pin);
+          document.title = `📍 ${pin.name || 'Pin'} Drop • Root Donate`;
+          return true;
+        } catch (err) {
+          console.error('Invalid shared pin:', err);
+          showStatus('Invalid or corrupted share link', 'error');
+        }
+      }
+      return false;
+    }
+
     // Event listeners
     document.getElementById('add-drop').onclick = addManualDrop;
     document.getElementById('toggle-auto').onclick = toggleAutoTrack;
@@ -357,9 +416,11 @@ Root Donate • Drop roots, grow the map 🌱🗺️
     });
 
     // Start
-    startWatching();
-    renderNearby();
+    const isSharedMode = checkForSharedPin();
+    if (!isSharedMode) {
+      startWatching();
+      renderNearby();
+    }
   </script>
 </body>
 </html>
-```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

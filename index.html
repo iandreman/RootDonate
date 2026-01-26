@@ -10,205 +10,152 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
 
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin:0; padding:0; box-sizing:border-box; }
+    
     body {
-      background: #0a0a12;
-      color: #e0e0ff;
-      font-family: 'Inter', system-ui, sans-serif;
-      min-height: 100vh;
+      background:#0a0a12;
+      color:#e0e0ff;
+      font-family:'Inter',system-ui,sans-serif;
+      min-height:100vh;
       background-image: 
-        radial-gradient(circle at 10% 20%, rgba(120, 80, 255, 0.07) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(52, 211, 153, 0.06) 0%, transparent 40%);
-      line-height: 1.6;
+        radial-gradient(circle at 10% 20%, rgba(120,80,255,0.07) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(52,211,153,0.06) 0%, transparent 40%);
+      line-height:1.6;
     }
 
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 20px;
-    }
+    .container { max-width:1100px; margin:0 auto; padding:0 20px; }
 
-    header {
-      padding: 80px 0 60px;
-      text-align: center;
-    }
+    header { padding:80px 0 60px; text-align:center; }
 
     .glow-text {
-      font-family: 'Orbitron', sans-serif;
-      font-size: clamp(3.5rem, 10vw, 7.5rem);
-      font-weight: 900;
-      letter-spacing: -3px;
-      background: linear-gradient(90deg, #a78bfa, #7dd3fc, #34d399, #a78bfa);
-      background-size: 300% 100%;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      animation: gradient 10s linear infinite;
-      text-shadow: 0 0 60px rgba(120, 80, 255, 0.5);
+      font-family:'Orbitron',sans-serif;
+      font-size:clamp(3.5rem,10vw,7.5rem);
+      font-weight:900;
+      letter-spacing:-3px;
+      background:linear-gradient(90deg,#a78bfa,#7dd3fc,#34d399,#a78bfa);
+      background-size:300% 100%;
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      animation:gradient 10s linear infinite;
+      text-shadow:0 0 60px rgba(120,80,255,0.5);
     }
 
-    @keyframes gradient {
-      0%   { background-position: 0% 50%; }
-      100% { background-position: 300% 50%; }
-    }
+    @keyframes gradient { 0% {background-position:0% 50%} 100% {background-position:300% 50%} }
 
-    .tagline {
-      margin: 1rem 0 0.5rem;
-      font-size: 1.4rem;
-      color: #a0a0ff;
-      font-weight: 300;
-    }
-
-    .handle {
-      font-size: 1.3rem;
-      color: #818cf8;
-      font-family: 'Orbitron', monospace;
-    }
+    .tagline { margin:1rem 0 0.5rem; font-size:1.4rem; color:#a0a0ff; font-weight:300; }
+    .handle   { font-size:1.3rem; color:#818cf8; font-family:'Orbitron',monospace; }
 
     .section {
-      margin: 50px 0;
-      padding: 32px;
-      background: rgba(255,255,255,0.015);
-      border-radius: 20px;
-      border: 1px solid rgba(120,80,255,0.12);
-      backdrop-filter: blur(10px);
+      margin:50px 0;
+      padding:32px;
+      background:rgba(255,255,255,0.015);
+      border-radius:20px;
+      border:1px solid rgba(120,80,255,0.12);
+      backdrop-filter:blur(10px);
     }
 
     .section h2 {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 1.8rem;
-      color: #34d399;
-      margin-bottom: 1.5rem;
-      text-shadow: 0 0 15px rgba(52,211,153,0.4);
+      font-family:'Orbitron',sans-serif;
+      font-size:1.8rem;
+      color:#34d399;
+      margin-bottom:1.5rem;
+      text-shadow:0 0 15px rgba(52,211,153,0.4);
     }
 
     input, textarea {
-      width: 100%;
-      padding: 14px;
-      margin-bottom: 16px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      color: white;
-      font-size: 1rem;
+      width:100%;
+      padding:14px;
+      margin-bottom:16px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:12px;
+      color:white;
+      font-size:1rem;
     }
 
-    textarea { min-height: 100px; resize: vertical; }
+    textarea { min-height:100px; resize:vertical; }
 
     button {
-      padding: 14px 32px;
-      background: linear-gradient(45deg, #7c3aed, #3b82f6);
-      border: none;
-      border-radius: 999px;
-      color: white;
-      font-weight: 600;
-      font-size: 1.05rem;
-      cursor: pointer;
-      transition: all 0.35s ease;
-      box-shadow: 0 8px 25px rgba(124,58,237,0.35);
+      padding:14px 32px;
+      background:linear-gradient(45deg,#7c3aed,#3b82f6);
+      border:none;
+      border-radius:999px;
+      color:white;
+      font-weight:600;
+      font-size:1.05rem;
+      cursor:pointer;
+      transition:all 0.35s ease;
+      box-shadow:0 8px 25px rgba(124,58,237,0.35);
     }
 
-    button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 15px 35px rgba(124,58,237,0.5);
-    }
+    button:hover { transform:translateY(-3px); box-shadow:0 15px 35px rgba(124,58,237,0.5); }
 
     button.share-btn {
-      background: linear-gradient(45deg, #6366f1, #a78bfa);
-      box-shadow: 0 6px 20px rgba(99,102,241,0.4);
+      background:linear-gradient(45deg,#6366f1,#a78bfa);
+      box-shadow:0 6px 20px rgba(99,102,241,0.4);
+      width:100%;
+      margin-top:16px;
+      font-size:0.98rem;
     }
 
     button.clear-btn {
-      background: linear-gradient(45deg, #ef4444, #dc2626);
-      box-shadow: 0 6px 20px rgba(239,68,68,0.4);
-    }
-
-    button.share-btn, button.clear-btn {
-      width: 100%;
-      margin-top: 16px;
+      background:linear-gradient(45deg,#ef4444,#dc2626);
+      box-shadow:0 6px 20px rgba(239,68,68,0.4);
+      width:100%;
+      margin-top:24px;
     }
 
     .pin {
-      background: rgba(255,255,255,0.025);
-      padding: 20px;
-      margin-bottom: 20px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.06);
+      background:rgba(255,255,255,0.025);
+      padding:20px;
+      margin-bottom:20px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,0.06);
     }
 
-    .from {
-      font-weight: 600;
-      color: #818cf8;
-      margin-bottom: 0.5rem;
-    }
+    .from { font-weight:600; color:#818cf8; margin-bottom:0.5rem; }
+    .msg   { margin:0.8rem 0; color:#d0d0ff; white-space:pre-wrap; }
+    .meta  { font-size:0.92rem; color:#888; }
 
-    .msg {
-      margin: 0.8rem 0;
-      color: #d0d0ff;
-      white-space: pre-wrap;
-    }
-
-    .meta {
-      font-size: 0.92rem;
-      color: #888;
-    }
-
-    .coords {
-      color: #4cc9ff;
-      text-decoration: none;
-      font-family: monospace;
-    }
-
-    .coords:hover { text-decoration: underline; }
+    .coords { color:#4cc9ff; text-decoration:none; font-family:monospace; }
+    .coords:hover { text-decoration:underline; }
 
     #status {
-      text-align: center;
-      padding: 14px;
-      margin: 20px 0;
-      border-radius: 12px;
-      display: none;
+      text-align:center;
+      padding:14px;
+      margin:20px 0;
+      border-radius:12px;
+      display:none;
     }
 
-    #status.success { background: rgba(52,211,153,0.2); color: #34d399; }
-    #status.error   { background: rgba(239,68,68,0.2); color: #ef4444; }
-
-    footer {
-      text-align: center;
-      padding: 80px 0 120px;
-      color: #666688;
-      font-size: 0.95rem;
-    }
+    #status.success { background:rgba(52,211,153,0.2); color:#34d399; }
+    #status.error   { background:rgba(239,68,68,0.2); color:#ef4444; }
 
     .search-container {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 16px;
+      display:flex;
+      gap:12px;
+      margin-bottom:16px;
     }
 
-    .search-container input {
-      flex: 1;
+    .search-container input { flex:1; }
+    .search-container button { padding:14px 24px; box-shadow:none; }
+
+    #search-results { margin-top:24px; }
+
+    footer {
+      text-align:center;
+      padding:80px 0 120px;
+      color:#666688;
+      font-size:0.95rem;
     }
 
-    .search-container button {
-      padding: 14px 24px;
-      box-shadow: none;
-    }
-
-    #search-results {
-      margin-top: 24px;
-    }
-
-    @media (max-width: 640px) {
-      header { padding: 60px 0 40px; }
-      .glow-text { font-size: clamp(2.8rem, 9vw, 5.5rem); }
-      .section { padding: 24px; }
-      .search-container { flex-direction: column; }
-      .search-container button { width: 100%; }
+    @media (max-width:640px) {
+      header { padding:60px 0 40px; }
+      .glow-text { font-size:clamp(2.8rem,9vw,5.5rem); }
+      .section { padding:24px; }
+      .search-container { flex-direction:column; }
+      .search-container button { width:100%; }
     }
   </style>
 </head>
@@ -231,6 +178,18 @@
     </div>
 
     <div class="section">
+      <h2>Auto-Track Mode</h2>
+      <button id="toggle-auto">Toggle Auto-Track (OFF)</button>
+    </div>
+
+    <div class="section">
+      <h2>Nearby Drops</h2>
+      <div id="pins">
+        <p style="text-align:center;color:#666;">Waiting for position…</p>
+      </div>
+    </div>
+
+    <div class="section">
       <h2>Search All Pins</h2>
       <div class="search-container">
         <input type="text" id="search-input" placeholder="Search by name, message, coords...">
@@ -240,18 +199,6 @@
       <button class="clear-btn" id="clear-all">Clear All Pins ⚠️</button>
     </div>
 
-    <div class="section">
-      <h2>Auto-Track Mode</h2>
-      <button id="toggle-auto">Toggle Auto-Track (OFF)</button>
-    </div>
-
-    <div class="section">
-      <h2>Nearby Drops</h2>
-      <div id="pins">
-        <p style="text-align:center; color:#666;">Waiting for position…</p>
-      </div>
-    </div>
-
     <footer>
       Built with pure energy • 2026 © Swagga Rico • #RootDonate
     </footer>
@@ -259,7 +206,7 @@
 
   <script>
     const STORAGE_KEY = 'root_donate_pins';
-    const NEARBY_RADIUS_DEG = 0.001; // ~111m
+    const NEARBY_RADIUS_DEG = 0.001;
 
     let userLat = null;
     let userLng = null;
@@ -308,7 +255,6 @@
 
     function addAutoPin() {
       if (!userLat || !userLng) return;
-
       const pins = getAllPins();
       pins.push({
         name: 'Swagga Rico',
@@ -318,7 +264,6 @@
         time: new Date().toISOString(),
         auto: true
       });
-
       savePins(pins);
       showStatus('Auto-pin saved', 'success');
       renderNearby();
@@ -330,8 +275,8 @@
       btn.textContent = `Toggle Auto-Track (${autoTracking ? 'ON' : 'OFF'})`;
 
       if (autoTracking) {
-        autoInterval = setInterval(addAutoPin, 60000); // every 1 min
-        showStatus('Auto-track ON', 'success');
+        autoInterval = setInterval(addAutoPin, 60000);
+        showStatus('Auto-track ON (~every 1 min)', 'success');
       } else {
         clearInterval(autoInterval);
         showStatus('Auto-track OFF', 'success');
@@ -339,27 +284,31 @@
     }
 
     function getAppleMapsLink(lat, lng, label) {
-      return `https://maps.apple.com/?ll=${lat},${lng}&q=${encodeURIComponent(label)}`;
+      return `https://maps.apple.com/?ll=${lat},${lng}&q=${encodeURIComponent(label || 'Pin')}`;
     }
 
     function generateShareUrl(pin) {
-      const pinJson = JSON.stringify(pin);
-      const encoded = btoa(pinJson);
-      return `${window.location.origin}${window.location.pathname}#pin=${encodeURIComponent(encoded)}`;
+      try {
+        const pinJson = JSON.stringify(pin);
+        const encoded = btoa(pinJson);
+        return `${window.location.origin}${window.location.pathname}#pin=${encodeURIComponent(encoded)}`;
+      } catch {
+        return '';
+      }
     }
 
     function renderPinList(containerId, pins, showShare = false) {
       const container = document.getElementById(containerId);
-      if (!pins.length) {
+      if (!pins?.length) {
         container.innerHTML = '<p style="text-align:center;color:#666;">No pins found</p>';
         return;
       }
 
       let html = '';
       pins.forEach(p => {
-        const dt = new Date(p.time).toLocaleString();
+        const dt = new Date(p.time).toLocaleString('en-GB', {dateStyle:'medium', timeStyle:'short'});
         const label = p.auto ? '[auto]' : '';
-        const mapLink = getAppleMapsLink(p.lat, p.lng, p.name || 'Pin');
+        const mapLink = getAppleMapsLink(p.lat, p.lng, p.name);
         const shareUrl = generateShareUrl(p);
 
         html += `
@@ -367,7 +316,7 @@
             <div class="from">${p.name} ${label}</div>
             <div class="msg">${p.msg || '(no message)'}</div>
             <div class="meta">${dt} • <a href="${mapLink}" target="_blank" class="coords">${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</a></div>
-            ${showShare ? `<button class="share-btn" data-share-url="${shareUrl.replace(/"/g, '&quot;')}">Share this pin 🔗</button>` : ''}
+            ${showShare && shareUrl ? `<button class="share-btn" data-open-url="${shareUrl.replace(/"/g,'&quot;')}">Open shared view ↗</button>` : ''}
           </div>`;
       });
       container.innerHTML = html;
@@ -381,33 +330,35 @@
 
       const pins = getAllPins()
         .filter(p => Math.abs(p.lat - userLat) <= NEARBY_RADIUS_DEG && Math.abs(p.lng - userLng) <= NEARBY_RADIUS_DEG)
-        .sort((a, b) => new Date(b.time) - new Date(a.time));
+        .sort((a,b) => new Date(b.time) - new Date(a.time));
 
       renderPinList('pins', pins, true);
     }
 
     function searchPins() {
       const term = document.getElementById('search-input').value.trim().toLowerCase();
-      if (!term) return showStatus('Enter a search term', 'error');
+      if (!term) return showStatus('Enter search term', 'error');
 
       const pins = getAllPins()
         .filter(p => 
           p.name.toLowerCase().includes(term) ||
           (p.msg || '').toLowerCase().includes(term) ||
-          `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`.includes(term)
+          `${p.lat?.toFixed(6)},${p.lng?.toFixed(6)}`.includes(term)
         )
-        .sort((a, b) => new Date(b.time) - new Date(a.time));
+        .sort((a,b) => new Date(b.time) - new Date(a.time));
 
       renderPinList('search-results', pins, true);
-      showStatus(`Found ${pins.length} pins`, 'success');
+      showStatus(`Found ${pins.length} pin${pins.length !== 1 ? 's' : ''}`, pins.length ? 'success' : 'error');
     }
 
-    function clearPins() {
-      if (!confirm('Clear all pins? This cannot be undone.')) return;
+    function clearAllPins() {
+      if (!confirm('Delete ALL saved pins forever?')) return;
+
       localStorage.removeItem(STORAGE_KEY);
-      showStatus('All pins cleared', 'success');
-      renderNearby();
+      document.getElementById('pins').innerHTML = '<p style="text-align:center;color:#666;">No pins found</p>';
       document.getElementById('search-results').innerHTML = '';
+      showStatus('All pins cleared successfully', 'success');
+      renderNearby();
     }
 
     function startGeo() {
@@ -428,21 +379,22 @@
     document.getElementById('add-drop').onclick = addPin;
     document.getElementById('toggle-auto').onclick = toggleAuto;
     document.getElementById('search-btn').onclick = searchPins;
-    document.getElementById('clear-all').onclick = clearPins;
+    document.getElementById('clear-all').onclick = clearAllPins;
     document.getElementById('search-input').addEventListener('keypress', e => {
       if (e.key === 'Enter') searchPins();
     });
 
-    // Click listener for share buttons
+    // Open share URL when clicking "Open shared view" buttons
     document.addEventListener('click', e => {
-      if (e.target.matches('.share-btn')) {
-        const url = e.target.dataset.shareUrl;
+      if (e.target.matches('.share-btn[data-open-url]')) {
+        const url = e.target.getAttribute('data-open-url');
         if (url) {
-          navigator.clipboard.writeText(url).then(() => {
-            showStatus('Share URL copied!', 'success');
-          }).catch(() => {
-            showStatus('Copy failed', 'error');
-          });
+          const originalText = e.target.textContent;
+          e.target.textContent = 'Opening...';
+          window.open(url, '_blank');
+          setTimeout(() => {
+            e.target.textContent = originalText;
+          }, 1800);
         }
       }
     });
@@ -452,4 +404,3 @@
   </script>
 </body>
 </html>
-```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

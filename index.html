@@ -228,6 +228,21 @@
       box-shadow: 0 8px 24px rgba(239, 68, 68, 0.5);
     }
 
+    #pins, #search-results {
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+    #pins::-webkit-scrollbar, #search-results::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #pins::-webkit-scrollbar-thumb, #search-results::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.2);
+      border-radius: 3px;
+    }
+
     @media (max-width: 640px) {
       .section { padding: 16px; }
       button { padding: 10px 20px; font-size: 0.95rem; }
@@ -327,7 +342,6 @@
       setTimeout(() => { status.style.display = 'none'; }, 5000);
     }
 
-    // The provided JS code starts here
     function generateShareUrl(pin) {
       const pinJson = JSON.stringify(pin);
       const encoded = btoa(pinJson);
@@ -432,6 +446,7 @@
         const dt = new Date(d.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
         const label = d.auto ? '[auto]' : '';
         const mapLink = getAppleMapsLink(d.lat, d.lng, d.name);
+        const pinStr = escapeHTML(JSON.stringify(d));
         html += `
           <div class="pin">
             <div class="from">${escapeHTML(d.name)} ${label}</div>
@@ -440,9 +455,9 @@
         `;
         if (showCopyButtons) {
           html += `
-            <button onclick='copyPin(${JSON.stringify(d)}, "email")'>Copy Email HTML</button>
-            <button onclick='copyPin(${JSON.stringify(d)}, "social")'>Copy Social Post</button>
-            <button onclick='copyPin(${JSON.stringify(d)}, "url")'>Copy Share URL</button>
+            <button onclick='copyPin(${pinStr}, "email")'>Copy Email HTML</button>
+            <button onclick='copyPin(${pinStr}, "social")'>Copy Social Post</button>
+            <button onclick='copyPin(${pinStr}, "url")'>Copy Share URL</button>
           `;
         }
         html += '</div>';

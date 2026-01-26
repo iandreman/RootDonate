@@ -123,6 +123,16 @@
       box-shadow: 0 6px 20px rgba(99,102,241,0.4);
     }
 
+    button.clear-btn {
+      background: linear-gradient(45deg, #ef4444, #dc2626);
+      box-shadow: 0 6px 20px rgba(239,68,68,0.4);
+    }
+
+    button.share-btn, button.clear-btn {
+      width: 100%;
+      margin-top: 16px;
+    }
+
     .pin {
       background: rgba(255,255,255,0.025);
       padding: 20px;
@@ -174,10 +184,31 @@
       font-size: 0.95rem;
     }
 
+    .search-container {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .search-container input {
+      flex: 1;
+    }
+
+    .search-container button {
+      padding: 14px 24px;
+      box-shadow: none;
+    }
+
+    #search-results {
+      margin-top: 24px;
+    }
+
     @media (max-width: 640px) {
       header { padding: 60px 0 40px; }
       .glow-text { font-size: clamp(2.8rem, 9vw, 5.5rem); }
       .section { padding: 24px; }
+      .search-container { flex-direction: column; }
+      .search-container button { width: 100%; }
     }
   </style>
 </head>
@@ -211,21 +242,30 @@
       </div>
     </div>
 
+    <div class="section">
+      <h2>Search All Pins</h2>
+      <div class="search-container">
+        <input type="text" id="search-input" placeholder="Search by name, message, coords...">
+        <button id="search-btn">Search</button>
+      </div>
+      <div id="search-results"></div>
+      <button class="clear-btn" id="clear-all">Clear All Pins ⚠️</button>
+    </div>
+
     <footer>
       Built with pure energy • 2026 © Swagga Rico • #RootDonate
     </footer>
   </div>
 
   <script>
-    // ────────────────────────────────────────────────
-    //   Minimal working version – extend as needed
-    // ────────────────────────────────────────────────
-
     const STORAGE_KEY = 'root_donate_pins';
+    const NEARBY_RADIUS_DEG = 0.001; // ~111m
 
     let userLat = null;
     let userLng = null;
     let watchId = null;
+    let autoTracking = false;
+    let autoInterval = null;
 
     function showStatus(msg, type = 'success') {
       const el = document.getElementById('status');
@@ -247,7 +287,7 @@
     function addPin() {
       if (!userLat || !userLng) return showStatus('No location fix yet', 'error');
 
-      const name = document.getElementById('name').value.trim() || 'Anonymous';
+      const name = document.getElementById('name').value.trim() || 'Swagga Rico';
       const msg  = document.getElementById('msg').value.trim();
 
       const pins = getAllPins();
@@ -256,35 +296,118 @@
         msg,
         lat: userLat,
         lng: userLng,
-        time: new Date().toISOString()
+        time: new Date().toISOString(),
+        auto: false
       });
 
       savePins(pins);
       showStatus('Pin dropped 🔥', 'success');
       document.getElementById('msg').value = '';
-      renderPins();
+      renderNearby();
     }
 
-    function renderPins() {
-      const container = document.getElementById('pins');
-      const pins = getAllPins();
+    function addAutoPin() {
+      if (!userLat || !userLng) return;
 
+      const pins = getAllPins();
+      pins.push({
+        name: 'Swagga Rico',
+        msg: '',
+        lat: userLat,
+        lng: userLng,
+        time: new Date().toISOString(),
+        auto: true
+      });
+
+      savePins(pins);
+      showStatus('Auto-pin saved', 'success');
+      renderNearby();
+    }
+
+    function toggleAuto() {
+      autoTracking = !autoTracking;
+      const btn = document.getElementById('toggle-auto');
+      btn.textContent = `Toggle Auto-Track (${autoTracking ? 'ON' : 'OFF'})`;
+
+      if (autoTracking) {
+        autoInterval = setInterval(addAutoPin, 60000); // every 1 min
+        showStatus('Auto-track ON', 'success');
+      } else {
+        clearInterval(autoInterval);
+        showStatus('Auto-track OFF', 'success');
+      }
+    }
+
+    function getAppleMapsLink(lat, lng, label) {
+      return `https://maps.apple.com/?ll=${lat},${lng}&q=${encodeURIComponent(label)}`;
+    }
+
+    function generateShareUrl(pin) {
+      const pinJson = JSON.stringify(pin);
+      const encoded = btoa(pinJson);
+      return `${window.location.origin}${window.location.pathname}#pin=${encodeURIComponent(encoded)}`;
+    }
+
+    function renderPinList(containerId, pins, showShare = false) {
+      const container = document.getElementById(containerId);
       if (!pins.length) {
-        container.innerHTML = '<p style="text-align:center;color:#666;">No pins yet</p>';
+        container.innerHTML = '<p style="text-align:center;color:#666;">No pins found</p>';
         return;
       }
 
       let html = '';
       pins.forEach(p => {
         const dt = new Date(p.time).toLocaleString();
+        const label = p.auto ? '[auto]' : '';
+        const mapLink = getAppleMapsLink(p.lat, p.lng, p.name || 'Pin');
+        const shareUrl = generateShareUrl(p);
+
         html += `
           <div class="pin">
-            <div class="from">${p.name}</div>
+            <div class="from">${p.name} ${label}</div>
             <div class="msg">${p.msg || '(no message)'}</div>
-            <div class="meta">${dt} • <span class="coords">${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</span></div>
+            <div class="meta">${dt} • <a href="${mapLink}" target="_blank" class="coords">${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</a></div>
+            ${showShare ? `<button class="share-btn" data-share-url="${shareUrl.replace(/"/g, '&quot;')}">Share this pin 🔗</button>` : ''}
           </div>`;
       });
       container.innerHTML = html;
+    }
+
+    function renderNearby() {
+      if (!userLat || !userLng) {
+        document.getElementById('pins').innerHTML = '<p style="text-align:center;color:#666;">Waiting for position…</p>';
+        return;
+      }
+
+      const pins = getAllPins()
+        .filter(p => Math.abs(p.lat - userLat) <= NEARBY_RADIUS_DEG && Math.abs(p.lng - userLng) <= NEARBY_RADIUS_DEG)
+        .sort((a, b) => new Date(b.time) - new Date(a.time));
+
+      renderPinList('pins', pins, true);
+    }
+
+    function searchPins() {
+      const term = document.getElementById('search-input').value.trim().toLowerCase();
+      if (!term) return showStatus('Enter a search term', 'error');
+
+      const pins = getAllPins()
+        .filter(p => 
+          p.name.toLowerCase().includes(term) ||
+          (p.msg || '').toLowerCase().includes(term) ||
+          `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`.includes(term)
+        )
+        .sort((a, b) => new Date(b.time) - new Date(a.time));
+
+      renderPinList('search-results', pins, true);
+      showStatus(`Found ${pins.length} pins`, 'success');
+    }
+
+    function clearPins() {
+      if (!confirm('Clear all pins? This cannot be undone.')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      showStatus('All pins cleared', 'success');
+      renderNearby();
+      document.getElementById('search-results').innerHTML = '';
     }
 
     function startGeo() {
@@ -294,7 +417,7 @@
         pos => {
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
-          renderPins();
+          renderNearby();
         },
         err => showStatus(`Location error: ${err.message}`, 'error'),
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -303,12 +426,30 @@
 
     // Events
     document.getElementById('add-drop').onclick = addPin;
-    document.getElementById('toggle-auto').onclick = () => {
-      alert('Auto-track mode coming soon... 🌍');
-    };
+    document.getElementById('toggle-auto').onclick = toggleAuto;
+    document.getElementById('search-btn').onclick = searchPins;
+    document.getElementById('clear-all').onclick = clearPins;
+    document.getElementById('search-input').addEventListener('keypress', e => {
+      if (e.key === 'Enter') searchPins();
+    });
+
+    // Click listener for share buttons
+    document.addEventListener('click', e => {
+      if (e.target.matches('.share-btn')) {
+        const url = e.target.dataset.shareUrl;
+        if (url) {
+          navigator.clipboard.writeText(url).then(() => {
+            showStatus('Share URL copied!', 'success');
+          }).catch(() => {
+            showStatus('Copy failed', 'error');
+          });
+        }
+      }
+    });
 
     // Start
     startGeo();
   </script>
 </body>
 </html>
+```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

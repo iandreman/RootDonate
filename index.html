@@ -185,7 +185,7 @@
   <div class="container">
     <header>
       <h1 class="glow-text">ROOT DONATE</h1>
-      <div class="tagline">Drop roots where energy flows 🌱 • GPS Pins</div>
+      <div class="tagline">Drop roots where energy flows 🌱 • Intelligent Nearby</div>
       <div class="handle">@iandreme</div>
     </header>
 
@@ -223,13 +223,12 @@
     </div>
 
     <footer>
-      Built with pure energy • 2026 © Swagga Rico • #RootDonate
+      Built with pure energy • 2026 © Swagga Rico • #RootDonate • AI-Adaptive Radius
     </footer>
   </div>
 
   <script>
     const STORAGE_KEY = 'root_donate_pins';
-    const NEARBY_RADIUS_DEG = 0.001; // ≈ 100–110 meters
 
     let userLat = null;
     let userLng = null;
@@ -260,6 +259,37 @@
 
     function savePins(pins) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(pins));
+    }
+
+    function haversineDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371000; // meters
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    function calculateDynamicRadius(centerLat, centerLng) {
+      const pins = getAllPins();
+      if (pins.length === 0) return 500; // default when empty
+
+      const MAX_SEARCH_RADIUS = 5000; // meters — wide enough to sense density
+      let nearbyCount = 0;
+
+      pins.forEach(p => {
+        const dist = haversineDistance(centerLat, centerLng, p.lat, p.lng);
+        if (dist <= MAX_SEARCH_RADIUS) nearbyCount++;
+      });
+
+      // Intelligent scaling (tweak these if needed for your vibe)
+      if (nearbyCount >= 20) return 150;       // very dense → tight focus
+      if (nearbyCount >= 10) return 250;
+      if (nearbyCount >= 5)  return 400;
+      if (nearbyCount >= 2)  return 700;
+      return 1200;                             // sparse → show broader energy
     }
 
     function addPin() {
@@ -355,6 +385,7 @@
         const appleLink = getAppleMapsLink(p.lat, p.lng, p.name);
         const googleLink = getGoogleMapsLink(p.lat, p.lng);
         const shareUrl = generateShareUrl(p);
+        const distanceStr = p.distance !== undefined ? ` • ${Math.round(p.distance)} m` : '';
 
         const isHighlighted = highlightedPin &&
           Math.abs(p.lat - highlightedPin.lat) < 0.0001 &&
@@ -369,7 +400,7 @@
             <div class="from">${nameEsc}${label}${badge}</div>
             <div class="msg">${msgEsc}</div>
             <div class="meta">
-              ${dt} • 
+              ${dt}${distanceStr} • 
               <a href="${appleLink}" target="_blank" class="coords" title="Apple Maps">${coords}</a>
               <br>
               <small><a href="${googleLink}" target="_blank" style="color:#888;">(Google Maps)</a></small>
@@ -394,15 +425,26 @@
         return;
       }
 
-      const pins = getAllPins()
-        .filter(p => Math.abs(p.lat - displayLat) <= NEARBY_RADIUS_DEG && Math.abs(p.lng - displayLng) <= NEARBY_RADIUS_DEG)
-        .sort((a, b) => new Date(b.time) - new Date(a.time));
+      const nearbyRadiusMeters = calculateDynamicRadius(displayLat, displayLng);
 
-      renderPinList('pins', pins, true);
+      const allPins = getAllPins();
+      const nearbyPins = allPins
+        .map(pin => ({
+          ...pin,
+          distance: haversineDistance(displayLat, displayLng, pin.lat, pin.lng)
+        }))
+        .filter(pin => pin.distance <= nearbyRadiusMeters)
+        .sort((a, b) => a.distance - b.distance);
+
+      renderPinList('pins', nearbyPins, true);
+
+      const densityDesc = nearbyPins.length >= 15 ? 'dense hot zone' :
+                          nearbyPins.length >= 5  ? 'active flow' :
+                          nearbyPins.length >= 1  ? 'emerging roots' : 'quiet zone';
 
       if (usingSharedCenter) {
         document.getElementById('nearby-info').innerHTML = 
-          `(showing nearby to shared pin • <a href="#" id="switch-live" style="color:#34d399;text-decoration:underline;cursor:pointer;">switch to my live location</a>)`;
+          `(within ~${Math.round(nearbyRadiusMeters)} m • ${densityDesc} • <a href="#" id="switch-live" style="color:#34d399;text-decoration:underline;cursor:pointer;">switch to live</a>)`;
 
         setTimeout(() => {
           const link = document.getElementById('switch-live');
@@ -418,7 +460,12 @@
           }
         }, 100);
       } else {
-        document.getElementById('nearby-info').textContent = '(your current position)';
+        document.getElementById('nearby-info').textContent = 
+          `(your position • ~${Math.round(nearbyRadiusMeters)} m • ${densityDesc})`;
+      }
+
+      if (nearbyPins.length > 0) {
+        highlightedPin = nearbyPins[0]; // highlight closest
       }
     }
 
@@ -474,7 +521,7 @@
         renderFeaturedPin(pin);
         renderNearby();
 
-        showStatus('Shared pin loaded • Nearby shows pins around this spot 🌱', 'success');
+        showStatus('Shared pin loaded • AI-adaptive nearby active 🌱', 'success');
         return true;
       } catch (err) {
         console.error('Invalid share link:', err);
@@ -488,12 +535,16 @@
       if (!term) return showStatus('Enter a search term', 'error');
 
       const pins = getAllPins()
+        .map(p => ({
+          ...p,
+          distance: userLat && userLng ? haversineDistance(userLat, userLng, p.lat, p.lng) : Infinity
+        }))
         .filter(p => 
           p.name.toLowerCase().includes(term) ||
           (p.msg || '').toLowerCase().includes(term) ||
           `${p.lat?.toFixed(6) || ''},${p.lng?.toFixed(6) || ''}`.includes(term)
         )
-        .sort((a, b) => new Date(b.time) - new Date(a.time));
+        .sort((a, b) => a.distance - b.distance);
 
       renderPinList('search-results', pins, true);
       showStatus(`Found ${pins.length} pin${pins.length !== 1 ? 's' : ''}`, pins.length ? 'success' : 'error');

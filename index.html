@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Donate • Auto-Nearby GPS Pins • Swagga Rico</title>
+  <title>Root Donate • Nearby + Share Pins • Swagga Rico</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,11 +36,7 @@
     }
     .subtitle { text-align:center; color:#a0a0ff; margin-bottom:20px; font-size:1.1rem; }
     #status {
-      padding:12px;
-      margin:15px 0;
-      border-radius:10px;
-      text-align:center;
-      display:none;
+      padding:12px; margin:15px 0; border-radius:10px; text-align:center; display:none;
     }
     #status.success { background:rgba(52,211,153,0.25); color:#34d399; }
     #status.error   { background:rgba(239,68,68,0.25); color:#ef4444; }
@@ -67,14 +63,27 @@
     .coords-link { color:#4cc9ff; text-decoration:none; }
     .coords-link:hover { text-decoration:underline; }
     .distance { color:#34d399; font-weight:600; }
+    button.share-btn {
+      margin-top:12px;
+      width:100%;
+      padding:10px;
+      background:linear-gradient(45deg,#6366f1,#a78bfa);
+      border:none;
+      border-radius:999px;
+      color:white;
+      font-weight:600;
+      cursor:pointer;
+      transition:all 0.3s;
+    }
+    button.share-btn:hover { transform:translateY(-2px); opacity:0.95; }
     .no-pins { text-align:center; color:#777; padding:60px 20px; font-size:1.2rem; }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <h1 class="glow">AUTO-NEARBY PINS</h1>
-    <div class="subtitle">Using your existing Root Donate pins • Radius auto-adapts to density around you</div>
+    <h1 class="glow">NEARBY PINS + SHARE</h1>
+    <div class="subtitle">Your existing pins • Auto radius • Share any pin via URL</div>
 
     <div id="status"></div>
 
@@ -87,6 +96,15 @@
     const STORAGE_KEY = 'root_donate_pins';
     let userLat = null;
     let userLng = null;
+
+    // ────────────────────────────────────────────────
+    //  CONFIG: Change this to the real URL of your main Root Donate page
+    // ────────────────────────────────────────────────
+    const ROOT_DONATE_BASE_URL = 'https://rootdonate.co.uk';  
+    // Examples:
+    // - 'https://iandreme.github.io/root-donate.html'
+    // - window.location.origin + '/root-donate.html'   (if same domain)
+    // - 'file:///path/to/root-donate.html'             (if local file)
 
     function showStatus(msg, type = 'success') {
       const el = document.getElementById('status');
@@ -106,34 +124,48 @@
     }
 
     function haversineDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371000; // meters
+      const R = 6371000;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
       return R * c;
     }
 
-    function calculateAdaptiveRadius(centerLat, centerLng) {
+    function calculateAdaptiveRadius(lat, lng) {
       const pins = getPins();
-      if (pins.length === 0) return 800; // default when empty
+      if (pins.length === 0) return 800;
 
-      const MAX_CHECK = 6000; // meters — broad area to sense density
-      let countInArea = 0;
-
+      const MAX_CHECK = 6000;
+      let count = 0;
       pins.forEach(p => {
-        const dist = haversineDistance(centerLat, centerLng, p.lat, p.lng);
-        if (dist <= MAX_CHECK) countInArea++;
+        if (haversineDistance(lat, lng, p.lat, p.lng) <= MAX_CHECK) count++;
       });
 
-      // Adaptive logic (more generous than before)
-      if (countInArea >= 25) return 350;      // very dense → tight focus
-      if (countInArea >= 12) return 550;
-      if (countInArea >= 5)  return 900;
-      if (countInArea >= 2)  return 1300;
-      return 2000;                            // sparse → wide view
+      if (count >= 25) return 350;
+      if (count >= 12) return 550;
+      if (count >= 5)  return 900;
+      if (count >= 2)  return 1300;
+      return 2000;
+    }
+
+    function generateShareUrl(pin) {
+      try {
+        const encoded = btoa(JSON.stringify(pin));
+        return `${ROOT_DONATE_BASE_URL}#pin=${encodeURIComponent(encoded)}`;
+      } catch {
+        return '';
+      }
+    }
+
+    function copyShareLink(url) {
+      if (!url) return showStatus('Share link generation failed', 'error');
+      navigator.clipboard.writeText(url).then(() => {
+        showStatus('Share link copied! Paste anywhere 🌱', 'success');
+      }).catch(() => {
+        showStatus('Copy failed — long-press or manual copy', 'error');
+        prompt('Copy this link:', url);
+      });
     }
 
     function renderNearby() {
@@ -143,30 +175,26 @@
       container.innerHTML = '';
 
       if (pins.length === 0) {
-        container.innerHTML = '<div class="no-pins">No pins saved in Root Donate yet 🌱</div>';
-        infoBar.textContent = 'No data found in localStorage';
+        container.innerHTML = '<div class="no-pins">No pins saved yet in Root Donate</div>';
+        infoBar.textContent = 'No data in localStorage';
         return;
       }
 
       if (!userLat || !userLng) {
-        container.innerHTML = '<div class="no-pins">Waiting for your current location...<br><small>Allow location access if prompted</small></div>';
-        infoBar.textContent = 'Waiting for GPS...';
+        container.innerHTML = '<div class="no-pins">Waiting for your current location...<br><small>Allow location access</small></div>';
+        infoBar.textContent = 'Waiting for GPS';
         return;
       }
 
       const radius = calculateAdaptiveRadius(userLat, userLng);
-
       const nearby = pins
-        .map(p => ({
-          ...p,
-          distance: haversineDistance(userLat, userLng, p.lat, p.lng)
-        }))
+        .map(p => ({ ...p, distance: haversineDistance(userLat, userLng, p.lat, p.lng) }))
         .filter(p => p.distance <= radius)
-        .sort((a, b) => a.distance - b.distance);
+        .sort((a,b) => a.distance - b.distance);
 
       if (nearby.length === 0) {
-        container.innerHTML = `<div class="no-pins">No pins within adaptive radius (~${Math.round(radius)} m)<br>Try moving closer or dropping more pins</div>`;
-        infoBar.innerHTML = `Current position • Adaptive radius ~${Math.round(radius)} m • No nearby roots yet`;
+        container.innerHTML = `<div class="no-pins">No pins within ~${Math.round(radius)} m<br>(try moving or dropping more)</div>`;
+        infoBar.innerHTML = `~${Math.round(radius)} m adaptive • No nearby pins`;
         return;
       }
 
@@ -177,6 +205,7 @@
         const coords = `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`;
         const apple = `https://maps.apple.com/?ll=${p.lat},${p.lng}&q=${encodeURIComponent(name)}`;
         const google = `https://www.google.com/maps?q=${p.lat},${p.lng}`;
+        const shareUrl = generateShareUrl(p);
 
         const div = document.createElement('div');
         div.className = 'pin';
@@ -185,22 +214,23 @@
           <div class="msg">${msg}</div>
           <div class="meta">
             <span class="distance">${Math.round(p.distance)} m away</span> • ${dt}<br>
-            <a href="${apple}" target="_blank" class="coords-link">${coords} (Apple Maps)</a>
-            <br><small><a href="${google}" target="_blank" style="color:#888;">(Google Maps)</a></small>
+            <a href="${apple}" target="_blank" class="coords-link">${coords} (Apple)</a>
+            <br><small><a href="${google}" target="_blank" style="color:#888;">(Google)</a></small>
           </div>
+          ${shareUrl ? `<button class="share-btn" onclick="copyShareLink('${shareUrl.replace(/'/g,'\\\'')}')">Share this pin 📍</button>` : ''}
         `;
         container.appendChild(div);
       });
 
-      const densityText = nearby.length >= 15 ? 'dense hot zone' :
-                          nearby.length >= 6  ? 'active flow' : 'emerging roots';
+      const density = nearby.length >= 15 ? 'dense zone' :
+                      nearby.length >= 6  ? 'active flow' : 'emerging roots';
 
-      infoBar.innerHTML = `Your position • Adaptive radius ~${Math.round(radius)} m • ${densityText} (${nearby.length} pins)`;
+      infoBar.innerHTML = `~${Math.round(radius)} m adaptive • ${density} (${nearby.length} pins)`;
 
       showStatus(`Showing ${nearby.length} nearby pin${nearby.length === 1 ? '' : 's'}`, 'success');
     }
 
-    // Get continuous location updates
+    // Live location
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(
         pos => {
@@ -215,10 +245,13 @@
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     } else {
-      showStatus('Geolocation not supported in this browser', 'error');
+      showStatus('Geolocation not supported', 'error');
     }
 
-    // Initial render
+    // Make copy function global for onclick
+    window.copyShareLink = copyShareLink;
+
+    // Start
     renderNearby();
   </script>
 </body>

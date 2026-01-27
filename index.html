@@ -74,7 +74,7 @@
       font-size:1rem;
     }
 
-    textarea { min-height:100px; resize:vertical; }
+    textarea { min-height:120px; resize:vertical; }
 
     button {
       padding:14px 32px;
@@ -129,8 +129,8 @@
     }
 
     .from { font-weight:600; color:#818cf8; margin-bottom:0.5rem; }
-    .msg   { margin:0.8rem 0; color:#d0d0ff; white-space:pre-wrap; }
-    .meta  { font-size:0.92rem; color:#888; }
+    .msg   { margin:0.8rem 0; color:#d0d0ff; white-space:pre-wrap; word-break:break-word; }
+    .meta  { font-size:0.92rem; color:#a0a0a0; }
 
     .coords { color:#4cc9ff; text-decoration:none; font-family:monospace; }
     .coords:hover { text-decoration:underline; }
@@ -222,21 +222,26 @@
 
   <script>
     const STORAGE_KEY = 'root_donate_pins';
-    const NEARBY_RADIUS_DEG = 0.001;
+    const NEARBY_RADIUS_DEG = 0.001; // ~100–110 m depending on latitude
 
     let userLat = null;
     let userLng = null;
     let watchId = null;
     let autoTracking = false;
     let autoInterval = null;
-    let sharedPin = null;
 
     function showStatus(msg, type = 'success') {
       const el = document.getElementById('status');
       el.textContent = msg;
       el.className = type;
       el.style.display = 'block';
-      setTimeout(() => el.style.display = 'none', 4000);
+      setTimeout(() => el.style.display = 'none', 4500);
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
     }
 
     function getAllPins() {
@@ -249,7 +254,7 @@
     }
 
     function addPin() {
-      if (!userLat || !userLng) return showStatus('No real GPS fix yet', 'error');
+      if (!userLat || !userLng) return showStatus('No GPS fix yet', 'error');
 
       const name = document.getElementById('name').value.trim() || 'Swagga Rico';
       const msg  = document.getElementById('msg').value.trim();
@@ -281,7 +286,7 @@
             const pins = getAllPins();
             pins.push({
               name: 'Swagga Rico',
-              msg: '',
+              msg: '(auto)',
               lat: userLat,
               lng: userLng,
               time: new Date().toISOString(),
@@ -291,16 +296,21 @@
             showStatus('Auto-pin saved', 'success');
             renderNearby();
           }
-        }, 60000);
-        showStatus('Auto-track ON (~every 1 min)', 'success');
+        }, 60000); // every 60 seconds
+        showStatus('Auto-track ON (≈ every 1 min)', 'success');
       } else {
         clearInterval(autoInterval);
         showStatus('Auto-track OFF', 'success');
       }
     }
 
-    function getAppleMapsLink(lat, lng, label) {
-      return `https://maps.apple.com/?ll=${lat},${lng}&q=${encodeURIComponent(label || 'Pin')}`, `<button class="share-btn" data-open-url="${shareUrl.replace(/"/g,'&quot;')}">Open shared view ↗</button>`;
+    function getAppleMapsLink(lat, lng, label = 'Pin') {
+      const safeLabel = encodeURIComponent(label);
+      return `https://maps.apple.com/?ll=${lat},${lng}&q=${safeLabel}`;
+    }
+
+    function getGoogleMapsLink(lat, lng) {
+      return `https://www.google.com/maps?q=${lat},${lng}`;
     }
 
     function generateShareUrl(pin) {
@@ -322,17 +332,26 @@
 
       let html = '';
       pins.forEach(p => {
-        const dt = new Date(p.time).toLocaleString('en-GB', {dateStyle:'medium', timeStyle:'short'});
-        const label = p.auto ? '[auto]' : '';
-        const mapLink = getAppleMapsLink(p.lat, p.lng, p.name);
+        const dt = new Date(p.time).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+        const label = p.auto ? ' [auto]' : '';
+        const nameEsc = escapeHTML(p.name);
+        const msgEsc = escapeHTML(p.msg || '(no message)');
+        const coords = `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`;
+        const appleLink = getAppleMapsLink(p.lat, p.lng, p.name);
+        const googleLink = getGoogleMapsLink(p.lat, p.lng);
         const shareUrl = generateShareUrl(p);
 
         html += `
           <div class="pin">
-            <div class="from">${p.name} ${label}</div>
-            <div class="msg">${p.msg || '(no message)'}</div>
-            <div class="meta">${dt} • <a href="${mapLink}" target="_blank" class="coords">${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</a></div>
-            ${showShare && shareUrl ? `<button class="share-btn" data-open-url="${shareUrl.replace(/"/g,'&quot;')}">Open shared view ↗</button>` : ''}
+            <div class="from">${nameEsc}${label}</div>
+            <div class="msg">${msgEsc}</div>
+            <div class="meta">
+              ${dt} • 
+              <a href="${appleLink}" target="_blank" class="coords" title="Apple Maps">${coords}</a>
+              <br>
+              <small><a href="${googleLink}" target="_blank" style="color:#888;">(Google Maps)</a></small>
+            </div>
+            ${showShare && shareUrl ? `<button class="share-btn" data-share-url="${shareUrl.replace(/"/g,'&quot;')}">Share this pin ↗</button>` : ''}
           </div>`;
       });
       container.innerHTML = html;
@@ -341,7 +360,7 @@
     function renderNearby() {
       if (!userLat || !userLng) {
         document.getElementById('pins').innerHTML = '<p style="text-align:center;color:#666;">Waiting for real GPS fix…</p>';
-        document.getElementById('nearby-info').textContent = '';
+        document.getElementById('nearby-info').textContent = '(location needed)';
         return;
       }
 
@@ -350,29 +369,30 @@
         .sort((a,b) => new Date(b.time) - new Date(a.time));
 
       renderPinList('pins', pins, true);
-
-      document.getElementById('nearby-info').textContent = sharedPin 
-        ? '(your real location — shared pin highlighted above)' 
-        : '(your real current position)';
+      document.getElementById('nearby-info').textContent = '(your current real position)';
     }
 
     function renderFeaturedPin(pin) {
-      sharedPin = pin;
-      const name = pin.name || 'Anonymous';
-      const msg = pin.msg || '(auto-tracked)';
-      const dt = new Date(pin.time).toLocaleString('en-GB', {dateStyle:'medium', timeStyle:'short'});
+      const nameEsc = escapeHTML(pin.name || 'Anonymous');
+      const msgEsc = escapeHTML(pin.msg || '(auto-tracked)');
+      const dt = new Date(pin.time).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
       const coords = `${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`;
       const label = pin.auto ? ' [auto]' : '';
-      const mapLink = getAppleMapsLink(pin.lat, pin.lng, name);
+      const appleLink = getAppleMapsLink(pin.lat, pin.lng, pin.name);
+      const googleLink = getGoogleMapsLink(pin.lat, pin.lng);
       const shareUrl = generateShareUrl(pin);
 
       document.getElementById('featured-pin').innerHTML = `
         <div class="featured">
           <h3>Featured Shared Pin 📍</h3>
-          <div style="font-weight:600;color:#88ffcc;margin-bottom:0.8rem;">From: ${name}${label}</div>
-          <div class="msg" style="margin:1rem 0;">${msg}</div>
-          <div class="meta">${dt} • <a href="${mapLink}" target="_blank" class="coords">${coords}</a></div>
-          ${shareUrl ? `<button class="share-btn" data-open-url="${shareUrl.replace(/"/g,'&quot;')}">Open this view ↗</button>` : ''}
+          <div style="font-weight:600;color:#88ffcc;margin-bottom:0.8rem;">From: ${nameEsc}${label}</div>
+          <div class="msg" style="margin:1rem 0;">${msgEsc}</div>
+          <div class="meta">
+            ${dt} • 
+            <a href="${appleLink}" target="_blank" class="coords">${coords}</a>
+            <br><small><a href="${googleLink}" target="_blank" style="color:#888;">(Google Maps)</a></small>
+          </div>
+          ${shareUrl ? `<button class="share-btn" data-share-url="${shareUrl.replace(/"/g,'&quot;')}">Share this view ↗</button>` : ''}
         </div>
       `;
       document.getElementById('featured-pin').style.display = 'block';
@@ -383,19 +403,20 @@
       if (!hash.startsWith('#pin=')) return false;
 
       try {
-        let encoded = decodeURIComponent(hash.slice(5));
-        let pinJson = atob(encoded);
+        const encoded = decodeURIComponent(hash.slice(5));
+        const pinJson = atob(encoded);
         const pin = JSON.parse(pinJson);
 
-        if (typeof pin.lat !== 'number' || typeof pin.lng !== 'number') {
+        if (typeof pin.lat !== 'number' || typeof pin.lng !== 'number' ||
+            isNaN(pin.lat) || isNaN(pin.lng)) {
           throw new Error('Invalid coordinates');
         }
 
         renderFeaturedPin(pin);
-        showStatus('Shared pin loaded — nearby shows your real location', 'success');
+        showStatus('Shared pin loaded ✓  (nearby pins show your real location)', 'success');
         return true;
       } catch (err) {
-        console.error('Share link error:', err);
+        console.error('Invalid share link:', err);
         showStatus('Invalid or corrupted share link', 'error');
         return false;
       }
@@ -403,13 +424,13 @@
 
     function searchPins() {
       const term = document.getElementById('search-input').value.trim().toLowerCase();
-      if (!term) return showStatus('Enter search term', 'error');
+      if (!term) return showStatus('Enter a search term', 'error');
 
       const pins = getAllPins()
         .filter(p => 
           p.name.toLowerCase().includes(term) ||
           (p.msg || '').toLowerCase().includes(term) ||
-          `${p.lat?.toFixed(6)},${p.lng?.toFixed(6)}`.includes(term)
+          `${p.lat?.toFixed(6) || ''},${p.lng?.toFixed(6) || ''}`.includes(term)
         )
         .sort((a,b) => new Date(b.time) - new Date(a.time));
 
@@ -418,18 +439,18 @@
     }
 
     function clearAllPins() {
-      if (!confirm('Delete ALL saved pins forever?')) return;
+      if (!confirm('Permanently delete ALL saved pins?')) return;
 
       localStorage.removeItem(STORAGE_KEY);
       document.getElementById('pins').innerHTML = '<p style="text-align:center;color:#666;">No pins found</p>';
       document.getElementById('search-results').innerHTML = '';
-      showStatus('All pins cleared successfully', 'success');
+      showStatus('All pins cleared', 'success');
       renderNearby();
     }
 
     function startGeo() {
       if (!navigator.geolocation) {
-        showStatus('Geolocation not supported', 'error');
+        showStatus('Geolocation not supported by this browser', 'error');
         return;
       }
 
@@ -440,7 +461,7 @@
           renderNearby();
         },
         err => showStatus(`Location error: ${err.message}`, 'error'),
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
       );
     }
 
@@ -453,22 +474,23 @@
       if (e.key === 'Enter') searchPins();
     });
 
-    // Handle "Open shared view" buttons
+    // Handle share buttons (dynamic)
     document.addEventListener('click', e => {
-      if (e.target.matches('.share-btn[data-open-url]')) {
-        const url = e.target.getAttribute('data-open-url');
-        if (url) {
-          const original = e.target.textContent;
-          e.target.textContent = 'Opening...';
-          window.open(url, '_blank');
-          setTimeout(() => e.target.textContent = original, 1800);
-        }
-      }
+      const btn = e.target.closest('.share-btn[data-share-url]');
+      if (!btn) return;
+      
+      const url = btn.getAttribute('data-share-url');
+      if (!url) return;
+
+      const originalText = btn.textContent;
+      btn.textContent = 'Opening…';
+      window.open(url, '_blank');
+      setTimeout(() => btn.textContent = originalText, 1800);
     });
 
-    // Start
-    const isShared = loadSharedPin();
-    startGeo(); // always start real GPS tracking
+    // Init
+    loadSharedPin();
+    startGeo();
   </script>
 </body>
 </html>

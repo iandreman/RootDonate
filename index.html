@@ -229,11 +229,11 @@
 
   <script>
     const STORAGE_KEY = 'root_donate_pins';
-    const NEARBY_RADIUS_DEG = 0.001; // ~100–110 m
+    const NEARBY_RADIUS_DEG = 0.001; // ≈ 100–110 meters
 
     let userLat = null;
     let userLng = null;
-    let centerLat = null;          // coords we're centering "nearby" on
+    let centerLat = null;          // coords used for "nearby" display
     let centerLng = null;
     let usingSharedCenter = false;
     let watchId = null;
@@ -399,7 +399,7 @@
 
       if (usingSharedCenter) {
         document.getElementById('nearby-info').innerHTML = 
-          `(centered on shared pin • <a href="#" id="switch-to-live" style="color:#34d399;text-decoration:underline;">switch to my live location</a>)`;
+          `(centered on shared pin • <a href="#" id="switch-to-live" style="color:#34d399;text-decoration:underline;cursor:pointer;">switch to my live location</a>)`;
         
         setTimeout(() => {
           const link = document.getElementById('switch-to-live');
@@ -469,7 +469,7 @@
         highlightedPin = pin;
 
         renderFeaturedPin(pin);
-        renderNearby();  // show nearby pins around the shared location
+        renderNearby();  // Show nearby pins around the shared coordinates
         showStatus('Shared pin loaded • Nearby shows drops around this spot 🌱', 'success');
 
         return true;

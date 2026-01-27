@@ -1,131 +1,545 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Root Donate • Nearby Drops • 27 Jan 2026 02:30</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Root Donate • GPS Pins • Swagga Rico</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    
     body {
-      background: #0a0a12;
-      color: #e0e0ff;
-      font-family: 'Inter', system-ui, sans-serif;
-      padding: 20px;
-      line-height: 1.6;
-      min-height: 100vh;
-      background-image:
+      background:#0a0a12;
+      color:#e0e0ff;
+      font-family:'Inter',system-ui,sans-serif;
+      min-height:100vh;
+      background-image: 
         radial-gradient(circle at 10% 20%, rgba(120,80,255,0.07) 0%, transparent 40%),
         radial-gradient(circle at 90% 80%, rgba(52,211,153,0.06) 0%, transparent 40%);
+      line-height:1.6;
     }
-    .glow {
-      font-family: 'Orbitron', sans-serif;
-      font-size: clamp(2.8rem, 9vw, 5rem);
-      font-weight: 900;
-      text-align: center;
-      margin: 2rem 0 1rem;
-      background: linear-gradient(90deg, #a78bfa, #7dd3fc, #34d399, #a78bfa);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      animation: gradient 12s linear infinite;
-      text-shadow: 0 0 50px rgba(120,80,255,0.45);
+
+    .container { max-width:1100px; margin:0 auto; padding:0 20px; }
+
+    header { padding:80px 0 60px; text-align:center; }
+
+    .glow-text {
+      font-family:'Orbitron',sans-serif;
+      font-size:clamp(3.5rem,10vw,7.5rem);
+      font-weight:900;
+      letter-spacing:-3px;
+      background:linear-gradient(90deg,#a78bfa,#7dd3fc,#34d399,#a78bfa);
+      background-size:300% 100%;
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      animation:gradient 10s linear infinite;
+      text-shadow:0 0 60px rgba(120,80,255,0.5);
     }
-    @keyframes gradient {
-      0% { background-position: 0% 50% }
-      100% { background-position: 300% 50% }
+
+    @keyframes gradient { 0% {background-position:0% 50%} 100% {background-position:300% 50%} }
+
+    .tagline { margin:1rem 0 0.5rem; font-size:1.4rem; color:#a0a0ff; font-weight:300; }
+    .handle   { font-size:1.3rem; color:#818cf8; font-family:'Orbitron',monospace; }
+
+    .section {
+      margin:50px 0;
+      padding:32px;
+      background:rgba(255,255,255,0.015);
+      border-radius:20px;
+      border:1px solid rgba(120,80,255,0.12);
+      backdrop-filter:blur(10px);
     }
-    .header {
-      text-align: center;
-      color: #a0a0ff;
-      margin-bottom: 2rem;
-      font-size: 1.1rem;
+
+    .section h2 {
+      font-family:'Orbitron',sans-serif;
+      font-size:1.8rem;
+      color:#34d399;
+      margin-bottom:1.5rem;
+      text-shadow:0 0 15px rgba(52,211,153,0.4);
     }
+
+    input, textarea {
+      width:100%;
+      padding:14px;
+      margin-bottom:16px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:12px;
+      color:white;
+      font-size:1rem;
+    }
+
+    textarea { min-height:120px; resize:vertical; }
+
+    button {
+      padding:14px 32px;
+      background:linear-gradient(45deg,#7c3aed,#3b82f6);
+      border:none;
+      border-radius:999px;
+      color:white;
+      font-weight:600;
+      font-size:1.05rem;
+      cursor:pointer;
+      transition:all 0.35s ease;
+      box-shadow:0 8px 25px rgba(124,58,237,0.35);
+    }
+
+    button:hover { transform:translateY(-3px); box-shadow:0 15px 35px rgba(124,58,237,0.5); }
+
+    button.share-btn {
+      background:linear-gradient(45deg,#6366f1,#a78bfa);
+      box-shadow:0 6px 20px rgba(99,102,241,0.4);
+      width:100%;
+      margin-top:16px;
+      font-size:0.98rem;
+    }
+
+    button.clear-btn {
+      background:linear-gradient(45deg,#ef4444,#dc2626);
+      box-shadow:0 6px 20px rgba(239,68,68,0.4);
+      width:100%;
+      margin-top:24px;
+    }
+
+    .featured {
+      background:rgba(52,211,153,0.12);
+      border:1px solid rgba(52,211,153,0.4);
+      padding:24px;
+      border-radius:16px;
+      margin-bottom:32px;
+    }
+
+    .featured h3 {
+      color:#88ffcc;
+      font-size:1.6rem;
+      margin-bottom:1rem;
+    }
+
     .pin {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(52,211,153,0.3);
-      border-radius: 16px;
-      padding: 18px;
-      margin: 1.2rem 0;
-      transition: all .3s;
+      background:rgba(255,255,255,0.025);
+      padding:20px;
+      margin-bottom:20px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,0.06);
+      transition: all 0.3s ease;
     }
-    .pin:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 25px rgba(52,211,153,0.3);
+
+    .pin.highlighted {
+      border:2px solid #34d399 !important;
+      background:rgba(52,211,153,0.12) !important;
+      box-shadow:0 0 20px rgba(52,211,153,0.4);
     }
-    .from {
-      font-weight: 600;
-      color: #a78bfa;
-      margin-bottom: .5rem;
-      font-size: 1.1rem;
+
+    .from { font-weight:600; color:#818cf8; margin-bottom:0.5rem; }
+    .msg   { margin:0.8rem 0; color:#d0d0ff; white-space:pre-wrap; word-break:break-word; }
+    .meta  { font-size:0.92rem; color:#a0a0a0; }
+
+    .coords { color:#4cc9ff; text-decoration:none; font-family:monospace; }
+    .coords:hover { text-decoration:underline; }
+
+    #status {
+      text-align:center;
+      padding:14px;
+      margin:20px 0;
+      border-radius:12px;
+      display:none;
     }
-    .msg {
-      margin: .8rem 0;
-      color: #d0d0ff;
-      white-space: pre-wrap;
+
+    #status.success { background:rgba(52,211,153,0.2); color:#34d399; }
+    #status.error   { background:rgba(239,68,68,0.2); color:#ef4444; }
+
+    .search-container {
+      display:flex;
+      gap:12px;
+      margin-bottom:16px;
     }
-    .meta {
-      color: #999;
-      font-size: .95rem;
-    }
-    .coords {
-      color: #4cc9ff;
-      text-decoration: none;
-    }
-    .coords:hover {
-      text-decoration: underline;
-    }
+
+    .search-container input { flex:1; }
+    .search-container button { padding:14px 24px; box-shadow:none; }
+
+    #search-results { margin-top:24px; }
+
     footer {
-      text-align: center;
-      margin: 4rem 0 2rem;
-      color: #555;
-      font-size: .95rem;
+      text-align:center;
+      padding:80px 0 120px;
+      color:#666688;
+      font-size:0.95rem;
+    }
+
+    @media (max-width:640px) {
+      header { padding:60px 0 40px; }
+      .glow-text { font-size:clamp(2.8rem,9vw,5.5rem); }
+      .section { padding:24px; }
+      .search-container { flex-direction:column; }
+      .search-container button { width:100%; }
     }
   </style>
 </head>
 <body>
-  <h1 class="glow">ROOT DONATE NEARBY</h1>
-  <div class="header">Energy drops within ~100 m • Exported 27 Jan 2026 02:30 • @iandreme</div>
 
-  <!-- Example pin 1 -->
-  <div class="pin">
-    <div class="from">Swagga Rico</div>
-    <div class="msg">Big energy spot right here — come vibe 🌱🔥</div>
-    <div class="meta">
-      27 Jan 2026 02:15 • 
-      <a href="https://maps.apple.com/?ll=51.507351,-0.127758&q=Swagga+Rico" class="coords">51.507351, -0.127758 → Apple Maps</a><br>
-      <small><a href="https://www.google.com/maps?q=51.507351,-0.127758" style="color:#777;">Google Maps</a></small>
+  <div class="container">
+    <header>
+      <h1 class="glow-text">ROOT DONATE</h1>
+      <div class="tagline">Drop roots where energy flows 🌱 • GPS Pins</div>
+      <div class="handle">@iandreme</div>
+    </header>
+
+    <div id="status"></div>
+
+    <div id="featured-pin" style="display:none;"></div>
+
+    <div class="section">
+      <h2>Drop a Pin</h2>
+      <input type="text" id="name" placeholder="Your name / alias" value="Swagga Rico">
+      <textarea id="msg" placeholder="Message / vibe / note (optional)"></textarea>
+      <button id="add-drop">Drop Pin 📍</button>
     </div>
+
+    <div class="section">
+      <h2>Auto-Track Mode</h2>
+      <button id="toggle-auto">Toggle Auto-Track (OFF)</button>
+    </div>
+
+    <div class="section">
+      <h2>Nearby Drops <span id="nearby-info">(loading your location…)</span></h2>
+      <div id="pins">
+        <p style="text-align:center;color:#666;">Waiting for real GPS…</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Search All Pins</h2>
+      <div class="search-container">
+        <input type="text" id="search-input" placeholder="Search by name, message, coords...">
+        <button id="search-btn">Search</button>
+      </div>
+      <div id="search-results"></div>
+      <button class="clear-btn" id="clear-all">Clear All Pins ⚠️</button>
+    </div>
+
+    <footer>
+      Built with pure energy • 2026 © Swagga Rico • #RootDonate
+    </footer>
   </div>
 
-  <!-- Example pin 2 -->
-  <div class="pin">
-    <div class="from">Swagga Rico [auto]</div>
-    <div class="msg">(auto-tracked)</div>
-    <div class="meta">
-      27 Jan 2026 02:20 • 
-      <a href="https://maps.apple.com/?ll=51.507420,-0.127690&q=Pin" class="coords">51.507420, -0.127690 → Apple Maps</a><br>
-      <small><a href="https://www.google.com/maps?q=51.507420,-0.127690" style="color:#777;">Google Maps</a></small>
-    </div>
-  </div>
+  <script>
+    const STORAGE_KEY = 'root_donate_pins';
+    const NEARBY_RADIUS_DEG = 0.001; // ~100–110 m
 
-  <!-- Example pin 3 -->
-  <div class="pin">
-    <div class="from">Swagga Rico</div>
-    <div class="msg">Late night root drop — feel the frequency</div>
-    <div class="meta">
-      27 Jan 2026 02:25 • 
-      <a href="https://maps.apple.com/?ll=51.507380,-0.127720&q=Swagga+Rico" class="coords">51.507380, -0.127720 → Apple Maps</a><br>
-      <small><a href="https://www.google.com/maps?q=51.507380,-0.127720" style="color:#777;">Google Maps</a></small>
-    </div>
-  </div>
+    let userLat = null;
+    let userLng = null;
+    let centerLat = null;          // coords we're centering "nearby" on
+    let centerLng = null;
+    let usingSharedCenter = false;
+    let watchId = null;
+    let autoTracking = false;
+    let autoInterval = null;
+    let highlightedPin = null;
 
-  <footer>Drop roots where energy flows 🌱 • Root Donate 2026 © Swagga Rico</footer>
+    function showStatus(msg, type = 'success') {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = type;
+      el.style.display = 'block';
+      setTimeout(() => el.style.display = 'none', 5000);
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+
+    function getAllPins() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+      catch { return []; }
+    }
+
+    function savePins(pins) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(pins));
+    }
+
+    function addPin() {
+      if (!userLat || !userLng) return showStatus('No GPS fix yet', 'error');
+
+      const name = document.getElementById('name').value.trim() || 'Swagga Rico';
+      const msg  = document.getElementById('msg').value.trim();
+
+      const pins = getAllPins();
+      pins.push({
+        name, msg, lat: userLat, lng: userLng,
+        time: new Date().toISOString(),
+        auto: false
+      });
+
+      savePins(pins);
+      showStatus('Pin dropped 🔥', 'success');
+      document.getElementById('msg').value = '';
+      renderNearby();
+    }
+
+    function toggleAuto() {
+      autoTracking = !autoTracking;
+      document.getElementById('toggle-auto').textContent = `Toggle Auto-Track (${autoTracking ? 'ON' : 'OFF'})`;
+
+      if (autoTracking) {
+        autoInterval = setInterval(() => {
+          if (userLat && userLng) {
+            const pins = getAllPins();
+            pins.push({
+              name: 'Swagga Rico',
+              msg: '(auto)',
+              lat: userLat,
+              lng: userLng,
+              time: new Date().toISOString(),
+              auto: true
+            });
+            savePins(pins);
+            showStatus('Auto-pin saved', 'success');
+            renderNearby();
+          }
+        }, 60000);
+        showStatus('Auto-track ON (≈ every 1 min)', 'success');
+      } else {
+        clearInterval(autoInterval);
+        showStatus('Auto-track OFF', 'success');
+      }
+    }
+
+    function getAppleMapsLink(lat, lng, label = 'Pin') {
+      return `https://maps.apple.com/?ll=${lat},${lng}&q=${encodeURIComponent(label)}`;
+    }
+
+    function getGoogleMapsLink(lat, lng) {
+      return `https://www.google.com/maps?q=${lat},${lng}`;
+    }
+
+    function generateShareUrl(pin) {
+      try {
+        const encoded = btoa(JSON.stringify(pin));
+        return `${window.location.origin}${window.location.pathname}#pin=${encodeURIComponent(encoded)}`;
+      } catch {
+        return '';
+      }
+    }
+
+    function copyShareLink(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        showStatus('Pin share link copied to clipboard! 📋', 'success');
+      }).catch(() => {
+        showStatus('Copy failed — long-press to copy manually', 'error');
+        prompt('Copy this link:', url);
+      });
+    }
+
+    function renderPinList(containerId, pins, showShare = false) {
+      const container = document.getElementById(containerId);
+      if (!pins?.length) {
+        container.innerHTML = '<p style="text-align:center;color:#666;">No pins found</p>';
+        return;
+      }
+
+      let html = '';
+      pins.forEach(p => {
+        const dt = new Date(p.time).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+        const label = p.auto ? ' [auto]' : '';
+        const nameEsc = escapeHTML(p.name);
+        const msgEsc = escapeHTML(p.msg || '(no message)');
+        const coords = `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`;
+        const appleLink = getAppleMapsLink(p.lat, p.lng, p.name);
+        const googleLink = getGoogleMapsLink(p.lat, p.lng);
+        const shareUrl = generateShareUrl(p);
+
+        const isHighlighted = highlightedPin &&
+          Math.abs(p.lat - highlightedPin.lat) < 0.0001 &&
+          Math.abs(p.lng - highlightedPin.lng) < 0.0001 &&
+          p.time === highlightedPin.time;
+
+        const highlightClass = isHighlighted ? ' highlighted' : '';
+        const badge = isHighlighted ? ' <span style="color:#34d399;font-weight:bold;">• Featured Nearby!</span>' : '';
+
+        html += `
+          <div class="pin${highlightClass}">
+            <div class="from">${nameEsc}${label}${badge}</div>
+            <div class="msg">${msgEsc}</div>
+            <div class="meta">
+              ${dt} • 
+              <a href="${appleLink}" target="_blank" class="coords" title="Apple Maps">${coords}</a>
+              <br>
+              <small><a href="${googleLink}" target="_blank" style="color:#888;">(Google Maps)</a></small>
+            </div>
+            ${showShare && shareUrl ? `
+              <button class="share-btn" onclick="copyShareLink('${shareUrl.replace(/"/g,'\\\"')}')">
+                Copy Share Link 📋
+              </button>
+            ` : ''}
+          </div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    function renderNearby() {
+      const displayLat = centerLat ?? userLat;
+      const displayLng = centerLng ?? userLng;
+
+      if (!displayLat || !displayLng) {
+        document.getElementById('pins').innerHTML = '<p style="text-align:center;color:#666;">Waiting for coordinates…</p>';
+        document.getElementById('nearby-info').textContent = '(location needed)';
+        return;
+      }
+
+      const pins = getAllPins()
+        .filter(p => Math.abs(p.lat - displayLat) <= NEARBY_RADIUS_DEG && Math.abs(p.lng - displayLng) <= NEARBY_RADIUS_DEG)
+        .sort((a,b) => new Date(b.time) - new Date(a.time));
+
+      renderPinList('pins', pins, true);
+
+      if (usingSharedCenter) {
+        document.getElementById('nearby-info').innerHTML = 
+          `(centered on shared pin • <a href="#" id="switch-to-live" style="color:#34d399;text-decoration:underline;">switch to my live location</a>)`;
+        
+        setTimeout(() => {
+          const link = document.getElementById('switch-to-live');
+          if (link) {
+            link.onclick = (e) => {
+              e.preventDefault();
+              usingSharedCenter = false;
+              centerLat = null;
+              centerLng = null;
+              renderNearby();
+              showStatus('Switched to your live location', 'success');
+            };
+          }
+        }, 300);
+      } else {
+        document.getElementById('nearby-info').textContent = '(your current real position)';
+      }
+    }
+
+    function renderFeaturedPin(pin) {
+      highlightedPin = pin;
+      const nameEsc = escapeHTML(pin.name || 'Anonymous');
+      const msgEsc = escapeHTML(pin.msg || '(auto-tracked)');
+      const dt = new Date(pin.time).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+      const coords = `${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`;
+      const label = pin.auto ? ' [auto]' : '';
+      const appleLink = getAppleMapsLink(pin.lat, pin.lng, pin.name);
+      const googleLink = getGoogleMapsLink(pin.lat, pin.lng);
+      const shareUrl = generateShareUrl(pin);
+
+      document.getElementById('featured-pin').innerHTML = `
+        <div class="featured">
+          <h3>Featured Shared Pin 📍</h3>
+          <div style="font-weight:600;color:#88ffcc;margin-bottom:0.8rem;">From: ${nameEsc}${label}</div>
+          <div class="msg" style="margin:1rem 0;">${msgEsc}</div>
+          <div class="meta">
+            ${dt} • 
+            <a href="${appleLink}" target="_blank" class="coords">${coords}</a>
+            <br><small><a href="${googleLink}" target="_blank" style="color:#888;">(Google Maps)</a></small>
+          </div>
+          ${shareUrl ? `
+            <button class="share-btn" onclick="copyShareLink('${shareUrl.replace(/"/g,'\\\"')}')">
+              Copy Share Link 📋
+            </button>
+          ` : ''}
+        </div>
+      `;
+      document.getElementById('featured-pin').style.display = 'block';
+    }
+
+    function loadSharedPin() {
+      const hash = window.location.hash;
+      if (!hash.startsWith('#pin=')) return false;
+
+      try {
+        const encoded = decodeURIComponent(hash.slice(5));
+        const pinJson = atob(encoded);
+        const pin = JSON.parse(pinJson);
+
+        if (typeof pin.lat !== 'number' || typeof pin.lng !== 'number' || isNaN(pin.lat) || isNaN(pin.lng)) {
+          throw new Error('Invalid coordinates');
+        }
+
+        centerLat = pin.lat;
+        centerLng = pin.lng;
+        usingSharedCenter = true;
+        highlightedPin = pin;
+
+        renderFeaturedPin(pin);
+        renderNearby();  // show nearby pins around the shared location
+        showStatus('Shared pin loaded • Nearby shows drops around this spot 🌱', 'success');
+
+        return true;
+      } catch (err) {
+        console.error('Invalid share link:', err);
+        showStatus('Invalid or corrupted share link', 'error');
+        return false;
+      }
+    }
+
+    function searchPins() {
+      const term = document.getElementById('search-input').value.trim().toLowerCase();
+      if (!term) return showStatus('Enter a search term', 'error');
+
+      const pins = getAllPins()
+        .filter(p => 
+          p.name.toLowerCase().includes(term) ||
+          (p.msg || '').toLowerCase().includes(term) ||
+          `${p.lat?.toFixed(6) || ''},${p.lng?.toFixed(6) || ''}`.includes(term)
+        )
+        .sort((a,b) => new Date(b.time) - new Date(a.time));
+
+      renderPinList('search-results', pins, true);
+      showStatus(`Found ${pins.length} pin${pins.length !== 1 ? 's' : ''}`, pins.length ? 'success' : 'error');
+    }
+
+    function clearAllPins() {
+      if (!confirm('Permanently delete ALL saved pins?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      document.getElementById('pins').innerHTML = '<p style="text-align:center;color:#666;">No pins found</p>';
+      document.getElementById('search-results').innerHTML = '';
+      showStatus('All pins cleared', 'success');
+      renderNearby();
+    }
+
+    function startGeo() {
+      if (!navigator.geolocation) {
+        showStatus('Geolocation not supported', 'error');
+        return;
+      }
+
+      watchId = navigator.geolocation.watchPosition(
+        pos => {
+          userLat = pos.coords.latitude;
+          userLng = pos.coords.longitude;
+          
+          if (!usingSharedCenter) {
+            centerLat = userLat;
+            centerLng = userLng;
+          }
+          
+          renderNearby();
+        },
+        err => showStatus(`Location error: ${err.message}`, 'error'),
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+      );
+    }
+
+    // Event listeners
+    document.getElementById('add-drop').onclick = addPin;
+    document.getElementById('toggle-auto').onclick = toggleAuto;
+    document.getElementById('search-btn').onclick = searchPins;
+    document.getElementById('clear-all').onclick = clearAllPins;
+    document.getElementById('search-input').addEventListener('keypress', e => {
+      if (e.key === 'Enter') searchPins();
+    });
+
+    // Init
+    loadSharedPin();
+    startGeo();
+  </script>
 </body>
 </html>

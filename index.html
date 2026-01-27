@@ -233,7 +233,7 @@
 
     let userLat = null;
     let userLng = null;
-    let centerLat = null;          // coords used for "nearby" display
+    let centerLat = null;
     let centerLng = null;
     let usingSharedCenter = false;
     let watchId = null;
@@ -270,7 +270,10 @@
 
       const pins = getAllPins();
       pins.push({
-        name, msg, lat: userLat, lng: userLng,
+        name,
+        msg,
+        lat: userLat,
+        lng: userLng,
         time: new Date().toISOString(),
         auto: false
       });
@@ -328,9 +331,9 @@
 
     function copyShareLink(url) {
       navigator.clipboard.writeText(url).then(() => {
-        showStatus('Pin share link copied to clipboard! 📋', 'success');
+        showStatus('Pin share link copied! 📋', 'success');
       }).catch(() => {
-        showStatus('Copy failed — long-press to copy manually', 'error');
+        showStatus('Copy failed — long-press to copy', 'error');
         prompt('Copy this link:', url);
       });
     }
@@ -359,7 +362,7 @@
           p.time === highlightedPin.time;
 
         const highlightClass = isHighlighted ? ' highlighted' : '';
-        const badge = isHighlighted ? ' <span style="color:#34d399;font-weight:bold;">• Featured Nearby!</span>' : '';
+        const badge = isHighlighted ? ' <span style="color:#34d399;font-weight:bold;">• Featured!</span>' : '';
 
         html += `
           <div class="pin${highlightClass}">
@@ -393,29 +396,29 @@
 
       const pins = getAllPins()
         .filter(p => Math.abs(p.lat - displayLat) <= NEARBY_RADIUS_DEG && Math.abs(p.lng - displayLng) <= NEARBY_RADIUS_DEG)
-        .sort((a,b) => new Date(b.time) - new Date(a.time));
+        .sort((a, b) => new Date(b.time) - new Date(a.time));
 
       renderPinList('pins', pins, true);
 
       if (usingSharedCenter) {
         document.getElementById('nearby-info').innerHTML = 
-          `(centered on shared pin • <a href="#" id="switch-to-live" style="color:#34d399;text-decoration:underline;cursor:pointer;">switch to my live location</a>)`;
-        
+          `(showing nearby to shared pin • <a href="#" id="switch-live" style="color:#34d399;text-decoration:underline;cursor:pointer;">switch to my live location</a>)`;
+
         setTimeout(() => {
-          const link = document.getElementById('switch-to-live');
+          const link = document.getElementById('switch-live');
           if (link) {
-            link.onclick = (e) => {
+            link.onclick = e => {
               e.preventDefault();
               usingSharedCenter = false;
               centerLat = null;
               centerLng = null;
               renderNearby();
-              showStatus('Switched to your live location', 'success');
+              showStatus('Switched to live location', 'success');
             };
           }
-        }, 300);
+        }, 100);
       } else {
-        document.getElementById('nearby-info').textContent = '(your current real position)';
+        document.getElementById('nearby-info').textContent = '(your current position)';
       }
     }
 
@@ -469,9 +472,9 @@
         highlightedPin = pin;
 
         renderFeaturedPin(pin);
-        renderNearby();  // Show nearby pins around the shared coordinates
-        showStatus('Shared pin loaded • Nearby shows drops around this spot 🌱', 'success');
+        renderNearby();
 
+        showStatus('Shared pin loaded • Nearby shows pins around this spot 🌱', 'success');
         return true;
       } catch (err) {
         console.error('Invalid share link:', err);
@@ -490,14 +493,14 @@
           (p.msg || '').toLowerCase().includes(term) ||
           `${p.lat?.toFixed(6) || ''},${p.lng?.toFixed(6) || ''}`.includes(term)
         )
-        .sort((a,b) => new Date(b.time) - new Date(a.time));
+        .sort((a, b) => new Date(b.time) - new Date(a.time));
 
       renderPinList('search-results', pins, true);
       showStatus(`Found ${pins.length} pin${pins.length !== 1 ? 's' : ''}`, pins.length ? 'success' : 'error');
     }
 
     function clearAllPins() {
-      if (!confirm('Permanently delete ALL saved pins?')) return;
+      if (!confirm('Permanently delete ALL saved pins? ⚠️')) return;
       localStorage.removeItem(STORAGE_KEY);
       document.getElementById('pins').innerHTML = '<p style="text-align:center;color:#666;">No pins found</p>';
       document.getElementById('search-results').innerHTML = '';
@@ -507,7 +510,7 @@
 
     function startGeo() {
       if (!navigator.geolocation) {
-        showStatus('Geolocation not supported', 'error');
+        showStatus('Geolocation not supported by browser', 'error');
         return;
       }
 

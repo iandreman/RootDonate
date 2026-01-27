@@ -300,7 +300,7 @@
     }
 
     function getAppleMapsLink(lat, lng, label) {
-      return `https://maps.apple.com/?ll=${lat},${lng}&q=${encodeURIComponent(label || 'Pin')}`;
+      return `https://maps.apple.com/?ll=${lat},${lng}&q=${encodeURIComponent(label || 'Pin')}`, `<button class="share-btn" data-open-url="${shareUrl.replace(/"/g,'&quot;')}">Open shared view ↗</button>`;
     }
 
     function generateShareUrl(pin) {

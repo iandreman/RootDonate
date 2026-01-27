@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Donate • Nearby + Share Pins • Swagga Rico</title>
+  <title>Root Donate • Nearby + Search + Share • Swagga Rico</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,7 +21,7 @@
         radial-gradient(circle at 10% 20%, rgba(120,80,255,0.07) 0%, transparent 40%),
         radial-gradient(circle at 90% 80%, rgba(52,211,153,0.06) 0%, transparent 40%);
     }
-    .container { max-width:1000px; margin:0 auto; }
+    .container { max-width:1100px; margin:0 auto; }
     h1.glow {
       font-family:'Orbitron',sans-serif;
       font-size:clamp(2.8rem,9vw,5rem);
@@ -44,11 +44,38 @@
       background:rgba(255,255,255,0.04);
       padding:12px 18px;
       border-radius:12px;
-      margin-bottom:20px;
+      margin:20px 0;
       text-align:center;
       font-size:0.98rem;
       border:1px solid rgba(52,211,153,0.2);
     }
+    .search-container {
+      display:flex;
+      gap:12px;
+      margin-bottom:20px;
+      flex-wrap:wrap;
+    }
+    #search-input {
+      flex:1;
+      min-width:220px;
+      padding:14px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:12px;
+      color:white;
+      font-size:1rem;
+    }
+    button {
+      padding:14px 24px;
+      background:linear-gradient(45deg,#7c3aed,#3b82f6);
+      border:none;
+      border-radius:999px;
+      color:white;
+      font-weight:600;
+      cursor:pointer;
+      transition:all 0.3s;
+    }
+    button:hover { transform:translateY(-2px); opacity:0.95; }
     .pin-list { display:grid; gap:16px; }
     .pin {
       background:rgba(255,255,255,0.03);
@@ -73,21 +100,25 @@
       color:white;
       font-weight:600;
       cursor:pointer;
-      transition:all 0.3s;
     }
-    button.share-btn:hover { transform:translateY(-2px); opacity:0.95; }
+    button.share-btn:hover { transform:translateY(-2px); }
     .no-pins { text-align:center; color:#777; padding:60px 20px; font-size:1.2rem; }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <h1 class="glow">NEARBY PINS + SHARE</h1>
-    <div class="subtitle">Your existing pins • Auto radius • Share any pin via URL</div>
+    <h1 class="glow">NEARBY + SEARCH + SHARE</h1>
+    <div class="subtitle">Your existing pins • Auto radius nearby • Search all • Share any</div>
 
     <div id="status"></div>
 
     <div id="info-bar" class="info-bar">Waiting for location & calculating adaptive radius…</div>
+
+    <div class="search-container">
+      <input type="text" id="search-input" placeholder="Search all pins (name / msg / coords)...">
+      <button onclick="renderSearchResults()">Search All</button>
+    </div>
 
     <div id="pin-list" class="pin-list"></div>
   </div>
@@ -97,14 +128,10 @@
     let userLat = null;
     let userLng = null;
 
-    // ────────────────────────────────────────────────
-    //  CONFIG: Change this to the real URL of your main Root Donate page
-    // ────────────────────────────────────────────────
+    // CHANGE THIS to match your main Root Donate page URL
     const ROOT_DONATE_BASE_URL = 'https://rootdonate.co.uk';  
-    // Examples:
-    // - 'https://iandreme.github.io/root-donate.html'
-    // - window.location.origin + '/root-donate.html'   (if same domain)
-    // - 'file:///path/to/root-donate.html'             (if local file)
+    // or: window.location.origin + '/root-donate.html'
+    // or local: 'file:///C:/path/to/root-donate.html'
 
     function showStatus(msg, type = 'success') {
       const el = document.getElementById('status');
@@ -159,11 +186,11 @@
     }
 
     function copyShareLink(url) {
-      if (!url) return showStatus('Share link generation failed', 'error');
+      if (!url) return showStatus('Share link failed', 'error');
       navigator.clipboard.writeText(url).then(() => {
-        showStatus('Share link copied! Paste anywhere 🌱', 'success');
+        showStatus('Share link copied! Paste to Root Donate page', 'success');
       }).catch(() => {
-        showStatus('Copy failed — long-press or manual copy', 'error');
+        showStatus('Copy failed — manual copy', 'error');
         prompt('Copy this link:', url);
       });
     }
@@ -175,13 +202,13 @@
       container.innerHTML = '';
 
       if (pins.length === 0) {
-        container.innerHTML = '<div class="no-pins">No pins saved yet in Root Donate</div>';
+        container.innerHTML = '<div class="no-pins">No pins saved yet</div>';
         infoBar.textContent = 'No data in localStorage';
         return;
       }
 
       if (!userLat || !userLng) {
-        container.innerHTML = '<div class="no-pins">Waiting for your current location...<br><small>Allow location access</small></div>';
+        container.innerHTML = '<div class="no-pins">Waiting for location… allow access</div>';
         infoBar.textContent = 'Waiting for GPS';
         return;
       }
@@ -193,7 +220,7 @@
         .sort((a,b) => a.distance - b.distance);
 
       if (nearby.length === 0) {
-        container.innerHTML = `<div class="no-pins">No pins within ~${Math.round(radius)} m<br>(try moving or dropping more)</div>`;
+        container.innerHTML = `<div class="no-pins">No pins in ~${Math.round(radius)} m<br>(move or add pins)</div>`;
         infoBar.innerHTML = `~${Math.round(radius)} m adaptive • No nearby pins`;
         return;
       }
@@ -226,8 +253,56 @@
                       nearby.length >= 6  ? 'active flow' : 'emerging roots';
 
       infoBar.innerHTML = `~${Math.round(radius)} m adaptive • ${density} (${nearby.length} pins)`;
+      showStatus(`Nearby: ${nearby.length} pins`, 'success');
+    }
 
-      showStatus(`Showing ${nearby.length} nearby pin${nearby.length === 1 ? '' : 's'}`, 'success');
+    function renderSearchResults() {
+      const term = document.getElementById('search-input').value.trim().toLowerCase();
+      if (!term) return showStatus('Enter search term', 'error');
+
+      const pins = getPins();
+      const container = document.getElementById('pin-list');
+      container.innerHTML = '';
+
+      const filtered = pins.filter(p =>
+        p.name.toLowerCase().includes(term) ||
+        (p.msg || '').toLowerCase().includes(term) ||
+        `${p.lat?.toFixed(6) || ''},${p.lng?.toFixed(6) || ''}`.includes(term)
+      );
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="no-pins">No matching pins found</div>';
+        return showStatus('No results', 'error');
+      }
+
+      filtered.sort((a,b) => new Date(b.time) - new Date(a.time));
+
+      filtered.forEach(p => {
+        const dt = new Date(p.time).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+        const name = escapeHTML(p.name || 'Anonymous');
+        const msg = escapeHTML(p.msg || '(no message)');
+        const coords = `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`;
+        const apple = `https://maps.apple.com/?ll=${p.lat},${p.lng}&q=${encodeURIComponent(name)}`;
+        const google = `https://www.google.com/maps?q=${p.lat},${p.lng}`;
+        const shareUrl = generateShareUrl(p);
+
+        const div = document.createElement('div');
+        div.className = 'pin';
+        div.innerHTML = `
+          <div class="from">${name}${p.auto ? ' [auto]' : ''}</div>
+          <div class="msg">${msg}</div>
+          <div class="meta">
+            ${dt} • 
+            <a href="${apple}" target="_blank" class="coords-link">${coords} (Apple)</a>
+            <br><small><a href="${google}" target="_blank" style="color:#888;">(Google)</a></small>
+          </div>
+          ${shareUrl ? `<button class="share-btn" onclick="copyShareLink('${shareUrl.replace(/'/g,'\\\'')}')">Share this pin 📍</button>` : ''}
+        `;
+        container.appendChild(div);
+      });
+
+      showStatus(`Found ${filtered.length} pins matching "${term}"`, 'success');
+      document.getElementById('info-bar').innerHTML = 'Search results (all pins)';
     }
 
     // Live location
@@ -248,11 +323,15 @@
       showStatus('Geolocation not supported', 'error');
     }
 
-    // Make copy function global for onclick
     window.copyShareLink = copyShareLink;
 
-    // Start
+    // Initial render (nearby view)
     renderNearby();
+
+    // Optional: search on Enter
+    document.getElementById('search-input').addEventListener('keypress', e => {
+      if (e.key === 'Enter') renderSearchResults();
+    });
   </script>
 </body>
 </html>

@@ -126,6 +126,13 @@
       margin-bottom:20px;
       border-radius:16px;
       border:1px solid rgba(255,255,255,0.06);
+      transition: all 0.3s ease;
+    }
+
+    .pin.highlighted {
+      border:2px solid #34d399 !important;
+      background:rgba(52,211,153,0.12) !important;
+      box-shadow:0 0 20px rgba(52,211,153,0.4);
     }
 
     .from { font-weight:600; color:#818cf8; margin-bottom:0.5rem; }
@@ -222,26 +229,25 @@
 
   <script>
     const STORAGE_KEY = 'root_donate_pins';
-    const NEARBY_RADIUS_DEG = 0.001; // ~100–110 m depending on latitude
+    const NEARBY_RADIUS_DEG = 0.001; // ~100–110 m
 
     let userLat = null;
     let userLng = null;
     let watchId = null;
     let autoTracking = false;
     let autoInterval = null;
+    let highlightedPin = null;
 
     function showStatus(msg, type = 'success') {
       const el = document.getElementById('status');
       el.textContent = msg;
       el.className = type;
       el.style.display = 'block';
-      setTimeout(() => el.style.display = 'none', 4500);
+      setTimeout(() => el.style.display = 'none', 5000);
     }
 
     function escapeHTML(str) {
-      return str.replace(/[&<>"']/g, m => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      }[m]));
+      return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
     }
 
     function getAllPins() {
@@ -261,10 +267,7 @@
 
       const pins = getAllPins();
       pins.push({
-        name,
-        msg,
-        lat: userLat,
-        lng: userLng,
+        name, msg, lat: userLat, lng: userLng,
         time: new Date().toISOString(),
         auto: false
       });
@@ -277,8 +280,7 @@
 
     function toggleAuto() {
       autoTracking = !autoTracking;
-      const btn = document.getElementById('toggle-auto');
-      btn.textContent = `Toggle Auto-Track (${autoTracking ? 'ON' : 'OFF'})`;
+      document.getElementById('toggle-auto').textContent = `Toggle Auto-Track (${autoTracking ? 'ON' : 'OFF'})`;
 
       if (autoTracking) {
         autoInterval = setInterval(() => {
@@ -296,7 +298,7 @@
             showStatus('Auto-pin saved', 'success');
             renderNearby();
           }
-        }, 60000); // every 60 seconds
+        }, 60000);
         showStatus('Auto-track ON (≈ every 1 min)', 'success');
       } else {
         clearInterval(autoInterval);
@@ -305,8 +307,7 @@
     }
 
     function getAppleMapsLink(lat, lng, label = 'Pin') {
-      const safeLabel = encodeURIComponent(label);
-      return `https://maps.apple.com/?ll=${lat},${lng}&q=${safeLabel}`;
+      return `https://maps.apple.com/?ll=${lat},${lng}&q=${encodeURIComponent(label)}`;
     }
 
     function getGoogleMapsLink(lat, lng) {
@@ -315,12 +316,20 @@
 
     function generateShareUrl(pin) {
       try {
-        const pinJson = JSON.stringify(pin);
-        const encoded = btoa(pinJson);
+        const encoded = btoa(JSON.stringify(pin));
         return `${window.location.origin}${window.location.pathname}#pin=${encodeURIComponent(encoded)}`;
       } catch {
         return '';
       }
+    }
+
+    function copyShareLink(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        showStatus('Pin share link copied to clipboard! 📋', 'success');
+      }).catch(() => {
+        showStatus('Copy failed — long-press to copy manually', 'error');
+        prompt('Copy this link:', url);
+      });
     }
 
     function renderPinList(containerId, pins, showShare = false) {
@@ -341,9 +350,17 @@
         const googleLink = getGoogleMapsLink(p.lat, p.lng);
         const shareUrl = generateShareUrl(p);
 
+        const isHighlighted = highlightedPin &&
+          Math.abs(p.lat - highlightedPin.lat) < 0.0001 &&
+          Math.abs(p.lng - highlightedPin.lng) < 0.0001 &&
+          p.time === highlightedPin.time;
+
+        const highlightClass = isHighlighted ? ' highlighted' : '';
+        const badge = isHighlighted ? ' <span style="color:#34d399;font-weight:bold;">• Featured Nearby!</span>' : '';
+
         html += `
-          <div class="pin">
-            <div class="from">${nameEsc}${label}</div>
+          <div class="pin${highlightClass}">
+            <div class="from">${nameEsc}${label}${badge}</div>
             <div class="msg">${msgEsc}</div>
             <div class="meta">
               ${dt} • 
@@ -351,7 +368,11 @@
               <br>
               <small><a href="${googleLink}" target="_blank" style="color:#888;">(Google Maps)</a></small>
             </div>
-            ${showShare && shareUrl ? `<button class="share-btn" data-share-url="${shareUrl.replace(/"/g,'&quot;')}">Share this pin ↗</button>` : ''}
+            ${showShare && shareUrl ? `
+              <button class="share-btn" onclick="copyShareLink('${shareUrl.replace(/"/g,'\\\"')}')">
+                Copy Share Link 📋
+              </button>
+            ` : ''}
           </div>`;
       });
       container.innerHTML = html;
@@ -373,6 +394,7 @@
     }
 
     function renderFeaturedPin(pin) {
+      highlightedPin = pin;
       const nameEsc = escapeHTML(pin.name || 'Anonymous');
       const msgEsc = escapeHTML(pin.msg || '(auto-tracked)');
       const dt = new Date(pin.time).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
@@ -392,7 +414,11 @@
             <a href="${appleLink}" target="_blank" class="coords">${coords}</a>
             <br><small><a href="${googleLink}" target="_blank" style="color:#888;">(Google Maps)</a></small>
           </div>
-          ${shareUrl ? `<button class="share-btn" data-share-url="${shareUrl.replace(/"/g,'&quot;')}">Share this view ↗</button>` : ''}
+          ${shareUrl ? `
+            <button class="share-btn" onclick="copyShareLink('${shareUrl.replace(/"/g,'\\\"')}')">
+              Copy Share Link 📋
+            </button>
+          ` : ''}
         </div>
       `;
       document.getElementById('featured-pin').style.display = 'block';
@@ -407,13 +433,15 @@
         const pinJson = atob(encoded);
         const pin = JSON.parse(pinJson);
 
-        if (typeof pin.lat !== 'number' || typeof pin.lng !== 'number' ||
-            isNaN(pin.lat) || isNaN(pin.lng)) {
+        if (typeof pin.lat !== 'number' || typeof pin.lng !== 'number' || isNaN(pin.lat) || isNaN(pin.lng)) {
           throw new Error('Invalid coordinates');
         }
 
         renderFeaturedPin(pin);
-        showStatus('Shared pin loaded ✓  (nearby pins show your real location)', 'success');
+        showStatus('Shared pin loaded ✓  (check Nearby Drops below for highlight if close)', 'success');
+
+        // Re-render nearby after geo has a chance to load
+        setTimeout(renderNearby, 2000);
         return true;
       } catch (err) {
         console.error('Invalid share link:', err);
@@ -440,7 +468,6 @@
 
     function clearAllPins() {
       if (!confirm('Permanently delete ALL saved pins?')) return;
-
       localStorage.removeItem(STORAGE_KEY);
       document.getElementById('pins').innerHTML = '<p style="text-align:center;color:#666;">No pins found</p>';
       document.getElementById('search-results').innerHTML = '';
@@ -450,7 +477,7 @@
 
     function startGeo() {
       if (!navigator.geolocation) {
-        showStatus('Geolocation not supported by this browser', 'error');
+        showStatus('Geolocation not supported', 'error');
         return;
       }
 
@@ -472,20 +499,6 @@
     document.getElementById('clear-all').onclick = clearAllPins;
     document.getElementById('search-input').addEventListener('keypress', e => {
       if (e.key === 'Enter') searchPins();
-    });
-
-    // Handle share buttons (dynamic)
-    document.addEventListener('click', e => {
-      const btn = e.target.closest('.share-btn[data-share-url]');
-      if (!btn) return;
-      
-      const url = btn.getAttribute('data-share-url');
-      if (!url) return;
-
-      const originalText = btn.textContent;
-      btn.textContent = 'Opening…';
-      window.open(url, '_blank');
-      setTimeout(() => btn.textContent = originalText, 1800);
     });
 
     // Init

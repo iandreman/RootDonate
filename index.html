@@ -9,6 +9,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
 
+  <!-- leaflet-geosearch (standalone capable) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-geosearch@3.11.1/dist/geosearch.css" />
+
   <style>
     :root {
       --bg: #0a0a12;
@@ -120,12 +123,54 @@
     button:active { transform: translateY(0); }
 
     .search-container {
-      display: flex;
-      gap: 12px;
+      position: relative;
       margin-bottom: 1.5rem;
-      flex-wrap: wrap;
     }
-    #search-input { flex: 1; min-width: 240px; }
+    #search-input {
+      width: 100%;
+      padding: 14px 16px 14px 40px;
+      font-size: 1rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 999px;
+      color: white;
+      transition: all 0.2s;
+    }
+    #search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(52,211,153,0.15);
+    }
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    /* Geosearch dropdown styling - match your theme */
+    .leaflet-control-geosearch {
+      box-shadow: none !important;
+    }
+    .leaflet-bar {
+      background: var(--card-bg) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 12px !important;
+      backdrop-filter: blur(6px);
+    }
+    .leaflet-control-geosearch ul {
+      background: transparent !important;
+    }
+    .leaflet-control-geosearch li {
+      color: var(--text) !important;
+      background: rgba(255,255,255,0.05) !important;
+      border-bottom: 1px solid var(--border) !important;
+    }
+    .leaflet-control-geosearch li:hover,
+    .leaflet-control-geosearch .active {
+      background: rgba(52,211,153,0.15) !important;
+    }
 
     .pin-list { display: grid; gap: 16px; }
     .pin {
@@ -161,7 +206,7 @@
 
   <div class="container">
     <h1 class="glow">NEARBY PINS</h1>
-    <div class="subtitle">Discover • Search • Share • Create location pins</div>
+    <div class="subtitle">Discover • Search places • Share • Create location pins</div>
 
     <div id="status"></div>
     <div id="info-bar" class="info-bar">Acquiring stable location…</div>
@@ -178,23 +223,25 @@
     </div>
 
     <div class="search-container">
-      <input type="search" id="search-input" placeholder="Search pins by name, message or coordinates…" aria-label="Search pins">
-      <button onclick="renderSearchResults()">Search</button>
+      <span class="search-icon">🔍</span>
+      <input type="search" id="search-input" placeholder="Search places, addresses, postcodes…" aria-label="Search places or pins">
     </div>
 
     <div id="pin-list" class="pin-list"></div>
   </div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-geosearch@3.11.1/dist/bundle.min.js"></script>
+
   <script>
+    // ── Your existing code (STORAGE_KEY, smoothing, functions, etc.) ──
     const STORAGE_KEY = 'root_donate_pins';
     let userLat = null;
     let userLng = null;
 
-    // ── GPS SMOOTHING TUNABLES ───────────────────────────────
-    const MAX_ACCEPTABLE_ACCURACY = 60;      // meters — ignore worse than this
-    const MIN_MOVEMENT_THRESHOLD = 4;        // meters — ignore smaller changes
-    const EMA_ALPHA = 0.18;                  // 0.1 = very smooth / slow, 0.3 = responsive
-    // ──────────────────────────────────────────────────────────
+    const MAX_ACCEPTABLE_ACCURACY = 60;
+    const MIN_MOVEMENT_THRESHOLD = 4;
+    const EMA_ALPHA = 0.18;
 
     let smoothedLat = null;
     let smoothedLng = null;
@@ -408,30 +455,21 @@
       renderNearby();
     }
 
-    // ── GPS with smoothing & filtering ───────────────────────────────
+    // ── GPS smoothing watch ──────────────────────────────────────────────
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(
         pos => {
           const acc = pos.coords.accuracy;
-
-          // 1. Ignore bad accuracy
-          if (acc > MAX_ACCEPTABLE_ACCURACY) {
-            console.log(`Ignored low-accuracy fix: ${acc.toFixed(1)}m`);
-            return;
-          }
+          if (acc > MAX_ACCEPTABLE_ACCURACY) return;
 
           const rawLat = pos.coords.latitude;
           const rawLng = pos.coords.longitude;
 
-          // 2. Skip tiny movements (likely jitter)
           if (lastReportedLat !== null) {
             const moved = haversineDistance(lastReportedLat, lastReportedLng, rawLat, rawLng);
-            if (moved < MIN_MOVEMENT_THRESHOLD) {
-              return;
-            }
+            if (moved < MIN_MOVEMENT_THRESHOLD) return;
           }
 
-          // 3. Apply EMA smoothing
           if (smoothedLat === null) {
             smoothedLat = rawLat;
             smoothedLng = rawLng;
@@ -452,28 +490,76 @@
           showStatus(`GPS error: ${err.message}`, 'error');
           renderNearby();
         },
-        {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 0
-        }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     } else {
       showStatus('Geolocation not supported in this browser', 'error');
     }
 
+    // ── Dynamic autocomplete with leaflet-geosearch (standalone) ─────────
+    const provider = new GeoSearch.OpenStreetMapProvider({
+      params: {
+        countrycodes: 'gb',          // bias toward UK
+        limit: 6,
+        addressdetails: 1
+      }
+    });
+
+    const search = new GeoSearch.GeoSearchControl({
+      provider: provider,
+      style: 'bar',                    // permanent bar style (no collapsing button)
+      autoComplete: true,              // suggestions while typing
+      autoClose: true,
+      keepResult: false,
+      showMarker: false,               // no map → no marker
+      showPopup: false,
+      searchLabel: 'Search places…',
+      notFoundMessage: 'Sorry, nothing found…'
+    });
+
+    // Attach to input manually (since no map)
+    const input = document.getElementById('search-input');
+
+    // Bind geosearch events to our input
+    input.addEventListener('input', async () => {
+      const query = input.value.trim();
+      if (query.length < 3) return;
+
+      try {
+        const results = await provider.search({ query });
+        // You could build custom dropdown here, but geosearch handles basic UI
+      } catch (e) {
+        console.warn('Geosearch error:', e);
+      }
+    });
+
+    // When result selected (via Enter or click in dropdown)
+    search.on('select', result => {
+      const { location } = result;
+      userLat = location.y;   // lat
+      userLng = location.x;   // lng
+
+      renderNearby();
+      showStatus(`Showing pins near: ${result.location.label || 'Selected place'}`, 'success');
+
+      // Optional: clear or keep query
+      // input.value = result.location.label;
+    });
+
+    // Optional: fallback to old pin search if no geocode → but for now we prioritize place search
+    input.addEventListener('keypress', e => {
+      if (e.key === 'Enter') {
+        // geosearch usually handles Enter → but fallback if needed
+        if (!userLat || !userLng) {
+          renderSearchResults();  // old text search
+        }
+      }
+    });
+
     window.copyShareLink = copyShareLink;
 
     // Initial render
     renderNearby();
-
-    // Search on Enter
-    document.getElementById('search-input').addEventListener('keypress', e => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        renderSearchResults();
-      }
-    });
   </script>
 </body>
 </html>

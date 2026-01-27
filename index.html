@@ -3,152 +3,252 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Root Donate • Nearby + Search + Share + Post • Swagga Rico</title>
+  <title>Root Donate • Nearby Pins • Swagga Rico</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
 
   <style>
+    :root {
+      --bg: #0a0a12;
+      --text: #e0e0ff;
+      --text-muted: #a0a0ff;
+      --accent: #34d399;
+      --accent-dark: #2aa980;
+      --purple: #a78bfa;
+      --purple-dark: #8b5cf6;
+      --card-bg: rgba(255,255,255,0.03);
+      --border: rgba(120,80,255,0.18);
+      --glow: rgba(52,211,153,0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      background:#0a0a12;
-      color:#e0e0ff;
-      font-family:'Inter',system-ui,sans-serif;
-      margin:0;
-      padding:20px;
-      min-height:100vh;
+      margin: 0;
+      padding: 24px;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
       background-image: 
-        radial-gradient(circle at 10% 20%, rgba(120,80,255,0.07) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(52,211,153,0.06) 0%, transparent 40%);
+        radial-gradient(circle at 10% 20%, rgba(120,80,255,0.08) 0%, transparent 45%),
+        radial-gradient(circle at 90% 80%, rgba(52,211,153,0.07) 0%, transparent 45%);
+      line-height: 1.5;
     }
-    .container { max-width:1100px; margin:0 auto; }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
     h1.glow {
-      font-family:'Orbitron',sans-serif;
-      font-size:clamp(2.8rem,9vw,5rem);
-      font-weight:900;
-      text-align:center;
-      margin:40px 0 10px;
-      background:linear-gradient(90deg,#a78bfa,#7dd3fc,#34d399);
-      -webkit-background-clip:text;
-      background-clip:text;
-      color:transparent;
-      text-shadow:0 0 25px rgba(52,211,153,0.4);
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2.8rem, 8.5vw, 4.8rem);
+      font-weight: 900;
+      text-align: center;
+      margin: 2rem 0 0.5rem;
+      background: linear-gradient(90deg, var(--purple), #7dd3fc, var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 30px var(--glow);
     }
-    .subtitle { text-align:center; color:#a0a0ff; margin-bottom:20px; font-size:1.1rem; }
+
+    .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      margin: 0 0 2rem;
+    }
+
     #status {
-      padding:12px; margin:15px 0; border-radius:10px; text-align:center; display:none;
+      padding: 12px 20px;
+      margin: 1rem 0;
+      border-radius: 10px;
+      text-align: center;
+      display: none;
+      font-weight: 500;
     }
-    #status.success { background:rgba(52,211,153,0.25); color:#34d399; }
-    #status.error   { background:rgba(239,68,68,0.25); color:#ef4444; }
+
+    #status.success { background: rgba(52,211,153,0.22); color: var(--accent); }
+    #status.error   { background: rgba(239,68,68,0.22); color: #f87171; }
+
     .info-bar {
-      background:rgba(255,255,255,0.04);
-      padding:12px 18px;
-      border-radius:12px;
-      margin:20px 0;
-      text-align:center;
-      font-size:0.98rem;
-      border:1px solid rgba(52,211,153,0.2);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(52,211,153,0.18);
+      border-radius: 12px;
+      padding: 14px 20px;
+      margin: 1.5rem 0;
+      text-align: center;
+      font-size: 0.98rem;
     }
-    .search-container {
-      display:flex;
-      gap:12px;
-      margin-bottom:20px;
-      flex-wrap:wrap;
+
+    .post-section {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      backdrop-filter: blur(8px);
     }
-    #search-input {
-      flex:1;
-      min-width:220px;
-      padding:14px;
-      background:rgba(255,255,255,0.04);
-      border:1px solid rgba(255,255,255,0.12);
-      border-radius:12px;
-      color:white;
-      font-size:1rem;
+
+    .post-section h2 {
+      margin: 0 0 1rem;
+      font-size: 1.25rem;
+      color: var(--purple);
     }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: white;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(52,211,153,0.15);
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
     button {
-      padding:14px 24px;
-      background:linear-gradient(45deg,#7c3aed,#3b82f6);
-      border:none;
-      border-radius:999px;
-      color:white;
-      font-weight:600;
-      cursor:pointer;
-      transition:all 0.3s;
+      padding: 14px 28px;
+      font-weight: 600;
+      font-size: 1rem;
+      color: white;
+      background: linear-gradient(45deg, #7c3aed, #3b82f6);
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.25s ease;
     }
-    button:hover { transform:translateY(-2px); opacity:0.95; }
-    .pin-list { display:grid; gap:16px; }
+
+    button:hover {
+      transform: translateY(-1px);
+      opacity: 0.95;
+      box-shadow: 0 6px 20px rgba(59,130,246,0.3);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .search-container {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    #search-input {
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .pin-list {
+      display: grid;
+      gap: 16px;
+    }
+
     .pin {
-      background:rgba(255,255,255,0.03);
-      padding:18px;
-      border-radius:12px;
-      border:1px solid rgba(120,80,255,0.15);
-      backdrop-filter:blur(6px);
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      backdrop-filter: blur(6px);
     }
-    .from { font-weight:600; color:#a78bfa; margin-bottom:6px; }
-    .msg { margin:8px 0 12px; color:#d0d0ff; white-space:pre-wrap; word-break:break-word; }
-    .meta { font-size:0.92rem; color:#a0a0a0; }
-    .coords-link { color:#4cc9ff; text-decoration:none; }
-    .coords-link:hover { text-decoration:underline; }
-    .distance { color:#34d399; font-weight:600; }
-    button.share-btn {
-      margin-top:12px;
-      width:100%;
-      padding:10px;
-      background:linear-gradient(45deg,#6366f1,#a78bfa);
-      border:none;
-      border-radius:999px;
-      color:white;
-      font-weight:600;
-      cursor:pointer;
+
+    .from {
+      font-weight: 600;
+      color: var(--purple);
+      margin-bottom: 0.5rem;
     }
-    button.share-btn:hover { transform:translateY(-2px); }
-    .no-pins { text-align:center; color:#777; padding:60px 20px; font-size:1.2rem; }
-    .post-container {
-      background:rgba(255,255,255,0.04);
-      padding:18px;
-      border-radius:12px;
-      margin-bottom:20px;
-      border:1px solid rgba(52,211,153,0.2);
+
+    .msg {
+      margin: 0.6rem 0 1rem;
+      color: #d0d0ff;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
-    .post-container input, .post-container textarea {
-      width:100%;
-      padding:12px;
-      margin-bottom:12px;
-      background:rgba(255,255,255,0.03);
-      border:1px solid rgba(255,255,255,0.12);
-      border-radius:8px;
-      color:white;
-      font-size:1rem;
+
+    .meta {
+      font-size: 0.92rem;
+      color: #a0a0a0;
     }
-    .post-container textarea {
-      min-height:80px;
-      resize:vertical;
+
+    .coords-link {
+      color: #60a5fa;
+      text-decoration: none;
     }
-    .post-container button {
-      width:100%;
+
+    .coords-link:hover {
+      text-decoration: underline;
+    }
+
+    .distance {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .share-btn {
+      margin-top: 1rem;
+      width: 100%;
+      background: linear-gradient(45deg, #6366f1, var(--purple));
+      padding: 12px;
+    }
+
+    .share-btn:hover {
+      box-shadow: 0 6px 20px rgba(139,92,246,0.3);
+    }
+
+    .no-pins {
+      text-align: center;
+      color: #777;
+      padding: 80px 20px;
+      font-size: 1.25rem;
     }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <h1 class="glow">NEARBY + SEARCH + SHARE + POST</h1>
-    <div class="subtitle">Your existing pins • Auto radius nearby • Search all • Share any • Post new</div>
+    <h1 class="glow">NEARBY PINS</h1>
+    <div class="subtitle">Discover • Search • Share • Create location pins</div>
 
     <div id="status"></div>
+    <div id="info-bar" class="info-bar">Acquiring location • calculating radius…</div>
 
-    <div id="info-bar" class="info-bar">Waiting for location & calculating adaptive radius…</div>
-
-    <div class="post-container">
-      <h2 style="margin:0 0 12px; font-size:1.2rem; color:#a78bfa;">Post New GPS Pin</h2>
-      <input type="text" id="new-name" placeholder="Your name (optional)">
-      <textarea id="new-msg" placeholder="Message (optional)"></textarea>
-      <button onclick="postNewPin()">Post New Pin 📍 (using current location)</button>
+    <div class="post-section">
+      <h2>Create New Pin</h2>
+      <div class="form-group">
+        <input type="text" id="new-name" placeholder="Your name (optional)" aria-label="Your name">
+      </div>
+      <div class="form-group">
+        <textarea id="new-msg" placeholder="Message or note (optional)" aria-label="Message"></textarea>
+      </div>
+      <button onclick="postNewPin()">Post Pin at Current Location</button>
     </div>
 
     <div class="search-container">
-      <input type="text" id="search-input" placeholder="Search all pins (name / msg / coords)...">
-      <button onclick="renderSearchResults()">Search All</button>
+      <input type="search" id="search-input" placeholder="Search pins by name, message or coordinates…" aria-label="Search pins">
+      <button onclick="renderSearchResults()">Search</button>
     </div>
 
     <div id="pin-list" class="pin-list"></div>
@@ -159,10 +259,9 @@
     let userLat = null;
     let userLng = null;
 
-    // CHANGE THIS to match your main Root Donate page URL
-    const ROOT_DONATE_BASE_URL = 'https://rootdonate.co.uk';  
-    // or: window.location.origin + '/root-donate.html'
-    // or local: 'file:///C:/path/to/root-donate.html'
+    // ── CHANGE THIS ───────────────────────────────────────
+    const ROOT_DONATE_BASE_URL = 'https://rootdonate.co.uk';
+    // ──────────────────────────────────────────────────────
 
     function showStatus(msg, type = 'success') {
       const el = document.getElementById('status');
@@ -190,19 +289,19 @@
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
     }
 
     function calculateAdaptiveRadius(lat, lng) {
       const pins = getPins();
-      if (pins.length === 0) return 800;
+      if (!pins.length) return 800;
 
       const MAX_CHECK = 6000;
       let count = 0;
-      pins.forEach(p => {
+      for (const p of pins) {
         if (haversineDistance(lat, lng, p.lat, p.lng) <= MAX_CHECK) count++;
-      });
+      }
 
       if (count >= 25) return 350;
       if (count >= 12) return 550;
@@ -221,13 +320,14 @@
     }
 
     function copyShareLink(url) {
-      if (!url) return showStatus('Share link failed', 'error');
-      navigator.clipboard.writeText(url).then(() => {
-        showStatus('Share link copied! Paste to Root Donate page', 'success');
-      }).catch(() => {
-        showStatus('Copy failed — manual copy', 'error');
-        prompt('Copy this link:', url);
-      });
+      if (!url) return showStatus('Could not generate share link', 'error');
+
+      navigator.clipboard.writeText(url)
+        .then(() => showStatus('Share link copied to clipboard', 'success'))
+        .catch(() => {
+          showStatus('Copy failed — please copy manually', 'error');
+          prompt('Copy this link:', url);
+        });
     }
 
     function renderNearby() {
@@ -236,14 +336,14 @@
       const infoBar = document.getElementById('info-bar');
       container.innerHTML = '';
 
-      if (pins.length === 0) {
+      if (!pins.length) {
         container.innerHTML = '<div class="no-pins">No pins saved yet</div>';
-        infoBar.textContent = 'No data in localStorage';
+        infoBar.textContent = 'No pins in storage';
         return;
       }
 
       if (!userLat || !userLng) {
-        container.innerHTML = '<div class="no-pins">Waiting for location… allow access</div>';
+        container.innerHTML = '<div class="no-pins">Waiting for location access…</div>';
         infoBar.textContent = 'Waiting for GPS';
         return;
       }
@@ -252,11 +352,11 @@
       const nearby = pins
         .map(p => ({ ...p, distance: haversineDistance(userLat, userLng, p.lat, p.lng) }))
         .filter(p => p.distance <= radius)
-        .sort((a,b) => a.distance - b.distance);
+        .sort((a, b) => a.distance - b.distance);
 
-      if (nearby.length === 0) {
-        container.innerHTML = `<div class="no-pins">No pins in ~${Math.round(radius)} m<br>(move or add pins)</div>`;
-        infoBar.innerHTML = `~${Math.round(radius)} m adaptive • No nearby pins`;
+      if (!nearby.length) {
+        container.innerHTML = `<div class="no-pins">No pins within ≈${Math.round(radius)} m<br>(move or create new pins)</div>`;
+        infoBar.innerHTML = `≈${Math.round(radius)} m • No nearby pins`;
         return;
       }
 
@@ -265,35 +365,35 @@
         const name = escapeHTML(p.name || 'Anonymous');
         const msg = escapeHTML(p.msg || '(no message)');
         const coords = `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`;
-        const apple = `https://maps.apple.com/?ll=${p.lat},${p.lng}&q=${encodeURIComponent(name)}`;
-        const google = `https://www.google.com/maps?q=${p.lat},${p.lng}`;
+        const appleMaps = `https://maps.apple.com/?ll=${p.lat},${p.lng}&q=${encodeURIComponent(name)}`;
+        const googleMaps = `https://www.google.com/maps?q=${p.lat},${p.lng}`;
         const shareUrl = generateShareUrl(p);
 
         const div = document.createElement('div');
         div.className = 'pin';
         div.innerHTML = `
-          <div class="from">${name}${p.auto ? ' [auto]' : ''}</div>
+          <div class="from">${name}${p.auto ? ' • auto' : ''}</div>
           <div class="msg">${msg}</div>
           <div class="meta">
             <span class="distance">${Math.round(p.distance)} m away</span> • ${dt}<br>
-            <a href="${apple}" target="_blank" class="coords-link">${coords} (Apple)</a>
-            <br><small><a href="${google}" target="_blank" style="color:#888;">(Google)</a></small>
+            <a href="${appleMaps}" target="_blank" rel="noopener noreferrer" class="coords-link">${coords} (Apple Maps)</a><br>
+            <small><a href="${googleMaps}" target="_blank" rel="noopener noreferrer" style="color:#888;">Google Maps</a></small>
           </div>
-          ${shareUrl ? `<button class="share-btn" onclick="copyShareLink('${shareUrl.replace(/'/g,'\\\'')}')">Share this pin 📍</button>` : ''}
+          ${shareUrl && `<button class="share-btn" onclick="copyShareLink('${shareUrl.replace(/'/g,"\\'")}')">Share Pin</button>`}
         `;
         container.appendChild(div);
       });
 
-      const density = nearby.length >= 15 ? 'dense zone' :
-                      nearby.length >= 6  ? 'active flow' : 'emerging roots';
+      const density = nearby.length >= 15 ? 'High-density area' :
+                      nearby.length >= 6  ? 'Active area' : 'Growing area';
 
-      infoBar.innerHTML = `~${Math.round(radius)} m adaptive • ${density} (${nearby.length} pins)`;
-      showStatus(`Nearby: ${nearby.length} pins`, 'success');
+      infoBar.innerHTML = `≈${Math.round(radius)} m adaptive • ${density} (${nearby.length} pin${nearby.length === 1 ? '' : 's'})`;
+      showStatus(`Showing ${nearby.length} nearby pin${nearby.length === 1 ? '' : 's'}`, 'success');
     }
 
     function renderSearchResults() {
       const term = document.getElementById('search-input').value.trim().toLowerCase();
-      if (!term) return showStatus('Enter search term', 'error');
+      if (!term) return showStatus('Please enter a search term', 'error');
 
       const pins = getPins();
       const container = document.getElementById('pin-list');
@@ -305,44 +405,44 @@
         `${p.lat?.toFixed(6) || ''},${p.lng?.toFixed(6) || ''}`.includes(term)
       );
 
-      if (filtered.length === 0) {
+      if (!filtered.length) {
         container.innerHTML = '<div class="no-pins">No matching pins found</div>';
-        return showStatus('No results', 'error');
+        return showStatus('No results found', 'error');
       }
 
-      filtered.sort((a,b) => new Date(b.time) - new Date(a.time));
+      filtered.sort((a, b) => new Date(b.time) - new Date(a.time));
 
       filtered.forEach(p => {
         const dt = new Date(p.time).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
         const name = escapeHTML(p.name || 'Anonymous');
         const msg = escapeHTML(p.msg || '(no message)');
         const coords = `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`;
-        const apple = `https://maps.apple.com/?ll=${p.lat},${p.lng}&q=${encodeURIComponent(name)}`;
-        const google = `https://www.google.com/maps?q=${p.lat},${p.lng}`;
+        const appleMaps = `https://maps.apple.com/?ll=${p.lat},${p.lng}&q=${encodeURIComponent(name)}`;
+        const googleMaps = `https://www.google.com/maps?q=${p.lat},${p.lng}`;
         const shareUrl = generateShareUrl(p);
 
         const div = document.createElement('div');
         div.className = 'pin';
         div.innerHTML = `
-          <div class="from">${name}${p.auto ? ' [auto]' : ''}</div>
+          <div class="from">${name}${p.auto ? ' • auto' : ''}</div>
           <div class="msg">${msg}</div>
           <div class="meta">
             ${dt} • 
-            <a href="${apple}" target="_blank" class="coords-link">${coords} (Apple)</a>
-            <br><small><a href="${google}" target="_blank" style="color:#888;">(Google)</a></small>
+            <a href="${appleMaps}" target="_blank" rel="noopener noreferrer" class="coords-link">${coords} (Apple Maps)</a><br>
+            <small><a href="${googleMaps}" target="_blank" rel="noopener noreferrer" style="color:#888;">Google Maps</a></small>
           </div>
-          ${shareUrl ? `<button class="share-btn" onclick="copyShareLink('${shareUrl.replace(/'/g,'\\\'')}')">Share this pin 📍</button>` : ''}
+          ${shareUrl && `<button class="share-btn" onclick="copyShareLink('${shareUrl.replace(/'/g,"\\'")}')">Share Pin</button>`}
         `;
         container.appendChild(div);
       });
 
-      showStatus(`Found ${filtered.length} pins matching "${term}"`, 'success');
-      document.getElementById('info-bar').innerHTML = 'Search results (all pins)';
+      showStatus(`Found ${filtered.length} matching pin${filtered.length === 1 ? '' : 's'}`, 'success');
+      document.getElementById('info-bar').innerHTML = 'Search results — all pins';
     }
 
     function postNewPin() {
       if (!userLat || !userLng) {
-        return showStatus('Waiting for location… allow GPS access', 'error');
+        return showStatus('Location not available — please enable GPS', 'error');
       }
 
       const name = document.getElementById('new-name').value.trim();
@@ -354,7 +454,7 @@
         name: name || 'Anonymous',
         msg: msg || '',
         time: new Date().toISOString(),
-        auto: false  // or true if you want to mark as manual/auto
+        auto: false
       };
 
       const pins = getPins();
@@ -364,11 +464,11 @@
       document.getElementById('new-name').value = '';
       document.getElementById('new-msg').value = '';
 
-      showStatus('New pin posted successfully!', 'success');
-      renderNearby();  // Refresh the list
+      showStatus('Pin created successfully', 'success');
+      renderNearby();
     }
 
-    // Live location
+    // ── Geolocation ───────────────────────────────────────
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(
         pos => {
@@ -377,25 +477,27 @@
           renderNearby();
         },
         err => {
-          showStatus(`Location error: ${err.message}`, 'error');
+          showStatus(`Location access denied: ${err.message}`, 'error');
           renderNearby();
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     } else {
-      showStatus('Geolocation not supported', 'error');
+      showStatus('Geolocation is not supported by this browser', 'error');
     }
 
     window.copyShareLink = copyShareLink;
 
-    // Initial render (nearby view)
+    // Initial render
     renderNearby();
 
-    // Optional: search on Enter
+    // Search on Enter
     document.getElementById('search-input').addEventListener('keypress', e => {
-      if (e.key === 'Enter') renderSearchResults();
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        renderSearchResults();
+      }
     });
   </script>
 </body>
 </html>
-```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​

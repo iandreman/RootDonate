@@ -9,8 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
 
-  <!-- leaflet-geosearch (standalone capable) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-geosearch@3.11.1/dist/geosearch.css" />
+  <!-- No need for leaflet-geosearch CSS anymore (we use custom dropdown) -->
 
   <style>
     :root {
@@ -149,27 +148,33 @@
       pointer-events: none;
     }
 
-    /* Geosearch dropdown styling - match your theme */
-    .leaflet-control-geosearch {
-      box-shadow: none !important;
-    }
-    .leaflet-bar {
-      background: var(--card-bg) !important;
-      border: 1px solid var(--border) !important;
-      border-radius: 12px !important;
+    /* Custom autocomplete dropdown */
+    #suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 1000;
       backdrop-filter: blur(6px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      display: none;
+      margin-top: 4px;
     }
-    .leaflet-control-geosearch ul {
-      background: transparent !important;
+    #suggestions div {
+      padding: 10px 16px;
+      cursor: pointer;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
     }
-    .leaflet-control-geosearch li {
-      color: var(--text) !important;
-      background: rgba(255,255,255,0.05) !important;
-      border-bottom: 1px solid var(--border) !important;
-    }
-    .leaflet-control-geosearch li:hover,
-    .leaflet-control-geosearch .active {
-      background: rgba(52,211,153,0.15) !important;
+    #suggestions div:last-child { border-bottom: none; }
+    #suggestions div:hover,
+    #suggestions div.selected {
+      background: rgba(52,211,153,0.2);
     }
 
     .pin-list { display: grid; gap: 16px; }
@@ -224,17 +229,15 @@
 
     <div class="search-container">
       <span class="search-icon">🔍</span>
-      <input type="search" id="search-input" placeholder="Search places, addresses, postcodes…" aria-label="Search places or pins">
+      <input type="search" id="search-input" placeholder="Search places, addresses, postcodes…" autocomplete="off" aria-label="Search places or pins">
+      <div id="suggestions"></div>
     </div>
 
     <div id="pin-list" class="pin-list"></div>
   </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-geosearch@3.11.1/dist/bundle.min.js"></script>
-
   <script>
-    // ── Your existing code (STORAGE_KEY, smoothing, functions, etc.) ──
+    // ── Your existing variables & functions (unchanged) ───────────────────────────────
     const STORAGE_KEY = 'root_donate_pins';
     let userLat = null;
     let userLng = null;
@@ -378,8 +381,7 @@
       showStatus(`Found ${nearby.length} nearby pin${nearby.length === 1 ? '' : 's'}`, 'success');
     }
 
-    function renderSearchResults() {
-      const term = document.getElementById('search-input').value.trim().toLowerCase();
+    function renderSearchResults(term = document.getElementById('search-input').value.trim().toLowerCase()) {
       if (!term) return showStatus('Enter something to search', 'error');
 
       const pins = getPins();
@@ -455,7 +457,7 @@
       renderNearby();
     }
 
-    // ── GPS smoothing watch ──────────────────────────────────────────────
+    // GPS watch (unchanged)
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(
         pos => {
@@ -496,63 +498,103 @@
       showStatus('Geolocation not supported in this browser', 'error');
     }
 
-    // ── Dynamic autocomplete with leaflet-geosearch (standalone) ─────────
-    const provider = new GeoSearch.OpenStreetMapProvider({
-      params: {
-        countrycodes: 'gb',          // bias toward UK
-        limit: 6,
-        addressdetails: 1
-      }
-    });
-
-    const search = new GeoSearch.GeoSearchControl({
-      provider: provider,
-      style: 'bar',                    // permanent bar style (no collapsing button)
-      autoComplete: true,              // suggestions while typing
-      autoClose: true,
-      keepResult: false,
-      showMarker: false,               // no map → no marker
-      showPopup: false,
-      searchLabel: 'Search places…',
-      notFoundMessage: 'Sorry, nothing found…'
-    });
-
-    // Attach to input manually (since no map)
-    const input = document.getElementById('search-input');
-
-    // Bind geosearch events to our input
-    input.addEventListener('input', async () => {
-      const query = input.value.trim();
-      if (query.length < 3) return;
-
-      try {
-        const results = await provider.search({ query });
-        // You could build custom dropdown here, but geosearch handles basic UI
-      } catch (e) {
-        console.warn('Geosearch error:', e);
-      }
-    });
-
-    // When result selected (via Enter or click in dropdown)
-    search.on('select', result => {
-      const { location } = result;
-      userLat = location.y;   // lat
-      userLng = location.x;   // lng
-
-      renderNearby();
-      showStatus(`Showing pins near: ${result.location.label || 'Selected place'}`, 'success');
-
-      // Optional: clear or keep query
-      // input.value = result.location.label;
-    });
-
-    // Optional: fallback to old pin search if no geocode → but for now we prioritize place search
-    input.addEventListener('keypress', e => {
-      if (e.key === 'Enter') {
-        // geosearch usually handles Enter → but fallback if needed
-        if (!userLat || !userLng) {
-          renderSearchResults();  // old text search
+    // ── Dynamic autocomplete using provider directly (no map needed) ────────────────
+    const provider = {
+      search: async ({ query }) => {
+        if (query.length < 3) return [];
+        try {
+          const url = `https://nominatim.openstreetmap.org/search?format=json&limit=6&countrycodes=gb&addressdetails=1&q=${encodeURIComponent(query)}`;
+          const res = await fetch(url);
+          const data = await res.json();
+          return data.map(item => ({
+            label: item.display_name,
+            lat: parseFloat(item.lat),
+            lng: parseFloat(item.lon)
+          }));
+        } catch (e) {
+          console.warn('Nominatim error:', e);
+          return [];
         }
+      }
+    };
+
+    const input = document.getElementById('search-input');
+    const suggestionsDiv = document.getElementById('suggestions');
+    let selectedIndex = -1;
+
+    function showSuggestions(results) {
+      suggestionsDiv.innerHTML = '';
+      if (!results.length) {
+        suggestionsDiv.style.display = 'none';
+        return;
+      }
+      results.forEach((result, i) => {
+        const item = document.createElement('div');
+        item.textContent = result.label;
+        item.dataset.lat = result.lat;
+        item.dataset.lng = result.lng;
+        item.dataset.index = i;
+        item.addEventListener('click', () => {
+          selectResult(result.lat, result.lng, result.label);
+        });
+        suggestionsDiv.appendChild(item);
+      });
+      suggestionsDiv.style.display = 'block';
+      selectedIndex = -1;
+    }
+
+    function selectResult(lat, lng, label) {
+      userLat = lat;
+      userLng = lng;
+      input.value = label;
+      suggestionsDiv.style.display = 'none';
+      renderNearby();
+      showStatus(`Pins near: ${label}`, 'success');
+    }
+
+    let debounceTimer;
+    input.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(async () => {
+        const query = input.value.trim();
+        if (query.length < 3) {
+          suggestionsDiv.style.display = 'none';
+          return;
+        }
+        const results = await provider.search({ query });
+        showSuggestions(results);
+      }, 300);
+    });
+
+    input.addEventListener('keydown', e => {
+      const items = suggestionsDiv.querySelectorAll('div');
+      if (items.length === 0) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedIndex = (selectedIndex + 1) % items.length;
+        items.forEach((el, i) => el.classList.toggle('selected', i === selectedIndex));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+        items.forEach((el, i) => el.classList.toggle('selected', i === selectedIndex));
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (selectedIndex >= 0) {
+          const item = items[selectedIndex];
+          selectResult(item.dataset.lat, item.dataset.lng, item.textContent);
+        } else if (input.value.trim()) {
+          renderSearchResults(); // fallback to pin text search
+        }
+      } else if (e.key === 'Escape') {
+        suggestionsDiv.style.display = 'none';
+      }
+    });
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', e => {
+      if (!input.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+        suggestionsDiv.style.display = 'none';
       }
     });
 

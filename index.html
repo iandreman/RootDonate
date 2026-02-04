@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Nearby Pins • Shared + AI • Root Donate</title>
+  <title>Nearby Pins • Share via URL • Smart Import</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,6 +22,7 @@
       --border: rgba(120,80,255,0.18);
       --glow: rgba(52,211,153,0.4);
       --ai-bg: rgba(167,139,250,0.12);
+      --imported: rgba(59,130,246,0.15);
     }
 
     * { box-sizing: border-box; }
@@ -82,9 +83,7 @@
       margin-bottom: 2rem;
       backdrop-filter: blur(8px);
     }
-    .post-section h2 { margin: 0 0 1rem; font-size: 1.25rem; color: var(--purple); }
 
-    .form-group { margin-bottom: 1rem; }
     input, textarea {
       width: 100%;
       padding: 12px 16px;
@@ -93,10 +92,8 @@
       border-radius: 8px;
       color: white;
       font-size: 1rem;
-      transition: border-color 0.2s;
     }
     input:focus, textarea:focus {
-      outline: none;
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(52,211,153,0.15);
     }
@@ -111,32 +108,16 @@
       border: none;
       border-radius: 999px;
       cursor: pointer;
-      transition: all 0.25s ease;
       margin: 0 8px 12px 0;
     }
-    button:hover { transform: translateY(-1px); opacity: 0.95; box-shadow: 0 6px 20px rgba(59,130,246,0.3); }
-    button:active { transform: translateY(0); }
+    button:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,0.3); }
 
-    button.ai-btn {
-      background: linear-gradient(45deg, #8b5cf6, #c084fc);
-    }
+    button.ai-btn { background: linear-gradient(45deg, #8b5cf6, #c084fc); }
+    button.share-all { background: linear-gradient(45deg, #ec4899, #f43f5e); }
 
-    .search-container {
-      position: relative;
-      margin-bottom: 1.5rem;
-    }
+    .search-container { position: relative; margin-bottom: 1.5rem; }
     #search-input {
-      width: 100%;
-      padding: 14px 16px 14px 40px;
-      font-size: 1rem;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 999px;
-      color: white;
-    }
-    #search-input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(52,211,153,0.15);
+      padding-left: 40px;
     }
     .search-icon {
       position: absolute;
@@ -144,7 +125,6 @@
       top: 50%;
       transform: translateY(-50%);
       color: var(--text-muted);
-      pointer-events: none;
     }
 
     #suggestions {
@@ -157,19 +137,13 @@
       max-height: 220px;
       overflow-y: auto;
       z-index: 1000;
-      backdrop-filter: blur(6px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
       display: none;
-      margin-top: 4px;
     }
     #suggestions div {
       padding: 10px 16px;
       cursor: pointer;
-      color: var(--text);
-      border-bottom: 1px solid var(--border);
     }
-    #suggestions div:last-child { border-bottom: none; }
-    #suggestions div:hover, #suggestions div.selected { background: rgba(52,211,153,0.2); }
+    #suggestions div:hover { background: rgba(52,211,153,0.2); }
 
     .pin-list { display: grid; gap: 16px; }
     .pin {
@@ -177,31 +151,22 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 1.25rem;
-      backdrop-filter: blur(6px);
     }
-    .pin.ai-pin { background: var(--ai-bg); border-color: rgba(167,139,250,0.3); }
-    .from { font-weight: 600; color: var(--purple); margin-bottom: 0.5rem; }
+    .pin.imported { background: var(--imported); border-color: #60a5fa; }
+    .pin.ai-pin { background: var(--ai-bg); }
+    .from { font-weight: 600; color: var(--purple); }
     .from.ai { color: #c084fc; }
-    .msg { margin: 0.6rem 0 1rem; color: #d0d0ff; white-space: pre-wrap; word-break: break-word; }
+    .msg { margin: 0.6rem 0; color: #d0d0ff; white-space: pre-wrap; }
     .meta { font-size: 0.92rem; color: #a0a0a0; }
-    .coords-link { color: #60a5fa; text-decoration: none; }
-    .coords-link:hover { text-decoration: underline; }
     .distance { color: var(--accent); font-weight: 600; }
 
-    .share-btn, .import-btn {
+    .share-btn {
       margin-top: 1rem;
       width: 100%;
-      padding: 12px;
       background: linear-gradient(45deg, #6366f1, var(--purple));
     }
-    .share-btn:hover, .import-btn:hover { box-shadow: 0 6px 20px rgba(139,92,246,0.3); }
 
-    .no-pins {
-      text-align: center;
-      color: #777;
-      padding: 80px 20px;
-      font-size: 1.25rem;
-    }
+    .no-pins { text-align: center; color: #777; padding: 80px 20px; font-size: 1.25rem; }
 
     .actions { text-align: center; margin: 1.5rem 0; }
   </style>
@@ -210,50 +175,41 @@
 
   <div class="container">
     <h1 class="glow">NEARBY PINS</h1>
-    <div class="subtitle">Human notes • AI observations • Share anywhere</div>
+    <div class="subtitle">Drop pins • Share via link • Anyone can import & see</div>
 
     <div id="status"></div>
     <div id="info-bar" class="info-bar">Acquiring location…</div>
 
     <div class="post-section">
-      <h2>Drop a Pin</h2>
-      <div class="form-group">
-        <input type="text" id="new-name" placeholder="Your name (optional)">
-      </div>
-      <div class="form-group">
-        <textarea id="new-msg" placeholder="Message or note…"></textarea>
-      </div>
+      <h2>Drop Pin Here</h2>
+      <input type="text" id="new-name" placeholder="Name (optional)">
+      <textarea id="new-msg" placeholder="Message / note…"></textarea>
       <button onclick="postNewPin()">Post My Pin</button>
-      <button class="ai-btn" onclick="postAIPin()">AI Auto-Pin</button>
+      <button class="ai-btn" onclick="postAIPin()">AI Suggestion Pin</button>
     </div>
 
     <div class="search-container">
       <span class="search-icon">🔍</span>
-      <input type="search" id="search-input" placeholder="Search places, addresses, postcodes…">
+      <input type="search" id="search-input" placeholder="Search places or addresses…">
       <div id="suggestions"></div>
     </div>
 
     <div class="actions">
-      <button onclick="shareAllNearby()">Share All Nearby Pins</button>
-      <button class="import-btn" onclick="importFromURL()">Import from Shared Link</button>
+      <button onclick="shareAllNearbyPins()">Share All Nearby Pins (Link)</button>
+      <button onclick="importPinsFromURL()">Import Pins from URL</button>
     </div>
 
     <div id="pin-list" class="pin-list"></div>
   </div>
 
   <script>
-    const STORAGE_KEY = 'nearby_pins_shared_ai';
-    let userLat = null;
-    let userLng = null;
-
-    const MAX_ACCEPTABLE_ACCURACY = 60;
-    const MIN_MOVEMENT_THRESHOLD = 4;
-    const EMA_ALPHA = 0.18;
-
-    let smoothedLat = null;
-    let smoothedLng = null;
-    let lastReportedLat = null;
-    let lastReportedLng = null;
+    const STORAGE_KEY = 'nearby_pins_url_share';
+    let userLat = null, userLng = null;
+    const MAX_ACC = 60;
+    const MIN_MOVE = 4;
+    const EMA = 0.18;
+    let smoothLat = null, smoothLng = null;
+    let lastLat = null, lastLng = null;
 
     function showStatus(msg, type = 'success') {
       const el = document.getElementById('status');
@@ -263,317 +219,158 @@
       setTimeout(() => el.style.display = 'none', 5000);
     }
 
-    function escapeHTML(str) {
-      return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    function escape(s) { return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+    function getPins() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } }
+    function savePins(p) { localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }
+
+    function dist(lat1, lon1, lat2, lon2) {
+      const R = 6371000, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    function getPins() {
-      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-      catch { return []; }
-    }
-
-    function savePins(pins) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(pins));
-    }
-
-    function haversineDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371000;
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
-    }
-
-    function calculateAdaptiveRadius(lat, lng) {
+    function adaptiveRadius() {
       const pins = getPins();
-      if (!pins.length) return 1000;
-      let count = pins.filter(p => haversineDistance(lat, lng, p.lat, p.lng) < 6000).length;
-      if (count >= 30) return 400;
-      if (count >= 15) return 600;
-      if (count >= 6)  return 1000;
-      return 1800;
+      if (!pins.length || !userLat) return 1200;
+      let c = pins.filter(p => dist(userLat,userLng,p.lat,p.lng) < 7000).length;
+      return c > 25 ? 400 : c > 12 ? 700 : c > 5 ? 1100 : 1800;
     }
 
-    function generateShareUrl(pinsArray) {
-      try {
-        const encoded = btoa(JSON.stringify(pinsArray));
-        const base = window.location.href.split('?')[0].split('#')[0];
-        return `${base}?pins=${encodeURIComponent(encoded)}`;
-      } catch {
-        return '';
-      }
-    }
-
-    function copyShareLink(url) {
-      if (!url) return showStatus('Link creation failed', 'error');
-      navigator.clipboard.writeText(url)
-        .then(() => showStatus('Link copied to clipboard!', 'success'))
-        .catch(() => {
-          showStatus('Copy failed — select manually', 'error');
-          prompt('Copy this link:', url);
-        });
-    }
-
-    function renderNearby() {
-      const pins = getPins();
-      const container = document.getElementById('pin-list');
-      const infoBar = document.getElementById('info-bar');
-      container.innerHTML = '';
+    function renderPins() {
+      const pins = getPins(), cont = document.getElementById('pin-list'), ib = document.getElementById('info-bar');
+      cont.innerHTML = '';
 
       if (!pins.length) {
-        container.innerHTML = '<div class="no-pins">No pins yet — drop one!</div>';
-        infoBar.textContent = 'No pins saved';
+        cont.innerHTML = '<div class="no-pins">No pins — drop or import some!</div>';
+        ib.textContent = 'No pins';
         return;
       }
 
-      if (!userLat || !userLng) {
-        container.innerHTML = '<div class="no-pins">Waiting for GPS…</div>';
-        infoBar.textContent = 'Getting location';
+      if (!userLat) {
+        cont.innerHTML = '<div class="no-pins">Waiting for location…</div>';
+        ib.textContent = 'Getting GPS';
         return;
       }
 
-      const radius = calculateAdaptiveRadius(userLat, userLng);
-      const nearby = pins
-        .map(p => ({ ...p, distance: haversineDistance(userLat, userLng, p.lat, p.lng) }))
-        .filter(p => p.distance <= radius)
-        .sort((a, b) => a.distance - b.distance);
+      const rad = adaptiveRadius();
+      const nearby = pins.map(p => ({...p, d: dist(userLat,userLng,p.lat,p.lng)}))
+        .filter(p => p.d <= rad)
+        .sort((a,b) => a.d - b.d);
 
       if (!nearby.length) {
-        container.innerHTML = `<div class="no-pins">Nothing within ≈${Math.round(radius)} m</div>`;
-        infoBar.innerHTML = `≈${Math.round(radius)} m • Empty area`;
+        cont.innerHTML = `<div class="no-pins">No pins in ≈${Math.round(rad)} m</div>`;
+        ib.innerHTML = `≈${Math.round(rad)} m • Empty`;
         return;
       }
 
       nearby.forEach(p => {
-        const dt = new Date(p.time).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
-        const name = escapeHTML(p.name || 'Anonymous');
-        const msg = escapeHTML(p.msg || '(no message)');
-        const coords = `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`;
-        const apple = `https://maps.apple.com/?ll=${p.lat},${p.lng}&q=${encodeURIComponent(name)}`;
-        const google = `https://www.google.com/maps?q=${p.lat},${p.lng}`;
-        const isAI = p.source === 'ai';
-        const pinClass = isAI ? 'pin ai-pin' : 'pin';
+        const dt = new Date(p.time).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'});
+        const cl = p.imported ? 'pin imported' : p.source === 'ai' ? 'pin ai-pin' : 'pin';
+        const from = `<div class="from ${p.source === 'ai' ? 'ai' : ''}">${escape(p.name || 'Anon')}${p.source === 'ai' ? ' • AI' : ''}</div>`;
+        const meta = `<div class="meta"><span class="distance">${Math.round(p.d)} m</span> • ${dt}<br>${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</div>`;
 
         const div = document.createElement('div');
-        div.className = pinClass;
-        div.innerHTML = `
-          <div class="from ${isAI ? 'ai' : ''}">${name}${isAI ? ' • AI' : ''}${p.auto ? ' • auto' : ''}</div>
-          <div class="msg">${msg}</div>
-          <div class="meta">
-            <span class="distance">${Math.round(p.distance)} m away</span> • ${dt}<br>
-            <a href="${apple}" target="_blank" class="coords-link">${coords} (Apple)</a><br>
-            <small><a href="${google}" target="_blank" style="color:#888;">Google Maps</a></small>
-          </div>
-          <button class="share-btn" onclick="copyShareLink('${generateShareUrl([p]).replace(/'/g,"\\'")}')">Share This Pin</button>
-        `;
-        container.appendChild(div);
+        div.className = cl;
+        div.innerHTML = `${from}<div class="msg">${escape(p.msg || '(empty)')}</div>${meta}`;
+        cont.appendChild(div);
       });
 
-      const density = nearby.length >= 12 ? 'Busy zone' : nearby.length >= 5 ? 'Active' : 'Quiet';
-      infoBar.innerHTML = `≈${Math.round(radius)} m • ${density} (${nearby.length} pin${nearby.length === 1 ? '' : 's'})`;
+      ib.innerHTML = `≈${Math.round(rad)} m • ${nearby.length} pin${nearby.length>1?'s':''}`;
     }
 
-    function postNewPin() {
-      if (!userLat || !userLng) return showStatus('Waiting for location…', 'error');
-      const name = document.getElementById('new-name').value.trim();
-      const msg = document.getElementById('new-msg').value.trim();
+    function postPin(source = 'human') {
+      if (!userLat) return showStatus('No location yet', 'error');
+      const name = document.getElementById('new-name').value.trim() || 'Anon';
+      const msg = document.getElementById('new-msg').value.trim() || '';
 
-      const pin = {
-        lat: userLat,
-        lng: userLng,
-        name: name || 'Anonymous',
-        msg: msg || '',
-        time: new Date().toISOString(),
-        source: 'human',
-        auto: false
-      };
-
+      const pin = { lat: userLat, lng: userLng, name, msg, time: new Date().toISOString(), source, imported: false };
       const pins = getPins();
       pins.push(pin);
       savePins(pins);
+
       document.getElementById('new-name').value = '';
       document.getElementById('new-msg').value = '';
-      showStatus('Pin added!', 'success');
-      renderNearby();
+      showStatus(source === 'ai' ? 'AI pin added 🤖' : 'Pin added!', 'success');
+      renderPins();
     }
 
-    function postAIPin() {
-      if (!userLat || !userLng) return showStatus('Waiting for location…', 'error');
-
-      const aiMessages = [
-        `AI note: Local time is ${new Date().toLocaleTimeString()}`,
-        `AI: ${Math.round(Math.random() * 30 + 5)}°C feels like today`,
-        `AI observation: Popular time for visits here`,
-        `AI: Moon phase — ${['New', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous', 'Full', 'Waning Gibbous', 'Last Quarter', 'Waning Crescent'][Math.floor(Math.random()*8)]}`,
-        `AI: This spot has good energy today`
+    window.postNewPin = () => postPin('human');
+    window.postAIPin = () => {
+      const msgs = [
+        `AI: Time here ≈ ${new Date().toLocaleTimeString()}`,
+        `AI: Nice spot — elevation ~${Math.round(Math.random()*300)}m`,
+        `AI: Good vibes detected`,
+        `AI: Weather-friendly area today`
       ];
+      document.getElementById('new-msg').value = msgs[Math.floor(Math.random()*msgs.length)];
+      postPin('ai');
+    };
 
-      const pin = {
-        lat: userLat,
-        lng: userLng,
-        name: 'AI',
-        msg: aiMessages[Math.floor(Math.random() * aiMessages.length)],
-        time: new Date().toISOString(),
-        source: 'ai',
-        auto: true
-      };
-
-      const pins = getPins();
-      pins.push(pin);
-      savePins(pins);
-      showStatus('AI note added 🤖', 'success');
-      renderNearby();
+    function generateShareLink() {
+      const pins = getPins().filter(p => dist(userLat,userLng,p.lat,p.lng) <= adaptiveRadius());
+      if (!pins.length) return showStatus('No nearby pins to share', 'error');
+      const enc = btoa(JSON.stringify(pins));
+      const url = `${location.origin}${location.pathname}?pins=${encodeURIComponent(enc)}`;
+      navigator.clipboard.writeText(url).then(() => showStatus('Share link copied! Send to anyone.', 'success'))
+        .catch(() => prompt('Copy this share link:', url));
     }
 
-    function shareAllNearby() {
-      const pins = getPins();
-      if (!userLat || !userLng) return showStatus('Need location first', 'error');
-      const radius = calculateAdaptiveRadius(userLat, userLng);
-      const nearby = pins.filter(p => haversineDistance(userLat, userLng, p.lat, p.lng) <= radius);
-      if (!nearby.length) return showStatus('No nearby pins to share', 'error');
+    window.shareAllNearbyPins = generateShareLink;
 
-      const url = generateShareUrl(nearby);
-      copyShareLink(url);
-    }
-
-    function importFromURL() {
-      const params = new URLSearchParams(window.location.search);
-      const encoded = params.get('pins');
-      if (!encoded) return showStatus('No shared pins in URL', 'error');
+    function importPinsFromURL() {
+      const p = new URLSearchParams(location.search).get('pins');
+      if (!p) return showStatus('No pins in URL — share one first!', 'error');
 
       try {
-        const imported = JSON.parse(atob(encoded));
-        if (!Array.isArray(imported)) throw new Error();
+        const imported = JSON.parse(atob(p));
+        if (!Array.isArray(imported)) throw 0;
 
         const pins = getPins();
-        const existing = new Set(pins.map(p => `${p.lat.toFixed(6)}|${p.lng.toFixed(6)}|${p.time}`));
-        const newPins = imported.filter(p => !existing.has(`${p.lat.toFixed(6)}|${p.lng.toFixed(6)}|${p.time}`));
+        const seen = new Set(pins.map(p => `${p.lat.toFixed(6)}|${p.lng.toFixed(6)}|${p.time.slice(0,19)}`));
+        const added = imported.filter(i => {
+          const key = `${i.lat.toFixed(6)}|${i.lng.toFixed(6)}|${(i.time||'').slice(0,19)}`;
+          return !seen.has(key);
+        }).map(i => ({...i, imported: true}));
 
-        if (!newPins.length) return showStatus('No new pins found', 'success');
+        if (!added.length) return showStatus('No new pins to import', 'success');
 
-        pins.push(...newPins);
+        pins.push(...added);
         savePins(pins);
-        showStatus(`Imported ${newPins.length} pin${newPins.length === 1 ? '' : 's'}`, 'success');
-        renderNearby();
+        showStatus(`Imported ${added.length} new pin${added.length>1?'s':''} — marked blue`, 'success');
+
+        // Smart: if no GPS yet, center on first imported pin
+        if (!userLat && added[0]) {
+          userLat = added[0].lat;
+          userLng = added[0].lng;
+        }
+
+        renderPins();
       } catch {
-        showStatus('Invalid shared link', 'error');
+        showStatus('Invalid pin data in link', 'error');
       }
     }
+
+    window.importPinsFromURL = importPinsFromURL;
 
     // GPS
     if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(
-        pos => {
-          if (pos.coords.accuracy > MAX_ACCEPTABLE_ACCURACY) return;
-          const rawLat = pos.coords.latitude;
-          const rawLng = pos.coords.longitude;
+      navigator.geolocation.watchPosition(pos => {
+        if (pos.coords.accuracy > MAX_ACC) return;
+        const rl = pos.coords.latitude, rg = pos.coords.longitude;
+        if (lastLat && dist(lastLat, lastLng, rl, rg) < MIN_MOVE) return;
 
-          if (lastReportedLat !== null) {
-            if (haversineDistance(lastReportedLat, lastReportedLng, rawLat, rawLng) < MIN_MOVEMENT_THRESHOLD) return;
-          }
-
-          smoothedLat = smoothedLat === null ? rawLat : EMA_ALPHA * rawLat + (1 - EMA_ALPHA) * smoothedLat;
-          smoothedLng = smoothedLng === null ? rawLng : EMA_ALPHA * rawLng + (1 - EMA_ALPHA) * smoothedLng;
-
-          lastReportedLat = rawLat;
-          lastReportedLng = rawLng;
-          userLat = smoothedLat;
-          userLng = smoothedLng;
-
-          renderNearby();
-        },
-        err => showStatus(`Location error: ${err.message}`, 'error'),
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-      );
+        smoothLat = smoothLat ? EMA * rl + (1-EMA) * smoothLat : rl;
+        smoothLng = smoothLng ? EMA * rg + (1-EMA) * smoothLng : rg;
+        lastLat = rl; lastLng = rg;
+        userLat = smoothLat; userLng = smoothLng;
+        renderPins();
+      }, e => showStatus('GPS issue: ' + e.message, 'error'), {enableHighAccuracy:true});
     }
 
-    // Place search (Nominatim) — unchanged from your original
-    const provider = {
-      search: async (query) => {
-        if (query.length < 3) return [];
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=6&countrycodes=gb&q=${encodeURIComponent(query)}`);
-          const data = await res.json();
-          return data.map(item => ({
-            label: item.display_name,
-            lat: parseFloat(item.lat),
-            lng: parseFloat(item.lon)
-          }));
-        } catch {
-          return [];
-        }
-      }
-    };
-
-    const input = document.getElementById('search-input');
-    const suggestionsDiv = document.getElementById('suggestions');
-    let selectedIndex = -1;
-
-    function showSuggestions(results) {
-      suggestionsDiv.innerHTML = '';
-      if (!results.length) return suggestionsDiv.style.display = 'none';
-      results.forEach((r, i) => {
-        const div = document.createElement('div');
-        div.textContent = r.label;
-        div.dataset.lat = r.lat;
-        div.dataset.lng = r.lng;
-        div.dataset.index = i;
-        div.onclick = () => {
-          userLat = r.lat;
-          userLng = r.lng;
-          input.value = r.label;
-          suggestionsDiv.style.display = 'none';
-          renderNearby();
-          showStatus(`Viewing area: ${r.label}`, 'success');
-        };
-        suggestionsDiv.appendChild(div);
-      });
-      suggestionsDiv.style.display = 'block';
-      selectedIndex = -1;
-    }
-
-    let debounce;
-    input.addEventListener('input', () => {
-      clearTimeout(debounce);
-      debounce = setTimeout(async () => {
-        const q = input.value.trim();
-        if (q.length < 3) return suggestionsDiv.style.display = 'none';
-        showSuggestions(await provider.search(q));
-      }, 350);
-    });
-
-    input.addEventListener('keydown', e => {
-      const items = suggestionsDiv.querySelectorAll('div');
-      if (!items.length) return;
-      if (e.key === 'ArrowDown') {
-        selectedIndex = (selectedIndex + 1) % items.length;
-        items.forEach((el, i) => el.classList.toggle('selected', i === selectedIndex));
-      } else if (e.key === 'ArrowUp') {
-        selectedIndex = (selectedIndex - 1 + items.length) % items.length;
-        items.forEach((el, i) => el.classList.toggle('selected', i === selectedIndex));
-      } else if (e.key === 'Enter' && selectedIndex >= 0) {
-        const item = items[selectedIndex];
-        userLat = parseFloat(item.dataset.lat);
-        userLng = parseFloat(item.dataset.lng);
-        input.value = item.textContent;
-        suggestionsDiv.style.display = 'none';
-        renderNearby();
-      } else if (e.key === 'Escape') {
-        suggestionsDiv.style.display = 'none';
-      }
-    });
-
-    document.addEventListener('click', e => {
-      if (!input.contains(e.target) && !suggestionsDiv.contains(e.target)) {
-        suggestionsDiv.style.display = 'none';
-      }
-    });
-
-    // Auto-import shared pins on load
-    if (window.location.search.includes('pins=')) importFromURL();
-
-    renderNearby();
+    // Initial
+    if (location.search.includes('pins=')) importPinsFromURL();
+    renderPins();
   </script>
 </body>
 </html>

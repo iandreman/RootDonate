@@ -3,223 +3,186 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Share Location Pin + Comments</title>
+  <title>Share & Search Location Pins (Local)</title>
+  <meta name="description" content="Create/share location pins + search your saved ones by keyword — all in browser." />
+  
   <style>
     :root {
       --bg: #0a0a15;
       --text: #e0e0ff;
       --accent: #00e0c0;
       --purple: #a78bfa;
-      --card: rgba(30, 30, 60, 0.7);
-      --border: rgba(167, 139, 250, 0.25);
+      --card: rgba(30, 30, 60, 0.75);
+      --border: rgba(167, 139, 250, 0.3);
+      --success: #00e0c0;
+      --error: #ff8080;
     }
-    * { box-sizing: border-box; }
     body {
-      margin: 0;
-      padding: 1.5rem;
       min-height: 100vh;
       background: var(--bg);
       color: var(--text);
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: system-ui, sans-serif;
       line-height: 1.6;
+      padding: 1.5rem;
+      margin: 0;
     }
-    .container { max-width: 720px; margin: 0 auto; }
-    h1 {
-      text-align: center;
-      background: linear-gradient(90deg, var(--purple), var(--accent));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      margin-bottom: 2rem;
-    }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 2rem;
-      backdrop-filter: blur(10px);
-      margin-bottom: 2rem;
-    }
-    label { display: block; margin: 1.2rem 0 0.5rem; color: #ccc; font-weight: 500; }
-    input, textarea {
-      width: 100%;
-      padding: 0.95rem;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 10px;
-      color: white;
-      font-size: 1rem;
-    }
-    textarea { min-height: 100px; resize: vertical; }
-    button {
-      margin-top: 0.9rem;
-      padding: 0.95rem 2rem;
-      background: linear-gradient(135deg, #7c3aed, #00d4ff);
-      border: none;
-      border-radius: 999px;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
+    .container { max-width: 740px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 2rem; background: linear-gradient(90deg, var(--purple), var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .card, .pin { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.8rem; margin-bottom: 1.8rem; backdrop-filter: blur(10px); }
+    label { display: block; margin: 1.2rem 0 0.5rem; color: #bbb; font-weight: 500; }
+    input, textarea { width: 100%; padding: 0.95rem; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: inherit; font-size: 1rem; }
+    button { margin-top: 0.9rem; padding: 0.95rem 2rem; background: linear-gradient(135deg, #7c3aed, #00d4ff); border: none; border-radius: 999px; color: white; font-weight: 600; cursor: pointer; }
     button:hover { opacity: 0.92; }
-    .email-btn {
-      background: linear-gradient(135deg, #e94e77, #ff6b6b);
-    }
-    .pin {
-      background: rgba(30,30,60,0.6);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.8rem;
-      margin: 2rem 0;
-    }
+    .search-box { margin: 2rem 0; }
+    #search-input { font-size: 1.1rem; }
+    .pin-list { display: grid; gap: 1.5rem; }
+    .pin-item { background: rgba(167,139,250,0.12); padding: 1.4rem; border-radius: 12px; cursor: pointer; }
+    .pin-item:hover { background: rgba(167,139,250,0.2); }
     .from { color: var(--purple); font-weight: bold; font-size: 1.4rem; }
-    .msg { margin: 1.1rem 0; white-space: pre-wrap; }
+    .msg { margin: 1rem 0; white-space: pre-wrap; }
     .meta { color: #aaa; font-size: 0.95rem; }
-    .comments { margin-top: 1.6rem; }
-    .comment {
-      background: rgba(167,139,250,0.13);
-      padding: 1.1rem;
-      border-radius: 12px;
-      margin: 0.9rem 0;
-    }
-    .comment-meta { font-size: 0.88rem; color: #bbb; margin-top: 0.5rem; }
-    .status {
-      padding: 1rem;
-      border-radius: 10px;
-      margin: 1rem 0;
-      text-align: center;
-      display: none;
-    }
-    .status.success { background: rgba(0,220,180,0.22); color: #00e0c0; }
-    .status.error   { background: rgba(255,80,80,0.22); color: #ff8080; }
-    .share-box {
-      margin-top: 1.8rem;
-      padding: 1.4rem;
-      background: rgba(0,220,180,0.12);
-      border-radius: 12px;
-      border: 1px solid rgba(0,220,180,0.2);
-    }
-    .share-input-group {
-      display: flex;
-      gap: 0.8rem;
-      margin: 1rem 0;
-      flex-wrap: wrap;
-    }
-    #share-url-input {
-      flex: 1;
-      font-family: monospace;
-      font-size: 0.96rem;
-      padding: 0.8rem;
-      background: rgba(0,0,0,0.2);
-      border: 1px solid #444;
-      border-radius: 8px;
-      color: #e0e0ff;
-      min-width: 220px;
-    }
-    @media (max-width: 500px) {
-      .share-input-group { flex-direction: column; }
-      button { width: 100%; }
-    }
+    .status { padding: 1rem; border-radius: 10px; margin: 1rem 0; text-align: center; display: none; }
+    .status.success { background: rgba(0,224,192,0.2); color: var(--success); }
+    .status.error { background: rgba(255,80,80,0.2); color: var(--error); }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>Share Location Pin</h1>
+  <h1>Share & Search Location Pins</h1>
 
-  <div id="status" class="status"></div>
+  <div id="status" class="status" role="alert"></div>
 
-  <div class="card" id="create-section">
+  <!-- Create Pin -->
+  <section class="card">
     <h2>Create Pin</h2>
     <div>
-      <label>Your name (optional)</label>
+      <label for="name">Your name (optional)</label>
       <input id="name" placeholder="Anonymous">
     </div>
     <div>
-      <label>Message / note (optional)</label>
-      <textarea id="msg" placeholder="What's here? Say something..."></textarea>
+      <label for="msg">Message / note (optional)</label>
+      <textarea id="msg" placeholder="What's here?..."></textarea>
     </div>
     <div>
-      <label>First comment (optional)</label>
-      <input id="initial-comment" placeholder="Start the conversation...">
+      <label for="initial-comment">First comment (optional)</label>
+      <input id="initial-comment" placeholder="Start conversation...">
     </div>
-    <button onclick="createPin()">Create & Get Share Link</button>
+    <button onclick="createPin()">Create & Save + Share</button>
+  </section>
+
+  <!-- Search -->
+  <div class="search-box card">
+    <h2>Search Your Saved Pins</h2>
+    <input type="text" id="search-input" placeholder="Search by name, message, or comment keyword..." oninput="searchPins()">
   </div>
 
-  <div class="pin" id="pin-view" style="display:none;">
+  <!-- List of saved pins -->
+  <div id="pin-list" class="pin-list"></div>
+
+  <!-- View selected pin -->
+  <section class="pin" id="pin-view" style="display:none;">
     <div class="from" id="pin-from"></div>
     <div class="msg" id="pin-msg"></div>
     <div class="meta" id="pin-meta"></div>
-
     <div class="comments" id="comments-list"></div>
-
     <div>
-      <label>Add comment</label>
+      <label for="new-comment">Add comment</label>
       <textarea id="new-comment" placeholder="Your thoughts..."></textarea>
       <button onclick="addComment()">Post Comment</button>
     </div>
-
-    <div class="share-box" id="share-url-box" style="display:none;">
-      <strong>Share this pin:</strong>
-      <p style="margin: 0.6rem 0 1rem; color: #ccc; font-size: 0.95rem;">
-        Send the link to friends via email, chat, notes, etc.
-      </p>
-
-      <div class="share-input-group">
-        <input type="text" id="share-url-input" readonly value="">
-        <button onclick="copyLink()">Copy Link</button>
-      </div>
-
-      <button class="email-btn" onclick="shareViaEmail()">
-        📧 Share via Email
-      </button>
-
-      <p style="margin-top: 1.2rem; font-size: 0.9rem; color: #aaa;">
-        Anyone with the link can view the pin and add comments.
-      </p>
+    <div style="margin-top:1.5rem;">
+      <strong>Share link:</strong><br>
+      <input type="text" id="share-url-input" readonly style="width:100%; margin:0.8rem 0; padding:0.8rem; font-family:monospace;">
+      <button onclick="copyLink()">Copy Link</button>
+      <button class="email-btn" style="background:linear-gradient(135deg,#e94e77,#ff6b6b);" onclick="shareViaEmail()">📧 Email</button>
     </div>
-  </div>
+  </section>
 </div>
 
 <script>
 let currentPin = null;
+const STORAGE_KEY = 'savedPins';
 
 function showStatus(msg, type = 'success') {
   const el = document.getElementById('status');
   el.textContent = msg;
-  el.className = 'status ' + type;
+  el.className = `status ${type}`;
   el.style.display = 'block';
-  setTimeout(() => el.style.display = 'none', 4800);
+  setTimeout(() => el.style.display = 'none', 4000);
 }
 
-function renderComments() {
-  const container = document.getElementById('comments-list');
-  container.innerHTML = '<strong>Comments</strong>';
-  if (!currentPin?.comments?.length) {
-    container.innerHTML += '<p style="color:#888;margin:1.2rem 0;">No comments yet. Be the first!</p>';
-    return;
-  }
-  currentPin.comments.forEach(c => {
+function escapeHTML(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function savePin(pin) {
+  let pins = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  pins.push(pin);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(pins));
+  renderPinList();
+}
+
+function getSavedPins() {
+  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+}
+
+function renderPinList(filter = '') {
+  const container = document.getElementById('pin-list');
+  container.innerHTML = '';
+  const pins = getSavedPins();
+  const lowerFilter = filter.toLowerCase();
+
+  pins.forEach((pin, index) => {
+    const text = [pin.name, pin.msg, ...pin.comments.map(c => c.text)].join(' ').toLowerCase();
+    if (lowerFilter && !text.includes(lowerFilter)) return;
+
     const div = document.createElement('div');
-    div.className = 'comment';
+    div.className = 'pin-item';
     div.innerHTML = `
-      ${c.text}
-      <div class="comment-meta">${c.author || 'Anonymous'} • ${new Date(c.time).toLocaleString()}</div>
+      <div class="from">${escapeHTML(pin.name)}</div>
+      <div class="msg">${escapeHTML(pin.msg || '(no message)')}</div>
+      <div class="meta">${pin.lat}, ${pin.lng} • ${new Date(pin.time).toLocaleDateString()}</div>
+      <div>${pin.comments.length} comment${pin.comments.length !== 1 ? 's' : ''}</div>
     `;
+    div.onclick = () => loadPin(pin);
     container.appendChild(div);
   });
+
+  if (!container.children.length && filter) {
+    container.innerHTML = '<p style="color:#888;text-align:center;">No matching pins found.</p>';
+  }
 }
 
-function updateShareUrl() {
-  const encoded = btoa(JSON.stringify(currentPin));
-  const url = `${location.origin}${location.pathname}?p=${encodeURIComponent(encoded)}`;
-  currentPin.shareUrl = url;
+function searchPins() {
+  const query = document.getElementById('search-input').value;
+  renderPinList(query);
+}
 
-  const input = document.getElementById('share-url-input');
-  const box = document.getElementById('share-url-box');
-  if (input) input.value = url;
-  if (box) box.style.display = 'block';
+function loadPin(pin) {
+  currentPin = pin;
+  document.getElementById('pin-from').textContent = pin.name;
+  document.getElementById('pin-msg').textContent = pin.msg || '(no message)';
+  document.getElementById('pin-meta').textContent = `${pin.lat}, ${pin.lng} • ${new Date(pin.time).toLocaleString()}`;
+
+  const commentsEl = document.getElementById('comments-list');
+  commentsEl.innerHTML = '<strong>Comments</strong>';
+  if (!pin.comments.length) {
+    commentsEl.innerHTML += '<p style="color:#888;margin:1rem 0;">No comments yet.</p>';
+  } else {
+    pin.comments.forEach(c => {
+      const div = document.createElement('div');
+      div.style.margin = '1rem 0';
+      div.innerHTML = `<div>${escapeHTML(c.text)}</div><div style="color:#aaa;font-size:0.9rem;">${escapeHTML(c.author || 'Anonymous')} • ${new Date(c.time).toLocaleString()}</div>`;
+      commentsEl.appendChild(div);
+    });
+  }
+
+  const url = `${location.origin}${location.pathname}?p=${encodeURIComponent(btoa(JSON.stringify(pin)))}`;
+  document.getElementById('share-url-input').value = url;
+
+  document.getElementById('pin-view').style.display = 'block';
+  window.scrollTo(0, document.getElementById('pin-view').offsetTop - 20);
 }
 
 function createPin() {
@@ -238,87 +201,67 @@ function createPin() {
       comments: first ? [{ text: first, author: name, time: new Date().toISOString() }] : []
     };
 
-    document.getElementById('pin-from').textContent = name;
-    document.getElementById('pin-msg').textContent = msg || '(no message)';
-    document.getElementById('pin-meta').textContent = `${lat}, ${lng} • ${new Date().toLocaleString()}`;
-    renderComments();
+    savePin(currentPin);
+    loadPin(currentPin);
+    showStatus('Pin created & saved locally!');
 
-    document.getElementById('pin-view').style.display = 'block';
-    document.getElementById('create-section').style.display = 'none';
-
-    updateShareUrl();
-    showStatus('Pin created! Ready to share.');
-
+    // Clear form
+    document.getElementById('name').value = '';
+    document.getElementById('msg').value = '';
+    document.getElementById('initial-comment').value = '';
   }, err => {
-    showStatus('Could not get location: ' + err.message, 'error');
+    showStatus('Location error: ' + err.message, 'error');
   }, { enableHighAccuracy: true, timeout: 10000 });
 }
 
 function addComment() {
   const text = document.getElementById('new-comment').value.trim();
-  if (!text) return showStatus('Please write something first', 'error');
+  if (!text) return showStatus('Enter a comment', 'error');
   if (!currentPin) return showStatus('No pin loaded', 'error');
 
   const author = prompt('Your name (optional)')?.trim() || 'Anonymous';
+  currentPin.comments.push({ text, author, time: new Date().toISOString() });
 
-  currentPin.comments.push({
-    text,
-    author,
-    time: new Date().toISOString()
-  });
+  // Update in storage
+  let pins = getSavedPins();
+  const index = pins.findIndex(p => p.time === currentPin.time);
+  if (index !== -1) pins[index] = currentPin;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(pins));
 
-  renderComments();
-  updateShareUrl();
+  loadPin(currentPin);
   document.getElementById('new-comment').value = '';
-  showStatus('Comment added — share link updated!');
+  showStatus('Comment added');
 }
 
 function copyLink() {
-  const url = currentPin?.shareUrl;
-  if (!url) return;
-
-  navigator.clipboard.writeText(url)
-    .then(() => showStatus('Link copied to clipboard!'))
-    .catch(() => showStatus('Could not copy — select and copy manually', 'error'));
+  const url = document.getElementById('share-url-input').value;
+  navigator.clipboard.writeText(url).then(() => showStatus('Link copied!'));
 }
 
 function shareViaEmail() {
-  if (!currentPin?.shareUrl) return;
-
-  const subject = "Check out this location I pinned!";
-  let body = 
-    "Hey!\n\n" +
-    "I just pinned this spot — take a look and feel free to comment:\n\n" +
-    currentPin.shareUrl + "\n\n";
-
-  if (currentPin.msg) body += `Note: ${currentPin.msg}\n`;
-  body += `Coordinates: ${currentPin.lat}, ${currentPin.lng}\n\n`;
-  body += "— shared with you via location pin";
-
-  const mailto = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  window.location.href = mailto;
+  const url = document.getElementById('share-url-input').value;
+  const subject = "Check this location pin!";
+  const body = `Hey!\n\nCheck out this pin: ${url}\n\nCoordinates: ${currentPin.lat}, ${currentPin.lng}`;
+  window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
 }
 
-// Load shared pin from URL on page load
-(function loadShared() {
+// Load saved pins on start + handle shared URL
+window.addEventListener('load', () => {
+  renderPinList();
+
   const params = new URLSearchParams(location.search);
   const data = params.get('p');
-  if (!data) return;
-
-  try {
-    currentPin = JSON.parse(atob(data));
-    document.getElementById('pin-from').textContent = currentPin.name || 'Anonymous';
-    document.getElementById('pin-msg').textContent = currentPin.msg || '(no message)';
-    document.getElementById('pin-meta').textContent = `${currentPin.lat}, ${currentPin.lng} • ${new Date(currentPin.time).toLocaleString()}`;
-    renderComments();
-    document.getElementById('pin-view').style.display = 'block';
-    document.getElementById('create-section').style.display = 'none';
-    updateShareUrl();
-    showStatus('Shared pin loaded successfully');
-  } catch (e) {
-    showStatus('Sorry, this link appears to be invalid', 'error');
+  if (data) {
+    try {
+      const pin = JSON.parse(atob(data));
+      savePin(pin); // Save if coming from shared link
+      loadPin(pin);
+      showStatus('Loaded shared pin & saved locally');
+    } catch (e) {
+      showStatus('Invalid shared link', 'error');
+    }
   }
-})();
+});
 </script>
 </body>
 </html>

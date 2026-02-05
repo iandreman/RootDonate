@@ -342,13 +342,12 @@ async function createPin() {
     pins.push(pin);
     savePins(pins);
 
-    // Clear form
     document.getElementById('name').value = '';
     document.getElementById('msg').value = '';
     document.getElementById('initial-comment').value = '';
 
     const url = getPinUrl(pin);
-    alert(`Your pin has been created!\n\nShare this link with others:\n${url}\n\nNote: All pins are stored only in your browser — others will need to save the pin on their device too.`);
+    alert(`Your pin has been created!\n\nShare this link:\n${url}\n\nNote: All pins are stored only in your browser — others will need to save the pin on their device too.`);
 
     render();
   } catch (err) {
@@ -405,6 +404,7 @@ function render() {
   const pins = getPins();
 
   if (id) {
+    // Single pin view
     const pin = pins.find(p => p.id === id);
     if (!pin) {
       grid.innerHTML = `
@@ -450,11 +450,17 @@ function render() {
         </div>
       </div>`;
   } else {
-    if (!pins.length && !searchTerm) {
-      grid.innerHTML = '<div class="empty-state">You haven’t created any pins yet.<br>Create one above to get started!</div>';
+    // List view - only show pins when search is active
+    if (!searchTerm) {
+      if (pins.length === 0) {
+        grid.innerHTML = '<div class="empty-state">You haven’t created any pins yet.<br>Create one above to get started!</div>';
+      } else {
+        grid.innerHTML = '<div class="empty-state">Type in the search box to see your saved pins</div>';
+      }
       return;
     }
 
+    // Search is not empty → filter and show results
     let shown = 0;
 
     pins.forEach(pin => {
@@ -465,7 +471,7 @@ function render() {
         new Date(pin.time).toLocaleString()
       ].join(' ').toLowerCase();
 
-      if (searchTerm && !searchText.includes(searchTerm)) return;
+      if (!searchText.includes(searchTerm)) return;
 
       shown++;
 
@@ -489,7 +495,7 @@ function render() {
       grid.appendChild(card);
     });
 
-    if (shown === 0 && searchTerm) {
+    if (shown === 0) {
       grid.innerHTML = `<div class="empty-state">No pins match "<strong>${escapeHTML(searchTerm)}</strong>".</div>`;
     }
   }

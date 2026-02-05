@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GPS Pins – Create, Comment, Search & Share</title>
-  <meta name="description" content="Create GPS pins with comments • Search name, comments, date or URL • Share via link" />
+  <title>GPS Pins – Create, Comment, Search & Email</title>
+  <meta name="description" content="Create GPS pins with comments • Search name, comments, date or URL • Share via email" />
   
   <style>
     :root {
@@ -16,6 +16,7 @@
       --purple: #c084fc;
       --border: rgba(34,211,238,0.18);
       --success: #10b981;
+      --email: #ec4899;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
@@ -114,8 +115,11 @@
     }
     .btn-copy { background: var(--accent); color: #0f172a; }
     .btn-copy:hover { background: #67e8f9; }
-    .btn-maps { background: #4f46e5; color: white; }
-    .btn-maps:hover { background: #6366f1; }
+    .btn-email {
+      background: var(--email);
+      color: white;
+    }
+    .btn-email:hover { background: #db2777; }
     .empty { text-align: center; color: var(--muted); padding: 3rem 1rem; font-size: 1.1rem; }
 
     @media (max-width: 600px) {
@@ -129,7 +133,7 @@
 <div class="container">
   <header>
     <h1>GPS Pins</h1>
-    <p class="subtitle">Create pins • Add comments • Search everything including share URLs</p>
+    <p class="subtitle">Create pins • Add comments • Search everything • Share via email</p>
   </header>
 
   <!-- Create new pin -->
@@ -217,10 +221,29 @@ async function createPin() {
     document.getElementById('initial-comment').value = '';
 
     renderPins();
-    alert('Pin created! Scroll down to see it.\nShare link copied to clipboard? → use the copy button on the card.');
+    alert('Pin created! Scroll down to see it and share via email.');
   } catch (err) {
     alert('Could not get location: ' + (err.message || 'Permission denied / timeout'));
   }
+}
+
+function shareViaEmail(pin) {
+  const url = getPinUrl(pin);
+  const subject = encodeURIComponent(`Check out this location pin: ${pin.name || 'GPS Pin'}`);
+  
+  let body = `Hi,\n\nHere's a location I want to share with you:\n\n`;
+  body += `Share link: ${url}\n\n`;
+  body += `Coordinates: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\n`;
+  
+  if (pin.msg) {
+    body += `\nNote: ${pin.msg}\n`;
+  }
+  
+  body += `\nOpen the link to view the full pin, see any comments, and add your own.\n\n`;
+  body += `See you there!`;
+
+  const mailto = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
+  window.open(mailto, '_blank');
 }
 
 function renderPins(filter = '') {
@@ -261,8 +284,7 @@ function renderPins(filter = '') {
       <div class="url-row">
         <input type="text" class="url-input" value="${pinUrl}" readonly aria-label="Share link">
         <button class="btn btn-copy" onclick="copyUrl('${pinUrl}', this)">Copy URL</button>
-        <a href="https://www.google.com/maps/search/?api=1&query=${pin.lat},${pin.lng}"
-           target="_blank" class="btn btn-maps">Open in Maps</a>
+        <button class="btn btn-email" onclick="shareViaEmail(${JSON.stringify(pin)})">Share via Email</button>
       </div>
     `;
     container.appendChild(card);
@@ -309,7 +331,6 @@ window.addEventListener('load', () => {
           pins.push(pin);
           savePins(pins);
           renderPins();
-          // alert('Shared pin loaded!');
         }
       }
     } catch (e) {}

@@ -6,6 +6,12 @@
   <title>GPS Pins – Share Locations & Notes</title>
   <meta name="description" content="Drop GPS pins, add notes & comments, share via link. Everything stays local in your browser." />
   
+  <!-- Leaflet CSS + JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5ir/XP5Y=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
   <style>
     :root {
       --bg: #0a0a15;
@@ -108,6 +114,14 @@
       margin-bottom: 1.2rem;
     }
 
+    #map {
+      height: 420px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin: 1rem 0 2rem;
+      background: #111;
+    }
+
     .pin-grid { display: grid; gap: 1.5rem; }
 
     .pin-card {
@@ -180,7 +194,7 @@
     .empty-state {
       text-align: center;
       color: var(--muted);
-      padding: 5rem 1.5rem;
+      padding: 3rem 1.5rem;
       font-size: 1.15rem;
       line-height: 1.7;
     }
@@ -192,6 +206,7 @@
       .btn { width: 100%; }
       h1 { font-size: 2.3rem; }
       .card { padding: 1.4rem; }
+      #map { height: 320px; }
     }
   </style>
 </head>
@@ -226,7 +241,7 @@
     <button class="btn btn-primary" onclick="createPin()">Create Pin & Get Share Link</button>
   </div>
 
-  <!-- Search & pin list / single pin view -->
+  <!-- Search & content area -->
   <div class="card" id="content-card">
     <input 
       type="search" 
@@ -236,11 +251,21 @@
       autofocus 
       aria-label="Search pins"
     >
+
+    <!-- Map (only shows pins when searching) -->
+    <div id="map"></div>
+
+    <!-- Pin list (cards) -->
+    <div id="pin-grid" class="pin-grid" role="region" aria-live="polite"></div>
   </div>
+  
 </div>
 
 <script>
 const STORAGE_KEY = 'gps-pins-v2';
+
+let map = null;
+let markersLayer = null;
 
 function escapeHTML(str = '') {
   return str.replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[m]);
@@ -284,13 +309,12 @@ async function createPin() {
     pins.push(pin);
     savePins(pins);
 
-    // Clear form
     document.getElementById('name').value = '';
     document.getElementById('msg').value = '';
     document.getElementById('initial-comment').value = '';
 
     const url = getPinUrl(pin);
-    alert(`Pin created!\n\nShare this link:\n${url}\n\nImportant: pins are stored only in your browser. Others need to save the pin too (or use a server version).`);
+    alert(`Pin created!\n\nShare this link:\n${url}\n\nImportant: pins are stored only in your browser.`);
 
     render();
   } catch (err) {
@@ -336,33 +360,43 @@ function deletePin(pinId) {
   render();
 }
 
+function initMap() {
+  if (map) return;
+  map = L.map('map').setView([20, 0], 2);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  }).addTo(map);
+  markersLayer = L.layerGroup().addTo(map);
+}
+
 function render() {
   const params = new URLSearchParams(location.search);
   const id = params.get('id');
   const searchTerm = document.getElementById('search')?.value?.toLowerCase().trim() || '';
-  const container = document.getElementById('pin-grid');
-  container.innerHTML = '';
+  const grid = document.getElementById('pin-grid');
+  grid.innerHTML = '';
+
+  // Clear previous markers
+  if (markersLayer) markersLayer.clearLayers();
 
   const pins = getPins();
 
   if (id) {
+    // Single pin view - no map
     const pin = pins.find(p => p.id === id);
     if (!pin) {
-      container.innerHTML = `
+      grid.innerHTML = `
         <div class="empty-state">
           <strong>This GPS pin was not found in your browser.</strong><br><br>
           This app stores everything locally — no server, no cloud.<br>
-          To see this pin, the person who created it must:<br>
-          1. Open the link on their device<br>
-          2. Copy the coordinates/note/comments<br>
-          3. Create the same pin on your device (or send you the data)<br><br>
           <small>Shared links only work if both people have saved the pin locally.</small>
         </div>`;
+      document.getElementById('map').style.display = 'none';
       return;
     }
 
     const url = getPinUrl(pin);
-    container.innerHTML = `
+    grid.innerHTML = `
       <div class="pin-card">
         <div class="pin-title">${escapeHTML(pin.name)}</div>
         ${pin.msg ? `<div class="pin-desc">${escapeHTML(pin.msg)}</div>` : ''}
@@ -389,29 +423,47 @@ function render() {
 
         <div class="url-row">
           <input type="text" class="url-input" value="${url}" readonly aria-label="Shareable link">
-          <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(()=>this.textContent='Copied!').catch(()=>alert('Copy failed'));">Copy Link</button>
+          <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(()=>this.textContent='Copied!')">Copy Link</button>
           <button class="btn btn-email" onclick='shareViaEmail(${JSON.stringify(pin)})'>Email</button>
           <button class="btn btn-delete" onclick="deletePin('${pin.id}')">Delete</button>
         </div>
       </div>`;
+    document.getElementById('map').style.display = 'none';
   } else {
-    // List view
+    // List + map view
+    document.getElementById('map').style.display = 'block';
+    initMap();
+
     if (!pins.length && !searchTerm) {
-      container.innerHTML = '<div class="empty-state">No pins yet — create one above!</div>';
+      grid.innerHTML = '<div class="empty-state">No pins yet — create one above!</div>';
       return;
     }
 
     let shown = 0;
+
     pins.forEach(pin => {
-      const text = [
-        pin.name || '', pin.msg || '',
+      const textToSearch = [
+        pin.name || '', 
+        pin.msg || '',
         ...pin.comments.map(c => c.text || ''),
         new Date(pin.time).toLocaleString()
       ].join(' ').toLowerCase();
 
-      if (searchTerm && !text.includes(searchTerm)) return;
+      if (searchTerm && !textToSearch.includes(searchTerm)) return;
+
       shown++;
 
+      // Add marker only for matching pins
+      const marker = L.marker([pin.lat, pin.lng]).addTo(markersLayer);
+      const popup = `
+        <strong>${escapeHTML(pin.name)}</strong><br>
+        ${pin.msg ? escapeHTML(pin.msg) + '<br>' : ''}
+        <small>${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}</small><br><br>
+        <a href="?id=${pin.id}" style="color:#22d3ee;">View details & comments →</a>
+      `;
+      marker.bindPopup(popup);
+
+      // Card in list
       const url = getPinUrl(pin);
       const card = document.createElement('div');
       card.className = 'pin-card';
@@ -429,11 +481,13 @@ function render() {
           <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(()=>this.textContent='Copied!')">Copy</button>
         </div>
       `;
-      container.appendChild(card);
+      grid.appendChild(card);
     });
 
     if (shown === 0 && searchTerm) {
-      container.innerHTML = `<div class="empty-state">No pins match "<strong>${escapeHTML(searchTerm)}</strong>".</div>`;
+      grid.innerHTML = `<div class="empty-state">No pins match "<strong>${escapeHTML(searchTerm)}</strong>".</div>`;
+    } else if (!searchTerm) {
+      grid.innerHTML = '<div class="empty-state">Type in the search box above to show matching pins on the map</div>';
     }
   }
 }

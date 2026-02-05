@@ -363,7 +363,7 @@ function shareViaEmail(pin) {
   const subject = encodeURIComponent(`Check out this location: ${pin.name || 'GPS Pin'}`);
   let body = `Here's a location I saved:\n${url}\n\nCoordinates: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\n`;
   if (pin.msg) body += `\nNote: ${pin.msg}\n`;
-  body += `\nOpen the link to view details and add comments. (Local-only app)`;
+  body += `\nOpen the link to view details and add comments.`;
 
   window.open(`mailto:?subject=${subject}&body=${encodeURIComponent(body)}`, '_blank');
 }

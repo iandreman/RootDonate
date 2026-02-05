@@ -453,7 +453,7 @@ function render() {
     // List view - only show pins when search is active
     if (!searchTerm) {
       if (pins.length === 0) {
-        grid.innerHTML = '<div class="empty-state">You haven’t created any pins yet.<br>Create one above to get started!</div>';
+        grid.innerHTML = '<div class="empty-state"><br>Create one above or search to get started!</div>';
       } else {
         grid.innerHTML = '<div class="empty-state">Type in the search box to see your saved pins</div>';
       }

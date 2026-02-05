@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GPS Pins – Create, Comment, Search & Email</title>
-  <meta name="description" content="Create GPS pins with comments • Search name, comments, date or URL • Share via email" />
+  <title>GPS Pins – Create, Comment, Search & Share</title>
+  <meta name="description" content="Create GPS pins • Add & view comments • Search everything • Share via email" />
   
   <style>
     :root {
@@ -17,6 +17,7 @@
       --border: rgba(34,211,238,0.18);
       --success: #10b981;
       --email: #ec4899;
+      --danger: #ef4444;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
@@ -78,14 +79,13 @@
       padding: 1.1rem 1.3rem;
     }
 
-    .pin-grid { display: grid; gap: 1.2rem; }
+    .pin-grid { display: grid; gap: 1.4rem; }
     .pin-card {
       background: rgba(34,211,238,0.07);
       border: 1px solid rgba(34,211,238,0.18);
       border-radius: 12px;
       padding: 1.5rem;
       transition: all 0.18s;
-      cursor: pointer;
     }
     .pin-card:hover {
       background: rgba(34,211,238,0.12);
@@ -95,6 +95,18 @@
     .pin-desc { margin: 0.7rem 0; white-space: pre-wrap; }
     .pin-meta { color: var(--muted); font-size: 0.95rem; margin: 0.9rem 0; }
     .comment-count { color: var(--accent); font-weight: 600; margin-left: 0.4rem; }
+
+    .comments { margin-top: 1.2rem; font-size: 0.95rem; }
+    .comment {
+      margin: 0.8rem 0;
+      padding: 0.8rem 1rem;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      border-left: 3px solid var(--accent);
+    }
+    .comment-header { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--muted); margin-bottom: 0.3rem; }
+    .comment-author { font-weight: 600; color: var(--text); }
+
     .url-row {
       margin-top: 1.2rem;
       display: flex;
@@ -115,11 +127,16 @@
     }
     .btn-copy { background: var(--accent); color: #0f172a; }
     .btn-copy:hover { background: #67e8f9; }
-    .btn-email {
-      background: var(--email);
-      color: white;
-    }
+    .btn-email { background: var(--email); color: white; }
     .btn-email:hover { background: #db2777; }
+    .btn-delete {
+      background: var(--danger);
+      color: white;
+      font-size: 0.85rem;
+      padding: 0.6rem 1.2rem;
+    }
+    .btn-delete:hover { background: #dc2626; }
+
     .empty { text-align: center; color: var(--muted); padding: 3rem 1rem; font-size: 1.1rem; }
 
     @media (max-width: 600px) {
@@ -133,7 +150,7 @@
 <div class="container">
   <header>
     <h1>GPS Pins</h1>
-    <p class="subtitle">Create pins • Add comments • Search everything • Share via email</p>
+    <p class="subtitle">Drop pins • Add comments • Search • Share via email</p>
   </header>
 
   <!-- Create new pin -->
@@ -144,19 +161,19 @@
       <input id="name" placeholder="Anonymous">
     </div>
     <div>
-      <label for="msg">Message / note (optional)</label>
+      <label for="msg">Note / description (optional)</label>
       <textarea id="msg" placeholder="What's special about this place?"></textarea>
     </div>
     <div>
       <label for="initial-comment">Initial comment (optional)</label>
       <input id="initial-comment" placeholder="Start the conversation...">
     </div>
-    <button class="btn btn-primary" onclick="createPin()">Create Pin & Get Share Link</button>
+    <button class="btn btn-primary" onclick="createPin()">Create Pin & Get Link</button>
   </div>
 
   <!-- Search -->
   <div class="card">
-    <input type="search" id="search" class="search-input" placeholder="Search name, message, comments, date or ?p= link..." autofocus>
+    <input type="search" id="search" class="search-input" placeholder="Search name, note, comments, date or link..." autofocus>
   </div>
 
   <div id="pin-grid" class="pin-grid"></div>
@@ -184,7 +201,7 @@ function getPinUrl(pin) {
 
 async function createPin() {
   if (!navigator.geolocation) {
-    alert('Geolocation not supported in this browser.');
+    alert('Geolocation not supported.');
     return;
   }
 
@@ -221,29 +238,52 @@ async function createPin() {
     document.getElementById('initial-comment').value = '';
 
     renderPins();
-    alert('Pin created! Scroll down to see it and share via email.');
+    alert('Pin created! Scroll down to view and share.');
   } catch (err) {
-    alert('Could not get location: ' + (err.message || 'Permission denied / timeout'));
+    alert('Location error: ' + (err.message || 'Permission denied'));
   }
 }
 
 function shareViaEmail(pin) {
   const url = getPinUrl(pin);
-  const subject = encodeURIComponent(`Check out this location pin: ${pin.name || 'GPS Pin'}`);
+  const subject = encodeURIComponent(`Check out this pin: ${pin.name || 'GPS Location'}`);
   
-  let body = `Hi,\n\nHere's a location I want to share with you:\n\n`;
-  body += `Share link: ${url}\n\n`;
+  let body = `Hi there,\n\nCheck out this location:\n\n`;
+  body += `Link: ${url}\n\n`;
   body += `Coordinates: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\n`;
-  
-  if (pin.msg) {
-    body += `\nNote: ${pin.msg}\n`;
-  }
-  
-  body += `\nOpen the link to view the full pin, see any comments, and add your own.\n\n`;
-  body += `See you there!`;
+  if (pin.msg) body += `\nNote: ${pin.msg}\n`;
+  body += `\nOpen the link to see comments and add your own.\n\nCheers!`;
 
-  const mailto = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
-  window.open(mailto, '_blank');
+  window.open(`mailto:?subject=${subject}&body=${encodeURIComponent(body)}`, '_blank');
+}
+
+function addComment(pinUrl, textarea) {
+  const text = textarea.value.trim();
+  if (!text) return;
+
+  let pins = getPins();
+  const pinIndex = pins.findIndex(p => getPinUrl(p) === pinUrl);
+  if (pinIndex === -1) return;
+
+  const author = prompt("Your name (optional):") || "Anonymous";
+
+  pins[pinIndex].comments.push({
+    text,
+    author,
+    time: new Date().toISOString()
+  });
+
+  savePins(pins);
+  textarea.value = '';
+  renderPins(document.getElementById('search').value);
+}
+
+function deletePin(pinUrl) {
+  if (!confirm("Delete this pin?")) return;
+  let pins = getPins();
+  pins = pins.filter(p => getPinUrl(p) !== pinUrl);
+  savePins(pins);
+  renderPins(document.getElementById('search').value);
 }
 
 function renderPins(filter = '') {
@@ -281,10 +321,27 @@ function renderPins(filter = '') {
         ${new Date(pin.time).toLocaleString()}
         ${pin.comments.length ? `<span class="comment-count">• ${pin.comments.length} comment${pin.comments.length !== 1 ? 's' : ''}</span>` : ''}
       </div>
-      <div class="url-row">
+
+      <div class="comments">
+        ${pin.comments.map(c => `
+          <div class="comment">
+            <div class="comment-header">
+              <span class="comment-author">${escapeHTML(c.author || 'Anonymous')}</span>
+              <span>${new Date(c.time).toLocaleString()}</span>
+            </div>
+            <div>${escapeHTML(c.text)}</div>
+          </div>
+        `).join('')}
+
+        <textarea placeholder="Add a comment..." class="comment-input" style="width:100%; margin-top:0.8rem; min-height:70px;"></textarea>
+        <button class="btn btn-primary" style="margin-top:0.5rem;" onclick="addComment('${pinUrl}', this.previousElementSibling)">Post Comment</button>
+      </div>
+
+      <div class="url-row" style="margin-top:1.4rem;">
         <input type="text" class="url-input" value="${pinUrl}" readonly aria-label="Share link">
-        <button class="btn btn-copy" onclick="copyUrl('${pinUrl}', this)">Copy URL</button>
-        <button class="btn btn-email" onclick="shareViaEmail(${JSON.stringify(pin)})">Share via Email</button>
+        <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${pinUrl}').then(()=>this.textContent='Copied!').catch(()=>alert('Copy failed'))">Copy URL</button>
+        <button class="btn btn-email" onclick="shareViaEmail(${JSON.stringify(pin).replace(/"/g, '&quot;')})">Share via Email</button>
+        <button class="btn btn-delete" onclick="deletePin('${pinUrl}')">Delete</button>
       </div>
     `;
     container.appendChild(card);
@@ -295,28 +352,12 @@ function renderPins(filter = '') {
   }
 }
 
-function copyUrl(url, btn) {
-  navigator.clipboard.writeText(url)
-    .then(() => {
-      const orig = btn.textContent;
-      btn.textContent = 'Copied!';
-      btn.style.background = '#10b981';
-      btn.style.color = 'white';
-      setTimeout(() => {
-        btn.textContent = orig;
-        btn.style.background = '';
-        btn.style.color = '';
-      }, 1800);
-    })
-    .catch(() => alert('Copy failed — select manually'));
-}
-
 // Live search
 document.getElementById('search').addEventListener('input', e => {
   renderPins(e.target.value);
 });
 
-// Load & handle shared pin
+// Load pins & handle shared link
 window.addEventListener('load', () => {
   renderPins();
 
@@ -327,7 +368,8 @@ window.addEventListener('load', () => {
       const pin = JSON.parse(atob(shared));
       if (pin.lat && pin.lng && pin.time) {
         let pins = getPins();
-        if (!pins.some(p => p.lat === pin.lat && p.lng === pin.lng && p.time === pin.time)) {
+        const exists = pins.some(p => p.lat === pin.lat && p.lng === pin.lng && p.time === pin.time);
+        if (!exists) {
           pins.push(pin);
           savePins(pins);
           renderPins();

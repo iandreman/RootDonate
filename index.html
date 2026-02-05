@@ -4,13 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GPS Pins – Share Locations & Notes</title>
-  <meta name="description" content="Drop GPS pins, add notes & comments, share via link. Everything stays local in your browser." />
-  
-  <!-- Leaflet CSS + JS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5ir/XP5Y=" crossorigin=""/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <meta name="description" content="Drop GPS pins, add notes and comments, and share via link. All data stays private in your browser." />
 
   <style>
     :root {
@@ -27,7 +21,11 @@
       --shadow-md: 0 8px 24px rgba(0,0,0,0.36);
     }
 
-    * { margin:0; padding:0; box-sizing:border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
     body {
       background: var(--bg);
@@ -38,9 +36,15 @@
       min-height: 100vh;
     }
 
-    .container { max-width: 980px; margin: 0 auto; }
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+    }
 
-    header { text-align: center; margin-bottom: 2.5rem; }
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
 
     h1 {
       font-size: 2.8rem;
@@ -51,7 +55,11 @@
       color: transparent;
     }
 
-    .subtitle { color: var(--muted); font-size: 1.15rem; margin-top: 0.5rem; }
+    .subtitle {
+      color: var(--muted);
+      font-size: 1.15rem;
+      margin-top: 0.5rem;
+    }
 
     .card {
       background: var(--surface);
@@ -62,7 +70,11 @@
       box-shadow: var(--shadow-sm);
     }
 
-    h2 { color: var(--accent); font-size: 1.45rem; margin-bottom: 1.3rem; }
+    h2 {
+      color: var(--accent);
+      font-size: 1.45rem;
+      margin-bottom: 1.3rem;
+    }
 
     label {
       display: block;
@@ -89,7 +101,10 @@
       box-shadow: 0 0 0 3px rgba(34,211,238,0.22);
     }
 
-    textarea { min-height: 100px; resize: vertical; }
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
 
     .btn {
       padding: 0.85rem 1.8rem;
@@ -106,7 +121,10 @@
       color: white;
     }
 
-    .btn-primary:hover { opacity: 0.94; transform: translateY(-1px); }
+    .btn-primary:hover {
+      opacity: 0.94;
+      transform: translateY(-1px);
+    }
 
     .search-input {
       font-size: 1.15rem;
@@ -114,15 +132,10 @@
       margin-bottom: 1.2rem;
     }
 
-    #map {
-      height: 420px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      margin: 1rem 0 2rem;
-      background: #111;
+    .pin-grid {
+      display: grid;
+      gap: 1.5rem;
     }
-
-    .pin-grid { display: grid; gap: 1.5rem; }
 
     .pin-card {
       background: rgba(34,211,238,0.05);
@@ -138,15 +151,35 @@
       box-shadow: var(--shadow-md);
     }
 
-    .pin-title { color: var(--purple); font-weight: 700; font-size: 1.4rem; margin-bottom: 0.7rem; }
+    .pin-title {
+      color: var(--purple);
+      font-weight: 700;
+      font-size: 1.4rem;
+      margin-bottom: 0.7rem;
+    }
 
-    .pin-desc { margin: 0.8rem 0; color: #d1d5db; white-space: pre-wrap; }
+    .pin-desc {
+      margin: 0.8rem 0;
+      color: #d1d5db;
+      white-space: pre-wrap;
+    }
 
-    .pin-meta { color: var(--muted); font-size: 0.94rem; margin: 1rem 0; }
+    .pin-meta {
+      color: var(--muted);
+      font-size: 0.94rem;
+      margin: 1rem 0;
+    }
 
-    .comment-count { color: var(--accent); font-weight: 600; margin-left: 0.5rem; }
+    .comment-count {
+      color: var(--accent);
+      font-weight: 600;
+      margin-left: 0.5rem;
+    }
 
-    .comments { margin-top: 1.3rem; font-size: 0.97rem; }
+    .comments {
+      margin-top: 1.3rem;
+      font-size: 0.97rem;
+    }
 
     .comment {
       margin: 1rem 0;
@@ -189,7 +222,9 @@
       margin: 1.2rem 0;
     }
 
-    .back-link:hover { text-decoration: underline; }
+    .back-link:hover {
+      text-decoration: underline;
+    }
 
     .empty-state {
       text-align: center;
@@ -199,14 +234,15 @@
       line-height: 1.7;
     }
 
-    .empty-state strong { color: var(--text); }
+    .empty-state strong {
+      color: var(--text);
+    }
 
     @media (max-width: 640px) {
       .url-row { flex-direction: column; align-items: stretch; }
       .btn { width: 100%; }
       h1 { font-size: 2.3rem; }
       .card { padding: 1.4rem; }
-      #map { height: 320px; }
     }
   </style>
 </head>
@@ -215,57 +251,48 @@
 <div class="container">
   <header>
     <h1>GPS Pins</h1>
-    <p class="subtitle">Drop a pin • Add notes & comments • Share via link • Local-only (browser storage)</p>
+    <p class="subtitle">Save locations • Add notes & comments • Share easily via link • 100% private (stored only in your browser)</p>
   </header>
 
-  <!-- Navigation -->
   <div style="text-align:center; margin-bottom:1.8rem;">
-    <a href="." class="back-link">← Back to all pins & search</a>
+    <a href="." class="back-link">← Back to all pins</a>
   </div>
 
   <!-- Create new pin -->
   <div class="card" id="create-card">
-    <h2>Create New GPS Pin</h2>
+    <h2>Create New Pin</h2>
     <div>
       <label for="name">Your name (optional)</label>
       <input id="name" placeholder="Anonymous" autocomplete="name">
     </div>
     <div>
       <label for="msg">Note / description (optional)</label>
-      <textarea id="msg" placeholder="What's special about this spot?"></textarea>
+      <textarea id="msg" placeholder="What's special about this location?"></textarea>
     </div>
     <div>
       <label for="initial-comment">First comment (optional)</label>
-      <input id="initial-comment" placeholder="Start the discussion…">
+      <input id="initial-comment" placeholder="Start a conversation…">
     </div>
     <button class="btn btn-primary" onclick="createPin()">Create Pin & Get Share Link</button>
   </div>
 
-  <!-- Search & content area -->
+  <!-- Search & pin list -->
   <div class="card" id="content-card">
     <input 
       type="search" 
       id="search" 
       class="search-input" 
-      placeholder="Search pins by name, note or comment…" 
+      placeholder="Search by name, note or comment…" 
       autofocus 
-      aria-label="Search pins"
+      aria-label="Search your saved pins"
     >
 
-    <!-- Map (only shows pins when searching) -->
-    <div id="map"></div>
-
-    <!-- Pin list (cards) -->
     <div id="pin-grid" class="pin-grid" role="region" aria-live="polite"></div>
   </div>
-  
 </div>
 
 <script>
 const STORAGE_KEY = 'gps-pins-v2';
-
-let map = null;
-let markersLayer = null;
 
 function escapeHTML(str = '') {
   return str.replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[m]);
@@ -284,11 +311,14 @@ function getPinUrl(pin) {
 }
 
 async function createPin() {
-  if (!navigator.geolocation) return alert('Geolocation not supported.');
+  if (!navigator.geolocation) {
+    alert("Geolocation is not supported by your browser.");
+    return;
+  }
 
   try {
-    const pos = await new Promise((res, rej) => 
-      navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 12000 })
+    const pos = await new Promise((resolve, reject) => 
+      navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 12000 })
     );
 
     const lat = Number(pos.coords.latitude.toFixed(6));
@@ -300,7 +330,10 @@ async function createPin() {
 
     const pin = {
       id: crypto.randomUUID(),
-      lat, lng, name, msg,
+      lat,
+      lng,
+      name,
+      msg,
       time: new Date().toISOString(),
       comments: first ? [{ text: first, author: name, time: new Date().toISOString() }] : []
     };
@@ -309,28 +342,29 @@ async function createPin() {
     pins.push(pin);
     savePins(pins);
 
+    // Clear form
     document.getElementById('name').value = '';
     document.getElementById('msg').value = '';
     document.getElementById('initial-comment').value = '';
 
     const url = getPinUrl(pin);
-    alert(`Pin created!\n\nShare this link:\n${url}\n\nImportant: pins are stored only in your browser.`);
+    alert(`Your pin has been created!\n\nShare this link with others:\n${url}\n\nNote: All pins are stored only in your browser — others will need to save the pin on their device too.`);
 
     render();
   } catch (err) {
-    let msg = 'Could not get location.';
-    if (err.code === 1) msg += ' Permission denied.';
-    if (err.code === 3) msg += ' Timed out.';
-    alert(msg + ' ' + (err.message || ''));
+    let message = 'Unable to get your location.';
+    if (err.code === 1) message += ' Location permission was denied.';
+    if (err.code === 3) message += ' Location request timed out.';
+    alert(`${message} Please try again.`);
   }
 }
 
 function shareViaEmail(pin) {
   const url = getPinUrl(pin);
-  const subject = encodeURIComponent(`GPS Pin: ${pin.name || 'Location'}`);
-  let body = `Check this location:\n${url}\n\n${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\n`;
+  const subject = encodeURIComponent(`Check out this location: ${pin.name || 'GPS Pin'}`);
+  let body = `Here's a location I saved:\n${url}\n\nCoordinates: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\n`;
   if (pin.msg) body += `\nNote: ${pin.msg}\n`;
-  body += `\nOpen link to view / comment. (Local-only app)`;
+  body += `\nOpen the link to view details and add comments. (Local-only app)`;
 
   window.open(`mailto:?subject=${subject}&body=${encodeURIComponent(body)}`, '_blank');
 }
@@ -352,21 +386,13 @@ function addComment(pinId, textarea) {
 }
 
 function deletePin(pinId) {
-  if (!confirm("Delete this pin forever?")) return;
+  if (!confirm("Are you sure you want to permanently delete this pin?")) return;
+
   let pins = getPins();
   pins = pins.filter(p => p.id !== pinId);
   savePins(pins);
   history.replaceState(null, '', '.');
   render();
-}
-
-function initMap() {
-  if (map) return;
-  map = L.map('map').setView([20, 0], 2);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-  }).addTo(map);
-  markersLayer = L.layerGroup().addTo(map);
 }
 
 function render() {
@@ -376,22 +402,17 @@ function render() {
   const grid = document.getElementById('pin-grid');
   grid.innerHTML = '';
 
-  // Clear previous markers
-  if (markersLayer) markersLayer.clearLayers();
-
   const pins = getPins();
 
   if (id) {
-    // Single pin view - no map
     const pin = pins.find(p => p.id === id);
     if (!pin) {
       grid.innerHTML = `
         <div class="empty-state">
-          <strong>This GPS pin was not found in your browser.</strong><br><br>
-          This app stores everything locally — no server, no cloud.<br>
-          <small>Shared links only work if both people have saved the pin locally.</small>
+          <strong>This pin could not be found in your browser.</strong><br><br>
+          This app stores everything locally — there is no cloud or server.<br>
+          <small>Shared links only work if the pin has been saved on your device too.</small>
         </div>`;
-      document.getElementById('map').style.display = 'none';
       return;
     }
 
@@ -416,60 +437,44 @@ function render() {
             </div>
           `).join('')}
 
-          <textarea placeholder="Add a comment..." style="margin-top:1.2rem; min-height:90px;"></textarea>
+          <textarea placeholder="Add your comment..." style="margin-top:1.2rem; min-height:90px;"></textarea>
           <button class="btn btn-primary" style="margin-top:0.7rem;" 
                   onclick="addComment('${pin.id}', this.previousElementSibling)">Post Comment</button>
         </div>
 
         <div class="url-row">
           <input type="text" class="url-input" value="${url}" readonly aria-label="Shareable link">
-          <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(()=>this.textContent='Copied!')">Copy Link</button>
-          <button class="btn btn-email" onclick='shareViaEmail(${JSON.stringify(pin)})'>Email</button>
-          <button class="btn btn-delete" onclick="deletePin('${pin.id}')">Delete</button>
+          <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(()=>this.textContent='Copied!').catch(()=>alert('Copy failed'));">Copy Link</button>
+          <button class="btn btn-email" onclick='shareViaEmail(${JSON.stringify(pin)})'>Share via Email</button>
+          <button class="btn btn-delete" onclick="deletePin('${pin.id}')">Delete Pin</button>
         </div>
       </div>`;
-    document.getElementById('map').style.display = 'none';
   } else {
-    // List + map view
-    document.getElementById('map').style.display = 'block';
-    initMap();
-
     if (!pins.length && !searchTerm) {
-      grid.innerHTML = '<div class="empty-state">No pins yet — create one above!</div>';
+      grid.innerHTML = '<div class="empty-state">You haven’t created any pins yet.<br>Create one above to get started!</div>';
       return;
     }
 
     let shown = 0;
 
     pins.forEach(pin => {
-      const textToSearch = [
-        pin.name || '', 
+      const searchText = [
+        pin.name || '',
         pin.msg || '',
         ...pin.comments.map(c => c.text || ''),
         new Date(pin.time).toLocaleString()
       ].join(' ').toLowerCase();
 
-      if (searchTerm && !textToSearch.includes(searchTerm)) return;
+      if (searchTerm && !searchText.includes(searchTerm)) return;
 
       shown++;
 
-      // Add marker only for matching pins
-      const marker = L.marker([pin.lat, pin.lng]).addTo(markersLayer);
-      const popup = `
-        <strong>${escapeHTML(pin.name)}</strong><br>
-        ${pin.msg ? escapeHTML(pin.msg) + '<br>' : ''}
-        <small>${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}</small><br><br>
-        <a href="?id=${pin.id}" style="color:#22d3ee;">View details & comments →</a>
-      `;
-      marker.bindPopup(popup);
-
-      // Card in list
       const url = getPinUrl(pin);
       const card = document.createElement('div');
       card.className = 'pin-card';
       card.innerHTML = `
         <div class="pin-title">
-          <a href="?id=${pin.id}" style="color:inherit;text-decoration:none;">${escapeHTML(pin.name)}</a>
+          <a href="?id=${pin.id}" style="color:inherit; text-decoration:none;">${escapeHTML(pin.name)}</a>
         </div>
         ${pin.msg ? `<div class="pin-desc">${escapeHTML(pin.msg)}</div>` : ''}
         <div class="pin-meta">
@@ -478,7 +483,7 @@ function render() {
         </div>
         <div class="url-row" style="margin-top:1.2rem;">
           <input type="text" class="url-input" value="${url}" readonly>
-          <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(()=>this.textContent='Copied!')">Copy</button>
+          <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(()=>this.textContent='Copied!')">Copy Link</button>
         </div>
       `;
       grid.appendChild(card);
@@ -486,8 +491,6 @@ function render() {
 
     if (shown === 0 && searchTerm) {
       grid.innerHTML = `<div class="empty-state">No pins match "<strong>${escapeHTML(searchTerm)}</strong>".</div>`;
-    } else if (!searchTerm) {
-      grid.innerHTML = '<div class="empty-state">Type in the search box above to show matching pins on the map</div>';
     }
   }
 }

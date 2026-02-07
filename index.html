@@ -151,8 +151,8 @@
 
     .btn-copy    { background: var(--accent); color: #0f172a; }
     .btn-copy:hover    { background: #67e8f9; }
-    .btn-gmaps   { background: #4285f4; color: white; }
-    .btn-gmaps:hover { background: #3267d6; }
+    .btn-app     { background: #8b5cf6; color: white; }
+    .btn-app:hover { background: #7c3aed; }
     .btn-email   { background: var(--pink); color: white; }
     .btn-email:hover   { background: #db2777; }
     .btn-delete  { background: var(--danger); color: white; }
@@ -247,12 +247,6 @@ function getPinUrl(pin) {
   return `${location.origin}${location.pathname}?id=${pin.id}`;
 }
 
-function getGoogleMapsUrl(pin) {
-  const q = `${pin.lat},${pin.lng}`;
-  const label = encodeURIComponent(pin.name || 'GPS Pin');
-  return `https://www.google.com/maps/search/?api=1&query=${q}&query_place_id=${label}`;
-}
-
 async function createPin() {
   if (!navigator.geolocation) {
     alert("Geolocation is not supported by your browser.");
@@ -341,7 +335,6 @@ function render() {
   const searchTerm = searchInput?.value?.trim().toLowerCase() || '';
   const effectiveSearch = searchTerm || urlSearch;
 
-  // Sync input with URL search param on load
   if (searchInput && urlSearch && !searchTerm) {
     searchInput.value = urlSearch;
   }
@@ -364,7 +357,6 @@ function render() {
     }
 
     const url = getPinUrl(pin);
-    const gmaps = getGoogleMapsUrl(pin);
 
     grid.innerHTML = `
       <div class="pin-card">
@@ -394,13 +386,12 @@ function render() {
         <div class="url-row">
           <input type="text" class="url-input" value="${url}" readonly aria-label="Shareable link">
           <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(()=>this.textContent='Copied!').catch(()=>alert('Copy failed'));">Copy Link</button>
-          <a href="${gmaps}" target="_blank" class="btn btn-gmaps">Open in Google Maps</a>
+          <a href="${url}" class="btn btn-app">Open in GPS Pins</a>
           <button class="btn btn-email" onclick='shareViaEmail(${JSON.stringify(pin).replace(/'/g,"\\'")})'>Share via Email</button>
           <button class="btn btn-delete" onclick="deletePin('${pin.id}')">Delete Pin</button>
         </div>
       </div>`;
   } else {
-    // List view
     if (!effectiveSearch) {
       grid.innerHTML = pins.length === 0
         ? '<div class="empty-state"><br>Create a pin above or use search to view saved ones!</div>'
@@ -422,7 +413,6 @@ function render() {
 
       shown++;
       const url = getPinUrl(pin);
-      const gmaps = getGoogleMapsUrl(pin);
 
       const card = document.createElement('div');
       card.className = 'pin-card';
@@ -438,7 +428,7 @@ function render() {
         <div class="url-row" style="margin-top:1.2rem;">
           <input type="text" class="url-input" value="${url}" readonly>
           <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(()=>this.textContent='Copied!')">Copy Link</button>
-          <a href="${gmaps}" target="_blank" class="btn btn-gmaps">Google Maps</a>
+          <a href="${url}" class="btn btn-app">Open in GPS Pins</a>
         </div>
       `;
       grid.appendChild(card);
@@ -450,7 +440,6 @@ function render() {
   }
 }
 
-// Update URL when typing search
 function updateSearchInUrl(term) {
   const params = new URLSearchParams(location.search);
   if (term.trim()) params.set('search', term.trim());

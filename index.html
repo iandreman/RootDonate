@@ -90,6 +90,8 @@
       color: white;
     }
     .btn-primary:hover { opacity: 0.94; transform: translateY(-1px); }
+    .btn-save { background: #10b981; color: white; }
+    .btn-save:hover { background: #059669; }
 
     .search-input {
       font-size: 1.15rem;
@@ -243,7 +245,10 @@ function savePins(pins) {
 }
 
 function getPinUrl(pin) {
-  return `${location.origin}${location.pathname}?q=${pin.id}`;
+  // Embed full pin data in URL using base64
+  const json = JSON.stringify(pin);
+  const encoded = btoa(json);
+  return `${location.origin}${location.pathname}?p=${encoded}`;
 }
 
 async function createPin() {
@@ -280,7 +285,7 @@ async function createPin() {
     document.getElementById('initial-comment').value = '';
 
     const url = getPinUrl(pin);
-    alert(`Pin created!\n\nShare this link:\n${url}\n\nAll data is stored only in your browser — others must save it too to view.`);
+    alert(`Pin created!\n\nShare this link (works on any device):\n${url}\n\nData is embedded — no account needed. You can save it locally too.`);
 
     render();
   } catch (err) {
@@ -294,27 +299,51 @@ async function createPin() {
 function shareViaEmail(pin) {
   const url = getPinUrl(pin);
   const subject = encodeURIComponent(`Check out this location: ${pin.name || 'GPS Pin'}`);
-  let body = `Location I saved:\n${url}\n\nCoordinates: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\n`;
+  let body = `Location:\n${url}\n\nCoordinates: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\n`;
   if (pin.msg) body += `\nNote: ${pin.msg}\n`;
-  body += `\nOpen the link to see details and add comments.`;
+  body += `\nOpen the link to view & comment.`;
 
   window.open(`mailto:?subject=${subject}&body=${encodeURIComponent(body)}`, '_blank');
 }
 
-function addComment(pinId, textarea) {
+function addComment(pinId, textarea, isImported = false) {
   const text = textarea.value.trim();
   if (!text) return;
 
   let pins = getPins();
-  const pin = pins.find(p => p.id === pinId);
-  if (!pin) return;
+  let pin;
+
+  if (isImported) {
+    // For imported pins not yet saved
+    pin = pins.find(p => p.id === pinId) || window.currentImportedPin;
+    if (!pin) return;
+  } else {
+    pin = pins.find(p => p.id === pinId);
+    if (!pin) return;
+  }
 
   const author = prompt("Your name (optional):")?.trim() || "Anonymous";
 
   pin.comments.push({ text, author, time: new Date().toISOString() });
-  savePins(pins);
+
+  if (!isImported || pins.some(p => p.id === pinId)) {
+    savePins(pins);
+  }
+
   textarea.value = '';
   render();
+}
+
+function saveImportedPin(pin) {
+  let pins = getPins();
+  if (!pins.some(p => p.id === pin.id)) {
+    pins.push(pin);
+    savePins(pins);
+    alert("Pin saved to your local collection!");
+    render();
+  } else {
+    alert("This pin is already saved.");
+  }
 }
 
 function deletePin(pinId) {
@@ -330,121 +359,140 @@ function isUUID(str) {
   return UUID_REGEX.test(str.trim());
 }
 
+function renderSinglePin(pin, isImported = false) {
+  const grid = document.getElementById('pin-grid');
+  const url = getPinUrl(pin);
+
+  grid.innerHTML = `
+    <div class="pin-card">
+      <div class="pin-title">${escapeHTML(pin.name)}</div>
+      ${pin.msg ? `<div class="pin-desc">${escapeHTML(pin.msg)}</div>` : ''}
+      <div class="pin-meta">
+        ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)} • ${new Date(pin.time).toLocaleString()}
+        ${pin.comments.length ? `<span class="comment-count">• ${pin.comments.length} comment${pin.comments.length > 1 ? 's' : ''}</span>` : ''}
+      </div>
+
+      <div class="comments">
+        ${pin.comments.map(c => `
+          <div class="comment">
+            <div style="display:flex;justify-content:space-between;font-size:0.9rem;color:var(--muted);margin-bottom:0.4rem;">
+              <strong>${escapeHTML(c.author || 'Anonymous')}</strong>
+              <span>${new Date(c.time).toLocaleString()}</span>
+            </div>
+            <div>${escapeHTML(c.text)}</div>
+          </div>
+        `).join('')}
+
+        <textarea placeholder="Add your comment..." style="margin-top:1.2rem; min-height:90px;"></textarea>
+        <button class="btn btn-primary" style="margin-top:0.7rem;" 
+                onclick="addComment('${pin.id}', this.previousElementSibling, ${isImported})">Post Comment</button>
+      </div>
+
+      <div class="url-row" style="margin-top:1.5rem; flex-wrap:wrap; gap:0.8rem;">
+        <input type="text" class="url-input" value="${url}" readonly aria-label="Shareable link">
+        <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(()=>this.textContent='Copied!').catch(()=>alert('Copy failed'));">Copy Link</button>
+        <button class="btn btn-email" onclick='shareViaEmail(${JSON.stringify(pin).replace(/'/g,"\\'")})'>Share via Email</button>
+        ${isImported ? `<button class="btn btn-save" onclick='saveImportedPin(${JSON.stringify(pin).replace(/'/g,"\\'")})'>Save to My Pins</button>` : ''}
+        <button class="btn btn-delete" onclick="deletePin('${pin.id}')">Delete Pin</button>
+      </div>
+    </div>`;
+}
+
 function render() {
   const params = new URLSearchParams(location.search);
   const q = params.get('q')?.trim() || '';
+  const encoded = params.get('p')?.trim() || '';
   const searchInput = document.getElementById('search');
+  const grid = document.getElementById('pin-grid');
+  grid.innerHTML = '';
 
-  // Sync input with ?q= on load
+  // Handle embedded pin (?p=...)
+  if (encoded) {
+    try {
+      const json = atob(encoded);
+      const pin = JSON.parse(json);
+      if (pin.id && typeof pin.lat === 'number' && typeof pin.lng === 'number') {
+        window.currentImportedPin = pin; // for commenting
+        renderSinglePin(pin, true);
+        return;
+      }
+    } catch (e) {
+      grid.innerHTML = `<div class="empty-state">Invalid or corrupted pin link.<br><br><a href=".">Go back</a></div>`;
+      return;
+    }
+  }
+
+  // Normal mode (search or single saved pin via ?q=)
   if (searchInput && q && !searchInput.value.trim()) {
     searchInput.value = q;
   }
 
-  const grid = document.getElementById('pin-grid');
-  grid.innerHTML = '';
-
   const pins = getPins();
 
-  // Single pin view
   if (q && isUUID(q)) {
     const pin = pins.find(p => p.id === q);
     if (!pin) {
       grid.innerHTML = `
         <div class="empty-state">
           <strong>Pin not found in your browser.</strong><br><br>
-          This app is 100% local — no server, no cloud.<br>
-          <small>Shared links only work if the pin is saved on your device.</small>
+          This pin may have been shared via link — if it has ?p= data, use that instead.<br>
+          <small>All data stays local — no cloud storage.</small>
         </div>`;
       return;
     }
+    renderSinglePin(pin, false);
+    return;
+  }
 
+  // List / search view
+  const term = q.toLowerCase();
+
+  if (!term) {
+    grid.innerHTML = pins.length === 0
+      ? '<div class="empty-state"><br>Create a pin above or use search to view saved ones!</div>'
+      : '<div class="empty-state">Type in the search box to see your pins</div>';
+    return;
+  }
+
+  let shown = 0;
+  pins.forEach(pin => {
+    const searchText = [
+      pin.name || '',
+      pin.msg || '',
+      ...pin.comments.map(c => c.text || ''),
+      pin.lat.toFixed(6), pin.lng.toFixed(6),
+      new Date(pin.time).toLocaleString()
+    ].join(' ').toLowerCase();
+
+    if (!searchText.includes(term)) return;
+
+    shown++;
     const url = getPinUrl(pin);
 
-    grid.innerHTML = `
-      <div class="pin-card">
-        <div class="pin-title">${escapeHTML(pin.name)}</div>
-        ${pin.msg ? `<div class="pin-desc">${escapeHTML(pin.msg)}</div>` : ''}
-        <div class="pin-meta">
-          ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)} • ${new Date(pin.time).toLocaleString()}
-          ${pin.comments.length ? `<span class="comment-count">• ${pin.comments.length} comment${pin.comments.length > 1 ? 's' : ''}</span>` : ''}
-        </div>
+    const card = document.createElement('div');
+    card.className = 'pin-card';
+    card.innerHTML = `
+      <div class="pin-title">
+        <a href="?q=${pin.id}" style="color:inherit; text-decoration:none;">${escapeHTML(pin.name)}</a>
+      </div>
+      ${pin.msg ? `<div class="pin-desc">${escapeHTML(pin.msg)}</div>` : ''}
+      <div class="pin-meta">
+        ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)} • ${new Date(pin.time).toLocaleString()}
+        ${pin.comments.length ? `<span class="comment-count">• ${pin.comments.length}</span>` : ''}
+      </div>
+      <div class="url-row" style="margin-top:1.2rem;">
+        <input type="text" class="url-input" value="${url}" readonly>
+        <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(()=>this.textContent='Copied!')">Copy Link</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
 
-        <div class="comments">
-          ${pin.comments.map(c => `
-            <div class="comment">
-              <div style="display:flex;justify-content:space-between;font-size:0.9rem;color:var(--muted);margin-bottom:0.4rem;">
-                <strong>${escapeHTML(c.author || 'Anonymous')}</strong>
-                <span>${new Date(c.time).toLocaleString()}</span>
-              </div>
-              <div>${escapeHTML(c.text)}</div>
-            </div>
-          `).join('')}
-
-          <textarea placeholder="Add your comment..." style="margin-top:1.2rem; min-height:90px;"></textarea>
-          <button class="btn btn-primary" style="margin-top:0.7rem;" 
-                  onclick="addComment('${pin.id}', this.previousElementSibling)">Post Comment</button>
-        </div>
-
-        <div class="url-row">
-          <input type="text" class="url-input" value="${url}" readonly aria-label="Shareable link">
-          <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(()=>this.textContent='Copied!').catch(()=>alert('Copy failed'));">Copy Link</button>
-          <button class="btn btn-email" onclick='shareViaEmail(${JSON.stringify(pin).replace(/'/g,"\\'")})'>Share via Email</button>
-          <button class="btn btn-delete" onclick="deletePin('${pin.id}')">Delete Pin</button>
-        </div>
-      </div>`;
-  } 
-  // Search / filter view
-  else {
-    const term = q.toLowerCase();
-
-    if (!term) {
-      grid.innerHTML = pins.length === 0
-        ? '<div class="empty-state"><br>Create a pin above or use search to view saved ones!</div>'
-        : '<div class="empty-state">Type in the search box to see your pins</div>';
-      return;
-    }
-
-    let shown = 0;
-    pins.forEach(pin => {
-      const searchText = [
-        pin.name || '',
-        pin.msg || '',
-        ...pin.comments.map(c => c.text || ''),
-        pin.lat.toFixed(6), pin.lng.toFixed(6),
-        new Date(pin.time).toLocaleString()
-      ].join(' ').toLowerCase();
-
-      if (!searchText.includes(term)) return;
-
-      shown++;
-      const url = getPinUrl(pin);
-
-      const card = document.createElement('div');
-      card.className = 'pin-card';
-      card.innerHTML = `
-        <div class="pin-title">
-          <a href="?q=${pin.id}" style="color:inherit; text-decoration:none;">${escapeHTML(pin.name)}</a>
-        </div>
-        ${pin.msg ? `<div class="pin-desc">${escapeHTML(pin.msg)}</div>` : ''}
-        <div class="pin-meta">
-          ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)} • ${new Date(pin.time).toLocaleString()}
-          ${pin.comments.length ? `<span class="comment-count">• ${pin.comments.length}</span>` : ''}
-        </div>
-        <div class="url-row" style="margin-top:1.2rem;">
-          <input type="text" class="url-input" value="${url}" readonly>
-          <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(()=>this.textContent='Copied!')">Copy Link</button>
-        </div>
-      `;
-      grid.appendChild(card);
-    });
-
-    if (shown === 0) {
-      grid.innerHTML = `<div class="empty-state">No pins match "<strong>${escapeHTML(term)}</strong>".</div>`;
-    }
+  if (shown === 0) {
+    grid.innerHTML = `<div class="empty-state">No pins match "<strong>${escapeHTML(term)}</strong>".</div>`;
   }
 }
 
-// Update URL when typing in search box
 function updateQueryInUrl(value) {
   const params = new URLSearchParams(location.search);
   if (value.trim()) {

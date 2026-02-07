@@ -151,8 +151,6 @@
 
     .btn-copy    { background: var(--accent); color: #0f172a; }
     .btn-copy:hover    { background: #67e8f9; }
-    .btn-app     { background: #8b5cf6; color: white; }
-    .btn-app:hover { background: #7c3aed; }
     .btn-email   { background: var(--pink); color: white; }
     .btn-email:hover   { background: #db2777; }
     .btn-delete  { background: var(--danger); color: white; }
@@ -230,6 +228,7 @@
 
 <script>
 const STORAGE_KEY = 'gps-pins-v2';
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function escapeHTML(str = '') {
   return str.replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[m]);
@@ -244,7 +243,7 @@ function savePins(pins) {
 }
 
 function getPinUrl(pin) {
-  return `${location.origin}${location.pathname}?id=${pin.id}`;
+  return `${location.origin}${location.pathname}?q=${pin.id}`;
 }
 
 async function createPin() {
@@ -327,16 +326,18 @@ function deletePin(pinId) {
   render();
 }
 
+function isUUID(str) {
+  return UUID_REGEX.test(str.trim());
+}
+
 function render() {
   const params = new URLSearchParams(location.search);
-  const id = params.get('id');
-  const urlSearch = params.get('search')?.trim().toLowerCase() || '';
+  const q = params.get('q')?.trim() || '';
   const searchInput = document.getElementById('search');
-  const searchTerm = searchInput?.value?.trim().toLowerCase() || '';
-  const effectiveSearch = searchTerm || urlSearch;
 
-  if (searchInput && urlSearch && !searchTerm) {
-    searchInput.value = urlSearch;
+  // Sync input with ?q= on load
+  if (searchInput && q && !searchInput.value.trim()) {
+    searchInput.value = q;
   }
 
   const grid = document.getElementById('pin-grid');
@@ -344,8 +345,9 @@ function render() {
 
   const pins = getPins();
 
-  if (id) {
-    const pin = pins.find(p => p.id === id);
+  // Single pin view
+  if (q && isUUID(q)) {
+    const pin = pins.find(p => p.id === q);
     if (!pin) {
       grid.innerHTML = `
         <div class="empty-state">
@@ -386,13 +388,16 @@ function render() {
         <div class="url-row">
           <input type="text" class="url-input" value="${url}" readonly aria-label="Shareable link">
           <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(()=>this.textContent='Copied!').catch(()=>alert('Copy failed'));">Copy Link</button>
-          <a href="${url}" class="btn btn-app">Open in GPS Pins</a>
           <button class="btn btn-email" onclick='shareViaEmail(${JSON.stringify(pin).replace(/'/g,"\\'")})'>Share via Email</button>
           <button class="btn btn-delete" onclick="deletePin('${pin.id}')">Delete Pin</button>
         </div>
       </div>`;
-  } else {
-    if (!effectiveSearch) {
+  } 
+  // Search / filter view
+  else {
+    const term = q.toLowerCase();
+
+    if (!term) {
       grid.innerHTML = pins.length === 0
         ? '<div class="empty-state"><br>Create a pin above or use search to view saved ones!</div>'
         : '<div class="empty-state">Type in the search box to see your pins</div>';
@@ -409,7 +414,7 @@ function render() {
         new Date(pin.time).toLocaleString()
       ].join(' ').toLowerCase();
 
-      if (!searchText.includes(effectiveSearch)) return;
+      if (!searchText.includes(term)) return;
 
       shown++;
       const url = getPinUrl(pin);
@@ -418,7 +423,7 @@ function render() {
       card.className = 'pin-card';
       card.innerHTML = `
         <div class="pin-title">
-          <a href="?id=${pin.id}" style="color:inherit; text-decoration:none;">${escapeHTML(pin.name)}</a>
+          <a href="?q=${pin.id}" style="color:inherit; text-decoration:none;">${escapeHTML(pin.name)}</a>
         </div>
         ${pin.msg ? `<div class="pin-desc">${escapeHTML(pin.msg)}</div>` : ''}
         <div class="pin-meta">
@@ -428,28 +433,31 @@ function render() {
         <div class="url-row" style="margin-top:1.2rem;">
           <input type="text" class="url-input" value="${url}" readonly>
           <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(()=>this.textContent='Copied!')">Copy Link</button>
-          <a href="${url}" class="btn btn-app">Open in GPS Pins</a>
         </div>
       `;
       grid.appendChild(card);
     });
 
     if (shown === 0) {
-      grid.innerHTML = `<div class="empty-state">No pins match "<strong>${escapeHTML(effectiveSearch)}</strong>".</div>`;
+      grid.innerHTML = `<div class="empty-state">No pins match "<strong>${escapeHTML(term)}</strong>".</div>`;
     }
   }
 }
 
-function updateSearchInUrl(term) {
+// Update URL when typing in search box
+function updateQueryInUrl(value) {
   const params = new URLSearchParams(location.search);
-  if (term.trim()) params.set('search', term.trim());
-  else params.delete('search');
-  history.replaceState(null, '', `${location.pathname}?${params}`);
+  if (value.trim()) {
+    params.set('q', value.trim());
+  } else {
+    params.delete('q');
+  }
+  history.replaceState(null, '', `${location.pathname}${params.toString() ? '?' + params : ''}`);
 }
 
 const searchInput = document.getElementById('search');
 searchInput?.addEventListener('input', e => {
-  updateSearchInUrl(e.target.value);
+  updateQueryInUrl(e.target.value);
   render();
 });
 

@@ -285,7 +285,7 @@ async function createPin() {
     document.getElementById('initial-comment').value = '';
 
     const url = getPinUrl(pin);
-    alert(`Pin created!\n\nShare this link (works on any device):\n${url}\n\nData is embedded — no account needed. You can save it locally too.`);
+    alert(`Pin created!\n\nShare this link (save GPS pins on any device):\n${url}\n\nData is embedded — no account needed. You can save it locally too.`);
 
     render();
   } catch (err) {

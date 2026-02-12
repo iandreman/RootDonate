@@ -21,248 +21,135 @@
       --shadow-md: 0 8px 24px rgba(0,0,0,0.36);
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, sans-serif;
-      line-height: 1.6;
-      padding: 1.5rem 1rem;
-      min-height: 100vh;
+      background:var(--bg);
+      color:var(--text);
+      font-family:system-ui,sans-serif;
+      line-height:1.6;
+      padding:1.5rem 1rem;
+      min-height:100vh;
     }
-
-    .container {
-      max-width: 980px;
-      margin: 0 auto;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 2.5rem;
-    }
-
+    .container { max-width:980px; margin:0 auto; }
+    header { text-align:center; margin-bottom:2.5rem; }
     h1 {
-      font-size: 2.8rem;
-      font-weight: 800;
-      background: linear-gradient(90deg, var(--purple), var(--accent));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+      font-size:2.8rem;
+      font-weight:800;
+      background:linear-gradient(90deg,var(--purple),var(--accent));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
     }
-
-    .subtitle {
-      color: var(--muted);
-      font-size: 1.15rem;
-      margin-top: 0.5rem;
-    }
-
+    .subtitle { color:var(--muted); font-size:1.15rem; margin-top:0.5rem; }
     .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.8rem;
-      margin-bottom: 2.2rem;
-      box-shadow: var(--shadow-sm);
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:1.8rem;
+      margin-bottom:2.2rem;
+      box-shadow:var(--shadow-sm);
     }
-
-    h2 {
-      color: var(--accent);
-      font-size: 1.45rem;
-      margin-bottom: 1.3rem;
+    h2 { color:var(--accent); font-size:1.45rem; margin-bottom:1.3rem; }
+    label { display:block; margin-bottom:0.6rem; color:var(--muted); font-weight:500; font-size:0.98rem; }
+    input, textarea {
+      width:100%;
+      padding:0.95rem 1.2rem;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.11);
+      border-radius:10px;
+      color:var(--text);
+      font-size:1rem;
+      transition:border-color 0.2s,box-shadow 0.2s;
     }
-
-    label {
-      display: block;
-      margin-bottom: 0.6rem;
-      color: var(--muted);
-      font-weight: 500;
-      font-size: 0.98rem;
+    input:focus, textarea:focus {
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(34,211,238,0.22);
     }
-
-    input,
-    textarea {
-      width: 100%;
-      padding: 0.95rem 1.2rem;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.11);
-      border-radius: 10px;
-      color: var(--text);
-      font-size: 1rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    input:focus,
-    textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(34,211,238,0.22);
-    }
-
-    textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
-
+    textarea { min-height:100px; resize:vertical; }
     .btn {
-      padding: 0.85rem 1.8rem;
-      border: none;
-      border-radius: 999px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.22s;
-      font-size: 0.97rem;
+      padding:0.85rem 1.8rem;
+      border:none;
+      border-radius:999px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all 0.22s;
+      font-size:0.97rem;
     }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--purple), var(--accent));
-      color: white;
-    }
-
-    .btn-primary:hover {
-      opacity: 0.94;
-      transform: translateY(-1px);
-    }
-
-    .btn-save {
-      background: #10b981;
-      color: white;
-    }
-
-    .btn-save:hover {
-      background: #059669;
-    }
-
-    .search-input {
-      font-size: 1.15rem;
-      padding: 1.15rem 1.4rem;
-      margin-bottom: 1.2rem;
-    }
-
-    .pin-grid {
-      display: grid;
-      gap: 1.5rem;
-    }
-
+    .btn-primary { background:linear-gradient(135deg,var(--purple),var(--accent)); color:white; }
+    .btn-primary:hover { opacity:0.94; transform:translateY(-1px); }
+    .btn-save { background:#10b981; color:white; font-weight:700; }
+    .btn-save:hover { background:#059669; }
+    .search-input { font-size:1.15rem; padding:1.15rem 1.4rem; margin-bottom:1.2rem; }
+    .pin-grid { display:grid; gap:1.5rem; }
     .pin-card {
-      background: rgba(34,211,238,0.05);
-      border: 1px solid rgba(34,211,238,0.15);
-      border-radius: 14px;
-      padding: 1.6rem;
-      transition: all 0.22s;
+      background:rgba(34,211,238,0.05);
+      border:1px solid rgba(34,211,238,0.15);
+      border-radius:14px;
+      padding:1.6rem;
+      transition:all 0.22s;
     }
-
     .pin-card:hover {
-      background: rgba(34,211,238,0.09);
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-md);
+      background:rgba(34,211,238,0.09);
+      transform:translateY(-3px);
+      box-shadow:var(--shadow-md);
     }
-
-    .pin-title {
-      color: var(--purple);
-      font-weight: 700;
-      font-size: 1.4rem;
-      margin-bottom: 0.7rem;
-    }
-
-    .pin-desc {
-      margin: 0.8rem 0;
-      color: #d1d5db;
-      white-space: pre-wrap;
-    }
-
-    .pin-meta {
-      color: var(--muted);
-      font-size: 0.94rem;
-      margin: 1rem 0;
-    }
-
-    .comment-count {
-      color: var(--accent);
-      font-weight: 600;
-      margin-left: 0.5rem;
-    }
-
-    .comments {
-      margin-top: 1.3rem;
-      font-size: 0.97rem;
-    }
-
+    .pin-title { color:var(--purple); font-weight:700; font-size:1.4rem; margin-bottom:0.7rem; }
+    .pin-desc { margin:0.8rem 0; color:#d1d5db; white-space:pre-wrap; }
+    .pin-meta { color:var(--muted); font-size:0.94rem; margin:1rem 0; }
+    .comment-count { color:var(--accent); font-weight:600; margin-left:0.5rem; }
+    .comments { margin-top:1.3rem; font-size:0.97rem; }
     .comment {
-      margin: 1rem 0;
-      padding: 0.9rem 1.1rem;
-      background: rgba(255,255,255,0.03);
-      border-radius: 10px;
-      border-left: 3px solid var(--accent);
+      margin:1rem 0;
+      padding:0.9rem 1.1rem;
+      background:rgba(255,255,255,0.03);
+      border-radius:10px;
+      border-left:3px solid var(--accent);
     }
-
     .url-row {
-      margin-top: 1.5rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.9rem;
-      align-items: center;
+      margin-top:1.5rem;
+      display:flex;
+      flex-wrap:wrap;
+      gap:0.9rem;
+      align-items:center;
     }
-
     .url-input {
-      flex: 1;
-      min-width: 260px;
-      font-family: 'Consolas', monospace;
-      background: rgba(0,0,0,0.35);
-      border: 1px solid #2a2a3a;
-      padding: 0.85rem 1.2rem;
-      border-radius: 10px;
-      color: #a5b4fc;
+      flex:1;
+      min-width:260px;
+      font-family:'Consolas',monospace;
+      background:rgba(0,0,0,0.35);
+      border:1px solid #2a2a3a;
+      padding:0.85rem 1.2rem;
+      border-radius:10px;
+      color:#a5b4fc;
     }
-
-    .btn-copy    { background: var(--accent); color: #0f172a; }
-    .btn-copy:hover    { background: #67e8f9; }
-    .btn-email   { background: var(--pink); color: white; }
-    .btn-email:hover   { background: #db2777; }
-    .btn-delete  { background: var(--danger); color: white; }
-
+    .btn-copy    { background:var(--accent); color:#0f172a; }
+    .btn-copy:hover    { background:#67e8f9; }
+    .btn-email   { background:var(--pink); color:white; }
+    .btn-email:hover   { background:#db2777; }
+    .btn-delete  { background:var(--danger); color:white; }
     .back-link {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 500;
-      display: inline-block;
-      margin: 1.2rem 0;
+      color:var(--accent);
+      text-decoration:none;
+      font-weight:500;
+      display:inline-block;
+      margin:1.2rem 0;
     }
-
-    .back-link:hover {
-      text-decoration: underline;
-    }
-
+    .back-link:hover { text-decoration:underline; }
     .empty-state {
-      text-align: center;
-      color: var(--muted);
-      padding: 3rem 1.5rem;
-      font-size: 1.15rem;
-      line-height: 1.7;
+      text-align:center;
+      color:var(--muted);
+      padding:3rem 1.5rem;
+      font-size:1.15rem;
+      line-height:1.7;
     }
+    .empty-state strong { color:var(--text); }
 
-    .empty-state strong {
-      color: var(--text);
-    }
-
-    @media (max-width: 640px) {
-      .url-row {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .btn {
-        width: 100%;
-      }
-      h1 {
-        font-size: 2.3rem;
-      }
-      .card {
-        padding: 1.4rem;
-      }
+    @media (max-width:640px) {
+      .url-row { flex-direction:column; align-items:stretch; }
+      .btn { width:100%; }
+      h1 { font-size:2.3rem; }
+      .card { padding:1.4rem; }
     }
   </style>
 </head>
@@ -296,7 +183,7 @@
     <button class="btn btn-primary" onclick="createPin()">Create Pin & Get Share Link</button>
   </div>
 
-  <!-- Search & pin list -->
+  <!-- Search & pin list / single pin view -->
   <div class="card" id="content-card">
     <input
       type="search"
@@ -312,20 +199,18 @@
 </div>
 
 <script>
+// ────────────────────────────────────────────────
 const STORAGE_KEY = 'gps-pins-v2';
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function escapeHTML(str = '') {
-  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  const map = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
   return str.replace(/[&<>"']/g, m => map[m]);
 }
 
 function getPins() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  } catch {
-    return [];
-  }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch { return []; }
 }
 
 function savePins(pins) {
@@ -340,18 +225,13 @@ function getPinUrl(pin) {
 
 async function createPin() {
   if (!navigator.geolocation) {
-    alert("Geolocation is not supported by your browser.");
+    alert("Geolocation not supported.");
     return;
   }
-
   try {
-    const pos = await new Promise((resolve, reject) =>
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: true,
-        timeout: 12000
-      })
+    const pos = await new Promise((res, rej) =>
+      navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy:true, timeout:12000 })
     );
-
     const lat = Number(pos.coords.latitude.toFixed(6));
     const lng = Number(pos.coords.longitude.toFixed(6));
 
@@ -361,34 +241,27 @@ async function createPin() {
 
     const pin = {
       id: crypto.randomUUID(),
-      lat,
-      lng,
-      name,
-      msg,
+      lat, lng, name, msg,
       time: new Date().toISOString(),
-      comments: firstComment
-        ? [{ text: firstComment, author: name, time: new Date().toISOString() }]
-        : []
+      comments: firstComment ? [{ text:firstComment, author:name, time:new Date().toISOString() }] : []
     };
 
     const pins = getPins();
     pins.push(pin);
     savePins(pins);
 
-    // Clear form
     document.getElementById('name').value = '';
     document.getElementById('msg').value = '';
     document.getElementById('initial-comment').value = '';
 
     const url = getPinUrl(pin);
-    alert(`Pin created!\n\nShare this link:\n${url}\n\nData is embedded in the link — no account needed.`);
-
+    alert(`Pin created!\n\nShare link:\n${url}\n\nData is in the link — no account needed.`);
     render();
   } catch (err) {
-    let message = 'Could not get location.';
-    if (err.code === 1) message += ' Permission denied.';
-    if (err.code === 3) message += ' Timed out.';
-    alert(`${message} Please try again.`);
+    let msg = 'Could not get location.';
+    if (err.code === 1) msg += ' Permission denied.';
+    if (err.code === 3) msg += ' Timed out.';
+    alert(`${msg} Try again.`);
   }
 }
 
@@ -397,8 +270,7 @@ function shareViaEmail(pin) {
   const subject = encodeURIComponent(`Check out this location: ${pin.name || 'GPS Pin'}`);
   let body = `Location:\n${url}\n\nCoordinates: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\n`;
   if (pin.msg) body += `\nNote: ${pin.msg}\n`;
-  body += `\nOpen the link to view & comment.`;
-
+  body += `\nOpen link to view & comment.`;
   window.open(`mailto:?subject=${subject}&body=${encodeURIComponent(body)}`, '_blank');
 }
 
@@ -423,6 +295,7 @@ function addComment(pinId, textarea, isImported = false) {
     time: new Date().toISOString()
   });
 
+  // Save if it's one of our local pins
   if (!isImported || pins.some(p => p.id === pinId)) {
     savePins(pins);
   }
@@ -431,25 +304,31 @@ function addComment(pinId, textarea, isImported = false) {
   render();
 }
 
-function saveImportedPin(pin) {
-  const pins = getPins();
-  if (!pins.some(p => p.id === pin.id)) {
-    pins.push(pin);
-    savePins(pins);
-    alert("Pin saved to your local collection!");
-    render();
-  } else {
-    alert("This pin is already saved.");
+function saveImportedPin() {
+  // Always use the live object
+  const pin = window.currentImportedPin;
+  if (!pin) {
+    alert("No pin loaded.");
+    return;
   }
+
+  const pins = getPins();
+  if (pins.some(p => p.id === pin.id)) {
+    alert("This pin is already saved in your collection.");
+    return;
+  }
+
+  pins.push({ ...pin }); // shallow copy is fine here
+  savePins(pins);
+  alert("Pin saved to your local pins!");
+  render();
 }
 
 function deletePin(pinId) {
   if (!confirm("Delete this pin permanently?")) return;
-
   let pins = getPins();
   pins = pins.filter(p => p.id !== pinId);
   savePins(pins);
-
   history.replaceState(null, '', '.');
   render();
 }
@@ -499,7 +378,7 @@ function renderSinglePin(pin, isImported = false) {
           Share via Email
         </button>
         ${isImported ? `
-          <button class="btn btn-save" onclick="saveImportedPin(${JSON.stringify(pin)})">
+          <button class="btn btn-save" onclick="saveImportedPin()">
             Save to My Pins
           </button>
         ` : ''}
@@ -518,7 +397,7 @@ function render() {
   const grid = document.getElementById('pin-grid');
   grid.innerHTML = '';
 
-  // Handle shared/embedded pin (?p=...)
+  // Shared pin (?p=...)
   if (encodedPin) {
     try {
       const json = atob(encodedPin);
@@ -529,7 +408,7 @@ function render() {
         return;
       }
     } catch {
-      grid.innerHTML = `<div class="empty-state">Invalid or corrupted pin link.<br><br><a href=".">Go back</a></div>`;
+      grid.innerHTML = `<div class="empty-state">Invalid pin link.<br><br><a href=".">Go back</a></div>`;
       return;
     }
   }
@@ -544,15 +423,15 @@ function render() {
     } else {
       grid.innerHTML = `
         <div class="empty-state">
-          <strong>Pin not found in your browser.</strong><br><br>
-          This may be a shared pin — look for a link with ?p= data.<br>
-          <small>All data is stored locally — no cloud.</small>
+          <strong>Pin not found.</strong><br><br>
+          This might be a shared pin — use a link with ?p= data.<br>
+          <small>Data is stored only in your browser.</small>
         </div>`;
     }
     return;
   }
 
-  // List + search view
+  // List + search
   if (searchInput && q && !searchInput.value.trim()) {
     searchInput.value = q;
   }
@@ -562,7 +441,7 @@ function render() {
   if (!term) {
     grid.innerHTML = pins.length === 0
       ? '<div class="empty-state">Create a pin above or start searching!</div>'
-      : '<div class="empty-state">Type in the search box to filter your pins</div>';
+      : '<div class="empty-state">Type in the search box to filter pins</div>';
     return;
   }
 
@@ -611,15 +490,12 @@ function render() {
 
 function updateQueryInUrl(value) {
   const params = new URLSearchParams(location.search);
-  if (value.trim()) {
-    params.set('q', value.trim());
-  } else {
-    params.delete('q');
-  }
+  if (value.trim()) params.set('q', value.trim());
+  else params.delete('q');
   history.replaceState(null, '', `${location.pathname}${params.toString() ? '?' + params : ''}`);
 }
 
-// Event listeners
+// Events
 document.getElementById('search')?.addEventListener('input', e => {
   updateQueryInUrl(e.target.value);
   render();

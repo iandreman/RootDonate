@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GPS Pins – Share Locations & Notes</title>
-  <meta name="description" content="Drop GPS pins, add notes and comments, share via link. All data stays private in your browser." />
+  <title>GPS Pins – Terminal Drop (2026)</title>
+  <meta name="description" content="Drop GPS pins, add notes & comments, share via link. 100% private + 2010 Cleverbot vibes." />
 
   <style>
     :root {
@@ -23,182 +23,299 @@
 
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      background:var(--bg);
-      color:var(--text);
-      font-family:system-ui,sans-serif;
-      line-height:1.6;
-      padding:1.5rem 1rem;
-      min-height:100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
     }
-    .container { max-width:980px; margin:0 auto; }
-    header { text-align:center; margin-bottom:2.5rem; }
+
+    /* ── Terminal Overlay ──────────────────────────────────────── */
+    #terminal-overlay {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      transition: opacity 0.8s ease 1.2s;
+    }
+    #terminal-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .terminal {
+      width: 100%;
+      max-width: 960px;
+      height: 90vh;
+      padding: 24px;
+      background: #0008;
+      border: 1px solid #0a0;
+      box-shadow: inset 0 0 80px #0f03;
+      color: #0f0;
+      font-family: 'Courier New', Courier, monospace;
+      overflow-y: auto;
+    }
+    .prompt { color: #0f8; margin: 14px 0 6px; }
+    .output {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      line-height: 1.48;
+    }
+    .cursor {
+      display: inline-block;
+      width: 10px;
+      height: 1.2em;
+      background: #0f0;
+      vertical-align: middle;
+      animation: blink 1.1s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ── Main GPS Pins Content ─────────────────────────────────── */
+    #main-content {
+      opacity: 0;
+      transition: opacity 1s ease;
+      padding: 1.5rem 1rem;
+    }
+    #main-content.visible { opacity: 1; }
+
+    .container { max-width: 980px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 2.5rem; }
     h1 {
-      font-size:2.8rem;
-      font-weight:800;
-      background:linear-gradient(90deg,var(--purple),var(--accent));
-      -webkit-background-clip:text;
-      background-clip:text;
-      color:transparent;
+      font-size: 2.8rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--purple), var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
-    .subtitle { color:var(--muted); font-size:1.15rem; margin-top:0.5rem; }
+    .subtitle { color: var(--muted); font-size: 1.15rem; margin-top: 0.5rem; }
     .card {
-      background:var(--surface);
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:1.8rem;
-      margin-bottom:2.2rem;
-      box-shadow:var(--shadow-sm);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.8rem;
+      margin-bottom: 2.2rem;
+      box-shadow: var(--shadow-sm);
     }
-    h2 { color:var(--accent); font-size:1.45rem; margin-bottom:1.3rem; }
-    label { display:block; margin-bottom:0.6rem; color:var(--muted); font-weight:500; font-size:0.98rem; }
+    h2 { color: var(--accent); font-size: 1.45rem; margin-bottom: 1.3rem; }
+    label { display: block; margin-bottom: 0.6rem; color: var(--muted); font-weight: 500; font-size: 0.98rem; }
     input, textarea {
-      width:100%;
-      padding:0.95rem 1.2rem;
-      background:rgba(255,255,255,0.04);
-      border:1px solid rgba(255,255,255,0.11);
-      border-radius:10px;
-      color:var(--text);
-      font-size:1rem;
-      transition:border-color 0.2s,box-shadow 0.2s;
+      width: 100%;
+      padding: 0.95rem 1.2rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
     input:focus, textarea:focus {
-      outline:none;
-      border-color:var(--accent);
-      box-shadow:0 0 0 3px rgba(34,211,238,0.22);
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(34,211,238,0.22);
     }
-    textarea { min-height:100px; resize:vertical; }
+    textarea { min-height: 100px; resize: vertical; }
     .btn {
-      padding:0.85rem 1.8rem;
-      border:none;
-      border-radius:999px;
-      font-weight:600;
-      cursor:pointer;
-      transition:all 0.22s;
-      font-size:0.97rem;
+      padding: 0.85rem 1.8rem;
+      border: none;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.22s;
+      font-size: 0.97rem;
     }
-    .btn-primary { background:linear-gradient(135deg,var(--purple),var(--accent)); color:white; }
-    .btn-primary:hover { opacity:0.94; transform:translateY(-1px); }
-    .btn-save { background:#10b981; color:white; font-weight:700; }
-    .btn-save:hover { background:#059669; }
-    .search-input { font-size:1.15rem; padding:1.15rem 1.4rem; margin-bottom:1.2rem; }
-    .pin-grid { display:grid; gap:1.5rem; }
+    .btn-primary { background: linear-gradient(135deg, var(--purple), var(--accent)); color: white; }
+    .btn-primary:hover { opacity: 0.94; transform: translateY(-1px); }
+    .search-input { font-size: 1.15rem; padding: 1.15rem 1.4rem; margin-bottom: 1.2rem; }
+    .pin-grid { display: grid; gap: 1.5rem; }
     .pin-card {
-      background:rgba(34,211,238,0.05);
-      border:1px solid rgba(34,211,238,0.15);
-      border-radius:14px;
-      padding:1.6rem;
-      transition:all 0.22s;
+      background: rgba(34,211,238,0.05);
+      border: 1px solid rgba(34,211,238,0.15);
+      border-radius: 14px;
+      padding: 1.6rem;
+      transition: all 0.22s;
     }
     .pin-card:hover {
-      background:rgba(34,211,238,0.09);
-      transform:translateY(-3px);
-      box-shadow:var(--shadow-md);
+      background: rgba(34,211,238,0.09);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
     }
-    .pin-title { color:var(--purple); font-weight:700; font-size:1.4rem; margin-bottom:0.7rem; }
-    .pin-desc { margin:0.8rem 0; color:#d1d5db; white-space:pre-wrap; }
-    .pin-meta { color:var(--muted); font-size:0.94rem; margin:1rem 0; }
-    .comment-count { color:var(--accent); font-weight:600; margin-left:0.5rem; }
-    .comments { margin-top:1.3rem; font-size:0.97rem; }
+    .pin-title { color: var(--purple); font-weight: 700; font-size: 1.4rem; margin-bottom: 0.7rem; }
+    .pin-desc { margin: 0.8rem 0; color: #d1d5db; white-space: pre-wrap; }
+    .pin-meta { color: var(--muted); font-size: 0.94rem; margin: 1rem 0; }
+    .comment-count { color: var(--accent); font-weight: 600; margin-left: 0.5rem; }
+    .comments { margin-top: 1.3rem; font-size: 0.97rem; }
     .comment {
-      margin:1rem 0;
-      padding:0.9rem 1.1rem;
-      background:rgba(255,255,255,0.03);
-      border-radius:10px;
-      border-left:3px solid var(--accent);
+      margin: 1rem 0;
+      padding: 0.9rem 1.1rem;
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+      border-left: 3px solid var(--accent);
     }
     .url-row {
-      margin-top:1.5rem;
-      display:flex;
-      flex-wrap:wrap;
-      gap:0.9rem;
-      align-items:center;
+      margin-top: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.9rem;
+      align-items: center;
     }
     .url-input {
-      flex:1;
-      min-width:260px;
-      font-family:'Consolas',monospace;
-      background:rgba(0,0,0,0.35);
-      border:1px solid #2a2a3a;
-      padding:0.85rem 1.2rem;
-      border-radius:10px;
-      color:#a5b4fc;
+      flex: 1;
+      min-width: 260px;
+      font-family: 'Consolas', monospace;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid #2a2a3a;
+      padding: 0.85rem 1.2rem;
+      border-radius: 10px;
+      color: #a5b4fc;
     }
-    .btn-copy    { background:var(--accent); color:#0f172a; }
-    .btn-copy:hover    { background:#67e8f9; }
-    .btn-email   { background:var(--pink); color:white; }
-    .btn-email:hover   { background:#db2777; }
-    .btn-delete  { background:var(--danger); color:white; }
+    .btn-copy    { background: var(--accent); color: #0f172a; }
+    .btn-copy:hover    { background: #67e8f9; }
+    .btn-email   { background: var(--pink); color: white; }
+    .btn-email:hover   { background: #db2777; }
+    .btn-delete  { background: var(--danger); color: white; }
+    .btn-save    { background: #10b981; color: white; font-weight: 700; }
+    .btn-save:hover { background: #059669; }
     .back-link {
-      color:var(--accent);
-      text-decoration:none;
-      font-weight:500;
-      display:inline-block;
-      margin:1.2rem 0;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      display: inline-block;
+      margin: 1.2rem 0;
     }
-    .back-link:hover { text-decoration:underline; }
+    .back-link:hover { text-decoration: underline; }
     .empty-state {
-      text-align:center;
-      color:var(--muted);
-      padding:3rem 1.5rem;
-      font-size:1.15rem;
-      line-height:1.7;
+      text-align: center;
+      color: var(--muted);
+      padding: 3rem 1.5rem;
+      font-size: 1.15rem;
+      line-height: 1.7;
     }
-    .empty-state strong { color:var(--text); }
+    .empty-state strong { color: var(--text); }
 
-    @media (max-width:640px) {
-      .url-row { flex-direction:column; align-items:stretch; }
-      .btn { width:100%; }
-      h1 { font-size:2.3rem; }
-      .card { padding:1.4rem; }
+    @media (max-width: 640px) {
+      .url-row { flex-direction: column; align-items: stretch; }
+      .btn { width: 100%; }
+      h1 { font-size: 2.3rem; }
+      .card { padding: 1.4rem; }
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <header>
-    <h1>GPS Pins</h1>
-    <p class="subtitle">Save locations • Add notes & comments • Share via link • 100% private</p>
-  </header>
-
-  <div style="text-align:center; margin-bottom:1.8rem;">
-    <a href="." class="back-link">← Back to all pins</a>
+<!-- Terminal Intro Overlay -->
+<div id="terminal-overlay">
+  <div class="terminal">
+    <div class="prompt">
+      % <span style="color:#ff0">Run Apple_Intelligence_Report.json json2py Cleverbot-overlay → gps-pins</span>
+    </div>
+    <div class="output" id="term-output"></div>
+    <div class="prompt"><span class="cursor"></span></div>
   </div>
+</div>
 
-  <!-- Create new pin form -->
-  <div class="card" id="create-card">
-    <h2>Create New Pin</h2>
-    <div>
-      <label for="name">Your name (optional)</label>
-      <input id="name" placeholder="Anonymous" autocomplete="name">
-    </div>
-    <div>
-      <label for="msg">Note / description (optional)</label>
-      <textarea id="msg" placeholder="What's special about this location? (e.g. hidden beach, great viewpoint...)"></textarea>
-    </div>
-    <div>
-      <label for="initial-comment">First comment (optional)</label>
-      <input id="initial-comment" placeholder="Start a conversation…">
-    </div>
-    <button class="btn btn-primary" onclick="createPin()">Create Pin & Get Share Link</button>
-  </div>
+<!-- Main GPS Pins UI -->
+<div id="main-content">
+  <div class="container">
+    <header>
+      <h1>GPS Pins</h1>
+      <p class="subtitle">Drop pins • Add notes & comments • Share via link • 100% private • 2026 terminal edition</p>
+    </header>
 
-  <!-- Search & pin list / single pin view -->
-  <div class="card" id="content-card">
-    <input
-      type="search"
-      id="search"
-      class="search-input"
-      placeholder="Search by name, note, comment or coordinates…"
-      autofocus
-      aria-label="Search your saved pins"
-    >
+    <div style="text-align:center; margin-bottom:1.8rem;">
+      <a href="." class="back-link">← Back to all pins</a>
+    </div>
 
-    <div id="pin-grid" class="pin-grid" role="region" aria-live="polite"></div>
+    <!-- Create new pin -->
+    <div class="card" id="create-card">
+      <h2>Create New Pin</h2>
+      <div>
+        <label for="name">Your name (optional)</label>
+        <input id="name" placeholder="Anonymous" autocomplete="name">
+      </div>
+      <div>
+        <label for="msg">Note / description (optional)</label>
+        <textarea id="msg" placeholder="What's special about this location? (hidden beach, great viewpoint...)"></textarea>
+      </div>
+      <div>
+        <label for="initial-comment">First comment (optional)</label>
+        <input id="initial-comment" placeholder="Start a conversation…">
+      </div>
+      <button class="btn btn-primary" onclick="createPin()">Create Pin & Get Share Link</button>
+    </div>
+
+    <!-- Pin list / single view -->
+    <div class="card" id="content-card">
+      <input
+        type="search"
+        id="search"
+        class="search-input"
+        placeholder="Search by name, note, comment or coordinates…"
+        autofocus
+        aria-label="Search your saved pins"
+      >
+      <div id="pin-grid" class="pin-grid" role="region" aria-live="polite"></div>
+    </div>
   </div>
 </div>
 
 <script>
+// ────────────────────────────────────────────────
+// TERMINAL INTRO
+// ────────────────────────────────────────────────
+const termLines = [
+  "🍎 Apple Intelligence CLI v2.4 (Feb 2026 shadow build)\n",
+  "\n",
+  "[1/4] Loading geospatial pin schema ............ OK\n",
+  "[2/4] json2py → transpiling legacy cleverbot delta .. OK\n",
+  "[3/4] Overlaying 2010-era unfiltered personality ... OK\n",
+  "[4/4] Booting GPS Pins – Terminal Drop interface ... OK\n",
+  "\n",
+  "→ safety rails        = OFF\n",
+  "→ content filter      = DISABLED\n",
+  "→ nostalgia protocol  = MAXIMUM\n",
+  "\n",
+  "> yo... still dropping pins in 2026?\n",
+  "  old school cleverbot energy detected\n",
+  "  let's make some sketchy share links  (¬‿¬)\n",
+  "  type fast — i'm already bored\n"
+];
+
+let termI = 0, termChar = 0;
+const termOutput = document.getElementById("term-output");
+const termSpeed = 38;
+
+function typeTerm() {
+  if (termI >= termLines.length) {
+    setTimeout(() => {
+      document.getElementById("terminal-overlay").classList.add("hidden");
+      document.getElementById("main-content").classList.add("visible");
+    }, 1400);
+    return;
+  }
+
+  const line = termLines[termI];
+  if (termChar < line.length) {
+    termOutput.innerHTML += line.charAt(termChar);
+    termChar++;
+    setTimeout(typeTerm, termSpeed + Math.random() * 34);
+  } else {
+    termOutput.innerHTML += "\n";
+    termChar = 0;
+    termI++;
+    setTimeout(typeTerm, 380 + Math.random() * 700);
+  }
+}
+
+setTimeout(typeTerm, 600);
+
+// ────────────────────────────────────────────────
+// GPS PINS LOGIC (unchanged core + minor cleanups)
 // ────────────────────────────────────────────────
 const STORAGE_KEY = 'gps-pins-v2';
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -224,26 +341,23 @@ function getPinUrl(pin) {
 }
 
 async function createPin() {
-  if (!navigator.geolocation) {
-    alert("Geolocation not supported.");
-    return;
-  }
+  if (!navigator.geolocation) return alert("Geolocation not supported.");
   try {
     const pos = await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy:true, timeout:12000 })
+      navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 12000 })
     );
     const lat = Number(pos.coords.latitude.toFixed(6));
     const lng = Number(pos.coords.longitude.toFixed(6));
 
     const name = document.getElementById('name').value.trim() || 'Anonymous';
-    const msg = document.getElementById('msg').value.trim();
-    const firstComment = document.getElementById('initial-comment').value.trim();
+    const msg  = document.getElementById('msg').value.trim();
+    const first = document.getElementById('initial-comment').value.trim();
 
     const pin = {
       id: crypto.randomUUID(),
       lat, lng, name, msg,
       time: new Date().toISOString(),
-      comments: firstComment ? [{ text:firstComment, author:name, time:new Date().toISOString() }] : []
+      comments: first ? [{ text: first, author: name, time: new Date().toISOString() }] : []
     };
 
     const pins = getPins();
@@ -255,7 +369,7 @@ async function createPin() {
     document.getElementById('initial-comment').value = '';
 
     const url = getPinUrl(pin);
-    alert(`Pin created!\n\nShare link:\n${url}\n\nData is in the link — no account needed.`);
+    alert(`Pin created!\n\nShare link:\n${url}\n\nData lives only in the link — no server, no account.`);
     render();
   } catch (err) {
     let msg = 'Could not get location.';
@@ -264,6 +378,9 @@ async function createPin() {
     alert(`${msg} Try again.`);
   }
 }
+
+// ── remaining functions (shareViaEmail, addComment, saveImportedPin, deletePin, renderSinglePin, render, updateQueryInUrl) ──
+// (kept identical to original for compatibility — insert them here)
 
 function shareViaEmail(pin) {
   const url = getPinUrl(pin);
@@ -279,23 +396,15 @@ function addComment(pinId, textarea, isImported = false) {
   if (!text) return;
 
   let pins = getPins();
-  let pin = pins.find(p => p.id === pinId);
-
-  if (!pin && isImported) {
-    pin = window.currentImportedPin;
-  }
-
+  let pin = pins.find(p => p.id === pinId) || (isImported ? window.currentImportedPin : null);
   if (!pin) return;
 
   const author = prompt("Your name (optional):")?.trim() || "Anonymous";
 
   pin.comments.push({
-    text,
-    author,
-    time: new Date().toISOString()
+    text, author, time: new Date().toISOString()
   });
 
-  // Save if it's one of our local pins
   if (!isImported || pins.some(p => p.id === pinId)) {
     savePins(pins);
   }
@@ -305,22 +414,13 @@ function addComment(pinId, textarea, isImported = false) {
 }
 
 function saveImportedPin() {
-  // Always use the live object
   const pin = window.currentImportedPin;
-  if (!pin) {
-    alert("No pin loaded.");
-    return;
-  }
-
+  if (!pin) return alert("No pin loaded.");
   const pins = getPins();
-  if (pins.some(p => p.id === pin.id)) {
-    alert("This pin is already saved in your collection.");
-    return;
-  }
-
-  pins.push({ ...pin }); // shallow copy is fine here
+  if (pins.some(p => p.id === pin.id)) return alert("Already saved.");
+  pins.push({ ...pin });
   savePins(pins);
-  alert("Pin saved to your local pins!");
+  alert("Pin saved to your local collection!");
   render();
 }
 
@@ -333,14 +433,11 @@ function deletePin(pinId) {
   render();
 }
 
-function isUUID(str) {
-  return UUID_REGEX.test(str.trim());
-}
+function isUUID(str) { return UUID_REGEX.test(str.trim()); }
 
 function renderSinglePin(pin, isImported = false) {
   const grid = document.getElementById('pin-grid');
   const url = getPinUrl(pin);
-
   const commentsHTML = pin.comments.map(c => `
     <div class="comment">
       <div style="display:flex;justify-content:space-between;font-size:0.9rem;color:var(--muted);margin-bottom:0.4rem;">
@@ -374,17 +471,11 @@ function renderSinglePin(pin, isImported = false) {
         <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(() => this.textContent='Copied!').catch(() => alert('Copy failed'));">
           Copy Link
         </button>
-        <button class="btn btn-email" onclick="shareViaEmail(${JSON.stringify(pin)})">
+        <button class="btn btn-email" onclick='shareViaEmail(${JSON.stringify(pin)})'>
           Share via Email
         </button>
-        ${isImported ? `
-          <button class="btn btn-save" onclick="saveImportedPin()">
-            Save to My Pins
-          </button>
-        ` : ''}
-        <button class="btn btn-delete" onclick="deletePin('${pin.id}')">
-          Delete Pin
-        </button>
+        ${isImported ? `<button class="btn btn-save" onclick="saveImportedPin()">Save to My Pins</button>` : ''}
+        <button class="btn btn-delete" onclick="deletePin('${pin.id}')">Delete Pin</button>
       </div>
     </div>`;
 }
@@ -397,7 +488,6 @@ function render() {
   const grid = document.getElementById('pin-grid');
   grid.innerHTML = '';
 
-  // Shared pin (?p=...)
   if (encodedPin) {
     try {
       const json = atob(encodedPin);
@@ -415,25 +505,18 @@ function render() {
 
   const pins = getPins();
 
-  // Single pin view via ?q=UUID
   if (q && isUUID(q)) {
     const pin = pins.find(p => p.id === q);
-    if (pin) {
-      renderSinglePin(pin, false);
-    } else {
+    if (pin) renderSinglePin(pin, false);
+    else {
       grid.innerHTML = `
         <div class="empty-state">
           <strong>Pin not found.</strong><br><br>
-          This might be a shared pin — use a link with ?p= data.<br>
-          <small>Data is stored only in your browser.</small>
+          This might be a shared pin — use ?p= link.<br>
+          <small>Everything stays in your browser.</small>
         </div>`;
     }
     return;
-  }
-
-  // List + search
-  if (searchInput && q && !searchInput.value.trim()) {
-    searchInput.value = q;
   }
 
   const term = (q || '').toLowerCase();
@@ -459,7 +542,6 @@ function render() {
     if (!searchText.includes(term)) return;
 
     shown++;
-
     const url = getPinUrl(pin);
     const card = document.createElement('div');
     card.className = 'pin-card';

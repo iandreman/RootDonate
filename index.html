@@ -73,7 +73,7 @@
     }
     .tab-content.active { display: flex; }
 
-    /* Terminal tab */
+    /* Terminal */
     #terminal-tab .terminal {
       flex: 1;
       padding: 1rem 1.4rem;
@@ -151,12 +151,38 @@
       color: var(--text);
       font-family: inherit;
     }
+    .share-row {
+      margin-top: 1.2rem;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+    }
+    .copy-btn {
+      padding: 0.45rem 1rem;
+      background: rgba(0,212,255,0.15);
+      border: 1px solid var(--accent-dim);
+      border-radius: 6px;
+      color: var(--accent);
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .copy-btn:hover {
+      background: rgba(0,212,255,0.3);
+    }
+    .copy-btn.copied {
+      background: rgba(0,255,157,0.25);
+      color: #00ff9d;
+      border-color: #00ff9d;
+    }
     .hidden { display: none !important; }
 
     @media (max-width: 560px) {
       header { padding: 0.8rem; }
       .tabs { flex-direction: column; }
       .tab-btn { width: 100%; margin: 0.3rem 0; }
+      .share-row { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
@@ -191,7 +217,7 @@
 
 <script>
 // ────────────────────────────────────────────────
-//  Shared
+// Shared
 // ────────────────────────────────────────────────
 const STORAGE_KEY = 'gps-pins-v3';
 
@@ -209,12 +235,12 @@ function savePins(pins) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(pins));
 }
 
-function getPinUrl(pin) {
-  return `#p=${btoa(JSON.stringify(pin))}`;
+function getPinShareUrl(pin) {
+  return `${location.origin}${location.pathname}#p=${btoa(JSON.stringify(pin))}`;
 }
 
 // ────────────────────────────────────────────────
-//  Terminal
+// Terminal
 // ────────────────────────────────────────────────
 const terminal = document.getElementById('terminal');
 const inputEl  = document.getElementById('input');
@@ -224,7 +250,7 @@ let shortMemory = [];
 function println(txt, cls = 'line') {
   const div = document.createElement('div');
   div.className = cls;
-  div.textContent = txt;
+  div.innerHTML = txt;  // allow HTML for buttons if needed later
   terminal.appendChild(div);
   terminal.scrollTop = terminal.scrollHeight;
 }
@@ -262,9 +288,11 @@ async function createPinFromPrompts() {
     pins.push(pin);
     savePins(pins);
 
-    printAI(`Pin created: ${name}`);
-    println(`→ ${getPinUrl(pin)}  (click or copy)`);
-    println("Switch to 'My Pins' tab to view it.");
+    const shareUrl = getPinShareUrl(pin);
+
+    printAI(`Pin created: ${escapeHTML(name)}`);
+    println(`→ <a href="${shareUrl}" style="color:var(--accent);">${shareUrl}</a>`, 'line ai');
+    println(`(open link or copy from Pins tab)`);
   } catch (err) {
     let m = "Couldn't get location.";
     if (err.code === 1) m += " Permission denied.";
@@ -276,11 +304,7 @@ async function createPinFromPrompts() {
 function generateResponse(text) {
   const lower = text.toLowerCase().trim();
 
-  if (["clear", "cls"].includes(lower)) {
-    clearScreen();
-    return null;
-  }
-
+  if (["clear", "cls"].includes(lower)) { clearScreen(); return null; }
   if (lower === "help") {
     return [
       "Commands:",
@@ -288,7 +312,7 @@ function generateResponse(text) {
       "  list pins              → show count",
       "  clear / cls            → clear terminal",
       "  help                   → this list",
-      "Switch to 'My Pins' tab to browse / search pins"
+      "Use 'My Pins' tab to browse, search, copy & share links"
     ].join('\n');
   }
 
@@ -299,14 +323,14 @@ function generateResponse(text) {
 
   if (["list pins","pins","my pins"].some(w => lower.includes(w))) {
     const count = getPins().length;
-    return `You have ${count} pin${count===1?'':'s'}.\nSwitch to 'My Pins' tab to see them.`;
+    return `You have ${count} pin${count===1?'':'s'}.\nGo to 'My Pins' tab to view & share them.`;
   }
 
   if (lower.includes("pin") || lower.includes("location")) {
     return "Want to save a spot? Type 'new pin'";
   }
 
-  return ["hmm… tell me more?", "interesting…", "go on", "that's a vibe"][Math.floor(Math.random()*4)];
+  return ["hmm… tell me more?", "interesting…", "go on", "vibe check passed"][Math.floor(Math.random()*4)];
 }
 
 inputEl.addEventListener('keydown', e => {
@@ -315,7 +339,7 @@ inputEl.addEventListener('keydown', e => {
   const text = inputEl.value.trim();
   if (!text) return;
 
-  println('> ' + text, 'line prompt');
+  println('> ' + escapeHTML(text), 'line prompt');
 
   const reply = generateResponse(text);
   if (reply) printAI(reply);
@@ -325,8 +349,46 @@ inputEl.addEventListener('keydown', e => {
 });
 
 // ────────────────────────────────────────────────
-//  Pins Tab
+// Pins Tab + Copy functionality
 // ────────────────────────────────────────────────
+function copyToClipboard(text, button) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => {
+      button.textContent = 'Copied!';
+      button.classList.add('copied');
+      setTimeout(() => {
+        button.textContent = 'Copy URL';
+        button.classList.remove('copied');
+      }, 2000);
+    }).catch(() => fallbackCopy());
+  } else {
+    fallbackCopy();
+  }
+
+  function fallbackCopy() {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      button.textContent = 'Copied (fallback)';
+      button.classList.add('copied');
+      setTimeout(() => {
+        button.textContent = 'Copy URL';
+        button.classList.remove('copied');
+      }, 2000);
+    } catch (err) {
+      button.textContent = 'Copy failed';
+      setTimeout(() => { button.textContent = 'Copy URL'; }, 2000);
+    }
+    document.body.removeChild(textarea);
+  }
+}
+
 function renderPins(pinsToShow = getPins()) {
   const container = document.getElementById('pins-container');
   container.innerHTML = pinsToShow.length === 0
@@ -347,11 +409,22 @@ function renderPins(pinsToShow = getPins()) {
               `).join('')}
             </div>
           ` : ''}
-          <div style="margin-top:1.2rem;">
-            <small><a href="${getPinUrl(pin)}" style="color:var(--accent);">Share this pin</a></small>
+          <div class="share-row">
+            <button class="copy-btn" data-url="${getPinShareUrl(pin)}">Copy URL</button>
+            <small style="color:var(--muted); opacity:0.8; word-break:break-all;">
+              ${getPinShareUrl(pin)}
+            </small>
           </div>
         </div>
       `).join('');
+
+  // Attach copy listeners
+  container.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const url = btn.getAttribute('data-url');
+      copyToClipboard(url, btn);
+    });
+  });
 }
 
 // Search
@@ -387,8 +460,9 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// Handle direct pin links (#p=...)
-window.addEventListener('hashchange', () => {
+// Handle #p=... links (shared pins)
+window.addEventListener('hashchange', handleSharedPin);
+function handleSharedPin() {
   const hash = location.hash.slice(1);
   if (hash.startsWith('p=')) {
     try {
@@ -397,18 +471,19 @@ window.addEventListener('hashchange', () => {
       renderPins([pin]);
       document.getElementById('search').classList.add('hidden');
       document.getElementById('pins-container').insertAdjacentHTML('afterbegin',
-        '<p style="color:var(--accent); text-align:center; margin:1rem 0;">Shared Pin • read-only view</p>'
+        '<p style="color:var(--accent); text-align:center; margin:1rem 0 2rem;">Shared Pin • read-only view</p>'
       );
     } catch {}
   }
-});
+}
+handleSharedPin(); // check on load
 
 // Boot
 println("GPS PINS — 2026", "system");
 println("100% local • type help", "system");
 println("────────────────────────────────────", "system");
 println("");
-printAI("hey... still collecting secret places?");
+printAI("ready when you are...");
 println("");
 </script>
 </body>

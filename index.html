@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GPS Pins • Terminal AI • 2026</title>
-  <meta name="description" content="Private GPS pins with notes & comments + retro AI terminal interface. 100% local." />
+  <meta name="description" content="Drop private GPS pins with notes & comments. Chat with a retro terminal AI. 100% local — no server, no tracking." />
 
   <style>
     :root {
@@ -21,7 +21,11 @@
       --shadow-sm: 0 4px 12px rgba(0,0,0,0.32);
     }
 
-    * { margin:0; padding:0; box-sizing:border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
     body {
       background: var(--bg);
@@ -35,7 +39,7 @@
 
     header {
       padding: 1rem 1.5rem;
-      background: rgba(0,0,0,0.4);
+      background: rgba(0,0,0,0.45);
       border-bottom: 1px solid var(--border);
       text-align: center;
     }
@@ -49,7 +53,11 @@
       margin: 0;
     }
 
-    .subtitle { font-size: 0.9rem; color: var(--muted); margin-top: 0.3rem; }
+    .subtitle {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+    }
 
     .terminal {
       flex: 1;
@@ -65,10 +73,10 @@
       word-wrap: break-word;
     }
 
-    .prompt { color: var(--accent-dim); }
-    .ai     { color: #0ff; }
-    .system { color: #888; }
-    .error  { color: #ff5555; }
+    .prompt    { color: var(--accent-dim); }
+    .ai        { color: #0ff; }
+    .system    { color: #888; }
+    .error     { color: #ff5555; }
 
     .input-line {
       display: flex;
@@ -104,10 +112,12 @@
       margin-left: 2px;
     }
 
-    @keyframes blink { 50% { opacity: 0; } }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
 
     .card {
-      background: rgba(20,20,31,0.85);
+      background: rgba(20,20,31,0.88);
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 1.2rem;
@@ -115,7 +125,9 @@
       box-shadow: var(--shadow-sm);
     }
 
-    .hidden { display: none !important; }
+    .hidden {
+      display: none !important;
+    }
 
     .btn {
       padding: 0.55rem 1.1rem;
@@ -143,7 +155,8 @@
       font-size: 0.92rem;
     }
 
-    input[type="text"], textarea {
+    input[type="text"],
+    textarea {
       width: 100%;
       padding: 0.7rem 1rem;
       background: rgba(255,255,255,0.03);
@@ -154,12 +167,15 @@
       font-size: 0.94rem;
     }
 
-    textarea { min-height: 80px; resize: vertical; }
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
 
     @media (max-width: 600px) {
-      header { padding: 0.8rem; }
+      header   { padding: 0.8rem; }
       .terminal { padding: 0.9rem 1.1rem; }
-      .btn { width: 100%; margin: 0.5rem 0; }
+      .btn     { width: 100%; margin: 0.5rem 0; }
     }
   </style>
 </head>
@@ -167,14 +183,14 @@
 
 <header>
   <h1>GPS Pins Terminal</h1>
-  <div class="subtitle">private location pins • AI chat interface • 100% local • 2026 edition</div>
+  <div class="subtitle">private location notes • threaded comments • retro AI chat • 100% local • 2026 edition</div>
 </header>
 
 <div class="terminal" id="terminal"></div>
 
 <!-- Create pin form (hidden by default) -->
 <div id="create-form" class="card hidden">
-  <h2 style="color:var(--accent); margin-top:0;">Drop New Pin</h2>
+  <h2 style="color:var(--accent); margin-top:0;">Create New Pin</h2>
 
   <div class="form-group">
     <label for="name">Your name (optional)</label>
@@ -183,7 +199,7 @@
 
   <div class="form-group">
     <label for="msg">Note / description</label>
-    <textarea id="msg" placeholder="What's special here? (hidden spot, viewpoint, street art...)"></textarea>
+    <textarea id="msg" placeholder="What's special about this location? (hidden viewpoint, great coffee spot, street art…)"></textarea>
   </div>
 
   <div class="form-group">
@@ -205,7 +221,7 @@
 
 <script>
 // ────────────────────────────────────────────────
-//  SHARED STATE & UTILITIES
+//  Utilities & Shared Logic
 // ────────────────────────────────────────────────
 const STORAGE_KEY = 'gps-pins-v2';
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -213,16 +229,14 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 const terminal = document.getElementById('terminal');
 const inputEl  = document.getElementById('input');
 
-let currentImportedPin = null;
-
-function escapeHTML(str='') {
-  const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
-  return str.replace(/[&<>"']/g, m=>map[m]);
+function escapeHTML(str = '') {
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  return str.replace(/[&<>"']/g, m => map[m]);
 }
 
-function println(text, cls='line') {
+function println(text, className = 'line') {
   const div = document.createElement('div');
-  div.className = cls;
+  div.className = className;
   div.textContent = text;
   terminal.appendChild(div);
   terminal.scrollTop = terminal.scrollHeight;
@@ -241,11 +255,14 @@ function clearScreen() {
 }
 
 // ────────────────────────────────────────────────
-//  GPS PINS FUNCTIONS
+//  GPS Pins Core Functions
 // ────────────────────────────────────────────────
 function getPins() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); }
-  catch { return []; }
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch {
+    return [];
+  }
 }
 
 function savePins(pins) {
@@ -258,13 +275,16 @@ function getPinUrl(pin) {
 
 async function createPinFromTerminal() {
   if (!navigator.geolocation) {
-    printError("Geolocation not supported in this browser.");
+    printError("Geolocation is not supported in this browser.");
     return;
   }
 
   try {
-    const pos = await new Promise((res,rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, {enableHighAccuracy:true, timeout:14000})
+    const pos = await new Promise((resolve, reject) =>
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 14000
+      })
     );
 
     const lat = Number(pos.coords.latitude.toFixed(6));
@@ -272,34 +292,37 @@ async function createPinFromTerminal() {
 
     const name  = document.getElementById('name').value.trim() || 'Anonymous';
     const msg   = document.getElementById('msg').value.trim();
-    const comm  = document.getElementById('initial-comment').value.trim();
+    const comment = document.getElementById('initial-comment').value.trim();
 
     const pin = {
       id: crypto.randomUUID(),
-      lat, lng, name, msg,
+      lat,
+      lng,
+      name,
+      msg,
       time: new Date().toISOString(),
-      comments: comm ? [{text:comm, author:name, time:new Date().toISOString()}] : []
+      comments: comment ? [{ text: comment, author: name, time: new Date().toISOString() }] : []
     };
 
     const pins = getPins();
     pins.push(pin);
     savePins(pins);
 
-    // clear form
+    // Clear form fields
     document.getElementById('name').value = '';
     document.getElementById('msg').value = '';
     document.getElementById('initial-comment').value = '';
 
     hideCreateForm();
 
-    printAI(`Pin created successfully.`);
-    println(`Link: ${getPinUrl(pin)}`);
-    println("(copy & share — data stays in browser only)");
+    printAI("Pin created successfully!");
+    println(`Share link: ${getPinUrl(pin)}`);
+    println("(data stays 100% in your browser — no server involved)");
   } catch (err) {
-    let msg = "Couldn't get location.";
+    let msg = "Could not get your location.";
     if (err.code === 1) msg += " Permission denied.";
-    if (err.code === 3) msg += " Timed out.";
-    printError(msg);
+    if (err.code === 3) msg += " Request timed out.";
+    printError(msg + " Please try again.");
   }
 }
 
@@ -309,68 +332,69 @@ function hideCreateForm() {
 }
 
 // ────────────────────────────────────────────────
-//  AI / COMMAND HANDLER
+//  Command & Chat Handler
 // ────────────────────────────────────────────────
 const responses = {
-  "hi": ["yo", "hey", "hello darkness my old friend"],
-  "hello": ["greetings", "hi there", "sup"],
+  "hi": ["yo", "hey there", "hello darkness my old friend"],
+  "hello": ["greetings", "hi", "sup"],
   "who are you": [
-    "just a retro terminal spirit running GPS Pins in 2026",
-    "your local unfiltered AI companion",
-    "think 2010 Cleverbot but with coordinates"
+    "just your friendly retro terminal running GPS Pins in 2026",
+    "local unfiltered AI companion",
+    "think 2010 Cleverbot — but with coordinates"
   ],
   "help": [
     "Available commands:",
-    "  new pin / drop pin     → create new location pin",
-    "  list pins / show pins  → list your saved pins",
-    "  search <term>          → search pins",
-    "  clear                  → clear screen",
-    "  ...or just chat normally"
+    "  new pin / drop pin     → open create pin form",
+    "  list pins / show pins  → list your saved locations",
+    "  search <term>          → find matching pins",
+    "  clear / cls            → clear the screen",
+    "  cancel                 → close create form",
+    "  ...or just chat with me"
   ],
   default: [
-    "not sure what you mean",
-    "try 'help' if you're lost",
-    "hmmm… elaborate?",
-    "that's beyond my 2009-level training data"
+    "sorry, didn't quite catch that",
+    "try 'help' if you're not sure what to do",
+    "hmm… can you say that another way?",
+    "that's a bit outside my 2009 training data"
   ]
 };
 
-function random(arr) {
-  return arr[Math.floor(Math.random()*arr.length)];
+function randomChoice(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 
 function processCommand(text) {
-  const lower = text.toLowerCase().trim();
+  const cmd = text.toLowerCase().trim();
 
-  // ── Special commands ──────────────────────────────────────
-  if (lower === "clear" || lower === "cls") {
+  // ── Built-in commands ─────────────────────────────────────
+  if (cmd === "clear" || cmd === "cls") {
     clearScreen();
     return true;
   }
 
-  if (lower === "help") {
-    printAI(random(responses.help));
+  if (cmd === "help") {
+    printAI(randomChoice(responses.help));
     return true;
   }
 
-  if (["new pin", "drop pin", "create pin"].some(cmd => lower.includes(cmd))) {
+  if (["new pin", "drop pin", "create pin"].some(s => cmd.includes(s))) {
     document.getElementById('create-form').classList.remove('hidden');
-    println("→ Create form opened. Fill it or type 'cancel' to close.");
+    println("→ Create form opened. Fill it out or type 'cancel' to close.");
     return true;
   }
 
-  if (lower === "cancel") {
+  if (cmd === "cancel") {
     hideCreateForm();
-    printAI("Form closed.");
+    printAI("Create form closed.");
     return true;
   }
 
-  if (["list pins", "show pins", "pins"].some(cmd => lower.includes(cmd))) {
+  if (["list pins", "show pins", "pins"].some(s => cmd.includes(s))) {
     const pins = getPins();
     if (pins.length === 0) {
       printAI("You don't have any pins saved yet.");
     } else {
-      printAI(`You have ${pins.length} pin${pins.length===1?'':'s'}:`);
+      printAI(`You have ${pins.length} pin${pins.length === 1 ? '' : 's'}:`);
       pins.forEach(p => {
         println(`• ${p.name}  (${p.lat.toFixed(6)}, ${p.lng.toFixed(6)})`);
       });
@@ -378,28 +402,29 @@ function processCommand(text) {
     return true;
   }
 
-  if (lower.startsWith("search ")) {
-    const term = lower.replace("search ", "").trim();
+  if (cmd.startsWith("search ")) {
+    const term = cmd.replace("search ", "").trim();
     if (!term) {
       printError("Usage: search <term>");
       return true;
     }
+
     const pins = getPins();
     const matches = pins.filter(p => {
-      const hay = [
-        p.name||'',
-        p.msg||'',
-        ...p.comments.map(c=>c.text||''),
+      const haystack = [
+        p.name || '',
+        p.msg || '',
+        ...p.comments.map(c => c.text || ''),
         p.lat.toFixed(6),
         p.lng.toFixed(6)
       ].join(' ').toLowerCase();
-      return hay.includes(term);
+      return haystack.includes(term);
     });
 
     if (matches.length === 0) {
       printAI(`No pins match "${term}".`);
     } else {
-      printAI(`Found ${matches.length} pin${matches.length===1?'':'s'} matching "${term}":`);
+      printAI(`Found ${matches.length} matching pin${matches.length === 1 ? '' : 's'}:`);
       matches.forEach(p => {
         println(`• ${p.name}  (${p.lat.toFixed(6)}, ${p.lng.toFixed(6)})`);
       });
@@ -407,22 +432,23 @@ function processCommand(text) {
     return true;
   }
 
-  // ── Normal chat fallback ──────────────────────────────────
-  let reply;
+  // ── Normal conversation fallback ──────────────────────────
+  let reply = null;
   for (const key in responses) {
-    if (lower.includes(key)) {
-      reply = random(responses[key]);
+    if (cmd.includes(key)) {
+      reply = randomChoice(responses[key]);
       break;
     }
   }
-  if (!reply) reply = random(responses.default);
+
+  if (!reply) reply = randomChoice(responses.default);
 
   printAI(reply);
   return false;
 }
 
 // ────────────────────────────────────────────────
-//  INPUT HANDLING
+//  Input Handling
 // ────────────────────────────────────────────────
 inputEl.addEventListener('keydown', e => {
   if (e.key === 'Enter') {
@@ -432,23 +458,19 @@ inputEl.addEventListener('keydown', e => {
 
     println('> ' + text, 'line prompt');
 
-    const handled = processCommand(text);
-
-    if (!handled) {
-      // normal chat already printed inside processCommand
-    }
+    processCommand(text);
 
     inputEl.value = '';
     inputEl.focus();
   }
 });
 
-// ─── Initial boot message ─────────────────────────────────────
+// ─── Welcome message ────────────────────────────────────────
 println("GPS PINS TERMINAL INTERFACE — 2026", "system");
-println("Local. Private. No cloud. Type 'help' for commands.", "system");
+println("100% local • private • no cloud • type 'help' to begin", "system");
 println("─────────────────────────────────────────────────────", "system");
 println("");
-printAI("wake up, human... ready to drop some pins?");
+printAI("hey... ready to drop some pins?");
 println("");
 </script>
 

@@ -366,7 +366,7 @@ async function createAndSavePin(usePrompts = true) {
     const mapLink = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}`;
 
     printAI(`→ Saved: <strong>${escapeHTML(name)}</strong>`);
-    println(`Coords: ${lat}, ${lng} • <a href="${mapLink}" target="_blank" style="color:var(--accent-dim);">View on map</a>`, 'line ai');
+    println(`Coords: ${lat}, ${lng} • <a href="${mapLink}" target="_blank" style="color:var(--accent-dim);"></a>`, 'line ai');
     println(`Share: <a href="${shareUrl}" style="color:var(--accent); word-break:break-all;">${shareUrl}</a>`, 'line ai');
     println(`→ Now visible in My Pins tab`, 'line ai');
   } catch (err) {

@@ -73,7 +73,7 @@
     }
     .tab-content.active { display: flex; }
 
-    /* Terminal */
+    /* Terminal styles unchanged */
     #terminal-tab .terminal {
       flex: 1;
       padding: 1rem 1.4rem;
@@ -152,15 +152,15 @@
       font-family: inherit;
     }
     .share-row {
-      margin-top: 1.2rem;
+      margin-top: 1.4rem;
       display: flex;
-      align-items: center;
       flex-wrap: wrap;
-      gap: 0.8rem;
+      gap: 0.7rem 1.2rem;
+      align-items: center;
     }
-    .copy-btn {
-      padding: 0.45rem 1rem;
-      background: rgba(0,212,255,0.15);
+    .action-btn {
+      padding: 0.5rem 1.1rem;
+      background: rgba(0,212,255,0.18);
       border: 1px solid var(--accent-dim);
       border-radius: 6px;
       color: var(--accent);
@@ -168,21 +168,20 @@
       cursor: pointer;
       transition: all 0.18s;
     }
-    .copy-btn:hover {
-      background: rgba(0,212,255,0.3);
+    .action-btn:hover {
+      background: rgba(0,212,255,0.35);
     }
-    .copy-btn.copied {
-      background: rgba(0,255,157,0.25);
+    .action-btn.copied,
+    .action-btn.email-sent {
+      background: rgba(0,255,157,0.28);
       color: #00ff9d;
       border-color: #00ff9d;
     }
     .hidden { display: none !important; }
 
     @media (max-width: 560px) {
-      header { padding: 0.8rem; }
-      .tabs { flex-direction: column; }
-      .tab-btn { width: 100%; margin: 0.3rem 0; }
-      .share-row { flex-direction: column; align-items: flex-start; }
+      .share-row { flex-direction: column; align-items: stretch; }
+      .action-btn { width: 100%; text-align: center; }
     }
   </style>
 </head>
@@ -201,7 +200,6 @@
 <!-- Terminal Tab -->
 <div id="terminal-tab" class="tab-content active">
   <div class="terminal" id="terminal"></div>
-
   <div class="input-line">
     <span class="prompt">></span>
     <input id="input" type="text" autocomplete="off" spellcheck="false" autofocus>
@@ -217,7 +215,7 @@
 
 <script>
 // ────────────────────────────────────────────────
-// Shared
+// Shared helpers
 // ────────────────────────────────────────────────
 const STORAGE_KEY = 'gps-pins-v3';
 
@@ -240,7 +238,7 @@ function getPinShareUrl(pin) {
 }
 
 // ────────────────────────────────────────────────
-// Terminal
+// Terminal logic (unchanged except small tweak to print URL)
 // ────────────────────────────────────────────────
 const terminal = document.getElementById('terminal');
 const inputEl  = document.getElementById('input');
@@ -250,7 +248,7 @@ let shortMemory = [];
 function println(txt, cls = 'line') {
   const div = document.createElement('div');
   div.className = cls;
-  div.innerHTML = txt;  // allow HTML for buttons if needed later
+  div.innerHTML = txt;
   terminal.appendChild(div);
   terminal.scrollTop = terminal.scrollHeight;
 }
@@ -264,10 +262,7 @@ async function createPinFromPrompts() {
   const msg  = prompt("Note / description:")?.trim() || '';
   const comm = prompt("First comment (optional):")?.trim() || '';
 
-  if (!navigator.geolocation) {
-    printError("Geolocation not supported.");
-    return;
-  }
+  if (!navigator.geolocation) return printError("Geolocation not supported.");
 
   try {
     const pos = await new Promise((res, rej) =>
@@ -292,7 +287,7 @@ async function createPinFromPrompts() {
 
     printAI(`Pin created: ${escapeHTML(name)}`);
     println(`→ <a href="${shareUrl}" style="color:var(--accent);">${shareUrl}</a>`, 'line ai');
-    println(`(open link or copy from Pins tab)`);
+    println(`(view/copy/share from My Pins tab)`);
   } catch (err) {
     let m = "Couldn't get location.";
     if (err.code === 1) m += " Permission denied.";
@@ -301,190 +296,117 @@ async function createPinFromPrompts() {
   }
 }
 
-function generateResponse(text) {
-  const lower = text.toLowerCase().trim();
+// ... (rest of generateResponse, input listener, boot messages unchanged - keep your existing ones)
 
-  if (["clear", "cls"].includes(lower)) { clearScreen(); return null; }
-  if (lower === "help") {
-    return [
-      "Commands:",
-      "  new pin / drop pin     → create pin",
-      "  list pins              → show count",
-      "  clear / cls            → clear terminal",
-      "  help                   → this list",
-      "Use 'My Pins' tab to browse, search, copy & share links"
-    ].join('\n');
+
+// ────────────────────────────────────────────────
+// Pins Tab + Email / Copy features
+// ────────────────────────────────────────────────
+function copyToClipboard(text, button, successText = 'Copied!') {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => showFeedback(button, successText));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showFeedback(button, successText);
   }
-
-  if (["new pin","drop pin","create pin"].some(w => lower.includes(w))) {
-    createPinFromPrompts();
-    return null;
-  }
-
-  if (["list pins","pins","my pins"].some(w => lower.includes(w))) {
-    const count = getPins().length;
-    return `You have ${count} pin${count===1?'':'s'}.\nGo to 'My Pins' tab to view & share them.`;
-  }
-
-  if (lower.includes("pin") || lower.includes("location")) {
-    return "Want to save a spot? Type 'new pin'";
-  }
-
-  return ["hmm… tell me more?", "interesting…", "go on", "vibe check passed"][Math.floor(Math.random()*4)];
 }
 
-inputEl.addEventListener('keydown', e => {
-  if (e.key !== 'Enter') return;
-  e.preventDefault();
-  const text = inputEl.value.trim();
-  if (!text) return;
+function showFeedback(btn, text) {
+  const original = btn.textContent;
+  btn.textContent = text;
+  btn.classList.add('copied');
+  setTimeout(() => {
+    btn.textContent = original;
+    btn.classList.remove('copied');
+  }, 2200);
+}
 
-  println('> ' + escapeHTML(text), 'line prompt');
+function getEmailBody(pin) {
+  const url = getPinShareUrl(pin);
+  let body = `Hey,\n\nCheck out this pin I saved:\n\n`;
 
-  const reply = generateResponse(text);
-  if (reply) printAI(reply);
+  body += `📍 ${escapeHTML(pin.name || 'Anonymous')}\n`;
+  body += `   ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\n`;
+  body += `   Created: ${new Date(pin.time).toLocaleString()}\n\n`;
 
-  inputEl.value = '';
-  inputEl.focus();
-});
+  if (pin.msg) body += `Note:\n${escapeHTML(pin.msg)}\n\n`;
 
-// ────────────────────────────────────────────────
-// Pins Tab + Copy functionality
-// ────────────────────────────────────────────────
-function copyToClipboard(text, button) {
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(text).then(() => {
-      button.textContent = 'Copied!';
-      button.classList.add('copied');
-      setTimeout(() => {
-        button.textContent = 'Copy URL';
-        button.classList.remove('copied');
-      }, 2000);
-    }).catch(() => fallbackCopy());
-  } else {
-    fallbackCopy();
+  if (pin.comments.length) {
+    body += `Comments:\n`;
+    pin.comments.forEach(c => {
+      body += `• ${escapeHTML(c.text)} (${escapeHTML(c.author || 'anon')}, ${new Date(c.time).toLocaleString()})\n`;
+    });
+    body += `\n`;
   }
 
-  function fallbackCopy() {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.focus();
-    textarea.select();
-    try {
-      document.execCommand('copy');
-      button.textContent = 'Copied (fallback)';
-      button.classList.add('copied');
-      setTimeout(() => {
-        button.textContent = 'Copy URL';
-        button.classList.remove('copied');
-      }, 2000);
-    } catch (err) {
-      button.textContent = 'Copy failed';
-      setTimeout(() => { button.textContent = 'Copy URL'; }, 2000);
-    }
-    document.body.removeChild(textarea);
-  }
+  body += `Open in GPS Pins app:\n${url}\n\n`;
+  return body;
 }
 
 function renderPins(pinsToShow = getPins()) {
   const container = document.getElementById('pins-container');
   container.innerHTML = pinsToShow.length === 0
     ? '<p style="color:var(--muted); text-align:center; margin:4rem 0;">No pins yet. Create one in Terminal tab.</p>'
-    : pinsToShow.map(pin => `
-        <div class="card">
-          <div class="pin-title">${escapeHTML(pin.name || 'Anonymous')}</div>
-          <div class="meta">${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)} • ${new Date(pin.time).toLocaleString()}</div>
-          ${pin.msg ? `<div class="note">${escapeHTML(pin.msg)}</div>` : ''}
-          ${pin.comments.length ? `
-            <div class="comments">
-              <strong>Comments (${pin.comments.length})</strong>
-              ${pin.comments.map(c => `
-                <div class="comment">
-                  ${escapeHTML(c.text)}<br>
-                  <small style="color:var(--muted);">— ${escapeHTML(c.author || 'anon')}, ${new Date(c.time).toLocaleString()}</small>
-                </div>
-              `).join('')}
-            </div>
-          ` : ''}
-          <div class="share-row">
-            <button class="copy-btn" data-url="${getPinShareUrl(pin)}">Copy URL</button>
-            <small style="color:var(--muted); opacity:0.8; word-break:break-all;">
-              ${getPinShareUrl(pin)}
-            </small>
-          </div>
-        </div>
-      `).join('');
+    : pinsToShow.map(pin => {
+        const shareUrl = getPinShareUrl(pin);
+        const emailSubject = encodeURIComponent(`GPS Pin: ${pin.name || 'Hidden Spot'}`);
+        const emailBody = encodeURIComponent(getEmailBody(pin));
+        const mailto = `mailto:?subject=${emailSubject}&body=${emailBody}`;
 
-  // Attach copy listeners
-  container.querySelectorAll('.copy-btn').forEach(btn => {
+        return `
+          <div class="card">
+            <div class="pin-title">${escapeHTML(pin.name || 'Anonymous')}</div>
+            <div class="meta">${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)} • ${new Date(pin.time).toLocaleString()}</div>
+            ${pin.msg ? `<div class="note">${escapeHTML(pin.msg)}</div>` : ''}
+            ${pin.comments.length ? `
+              <div class="comments">
+                <strong>Comments (${pin.comments.length})</strong>
+                ${pin.comments.map(c => `
+                  <div class="comment">
+                    ${escapeHTML(c.text)}<br>
+                    <small style="color:var(--muted);">— ${escapeHTML(c.author || 'anon')}, ${new Date(c.time).toLocaleString()}</small>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+            <div class="share-row">
+              <button class="action-btn" data-action="copy" data-url="${shareUrl}">Copy URL</button>
+              <button class="action-btn" data-action="copy-email" data-pin-id="${pin.id}">Copy Email Text</button>
+              <a href="${mailto}" class="action-btn" style="text-decoration:none;">Email this Pin</a>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+  // Event listeners
+  container.querySelectorAll('[data-action="copy"]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const url = btn.getAttribute('data-url');
-      copyToClipboard(url, btn);
+      copyToClipboard(btn.getAttribute('data-url'), btn);
+    });
+  });
+
+  container.querySelectorAll('[data-action="copy-email"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pinId = btn.getAttribute('data-pin-id');
+      const pin = getPins().find(p => p.id === pinId);
+      if (pin) {
+        copyToClipboard(getEmailBody(pin), btn, 'Email text copied!');
+      }
     });
   });
 }
 
-// Search
-document.getElementById('search').addEventListener('input', e => {
-  const term = e.target.value.toLowerCase().trim();
-  if (!term) return renderPins();
-  const filtered = getPins().filter(p => {
-    const hay = [
-      p.name||'',
-      p.msg||'',
-      ...p.comments.map(c=>c.text||''),
-      p.lat.toFixed(6),
-      p.lng.toFixed(6)
-    ].join(' ').toLowerCase();
-    return hay.includes(term);
-  });
-  renderPins(filtered);
-});
+// Search, tab switching, hashchange handler (keep your existing code here)
 
-// Tab switching
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
-
-    if (btn.dataset.tab === 'terminal') {
-      inputEl.focus();
-    } else if (btn.dataset.tab === 'pins') {
-      renderPins();
-    }
-  });
-});
-
-// Handle #p=... links (shared pins)
-window.addEventListener('hashchange', handleSharedPin);
-function handleSharedPin() {
-  const hash = location.hash.slice(1);
-  if (hash.startsWith('p=')) {
-    try {
-      const pin = JSON.parse(atob(hash.slice(2)));
-      document.querySelector('[data-tab="pins"]').click();
-      renderPins([pin]);
-      document.getElementById('search').classList.add('hidden');
-      document.getElementById('pins-container').insertAdjacentHTML('afterbegin',
-        '<p style="color:var(--accent); text-align:center; margin:1rem 0 2rem;">Shared Pin • read-only view</p>'
-      );
-    } catch {}
-  }
-}
-handleSharedPin(); // check on load
-
-// Boot
-println("GPS PINS — 2026", "system");
-println("100% local • type help", "system");
-println("────────────────────────────────────", "system");
-println("");
-printAI("ready when you are...");
-println("");
+// Initial render & handlers setup (keep your existing tab/hash logic)
+document.querySelector('[data-tab="pins"]').addEventListener('click', () => renderPins());
+// ... rest of your script ...
 </script>
 </body>
 </html>

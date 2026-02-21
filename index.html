@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GPS Pins – Private Location Markers</title>
-  <meta name="description" content="Save private GPS locations with names. 100% local storage, offline-capable, no account required." />
+  <title>GPS Pins – Private Location Markers + Local AI</title>
+  <meta name="description" content="Save private GPS locations. 100% local storage + offline local AI chat. No account." />
+
+  <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@3.3.0"></script>
 
   <style>
     :root {
@@ -72,7 +74,6 @@
     }
     .tab-content.active { display: flex; }
 
-    /* Terminal */
     #terminal-tab .terminal {
       flex: 1;
       padding: 1.3rem 1.8rem;
@@ -112,7 +113,6 @@
     }
     @keyframes blink { 50% { opacity: 0; } }
 
-    /* My Pins */
     #pins-tab {
       padding: 1.5rem;
       overflow-y: auto;
@@ -187,7 +187,6 @@
       border-color: #00ff9d;
     }
 
-    /* Floating new pin button */
     #fab {
       position: fixed;
       bottom: 24px;
@@ -224,7 +223,7 @@
 
 <header>
   <h1>GPS Pins</h1>
-  <div class="subtitle">Private location markers — fully local storage, offline-capable</div>
+  <div class="subtitle">Private markers + local AI chat • 100% offline</div>
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="terminal">Terminal</button>
@@ -232,7 +231,6 @@
   </div>
 </header>
 
-<!-- Terminal Tab -->
 <div id="terminal-tab" class="tab-content active">
   <div class="terminal" id="terminal"></div>
   <div class="input-line">
@@ -242,21 +240,19 @@
   </div>
 </div>
 
-<!-- My Pins Tab -->
 <div id="pins-tab" class="tab-content">
   <div class="collection-header">My Saved Pins</div>
   <input type="text" id="search" placeholder="Search name or coordinates…">
   <div id="pins-container"></div>
 </div>
 
-<!-- Floating Action Button -->
 <button id="fab" title="Create new pin at current location">+</button>
 
 <script>
 // ────────────────────────────────────────────────
 // Shared
 // ────────────────────────────────────────────────
-const STORAGE_KEY = 'gps-pins-v4'; // bumped version to avoid old data
+const STORAGE_KEY = 'gps-pins-v4';
 let lastUsedName = localStorage.getItem('gps-pins-last-name') || '';
 
 function escapeHTML(str = '') {
@@ -274,13 +270,7 @@ function savePins(pins) {
 }
 
 function getPinShareUrl(pin) {
-  const publicPin = {
-    id: pin.id,
-    lat: pin.lat,
-    lng: pin.lng,
-    name: pin.name,
-    time: pin.time
-  };
+  const publicPin = { id: pin.id, lat: pin.lat, lng: pin.lng, name: pin.name, time: pin.time };
   return `${location.origin}${location.pathname}#p=${btoa(JSON.stringify(publicPin))}`;
 }
 
@@ -306,208 +296,182 @@ function printAI(txt) { println(txt, 'line ai'); }
 function printError(txt) { println(txt, 'line error'); }
 function clearScreen() { terminal.innerHTML = ''; }
 
-async function createAndSavePin(usePrompts = true) {
-  let name = lastUsedName || 'Pin ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+// ────────────────────────────────────────────────
+// LLM (lazy load)
+// ────────────────────────────────────────────────
+let generator = null;
+let isModelLoading = false;
+let modelStatusLine = null;
 
-  if (usePrompts) {
-    const nameInput = prompt("Pin name:", name)?.trim();
-    if (nameInput === null) return;
-    name = nameInput || 'Untitled';
+async function loadModelIfNeeded() {
+  if (generator) return generator;
+  if (isModelLoading) {
+    println("Model still loading (30–180 s first time)...", "line system");
+    return null;
   }
 
-  localStorage.setItem('gps-pins-last-name', name);
-
-  if (!navigator.geolocation) {
-    printError("Geolocation not supported.");
-    return;
-  }
+  isModelLoading = true;
+  modelStatusLine = document.createElement('div');
+  modelStatusLine.className = 'line system';
+  modelStatusLine.textContent = "Loading Phi-3.5-mini (local AI) – one-time ~2–4 GB download...";
+  terminal.appendChild(modelStatusLine);
+  terminal.scrollTop = terminal.scrollHeight;
 
   try {
-    const pos = await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, {
-        enableHighAccuracy: true,
-        timeout: 12000,
-        maximumAge: 0
-      })
+    const { pipeline } = Xenova;
+    generator = await pipeline(
+      'text-generation',
+      'Xenova/Phi-3.5-mini-instruct',
+      {
+        quantized: true,
+        progress_callback: (progress) => {
+          if (modelStatusLine) {
+            modelStatusLine.textContent = `Loading model... ${Math.round((progress.loaded / progress.total) * 100) || progress.progress * 100}%`;
+          }
+        }
+      }
     );
-
-    const lat = Number(pos.coords.latitude.toFixed(6));
-    const lng = Number(pos.coords.longitude.toFixed(6));
-
-    const pin = {
-      id: crypto.randomUUID(),
-      lat,
-      lng,
-      name,
-      time: new Date().toISOString()
-    };
-
-    const pins = getPins();
-    pins.push(pin);
-    savePins(pins);
-
-    const shareUrl = getPinShareUrl(pin);
-
-    printAI(`Pin saved → <strong>${escapeHTML(name)}</strong>`);
-    println(`Location: ${lat}, ${lng}`, 'line ai');
-    println(`Share: <a href="${shareUrl}" style="color:var(--accent); word-break:break-all;">${shareUrl}</a>`, 'line ai');
-    println(`→ See it in "My Pins" tab`, 'line ai');
+    modelStatusLine.textContent = "Local AI ready ✓  Now talk naturally!";
+    println("Phi-3.5-mini loaded 100% in browser. Type anything.", "line ai");
   } catch (err) {
-    let msg = "Could not get location.";
-    if (err.code === 1) msg += " → Permission denied";
-    if (err.code === 3) msg += " → Timed out";
-    printError(msg);
+    console.error(err);
+    modelStatusLine.className = 'line error';
+    modelStatusLine.textContent = `Model load failed: ${err.message}\nTry Chrome/Edge. Use classic commands for now (type help).`;
+  } finally {
+    isModelLoading = false;
   }
+  return generator;
 }
 
-function generateResponse(text) {
+// ────────────────────────────────────────────────
+// generateResponse – rules + LLM fallback
+// ────────────────────────────────────────────────
+async function generateResponse(text) {
   const lower = text.toLowerCase().trim();
   const pins = getPins();
 
-  // ── Clear ────────────────────────────────────────────────
+  // Fast rules
   if (["clear", "cls"].includes(lower)) {
     clearScreen();
     return null;
   }
 
-  // ── Help ─────────────────────────────────────────────────
-  if (lower === "help" || lower === "?" || lower === "commands") {
-    return `GPS Pins Terminal – Commands:
+  if (["help", "?", "commands"].includes(lower)) {
+    return `GPS Pins + Local AI Terminal
 
-  + / save / new / drop / create pin    → Add pin at current location
-  list / pins / my pins / saved         → Quick list of all pins
-  recent / latest                       → 5–6 most recent pins
-  count                                 → Number of saved pins
-  search <keyword>                      → Find in name/coordinates
-  show <name>                           → Detailed view of pin(s) by name
-  import pin                            → Import a shared pin you just opened
-  clear / cls                           → Clear screen
-  help / ? / commands                   → This help
+Classic commands:
+  + / save / new / drop pin     → save current location
+  list / pins / recent / count  → show pins
+  search <term>                 → find pins
+  show <name>                   → details
+  import pin                    → add shared pin
+  clear / cls                   → clear screen
 
-Examples:
-  search coffee
-  show home
-  recent
-  list
-  import pin
-  count
+Now also talk naturally:
+  • "how many pins do I have?"
+  • "show me my home pin"
+  • "where is the nearest coffee?"
+  • "remind me about work"
 
-100% local – private – offline.`;
+Model: Phi-3.5-mini • fully local after first load`;
   }
 
-  // ── Count ────────────────────────────────────────────────
-  if (lower === "count") {
-    const cnt = pins.length;
-    return `You have **${cnt}** pin${cnt === 1 ? '' : 's'} saved.`;
+  if (lower === "count" || (lower.includes("how many") && lower.includes("pin"))) {
+    return `You have **${pins.length}** pin${pins.length === 1 ? '' : 's'} saved.`;
   }
 
-  // ── List ─────────────────────────────────────────────────
   if (["list", "pins", "my pins", "saved"].some(w => lower.includes(w))) {
-    if (pins.length === 0) return "No pins yet.\nType + or save pin to start.";
-
-    let out = `Your pins (${pins.length} total):\n\n`;
-    pins.forEach((p, i) => {
-      out += `${String(i+1).padStart(2,' ')}. ${escapeHTML(p.name || 'Unnamed')}   (${p.lat.toFixed(5)}, ${p.lng.toFixed(5)})\n\n`;
+    if (!pins.length) return "No pins yet. Type 'save pin' or tap +";
+    let out = `Pins (${pins.length}):\n\n`;
+    pins.forEach((p,i) => {
+      out += `${i+1}. ${escapeHTML(p.name||'Unnamed')}  (${p.lat.toFixed(5)}, ${p.lng.toFixed(5)})\n`;
     });
-    return out + "→ Full view in \"My Pins\" tab";
+    return out + "\n→ Full view in My Pins tab";
   }
 
-  // ── Recent ───────────────────────────────────────────────
   if (lower === "recent" || lower === "latest") {
-    if (pins.length === 0) return "No pins saved yet.";
-
-    const sorted = [...pins].sort((a,b) => new Date(b.time) - new Date(a.time));
-    let out = "Recent pins:\n\n";
-    sorted.slice(0, 6).forEach(p => {
-      out += `• ${escapeHTML(p.name || 'Unnamed')}   •   ${new Date(p.time).toLocaleString([], {
-        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-      })}\n   ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}\n\n`;
+    if (!pins.length) return "No pins yet.";
+    const sorted = [...pins].sort((a,b)=>new Date(b.time)-new Date(a.time));
+    let out = "Recent:\n\n";
+    sorted.slice(0,6).forEach(p=>{
+      out += `• ${escapeHTML(p.name||'Unnamed')}  •  ${new Date(p.time).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}\n   ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}\n\n`;
     });
-    if (sorted.length > 6) out += `… ${sorted.length - 6} more pins`;
     return out;
   }
 
-  // ── Search ───────────────────────────────────────────────
   if (lower.startsWith("search ")) {
     const term = lower.slice(7).trim();
-    if (!term) return "Example:\n  search coffee\n  search 51.507";
-
-    const matches = pins.filter(p => {
-      const hay = [
-        (p.name || '').toLowerCase(),
-        p.lat.toFixed(6), p.lng.toFixed(6),
-        new Date(p.time).toISOString().slice(0,10)
-      ].join(' ');
-      return hay.includes(term);
+    if (!term) return "Example: search coffee";
+    const matches = pins.filter(p=>{
+      return [(p.name||'').toLowerCase(), p.lat.toFixed(6), p.lng.toFixed(6)].join(' ').includes(term);
     });
-
-    if (matches.length === 0) return `No matches for "${escapeHTML(term)}"`;
-
-    let out = `Found **${matches.length}** result${matches.length === 1 ? '' : 's'} for "${escapeHTML(term)}":\n\n`;
-    matches.forEach(p => {
-      out += `→ ${escapeHTML(p.name || 'Unnamed')}\n   ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}  •  ${new Date(p.time).toLocaleDateString()}\n\n`;
+    if (!matches.length) return `No matches for "${escapeHTML(term)}"`;
+    let out = `Found ${matches.length}:\n\n`;
+    matches.forEach(p=>{
+      out += `→ ${escapeHTML(p.name||'Unnamed')}\n   ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}\n\n`;
     });
-    return out + "→ Details in \"My Pins\" tab";
+    return out;
   }
 
-  // ── Show ─────────────────────────────────────────────────
   if (lower.startsWith("show ")) {
-    const query = lower.slice(5).trim();
-    if (!query) return "Example:\n  show home\n  show office";
-
-    const matches = pins.filter(p => (p.name || '').toLowerCase().includes(query));
-
-    if (matches.length === 0) return `No pin found matching "${escapeHTML(query)}"`;
-    if (matches.length > 4) return `Too many matches (${matches.length}). Try a more specific name.`;
-
+    const q = lower.slice(5).trim();
+    if (!q) return "Example: show home";
+    const matches = pins.filter(p=>(p.name||'').toLowerCase().includes(q));
+    if (!matches.length) return `No pin matching "${escapeHTML(q)}"`;
     let out = "";
-    matches.forEach(p => {
-      out += `**${escapeHTML(p.name || 'Unnamed Pin')}**\n`;
-      out += `Coords:   ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}\n`;
-      out += `Added:    ${new Date(p.time).toLocaleString([], {
-        weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-      })}\n`;
-      out += "──────────────────────────────\n\n";
+    matches.forEach(p=>{
+      out += `**${escapeHTML(p.name||'Unnamed')}**\n   ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}\n   Added ${new Date(p.time).toLocaleDateString()}\n\n`;
     });
     return out.trim();
   }
 
-  // ── Import shared pin ────────────────────────────────────────
   if (lower === "import pin" || lower.startsWith("import ")) {
     const pending = sessionStorage.getItem('pending-shared-pin');
-    if (!pending) return "No pending shared pin.\nOpen a share link first, then type 'import pin'.";
-
+    if (!pending) return "No shared pin pending. Open a share link first.";
     try {
       const pin = JSON.parse(pending);
       sessionStorage.removeItem('pending-shared-pin');
-
-      if (pinAlreadySaved(pin.id)) {
-        return "This pin is already in your collection.";
-      }
-
+      if (pinAlreadySaved(pin.id)) return "Already saved.";
       const pins = getPins();
-      pins.push({ ...pin });
+      pins.push(pin);
       savePins(pins);
-
-      return `Pin imported → ${escapeHTML(pin.name || 'Unnamed')}\n` +
-             `Now visible in "My Pins" tab.`;
-    } catch (e) {
-      return "Failed to import pin (data may be corrupted).";
+      return `Imported → ${escapeHTML(pin.name||'Unnamed')}`;
+    } catch {
+      return "Invalid shared pin data.";
     }
   }
 
-  // ── Fallback ─────────────────────────────────────────────
-  const vibes = [
-    "Pins grid online. Ready.",
-    "Local vault responsive.",
-    "Coordinates secured.",
-    "Terminal standing by.",
-    "Database nominal. Query me."
-  ];
-  return vibes[Math.floor(Math.random() * vibes.length)];
+  // ── LLM fallback ───────────────────────────────────────
+  const gen = await loadModelIfNeeded();
+  if (!gen) return "AI loading or failed. Use commands above.";
+
+  const system = `You are GPS Pins Terminal — concise, helpful, witty assistant for private GPS pins.
+Everything is local/offline. Current pins: ${pins.length}.
+Only talk about pins, locations, the app, or answer naturally.
+If unrelated, say: "Let's stick to pins and locations — what's up?"`;
+
+  try {
+    const output = await gen([
+      {role:"system", content:system},
+      {role:"user",   content:text}
+    ], {
+      max_new_tokens: 160,
+      temperature: 0.75,
+      do_sample: true,
+      top_p: 0.9
+    });
+
+    let reply = output[0].generated_text.split(/Assistant:|You:/).pop()?.trim() || "Got it.";
+    return reply;
+  } catch (err) {
+    return `AI error: ${err.message}\nTry again or use classic commands.`;
+  }
 }
 
-inputEl.addEventListener('keydown', e => {
+// ────────────────────────────────────────────────
+// Input handler (async)
+// ────────────────────────────────────────────────
+inputEl.addEventListener('keydown', async e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
   const text = inputEl.value.trim();
@@ -515,50 +479,60 @@ inputEl.addEventListener('keydown', e => {
 
   println('> ' + escapeHTML(text), 'line prompt');
 
-  const reply = generateResponse(text);
+  const reply = await generateResponse(text);
   if (reply) printAI(reply);
 
   inputEl.value = '';
   inputEl.focus();
 });
 
-// Floating button quick-create
-document.getElementById('fab').addEventListener('click', () => {
-  createAndSavePin(true);
-  document.querySelector('[data-tab="terminal"]').click();
+// Floating button → quick pin
+document.getElementById('fab').addEventListener('click', async () => {
+  let name = lastUsedName || 'Pin ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  name = prompt("Pin name:", name)?.trim() || 'Untitled';
+  localStorage.setItem('gps-pins-last-name', name);
+
+  if (!navigator.geolocation) return printError("Geolocation not supported.");
+
+  try {
+    const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {
+      enableHighAccuracy: true, timeout: 12000, maximumAge: 0
+    }));
+    const lat = Number(pos.coords.latitude.toFixed(6));
+    const lng = Number(pos.coords.longitude.toFixed(6));
+
+    const pin = { id: crypto.randomUUID(), lat, lng, name, time: new Date().toISOString() };
+    const pins = getPins();
+    pins.push(pin);
+    savePins(pins);
+
+    const url = getPinShareUrl(pin);
+
+    printAI(`Saved → <strong>${escapeHTML(name)}</strong>`);
+    println(`   ${lat}, ${lng}`, 'line ai');
+    println(`Share: <a href="${url}" style="color:var(--accent);">${url}</a>`, 'line ai');
+  } catch (err) {
+    printError("Location failed" + (err.code===1?" → permission denied":err.code===3?" → timeout":""));
+  }
 });
 
 // ────────────────────────────────────────────────
-// My Pins Rendering
+// My Pins tab rendering
 // ────────────────────────────────────────────────
 function renderMyPins(pinsToShow = getPins()) {
   const container = document.getElementById('pins-container');
   container.innerHTML = '';
 
-  if (pinsToShow.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        No pins yet.<br><br>
-        Create one:<br>
-        • tap the <strong style="color:var(--accent);">+</strong> button<br>
-        • or type “+” or “save pin” in Terminal
-      </div>
-    `;
+  if (!pinsToShow.length) {
+    container.innerHTML = `<div class="empty-state">No pins yet.<br><br>Tap + or type “save pin” in Terminal</div>`;
     return;
   }
 
   pinsToShow.forEach(pin => {
-    const shareUrl = getPinShareUrl(pin);
+    const url = getPinShareUrl(pin);
+    const mailto = `mailto:?subject=${encodeURIComponent(`GPS Pin: ${pin.name||'Unnamed'}`)}&body=${encodeURIComponent(`GPS Pin: ${pin.name||'Unnamed'}\n\nCoordinates: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\nShare: ${url}\n`)}`;
 
-    let emailBody = `GPS Pin: ${pin.name || 'Unnamed'}\n\n`;
-    emailBody += `Coordinates: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\n`;
-    emailBody += `Share link: ${shareUrl}\n`;
-
-    const encodedSubject = encodeURIComponent(`GPS Pin: ${pin.name || 'Unnamed'}`);
-    const encodedBody = encodeURIComponent(emailBody);
-    const mailtoLink = `mailto:?subject=${encodedSubject}&body=${encodedBody}`;
-
-    let html = `
+    container.insertAdjacentHTML('beforeend', `
       <div class="card">
         <div class="pin-title">${escapeHTML(pin.name || 'Unnamed')}</div>
         <div class="meta">
@@ -566,76 +540,59 @@ function renderMyPins(pinsToShow = getPins()) {
           ${pin.time ? `<span class="saved-label">Added ${new Date(pin.time).toLocaleDateString()}</span>` : ''}
         </div>
         <div class="share-row">
-          <button class="action-btn" onclick="navigator.clipboard.writeText('${shareUrl}').then(()=> {this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy share link',2000)})">
-            Copy share link
-          </button>
-          <a href="${mailtoLink}" class="action-btn" target="_blank">Email this pin</a>
+          <button class="action-btn" onclick="navigator.clipboard.writeText('${url}').then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy share link',2000)})">Copy share link</button>
+          <a href="${mailto}" class="action-btn" target="_blank">Email pin</a>
         </div>
-      </div>`;
-    container.insertAdjacentHTML('beforeend', html);
+      </div>`);
   });
 }
 
-// Search in My Pins tab (only name + coords)
 document.getElementById('search').addEventListener('input', e => {
   const term = e.target.value.toLowerCase().trim();
   if (!term) return renderMyPins();
   const filtered = getPins().filter(p => {
-    const hay = [
-      (p.name||'').toLowerCase(),
-      p.lat.toFixed(6),
-      p.lng.toFixed(6)
-    ].join(' ');
-    return hay.includes(term);
+    return [(p.name||'').toLowerCase(), p.lat.toFixed(6), p.lng.toFixed(6)].join(' ').includes(term);
   });
   renderMyPins(filtered);
 });
 
-// Tab switching
+// Tabs
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     btn.classList.add('active');
-    const tabId = btn.dataset.tab + '-tab';
-    document.getElementById(tabId).classList.add('active');
+    document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
 
-    if (btn.dataset.tab === 'terminal') {
-      inputEl.focus();
-    } else if (btn.dataset.tab === 'pins') {
-      renderMyPins();
-    }
+    if (btn.dataset.tab === 'terminal') inputEl.focus();
+    else if (btn.dataset.tab === 'pins') renderMyPins();
   });
 });
 
-// Handle shared pin links → go to terminal + offer import
+// Shared pin via hash
 window.addEventListener('hashchange', () => {
   const hash = location.hash.slice(1);
-  if (hash.startsWith('p=')) {
-    try {
-      const publicPin = JSON.parse(atob(hash.slice(2)));
-
-      document.querySelector('[data-tab="terminal"]').click();
-
-      printAI(`Shared pin received: <strong>${escapeHTML(publicPin.name || 'Unnamed')}</strong>`);
-      println(`Location: ${publicPin.lat.toFixed(6)}, ${publicPin.lng.toFixed(6)}`, 'line ai');
-      println(`Type <strong>import pin</strong> to add it to your collection.`, 'line system');
-
-      sessionStorage.setItem('pending-shared-pin', JSON.stringify(publicPin));
-      history.replaceState(null, null, ' ');
-    } catch (e) {
-      println("Invalid shared pin link.", 'line error');
-    }
+  if (!hash.startsWith('p=')) return;
+  try {
+    const pin = JSON.parse(atob(hash.slice(2)));
+    document.querySelector('[data-tab="terminal"]').click();
+    printAI(`Shared pin: <strong>${escapeHTML(pin.name||'Unnamed')}</strong>`);
+    println(`   ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`, 'line ai');
+    println(`Type <strong>import pin</strong> to save it.`, 'line system');
+    sessionStorage.setItem('pending-shared-pin', JSON.stringify(pin));
+    history.replaceState(null, null, ' ');
+  } catch {
+    println("Invalid share link.", 'line error');
   }
 });
 if (location.hash) window.dispatchEvent(new HashChangeEvent('hashchange'));
 
-// Boot message
-println("GPS Pins — London 2026", "system");
+// Boot
+println("GPS Pins + Local AI — London 2026", "system");
 println("100% local • Private • Offline", "system");
 println("────────────────────────────────────────", "system");
 println("");
-printAI("Ready. Type <strong>help</strong> or tap + to drop a pin.");
+printAI("Hey Rico — type <strong>help</strong> or just chat. Tap + to drop a pin.");
 println("");
 </script>
 </body>

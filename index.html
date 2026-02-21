@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GPS Pins • 2026</title>
-  <meta name="description" content="Private GPS pins with notes & comments + retro terminal AI chat. 100% local." />
+  <meta name="description" content="Private GPS pins with notes & threaded comments. 100% local — now with quick + button." />
 
   <style>
     :root {
@@ -16,8 +16,8 @@
       --accent-dim:#00ff9d;
       --purple:    #bb86fc;
       --danger:    #ff5555;
-      --border:    rgba(0,212,255,0.16);
-      --shadow:    0 4px 16px rgba(0,0,0,0.35);
+      --border:    rgba(0,212,255,0.18);
+      --shadow:    0 4px 20px rgba(0,0,0,0.4);
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
@@ -30,34 +30,34 @@
     }
     header {
       padding: 1rem 1.4rem;
-      background: rgba(0,0,0,0.55);
+      background: rgba(0,0,0,0.6);
       border-bottom: 1px solid var(--border);
       text-align: center;
     }
     h1 {
-      font-size: 2rem;
+      font-size: 2.1rem;
       background: linear-gradient(90deg, var(--purple), var(--accent));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
     }
-    .subtitle { color: var(--muted); font-size: 0.9rem; margin-top: 0.4rem; }
+    .subtitle { color: var(--muted); font-size: 0.95rem; margin-top: 0.5rem; }
     .tabs {
-      margin: 1rem 0 0.6rem;
+      margin: 1.2rem 0 0.8rem;
       display: flex;
       justify-content: center;
-      gap: 0.8rem;
+      gap: 1rem;
       flex-wrap: wrap;
     }
     .tab-btn {
-      padding: 0.6rem 1.4rem;
-      background: rgba(255,255,255,0.05);
+      padding: 0.7rem 1.6rem;
+      background: rgba(255,255,255,0.06);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
       color: var(--muted);
       cursor: pointer;
       font-weight: bold;
-      transition: all 0.16s;
+      transition: all 0.18s;
     }
     .tab-btn.active {
       background: linear-gradient(135deg, var(--purple), var(--accent));
@@ -75,12 +75,12 @@
     /* Terminal */
     #terminal-tab .terminal {
       flex: 1;
-      padding: 1.2rem 1.6rem;
+      padding: 1.3rem 1.8rem;
       overflow-y: auto;
-      line-height: 1.5;
-      font-size: 0.98rem;
+      line-height: 1.55;
+      font-size: 1rem;
     }
-    .line { margin: 0.4rem 0; white-space: pre-wrap; word-break: break-word; }
+    .line { margin: 0.5rem 0; white-space: pre-wrap; word-break: break-word; }
     .prompt    { color: var(--accent-dim); }
     .ai        { color: #00ffea; }
     .system    { color: #778899; }
@@ -88,11 +88,11 @@
     .input-line {
       display: flex;
       align-items: flex-start;
-      padding: 0.8rem 1.6rem;
-      background: rgba(0,0,0,0.35);
+      padding: 1rem 1.8rem;
+      background: rgba(0,0,0,0.4);
       border-top: 1px solid var(--border);
     }
-    .input-line .prompt { margin-right: 0.8rem; flex-shrink: 0; }
+    .input-line .prompt { margin-right: 1rem; flex-shrink: 0; }
     #input {
       flex: 1;
       background: transparent;
@@ -104,123 +104,148 @@
     }
     .cursor {
       display: inline-block;
-      width: 9px;
-      height: 1.2em;
+      width: 10px;
+      height: 1.3em;
       background: var(--accent);
-      animation: blink 1.1s step-end infinite;
-      margin-left: 4px;
+      animation: blink 1.2s step-end infinite;
+      margin-left: 5px;
     }
     @keyframes blink { 50% { opacity: 0; } }
 
-    /* My Pins tab */
+    /* My Pins */
     #pins-tab {
-      padding: 1.4rem;
+      padding: 1.5rem;
       overflow-y: auto;
     }
     .collection-header {
       text-align: center;
-      margin: 0 0 1.5rem;
+      margin: 0 0 1.6rem;
       color: var(--accent);
-      font-size: 1.4rem;
+      font-size: 1.5rem;
     }
     .empty-state {
       text-align: center;
       color: var(--muted);
-      padding: 5rem 1rem;
-      font-size: 1.1rem;
-      line-height: 1.6;
+      padding: 6rem 1.5rem;
+      font-size: 1.15rem;
+      line-height: 1.7;
     }
     .shared-notice {
-      background: rgba(187,134,252,0.15);
+      background: rgba(187,134,252,0.18);
       border: 1px solid var(--purple);
-      border-radius: 8px;
-      padding: 1rem;
-      margin: 1rem 0 2rem;
+      border-radius: 10px;
+      padding: 1.2rem;
+      margin: 1.2rem 0 2.2rem;
       text-align: center;
-      font-size: 1.05rem;
+      font-size: 1.1rem;
     }
     .card {
-      background: rgba(20,24,34,0.96);
+      background: rgba(20,24,34,0.97);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.4rem;
-      margin: 1.2rem 0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.3rem 0;
       box-shadow: var(--shadow);
     }
-    .pin-title { color: var(--accent); font-size: 1.35rem; margin-bottom: 0.6rem; }
+    .pin-title { color: var(--accent); font-size: 1.4rem; margin-bottom: 0.7rem; }
     .meta {
       color: var(--muted);
-      font-size: 0.92rem;
-      margin: 0.7rem 0;
+      font-size: 0.95rem;
+      margin: 0.8rem 0;
       display: flex;
       flex-wrap: wrap;
-      gap: 1.4rem;
+      gap: 1.6rem;
     }
     .saved-label { color: #00ff9d; font-weight: bold; }
-    .note { margin: 1.1rem 0; white-space: pre-wrap; line-height: 1.45; }
+    .note { margin: 1.2rem 0; white-space: pre-wrap; line-height: 1.5; }
     .comments {
-      margin-top: 1.3rem;
+      margin-top: 1.4rem;
       border-top: 1px solid var(--border);
-      padding-top: 1.1rem;
+      padding-top: 1.2rem;
     }
     .comment {
-      margin: 0.9rem 0;
-      padding-left: 1.1rem;
+      margin: 1rem 0;
+      padding-left: 1.2rem;
       border-left: 3px solid var(--accent-dim);
     }
     #search {
       width: 100%;
-      max-width: 480px;
-      padding: 0.8rem;
-      margin: 0 auto 1.6rem;
+      max-width: 500px;
+      padding: 0.9rem;
+      margin: 0 auto 1.8rem;
       display: block;
-      background: rgba(255,255,255,0.04);
+      background: rgba(255,255,255,0.05);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 10px;
       color: var(--text);
       font-family: inherit;
-      font-size: 0.98rem;
+      font-size: 1rem;
     }
     .share-row {
-      margin-top: 1.5rem;
+      margin-top: 1.6rem;
       display: flex;
       flex-wrap: wrap;
-      gap: 0.9rem;
+      gap: 1rem;
     }
     .action-btn {
-      padding: 0.55rem 1.2rem;
-      background: rgba(0,212,255,0.16);
+      padding: 0.6rem 1.4rem;
+      background: rgba(0,212,255,0.18);
       border: 1px solid var(--accent-dim);
-      border-radius: 6px;
+      border-radius: 8px;
       color: var(--accent);
       font-weight: bold;
       cursor: pointer;
-      transition: all 0.18s;
+      transition: all 0.2s;
     }
-    .action-btn:hover { background: rgba(0,212,255,0.32); }
+    .action-btn:hover { background: rgba(0,212,255,0.35); }
     .action-btn.copied,
     .action-btn.saved {
-      background: rgba(0,255,157,0.28);
+      background: rgba(0,255,157,0.3);
       color: #00ff9d;
       border-color: #00ff9d;
     }
     .save-shared-btn {
       background: linear-gradient(135deg, var(--purple), var(--accent));
       color: #000;
-      font-size: 1rem;
-      padding: 0.8rem 1.6rem;
-      margin: 1.5rem auto;
+      font-size: 1.05rem;
+      padding: 0.9rem 1.8rem;
+      margin: 1.6rem auto;
       display: block;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
     }
 
+    /* Floating new pin button */
+    #fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--purple), var(--accent));
+      color: #000;
+      border: none;
+      border-radius: 50%;
+      font-size: 2.2rem;
+      font-weight: bold;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+      cursor: pointer;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s;
+    }
+    #fab:hover { transform: scale(1.1); }
+    #fab:active { transform: scale(0.95); }
+
     @media (max-width: 560px) {
-      .tabs { flex-direction: column; gap: 0.5rem; }
+      .tabs { flex-direction: column; gap: 0.6rem; }
       .tab-btn { width: 100%; }
       .share-row { flex-direction: column; align-items: stretch; }
       .action-btn { width: 100%; text-align: center; }
+      #fab { bottom: 16px; right: 16px; width: 56px; height: 56px; font-size: 2rem; }
     }
   </style>
 </head>
@@ -249,15 +274,19 @@
 <!-- My Pins Tab -->
 <div id="pins-tab" class="tab-content">
   <div class="collection-header">My Saved Pins</div>
-  <input type="text" id="search" placeholder="Search name, note, comment, coords...">
+  <input type="text" id="search" placeholder="Search name, note, comment, coords…">
   <div id="pins-container"></div>
 </div>
+
+<!-- Floating Action Button -->
+<button id="fab" title="Create new pin">+</button>
 
 <script>
 // ────────────────────────────────────────────────
 // Shared
 // ────────────────────────────────────────────────
 const STORAGE_KEY = 'gps-pins-v3';
+let lastUsedName = localStorage.getItem('gps-pins-last-name') || '';
 
 function escapeHTML(str = '') {
   const map = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
@@ -282,7 +311,7 @@ function pinAlreadySaved(pinId) {
 }
 
 // ────────────────────────────────────────────────
-// Terminal
+// Terminal & Pin Creation
 // ────────────────────────────────────────────────
 const terminal = document.getElementById('terminal');
 const inputEl  = document.getElementById('input');
@@ -299,16 +328,24 @@ function printAI(txt) { println(txt, 'line ai'); }
 function printError(txt) { println(txt, 'line error'); }
 function clearScreen() { terminal.innerHTML = ''; }
 
-async function createAndSavePin() {
-  const name = prompt("Pin name (optional):")?.trim() || 'Anonymous';
-  const msg  = prompt("Note / description:")?.trim() || '';
-  const comm = prompt("First comment (optional):")?.trim() || '';
+async function createAndSavePin(usePrompts = true) {
+  let name = lastUsedName || 'Anonymous';
+  let msg = '';
+  let comm = '';
+
+  if (usePrompts) {
+    name = prompt("Pin name:", name)?.trim() || 'Anonymous';
+    msg  = prompt("Note / description (optional):")?.trim() || '';
+    comm = prompt("First comment (optional):")?.trim() || '';
+  }
+
+  localStorage.setItem('gps-pins-last-name', name);
 
   if (!navigator.geolocation) return printError("Geolocation not supported.");
 
   try {
     const pos = await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 14000 })
+      navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 15000 })
     );
 
     const lat = Number(pos.coords.latitude.toFixed(6));
@@ -326,14 +363,16 @@ async function createAndSavePin() {
     savePins(pins);
 
     const shareUrl = getPinShareUrl(pin);
+    const mapLink = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}`;
 
-    printAI(`Saved to My Pins: ${escapeHTML(name)}`);
-    println(`Share link: <a href="${shareUrl}" style="color:var(--accent); word-break:break-all;">${shareUrl}</a>`, 'line ai');
-    println(`→ open link or copy — now in your My Pins collection`);
+    printAI(`→ Saved: <strong>${escapeHTML(name)}</strong>`);
+    println(`Coords: ${lat}, ${lng} • <a href="${mapLink}" target="_blank" style="color:var(--accent-dim);">View on map</a>`, 'line ai');
+    println(`Share: <a href="${shareUrl}" style="color:var(--accent); word-break:break-all;">${shareUrl}</a>`, 'line ai');
+    println(`→ Now visible in My Pins tab`, 'line ai');
   } catch (err) {
     let m = "Couldn't get location.";
     if (err.code === 1) m += " Permission denied.";
-    if (err.code === 3) m += " Timed out.";
+    if (err.code === 3) m += " Timed out — try again?";
     printError(m);
   }
 }
@@ -346,26 +385,27 @@ function generateResponse(text) {
   if (lower === "help") {
     return [
       "Commands:",
-      "  save pin / new pin     → create & save to My Pins",
-      "  list pins              → count of saved pins",
-      "  clear / cls            → clear screen",
-      "  help                   → this list",
+      "  save pin / new pin / drop pin   → create new pin",
+      "  +                               → same as above (quick)",
+      "  list pins / my pins             → show count",
+      "  clear / cls                     → clear screen",
+      "  help                            → this help",
       "",
-      "→ My Pins tab shows only pins you have saved"
+      "→ Everything stays 100% in your browser"
     ].join('\n');
   }
 
-  if (["save pin","new pin","drop pin","create pin"].some(w => lower.includes(w))) {
-    createAndSavePin();
+  if (["save pin","new pin","drop pin","+","create pin"].some(w => lower.includes(w) || lower === w)) {
+    createAndSavePin(true);
     return null;
   }
 
   if (["list pins","pins","my pins","saved"].some(w => lower.includes(w))) {
     const count = getPins().length;
-    return `You have ${count} pin${count===1?'':'s'} saved in My Pins.\nSwitch to My Pins tab to see them.`;
+    return `You currently have ${count} pin${count===1?'':'s'} saved.\n→ Switch to My Pins tab to view them.`;
   }
 
-  return ["hmm…", "interesting…", "go on", "tell me more"][Math.floor(Math.random()*4)];
+  return ["hmm…", "go on…", "interesting", "tell me more"][Math.floor(Math.random()*4)];
 }
 
 inputEl.addEventListener('keydown', e => {
@@ -383,8 +423,14 @@ inputEl.addEventListener('keydown', e => {
   inputEl.focus();
 });
 
+// Quick + button
+document.getElementById('fab').addEventListener('click', () => {
+  createAndSavePin(true);
+  document.querySelector('[data-tab="terminal"]').click();
+});
+
 // ────────────────────────────────────────────────
-// My Pins Tab
+// My Pins Tab + Sharing
 // ────────────────────────────────────────────────
 let currentViewedPin = null;
 
@@ -395,9 +441,9 @@ function renderMyPins(pinsToShow = getPins(), isSharedPreview = false) {
   if (pinsToShow.length === 0 && !isSharedPreview) {
     container.innerHTML = `
       <div class="empty-state">
-        Your My Pins collection is empty.<br><br>
-        Use <strong>save pin</strong> or <strong>new pin</strong> in Terminal<br>
-        to add locations to your personal list.
+        No pins yet.<br><br>
+        Tap the <strong style="color:var(--accent);">+</strong> button<br>
+        or type <strong>save pin</strong> in Terminal
       </div>
     `;
     return;
@@ -406,7 +452,7 @@ function renderMyPins(pinsToShow = getPins(), isSharedPreview = false) {
   if (isSharedPreview) {
     container.insertAdjacentHTML('afterbegin', `
       <div class="shared-notice">
-        This is a shared pin preview • not yet in your My Pins
+        Shared pin preview • not yet saved to your collection
       </div>
     `);
   }
@@ -414,12 +460,14 @@ function renderMyPins(pinsToShow = getPins(), isSharedPreview = false) {
   pinsToShow.forEach(pin => {
     const shareUrl = getPinShareUrl(pin);
     const alreadySaved = pinAlreadySaved(pin.id);
+    const mapLink = `https://www.openstreetmap.org/?mlat=${pin.lat}&mlon=${pin.lng}#map=15/${pin.lat}/${pin.lng}`;
 
     let html = `
       <div class="card">
         <div class="pin-title">${escapeHTML(pin.name || 'Anonymous')}</div>
         <div class="meta">
           <span>${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}</span>
+          <span><a href="${mapLink}" target="_blank" style="color:var(--accent-dim);">Map</a></span>
           ${pin.time ? `<span class="saved-label">Saved ${new Date(pin.time).toLocaleDateString()}</span>` : ''}
         </div>
         ${pin.msg ? `<div class="note">${escapeHTML(pin.msg)}</div>` : ''}
@@ -435,7 +483,7 @@ function renderMyPins(pinsToShow = getPins(), isSharedPreview = false) {
           </div>
         ` : ''}
         <div class="share-row">
-          <button class="action-btn" onclick="navigator.clipboard.writeText('${shareUrl}').then(()=> {this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy URL',2200)})">
+          <button class="action-btn" onclick="navigator.clipboard.writeText('${shareUrl}').then(()=> {this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy URL',2000)})">
             Copy URL
           </button>
     `;
@@ -460,13 +508,13 @@ window.saveSharedPin = function(pinId) {
   if (!sharedPin || sharedPin.id !== pinId) return alert("Pin not found.");
 
   if (pinAlreadySaved(pinId)) {
-    alert("This pin is already saved in My Pins.");
+    alert("Already saved in your My Pins.");
     return;
   }
 
   pins.push({ ...sharedPin });
   savePins(pins);
-  alert("Pin saved to My Pins!");
+  alert("Pin added to My Pins!");
   renderMyPins(getPins());
 };
 
@@ -504,7 +552,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// Handle URL → shared pin preview
+// Handle shared pin via URL hash
 window.addEventListener('hashchange', () => {
   const hash = location.hash.slice(1);
   if (hash.startsWith('p=')) {
@@ -512,10 +560,10 @@ window.addEventListener('hashchange', () => {
       const pin = JSON.parse(atob(hash.slice(2)));
       currentViewedPin = pin;
       document.querySelector('[data-tab="pins"]').click();
-      renderMyPins([pin], true);  // true = shared preview mode
+      renderMyPins([pin], true);
     } catch (e) {
       document.getElementById('pins-container').innerHTML = 
-        '<p style="color:var(--danger); text-align:center; margin:3rem 0;">Invalid shared pin link.</p>';
+        '<p style="color:var(--danger); text-align:center; margin:4rem 0;">Invalid shared pin link.</p>';
     }
   } else {
     currentViewedPin = null;
@@ -523,12 +571,12 @@ window.addEventListener('hashchange', () => {
 });
 if (location.hash) window.dispatchEvent(new HashChangeEvent('hashchange'));
 
-// Boot
-println("GPS PINS — 2026", "system");
-println("100% local • private • type help", "system");
-println("────────────────────────────────────", "system");
+// Boot message
+println("GPS PINS — London 2026", "system");
+println("100% local • private • offline-capable", "system");
+println("───────────────────────────────────────", "system");
 println("");
-printAI("ready to save your places?");
+printAI("Ready. Type <strong>help</strong> or tap + to drop a pin.");
 println("");
 </script>
 </body>

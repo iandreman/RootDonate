@@ -467,7 +467,7 @@ function renderMyPins(pinsToShow = getPins(), isSharedPreview = false) {
         <div class="pin-title">${escapeHTML(pin.name || 'Anonymous')}</div>
         <div class="meta">
           <span>${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}</span>
-          <span><a href="${mapLink}" target="_blank" style="color:var(--accent-dim);">Map</a></span>
+          <span><a href="${mapLink}" target="_blank" style="color:var(--accent-dim);"></a></span>
           ${pin.time ? `<span class="saved-label">Saved ${new Date(pin.time).toLocaleDateString()}</span>` : ''}
         </div>
         ${pin.msg ? `<div class="note">${escapeHTML(pin.msg)}</div>` : ''}

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GPS Pins • 2026</title>
-  <meta name="description" content="Private GPS pins with notes & threaded comments. 100% local — now with quick + button." />
+  <title>GPS Pins – Private Location Markers</title>
+  <meta name="description" content="Save private GPS locations with notes and threaded comments. 100% local storage, offline-capable, no account required." />
 
   <style>
     :root {
@@ -255,7 +255,7 @@
 
 <header>
   <h1>GPS Pins</h1>
-  <div class="subtitle">private locations • threaded comments • 100% local</div>
+  <div class="subtitle">Private location markers with notes and threaded comments — fully local storage</div>
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="terminal">Terminal</button>
@@ -276,7 +276,7 @@
 <!-- My Pins Tab -->
 <div id="pins-tab" class="tab-content">
   <div class="collection-header">My Saved Pins</div>
-  <input type="text" id="search" placeholder="Search name, note, comment, coords…">
+  <input type="text" id="search" placeholder="Search name, note, comment, coordinates…">
   <div id="pins-container"></div>
 </div>
 
@@ -332,18 +332,18 @@ function clearScreen() { terminal.innerHTML = ''; }
 
 async function createAndSavePin(usePrompts = true) {
   let name = lastUsedName || 'Anonymous';
-  let msg = '';
-  let comm = '';
+  let note = '';
+  let comment = '';
 
   if (usePrompts) {
-    name = prompt("Pin name:", name)?.trim() || 'Anonymous';
-    msg  = prompt("Note / description (optional):")?.trim() || '';
-    comm = prompt("First comment (optional):")?.trim() || '';
+    name   = prompt("Pin name:", name)?.trim() || 'Anonymous';
+    note   = prompt("Note / description (optional):")?.trim() || '';
+    comment = prompt("Initial comment (optional):")?.trim() || '';
   }
 
   localStorage.setItem('gps-pins-last-name', name);
 
-  if (!navigator.geolocation) return printError("Geolocation not supported.");
+  if (!navigator.geolocation) return printError("Geolocation is not supported by this browser.");
 
   try {
     const pos = await new Promise((res, rej) =>
@@ -355,9 +355,10 @@ async function createAndSavePin(usePrompts = true) {
 
     const pin = {
       id: crypto.randomUUID(),
-      lat, lng, name, msg,
+      lat, lng, name,
+      msg: note,
       time: new Date().toISOString(),
-      comments: comm ? [{ text: comm, author: name, time: new Date().toISOString() }] : []
+      comments: comment ? [{ text: comment, author: name, time: new Date().toISOString() }] : []
     };
 
     const pins = getPins();
@@ -367,15 +368,15 @@ async function createAndSavePin(usePrompts = true) {
     const shareUrl = getPinShareUrl(pin);
     const mapLink = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}`;
 
-    printAI(`→ Saved: <strong>${escapeHTML(name)}</strong>`);
-    println(`Coords: ${lat}, ${lng} • <a href="${mapLink}" target="_blank" style="color:var(--accent-dim);">View on map</a>`, 'line ai');
-    println(`Share: <a href="${shareUrl}" style="color:var(--accent); word-break:break-all;">${shareUrl}</a>`, 'line ai');
-    println(`→ Now visible in My Pins tab`, 'line ai');
+    printAI(`Pin saved: <strong>${escapeHTML(name)}</strong>`);
+    println(`Coordinates: ${lat}, ${lng} • <a href="${mapLink}" target="_blank" style="color:var(--accent-dim);">View on OpenStreetMap</a>`, 'line ai');
+    println(`Share link: <a href="${shareUrl}" style="color:var(--accent); word-break:break-all;">${shareUrl}</a>`, 'line ai');
+    println(`→ View in the "My Pins" tab`, 'line ai');
   } catch (err) {
-    let m = "Couldn't get location.";
-    if (err.code === 1) m += " Permission denied.";
-    if (err.code === 3) m += " Timed out — try again?";
-    printError(m);
+    let msg = "Unable to retrieve location.";
+    if (err.code === 1) msg += " Permission denied.";
+    if (err.code === 3) msg += " Request timed out — please try again.";
+    printError(msg);
   }
 }
 
@@ -386,14 +387,14 @@ function generateResponse(text) {
 
   if (lower === "help") {
     return [
-      "Commands:",
-      "  save pin / new pin / drop pin   → create new pin",
-      "  +                               → same as above (quick)",
-      "  list pins / my pins             → show count",
-      "  clear / cls                     → clear screen",
-      "  help                            → this help",
+      "Available commands:",
       "",
-      "→ Everything stays 100% in your browser"
+      "  save pin   new pin   drop pin   +          → Create a new pin",
+      "  list pins  my pins                        → Show number of saved pins",
+      "  clear      cls                            → Clear the terminal",
+      "  help                                      → Show this help message",
+      "",
+      "All data remains 100% local — stored only in your browser."
     ].join('\n');
   }
 
@@ -404,10 +405,10 @@ function generateResponse(text) {
 
   if (["list pins","pins","my pins","saved"].some(w => lower.includes(w))) {
     const count = getPins().length;
-    return `You currently have ${count} pin${count===1?'':'s'} saved.\n→ Switch to My Pins tab to view them.`;
+    return `You have ${count} pin${count===1?'':'s'} saved.\n→ Switch to the "My Pins" tab to view them.`;
   }
 
-  return ["hmm…", "go on…", "interesting", "tell me more"][Math.floor(Math.random()*4)];
+  return ["Hmm…", "Go on…", "Interesting…", "Tell me more…"][Math.floor(Math.random()*4)];
 }
 
 inputEl.addEventListener('keydown', e => {
@@ -425,14 +426,14 @@ inputEl.addEventListener('keydown', e => {
   inputEl.focus();
 });
 
-// Quick + button
+// Quick-create button
 document.getElementById('fab').addEventListener('click', () => {
   createAndSavePin(true);
   document.querySelector('[data-tab="terminal"]').click();
 });
 
 // ────────────────────────────────────────────────
-// My Pins Tab + Sharing + Email
+// My Pins Tab + Sharing
 // ────────────────────────────────────────────────
 let currentViewedPin = null;
 
@@ -443,9 +444,10 @@ function renderMyPins(pinsToShow = getPins(), isSharedPreview = false) {
   if (pinsToShow.length === 0 && !isSharedPreview) {
     container.innerHTML = `
       <div class="empty-state">
-        No pins yet.<br><br>
-        Tap the <strong style="color:var(--accent);">+</strong> button<br>
-        or type <strong>save pin</strong> in Terminal
+        No pins saved yet.<br><br>
+        Create your first pin by:<br>
+        • tapping the <strong style="color:var(--accent);">+</strong> button, or<br>
+        • typing “save pin” or “+” in the Terminal tab
       </div>
     `;
     return;
@@ -454,7 +456,7 @@ function renderMyPins(pinsToShow = getPins(), isSharedPreview = false) {
   if (isSharedPreview) {
     container.insertAdjacentHTML('afterbegin', `
       <div class="shared-notice">
-        Shared pin preview • not yet saved to your collection
+        Shared pin preview (not yet saved to your collection)
       </div>
     `);
   }
@@ -462,38 +464,36 @@ function renderMyPins(pinsToShow = getPins(), isSharedPreview = false) {
   pinsToShow.forEach(pin => {
     const shareUrl = getPinShareUrl(pin);
     const alreadySaved = pinAlreadySaved(pin.id);
-    const mapLink = `https://www.openstreetmap.org/?mlat=${pin.lat}&mlon=${pin.lng}#map=15/${pin.lat}/${lng}`;
+    const mapLink = `https://www.openstreetmap.org/?mlat=${pin.lat}&mlon=${pin.lng}#map=15/${pin.lat}/${pin.lng}`;
 
-    // Build email content
-    let emailBody = `GPS Pin: ${pin.name || 'Anonymous'}\n\n`;
+    // Email content
+    let emailBody = `GPS Pin: ${pin.name || 'Unnamed'}\n\n`;
     emailBody += `Coordinates: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\n`;
     emailBody += `View on map: ${mapLink}\n\n`;
 
-    if (pin.msg) {
-      emailBody += `Note:\n${pin.msg}\n\n`;
-    }
+    if (pin.msg) emailBody += `Note:\n${pin.msg}\n\n`;
 
     if (pin.comments.length > 0) {
       emailBody += `Comments (${pin.comments.length}):\n`;
       pin.comments.forEach(c => {
-        emailBody += `• ${c.text}  (${c.author || 'anon'}, ${new Date(c.time).toLocaleString()})\n`;
+        emailBody += `• ${c.text}  (${c.author || 'anonymous'}, ${new Date(c.time).toLocaleString()})\n`;
       });
       emailBody += '\n';
     }
 
-    emailBody += `Share link (opens in GPS Pins): ${shareUrl}\n`;
+    emailBody += `Share link: ${shareUrl}\n`;
 
-    const encodedSubject = encodeURIComponent(`GPS Pin: ${pin.name || 'Anonymous'}`);
+    const encodedSubject = encodeURIComponent(`GPS Pin: ${pin.name || 'Unnamed'}`);
     const encodedBody = encodeURIComponent(emailBody);
     const mailtoLink = `mailto:?subject=${encodedSubject}&body=${encodedBody}`;
 
     let html = `
       <div class="card">
-        <div class="pin-title">${escapeHTML(pin.name || 'Anonymous')}</div>
+        <div class="pin-title">${escapeHTML(pin.name || 'Unnamed')}</div>
         <div class="meta">
           <span>${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}</span>
           <span><a href="${mapLink}" target="_blank" style="color:var(--accent-dim);">View on OpenStreetMap</a></span>
-          ${pin.time ? `<span class="saved-label">Saved ${new Date(pin.time).toLocaleDateString()}</span>` : ''}
+          ${pin.time ? `<span class="saved-label">Added ${new Date(pin.time).toLocaleDateString()}</span>` : ''}
         </div>
         ${pin.msg ? `<div class="note">${escapeHTML(pin.msg)}</div>` : ''}
         ${pin.comments.length ? `
@@ -502,17 +502,17 @@ function renderMyPins(pinsToShow = getPins(), isSharedPreview = false) {
             ${pin.comments.map(c => `
               <div class="comment">
                 ${escapeHTML(c.text)}<br>
-                <small style="color:var(--muted);">— ${escapeHTML(c.author || 'anon')}, ${new Date(c.time).toLocaleString()}</small>
+                <small style="color:var(--muted);">— ${escapeHTML(c.author || 'anonymous')}, ${new Date(c.time).toLocaleString()}</small>
               </div>
             `).join('')}
           </div>
         ` : ''}
         <div class="share-row">
-          <button class="action-btn" onclick="navigator.clipboard.writeText('${shareUrl}').then(()=> {this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy URL',2000)})">
-            Copy URL
+          <button class="action-btn" onclick="navigator.clipboard.writeText('${shareUrl}').then(()=> {this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy share link',2000)})">
+            Copy share link
           </button>
           <a href="${mailtoLink}" class="action-btn" target="_blank">
-            Email Pin
+            Email this pin
           </a>
     `;
 
@@ -536,13 +536,13 @@ window.saveSharedPin = function(pinId) {
   if (!sharedPin || sharedPin.id !== pinId) return alert("Pin not found.");
 
   if (pinAlreadySaved(pinId)) {
-    alert("Already saved in your My Pins.");
+    alert("This pin is already saved in your collection.");
     return;
   }
 
   pins.push({ ...sharedPin });
   savePins(pins);
-  alert("Pin added to My Pins!");
+  alert("Pin added to My Pins.");
   renderMyPins(getPins());
 };
 
@@ -600,11 +600,11 @@ window.addEventListener('hashchange', () => {
 if (location.hash) window.dispatchEvent(new HashChangeEvent('hashchange'));
 
 // Boot message
-println("GPS PINS — London 2026", "system");
-println("100% local • private • offline-capable", "system");
-println("───────────────────────────────────────", "system");
+println("GPS Pins — 2026", "system");
+println("Fully local • Private • Offline-capable", "system");
+println("────────────────────────────────────────", "system");
 println("");
-printAI("Ready. Type <strong>help</strong> or tap + to drop a pin.");
+printAI("Ready. Type <strong>help</strong> or tap + to create a pin.");
 println("");
 </script>
 </body>

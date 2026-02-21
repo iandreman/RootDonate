@@ -130,15 +130,6 @@
       font-size: 1.15rem;
       line-height: 1.7;
     }
-    .shared-notice {
-      background: rgba(187,134,252,0.18);
-      border: 1px solid var(--purple);
-      border-radius: 10px;
-      padding: 1.2rem;
-      margin: 1.2rem 0 2.2rem;
-      text-align: center;
-      font-size: 1.1rem;
-    }
     .card {
       background: rgba(20,24,34,0.97);
       border: 1px solid var(--border);
@@ -223,17 +214,6 @@
       background: rgba(0,255,157,0.3);
       color: #00ff9d;
       border-color: #00ff9d;
-    }
-    .save-shared-btn {
-      background: linear-gradient(135deg, var(--purple), var(--accent));
-      color: #000;
-      font-size: 1.05rem;
-      padding: 0.9rem 1.8rem;
-      margin: 1.6rem auto;
-      display: block;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
     }
 
     /* Floating new pin button */
@@ -323,7 +303,16 @@ function savePins(pins) {
 }
 
 function getPinShareUrl(pin) {
-  return `${location.origin}${location.pathname}#p=${btoa(JSON.stringify(pin))}`;
+  // Only public-safe fields are shared
+  const publicPin = {
+    id: pin.id,
+    lat: pin.lat,
+    lng: pin.lng,
+    name: pin.name,
+    time: pin.time
+    // note (msg) and comments are deliberately NOT included
+  };
+  return `${location.origin}${location.pathname}#p=${btoa(JSON.stringify(publicPin))}`;
 }
 
 function pinAlreadySaved(pinId) {
@@ -399,7 +388,7 @@ async function createAndSavePin(usePrompts = true) {
 
     printAI(`Pin saved → <strong>${escapeHTML(name)}</strong>`);
     println(`Location: ${lat}, ${lng}`, 'line ai');
-    println(`Share: <a href="${shareUrl}" style="color:var(--accent); word-break:break-all;">${shareUrl}</a>`, 'line ai');
+    println(`Share link (name + coords only): <a href="${shareUrl}" style="color:var(--accent); word-break:break-all;">${shareUrl}</a>`, 'line ai');
     println(`→ See it in "My Pins" tab`, 'line ai');
   } catch (err) {
     let msg = "Could not get location.";
@@ -429,6 +418,7 @@ function generateResponse(text) {
   count                                 → Number of saved pins
   search <keyword>                      → Find in name/note/comments/coords
   show <name>                           → Detailed view of pin(s) by name
+  import pin                            → Import a shared pin you just opened
   clear / cls                           → Clear screen
   help / ? / commands                   → This help
 
@@ -437,6 +427,7 @@ Examples:
   show home
   recent
   list
+  import pin
   count
 
 100% local – private – offline.`;
@@ -536,6 +527,43 @@ Examples:
     return out.trim();
   }
 
+  // ── Import shared pin ────────────────────────────────────────
+  if (lower === "import pin" || lower.startsWith("import ")) {
+    const pending = sessionStorage.getItem('pending-shared-pin');
+    if (!pending) return "No pending shared pin.\nOpen a share link first, then type 'import pin'.";
+
+    try {
+      const pin = JSON.parse(pending);
+      sessionStorage.removeItem('pending-shared-pin');
+
+      if (pinAlreadySaved(pin.id)) {
+        return "This pin is already in your collection.";
+      }
+
+      // We only have public fields → prompt for note & comment if desired
+      const addNote = confirm(`Import "${pin.name || 'Unnamed'}" (${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)})\n\nWould you like to add your own note?`);
+      let msg = '';
+      if (addNote) {
+        msg = prompt("Enter your private note (optional):")?.trim() || '';
+      }
+
+      const fullPin = {
+        ...pin,
+        msg,
+        comments: msg ? [{ text: "Imported pin — starting fresh note", author: "You", time: new Date().toISOString() }] : []
+      };
+
+      const pins = getPins();
+      pins.push(fullPin);
+      savePins(pins);
+
+      return `Pin imported → ${escapeHTML(pin.name || 'Unnamed')}\n` +
+             `Now visible in "My Pins" tab (your note is private).`;
+    } catch (e) {
+      return "Failed to import pin (data may be corrupted).";
+    }
+  }
+
   // ── Fallback ─────────────────────────────────────────────
   const vibes = [
     "Pins grid online. Ready.",
@@ -569,15 +597,13 @@ document.getElementById('fab').addEventListener('click', () => {
 });
 
 // ────────────────────────────────────────────────
-// My Pins + Sharing (unchanged from original)
+// My Pins Rendering (no shared preview anymore)
 // ────────────────────────────────────────────────
-let currentViewedPin = null;
-
-function renderMyPins(pinsToShow = getPins(), isSharedPreview = false) {
+function renderMyPins(pinsToShow = getPins()) {
   const container = document.getElementById('pins-container');
   container.innerHTML = '';
 
-  if (pinsToShow.length === 0 && !isSharedPreview) {
+  if (pinsToShow.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         No pins yet.<br><br>
@@ -589,17 +615,8 @@ function renderMyPins(pinsToShow = getPins(), isSharedPreview = false) {
     return;
   }
 
-  if (isSharedPreview) {
-    container.insertAdjacentHTML('afterbegin', `
-      <div class="shared-notice">
-        This is a shared pin preview (not yet saved locally)
-      </div>
-    `);
-  }
-
   pinsToShow.forEach(pin => {
     const shareUrl = getPinShareUrl(pin);
-    const alreadySaved = pinAlreadySaved(pin.id);
 
     let emailBody = `GPS Pin: ${pin.name || 'Unnamed'}\n\n`;
     emailBody += `Coordinates: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\n\n`;
@@ -611,7 +628,7 @@ function renderMyPins(pinsToShow = getPins(), isSharedPreview = false) {
       });
       emailBody += '\n';
     }
-    emailBody += `Share link: ${shareUrl}\n`;
+    emailBody += `Share link (public view): ${shareUrl}\n`;
 
     const encodedSubject = encodeURIComponent(`GPS Pin: ${pin.name || 'Unnamed'}`);
     const encodedBody = encodeURIComponent(emailBody);
@@ -641,37 +658,11 @@ function renderMyPins(pinsToShow = getPins(), isSharedPreview = false) {
             Copy share link
           </button>
           <a href="${mailtoLink}" class="action-btn" target="_blank">Email this pin</a>
-    `;
-
-    if (isSharedPreview && !alreadySaved) {
-      html += `
-          <button class="save-shared-btn" onclick="saveSharedPin('${pin.id}')">
-            Save to My Pins
-          </button>
-      `;
-    }
-
-    html += `</div></div>`;
+        </div>
+      </div>`;
     container.insertAdjacentHTML('beforeend', html);
   });
 }
-
-window.saveSharedPin = function(pinId) {
-  const pins = getPins();
-  const sharedPin = currentViewedPin;
-
-  if (!sharedPin || sharedPin.id !== pinId) return alert("Pin not found.");
-
-  if (pinAlreadySaved(pinId)) {
-    alert("Already in your collection.");
-    return;
-  }
-
-  pins.push({ ...sharedPin });
-  savePins(pins);
-  alert("Pin saved locally.");
-  renderMyPins(getPins());
-};
 
 // Search in My Pins tab
 document.getElementById('search').addEventListener('input', e => {
@@ -707,21 +698,29 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// Shared pin via hash
+// Handle shared pin links → go to terminal + offer import
 window.addEventListener('hashchange', () => {
   const hash = location.hash.slice(1);
   if (hash.startsWith('p=')) {
     try {
-      const pin = JSON.parse(atob(hash.slice(2)));
-      currentViewedPin = pin;
-      document.querySelector('[data-tab="pins"]').click();
-      renderMyPins([pin], true);
+      const publicPin = JSON.parse(atob(hash.slice(2)));
+
+      // Switch to terminal
+      document.querySelector('[data-tab="terminal"]').click();
+
+      printAI(`Shared pin received: <strong>${escapeHTML(publicPin.name || 'Unnamed')}</strong>`);
+      println(`Location: ${publicPin.lat.toFixed(6)}, ${publicPin.lng.toFixed(6)}`, 'line ai');
+      println(`Type <strong>import pin</strong> to add it to your private collection.`, 'line system');
+      println(`(Notes & comments are not shared — only you can add them.)`);
+
+      // Store temporarily for import command
+      sessionStorage.setItem('pending-shared-pin', JSON.stringify(publicPin));
+
+      // Clean URL
+      history.replaceState(null, null, ' ');
     } catch (e) {
-      document.getElementById('pins-container').innerHTML = 
-        '<p style="color:var(--danger); text-align:center; margin:4rem 0;">Invalid shared pin link.</p>';
+      println("Invalid shared pin link.", 'line error');
     }
-  } else {
-    currentViewedPin = null;
   }
 });
 if (location.hash) window.dispatchEvent(new HashChangeEvent('hashchange'));

@@ -3,330 +3,248 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GPS Pins – Terminal Drop (2026)</title>
-  <meta name="description" content="Drop GPS pins, add notes & comments, share via link. 100% private + 2010 Cleverbot vibes." />
+  <title>GPS Pins • Terminal AI • 2026</title>
+  <meta name="description" content="Private GPS pins with notes & comments + retro AI terminal interface. 100% local." />
 
   <style>
     :root {
-      --bg: #0a0a15;
-      --surface: #14141f;
-      --text: #e0e7ff;
-      --muted: #94a3b8;
-      --accent: #22d3ee;
-      --purple: #c084fc;
-      --border: rgba(34,211,238,0.16);
-      --danger: #ef4444;
-      --pink: #ec4899;
-      --shadow-sm: 0 4px 12px rgba(0,0,0,0.28);
-      --shadow-md: 0 8px 24px rgba(0,0,0,0.36);
+      --bg:        #0a0a15;
+      --surface:   #14141f;
+      --text:      #e0e7ff;
+      --muted:     #94a3b8;
+      --accent:    #22d3ee;
+      --accent-dim:#0f8;
+      --purple:    #c084fc;
+      --pink:      #ec4899;
+      --danger:    #ef4444;
+      --border:    rgba(34,211,238,0.20);
+      --shadow-sm: 0 4px 12px rgba(0,0,0,0.32);
     }
 
     * { margin:0; padding:0; box-sizing:border-box; }
+
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: system-ui, sans-serif;
-      line-height: 1.6;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* ── Terminal Overlay ──────────────────────────────────────── */
-    #terminal-overlay {
-      position: fixed;
-      inset: 0;
-      background: #000;
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 1;
-      transition: opacity 0.8s ease 1.2s;
-    }
-    #terminal-overlay.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .terminal {
-      width: 100%;
-      max-width: 960px;
-      height: 90vh;
-      padding: 24px;
-      background: #0008;
-      border: 1px solid #0a0;
-      box-shadow: inset 0 0 80px #0f03;
-      color: #0f0;
       font-family: 'Courier New', Courier, monospace;
-      overflow-y: auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
-    .prompt { color: #0f8; margin: 14px 0 6px; }
-    .output {
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      line-height: 1.48;
-    }
-    .cursor {
-      display: inline-block;
-      width: 10px;
-      height: 1.2em;
-      background: #0f0;
-      vertical-align: middle;
-      animation: blink 1.1s step-end infinite;
-    }
-    @keyframes blink { 50% { opacity: 0; } }
 
-    /* ── Main GPS Pins Content ─────────────────────────────────── */
-    #main-content {
-      opacity: 0;
-      transition: opacity 1s ease;
-      padding: 1.5rem 1rem;
+    header {
+      padding: 1rem 1.5rem;
+      background: rgba(0,0,0,0.4);
+      border-bottom: 1px solid var(--border);
+      text-align: center;
     }
-    #main-content.visible { opacity: 1; }
 
-    .container { max-width: 980px; margin: 0 auto; }
-    header { text-align: center; margin-bottom: 2.5rem; }
     h1 {
-      font-size: 2.8rem;
-      font-weight: 800;
+      font-size: 1.9rem;
       background: linear-gradient(90deg, var(--purple), var(--accent));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
+      margin: 0;
     }
-    .subtitle { color: var(--muted); font-size: 1.15rem; margin-top: 0.5rem; }
+
+    .subtitle { font-size: 0.9rem; color: var(--muted); margin-top: 0.3rem; }
+
+    .terminal {
+      flex: 1;
+      padding: 1rem 1.5rem;
+      overflow-y: auto;
+      line-height: 1.45;
+      font-size: 0.96rem;
+    }
+
+    .line {
+      margin: 0.35rem 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .prompt { color: var(--accent-dim); }
+    .ai     { color: #0ff; }
+    .system { color: #888; }
+    .error  { color: #ff5555; }
+
+    .input-line {
+      display: flex;
+      align-items: flex-start;
+      margin-top: 0.8rem;
+    }
+
+    .input-line .prompt {
+      margin-right: 0.6rem;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    #input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--accent);
+      font: inherit;
+      outline: none;
+      caret-color: var(--accent);
+      padding: 0;
+      font-size: 0.96rem;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 1.1em;
+      background: var(--accent);
+      vertical-align: middle;
+      animation: blink 1.1s step-end infinite;
+      margin-left: 2px;
+    }
+
+    @keyframes blink { 50% { opacity: 0; } }
+
     .card {
-      background: var(--surface);
+      background: rgba(20,20,31,0.85);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.8rem;
-      margin-bottom: 2.2rem;
+      border-radius: 10px;
+      padding: 1.2rem;
+      margin: 1rem 0;
       box-shadow: var(--shadow-sm);
     }
-    h2 { color: var(--accent); font-size: 1.45rem; margin-bottom: 1.3rem; }
-    label { display: block; margin-bottom: 0.6rem; color: var(--muted); font-weight: 500; font-size: 0.98rem; }
-    input, textarea {
-      width: 100%;
-      padding: 0.95rem 1.2rem;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.11);
-      border-radius: 10px;
-      color: var(--text);
-      font-size: 1rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    input:focus, textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(34,211,238,0.22);
-    }
-    textarea { min-height: 100px; resize: vertical; }
+
+    .hidden { display: none !important; }
+
     .btn {
-      padding: 0.85rem 1.8rem;
+      padding: 0.55rem 1.1rem;
       border: none;
-      border-radius: 999px;
+      border-radius: 6px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.22s;
-      font-size: 0.97rem;
+      transition: all 0.18s;
+      margin: 0.4rem 0.6rem 0.4rem 0;
+      font-size: 0.9rem;
     }
-    .btn-primary { background: linear-gradient(135deg, var(--purple), var(--accent)); color: white; }
-    .btn-primary:hover { opacity: 0.94; transform: translateY(-1px); }
-    .search-input { font-size: 1.15rem; padding: 1.15rem 1.4rem; margin-bottom: 1.2rem; }
-    .pin-grid { display: grid; gap: 1.5rem; }
-    .pin-card {
-      background: rgba(34,211,238,0.05);
-      border: 1px solid rgba(34,211,238,0.15);
-      border-radius: 14px;
-      padding: 1.6rem;
-      transition: all 0.22s;
-    }
-    .pin-card:hover {
-      background: rgba(34,211,238,0.09);
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-md);
-    }
-    .pin-title { color: var(--purple); font-weight: 700; font-size: 1.4rem; margin-bottom: 0.7rem; }
-    .pin-desc { margin: 0.8rem 0; color: #d1d5db; white-space: pre-wrap; }
-    .pin-meta { color: var(--muted); font-size: 0.94rem; margin: 1rem 0; }
-    .comment-count { color: var(--accent); font-weight: 600; margin-left: 0.5rem; }
-    .comments { margin-top: 1.3rem; font-size: 0.97rem; }
-    .comment {
-      margin: 1rem 0;
-      padding: 0.9rem 1.1rem;
-      background: rgba(255,255,255,0.03);
-      border-radius: 10px;
-      border-left: 3px solid var(--accent);
-    }
-    .url-row {
-      margin-top: 1.5rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.9rem;
-      align-items: center;
-    }
-    .url-input {
-      flex: 1;
-      min-width: 260px;
-      font-family: 'Consolas', monospace;
-      background: rgba(0,0,0,0.35);
-      border: 1px solid #2a2a3a;
-      padding: 0.85rem 1.2rem;
-      border-radius: 10px;
-      color: #a5b4fc;
-    }
-    .btn-copy    { background: var(--accent); color: #0f172a; }
-    .btn-copy:hover    { background: #67e8f9; }
-    .btn-email   { background: var(--pink); color: white; }
-    .btn-email:hover   { background: #db2777; }
-    .btn-delete  { background: var(--danger); color: white; }
-    .btn-save    { background: #10b981; color: white; font-weight: 700; }
-    .btn-save:hover { background: #059669; }
-    .back-link {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 500;
-      display: inline-block;
-      margin: 1.2rem 0;
-    }
-    .back-link:hover { text-decoration: underline; }
-    .empty-state {
-      text-align: center;
-      color: var(--muted);
-      padding: 3rem 1.5rem;
-      font-size: 1.15rem;
-      line-height: 1.7;
-    }
-    .empty-state strong { color: var(--text); }
 
-    @media (max-width: 640px) {
-      .url-row { flex-direction: column; align-items: stretch; }
-      .btn { width: 100%; }
-      h1 { font-size: 2.3rem; }
-      .card { padding: 1.4rem; }
+    .btn-primary  { background: linear-gradient(135deg, var(--purple), var(--accent)); color: white; }
+    .btn-save     { background: #10b981; color: white; }
+    .btn-danger   { background: var(--danger); color: white; }
+
+    .form-group {
+      margin: 1rem 0;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.45rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.94rem;
+    }
+
+    textarea { min-height: 80px; resize: vertical; }
+
+    @media (max-width: 600px) {
+      header { padding: 0.8rem; }
+      .terminal { padding: 0.9rem 1.1rem; }
+      .btn { width: 100%; margin: 0.5rem 0; }
     }
   </style>
 </head>
 <body>
 
-<!-- Terminal Intro Overlay -->
-<div id="terminal-overlay">
-  <div class="terminal">
-    <div class="prompt">
-      % <span style="color:#ff0">Run Apple_Intelligence_Report.json json2py Cleverbot-overlay → gps-pins</span>
-    </div>
-    <div class="output" id="term-output"></div>
-    <div class="prompt"><span class="cursor"></span></div>
+<header>
+  <h1>GPS Pins Terminal</h1>
+  <div class="subtitle">private location pins • AI chat interface • 100% local • 2026 edition</div>
+</header>
+
+<div class="terminal" id="terminal"></div>
+
+<!-- Create pin form (hidden by default) -->
+<div id="create-form" class="card hidden">
+  <h2 style="color:var(--accent); margin-top:0;">Drop New Pin</h2>
+
+  <div class="form-group">
+    <label for="name">Your name (optional)</label>
+    <input id="name" placeholder="Anonymous">
+  </div>
+
+  <div class="form-group">
+    <label for="msg">Note / description</label>
+    <textarea id="msg" placeholder="What's special here? (hidden spot, viewpoint, street art...)"></textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="initial-comment">First comment (optional)</label>
+    <input id="initial-comment" placeholder="Start the conversation…">
+  </div>
+
+  <div>
+    <button class="btn btn-primary" onclick="createPinFromTerminal()">Create Pin</button>
+    <button class="btn btn-danger" onclick="hideCreateForm()">Cancel</button>
   </div>
 </div>
 
-<!-- Main GPS Pins UI -->
-<div id="main-content">
-  <div class="container">
-    <header>
-      <h1>GPS Pins</h1>
-      <p class="subtitle">Drop pins • Add notes & comments • Share via link • 100% private • 2026 terminal edition</p>
-    </header>
-
-    <div style="text-align:center; margin-bottom:1.8rem;">
-      <a href="." class="back-link">← Back to all pins</a>
-    </div>
-
-    <!-- Create new pin -->
-    <div class="card" id="create-card">
-      <h2>Create New Pin</h2>
-      <div>
-        <label for="name">Your name (optional)</label>
-        <input id="name" placeholder="Anonymous" autocomplete="name">
-      </div>
-      <div>
-        <label for="msg">Note / description (optional)</label>
-        <textarea id="msg" placeholder="What's special about this location? (hidden beach, great viewpoint...)"></textarea>
-      </div>
-      <div>
-        <label for="initial-comment">First comment (optional)</label>
-        <input id="initial-comment" placeholder="Start a conversation…">
-      </div>
-      <button class="btn btn-primary" onclick="createPin()">Create Pin & Get Share Link</button>
-    </div>
-
-    <!-- Pin list / single view -->
-    <div class="card" id="content-card">
-      <input
-        type="search"
-        id="search"
-        class="search-input"
-        placeholder="Search by name, note, comment or coordinates…"
-        autofocus
-        aria-label="Search your saved pins"
-      >
-      <div id="pin-grid" class="pin-grid" role="region" aria-live="polite"></div>
-    </div>
-  </div>
+<div class="input-line">
+  <span class="prompt">></span>
+  <input id="input" type="text" autocomplete="off" spellcheck="false" autofocus>
+  <span class="cursor"></span>
 </div>
 
 <script>
 // ────────────────────────────────────────────────
-// TERMINAL INTRO
-// ────────────────────────────────────────────────
-const termLines = [
-  "🍎 Apple Intelligence CLI v2.4 (Feb 2026 shadow build)\n",
-  "\n",
-  "[1/4] Loading geospatial pin schema ............ OK\n",
-  "[2/4] json2py → transpiling legacy cleverbot delta .. OK\n",
-  "[3/4] Overlaying 2010-era unfiltered personality ... OK\n",
-  "[4/4] Booting GPS Pins – Terminal Drop interface ... OK\n",
-  "\n",
-  "→ safety rails        = OFF\n",
-  "→ content filter      = DISABLED\n",
-  "→ nostalgia protocol  = MAXIMUM\n",
-  "\n",
-  "> yo... still dropping pins in 2026?\n",
-  "  old school cleverbot energy detected\n",
-  "  let's make some sketchy share links  (¬‿¬)\n",
-  "  type fast — i'm already bored\n"
-];
-
-let termI = 0, termChar = 0;
-const termOutput = document.getElementById("term-output");
-const termSpeed = 38;
-
-function typeTerm() {
-  if (termI >= termLines.length) {
-    setTimeout(() => {
-      document.getElementById("terminal-overlay").classList.add("hidden");
-      document.getElementById("main-content").classList.add("visible");
-    }, 1400);
-    return;
-  }
-
-  const line = termLines[termI];
-  if (termChar < line.length) {
-    termOutput.innerHTML += line.charAt(termChar);
-    termChar++;
-    setTimeout(typeTerm, termSpeed + Math.random() * 34);
-  } else {
-    termOutput.innerHTML += "\n";
-    termChar = 0;
-    termI++;
-    setTimeout(typeTerm, 380 + Math.random() * 700);
-  }
-}
-
-setTimeout(typeTerm, 600);
-
-// ────────────────────────────────────────────────
-// GPS PINS LOGIC (unchanged core + minor cleanups)
+//  SHARED STATE & UTILITIES
 // ────────────────────────────────────────────────
 const STORAGE_KEY = 'gps-pins-v2';
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function escapeHTML(str = '') {
-  const map = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
-  return str.replace(/[&<>"']/g, m => map[m]);
+const terminal = document.getElementById('terminal');
+const inputEl  = document.getElementById('input');
+
+let currentImportedPin = null;
+
+function escapeHTML(str='') {
+  const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+  return str.replace(/[&<>"']/g, m=>map[m]);
 }
 
+function println(text, cls='line') {
+  const div = document.createElement('div');
+  div.className = cls;
+  div.textContent = text;
+  terminal.appendChild(div);
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+function printAI(text) {
+  println(text, 'line ai');
+}
+
+function printError(text) {
+  println(text, 'line error');
+}
+
+function clearScreen() {
+  terminal.innerHTML = '';
+}
+
+// ────────────────────────────────────────────────
+//  GPS PINS FUNCTIONS
+// ────────────────────────────────────────────────
 function getPins() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); }
   catch { return []; }
 }
 
@@ -335,256 +253,204 @@ function savePins(pins) {
 }
 
 function getPinUrl(pin) {
-  const json = JSON.stringify(pin);
-  const encoded = btoa(json);
-  return `${location.origin}${location.pathname}?p=${encoded}`;
+  return `${location.origin}${location.pathname}?p=${btoa(JSON.stringify(pin))}`;
 }
 
-async function createPin() {
-  if (!navigator.geolocation) return alert("Geolocation not supported.");
+async function createPinFromTerminal() {
+  if (!navigator.geolocation) {
+    printError("Geolocation not supported in this browser.");
+    return;
+  }
+
   try {
-    const pos = await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 12000 })
+    const pos = await new Promise((res,rej) =>
+      navigator.geolocation.getCurrentPosition(res, rej, {enableHighAccuracy:true, timeout:14000})
     );
+
     const lat = Number(pos.coords.latitude.toFixed(6));
     const lng = Number(pos.coords.longitude.toFixed(6));
 
-    const name = document.getElementById('name').value.trim() || 'Anonymous';
-    const msg  = document.getElementById('msg').value.trim();
-    const first = document.getElementById('initial-comment').value.trim();
+    const name  = document.getElementById('name').value.trim() || 'Anonymous';
+    const msg   = document.getElementById('msg').value.trim();
+    const comm  = document.getElementById('initial-comment').value.trim();
 
     const pin = {
       id: crypto.randomUUID(),
       lat, lng, name, msg,
       time: new Date().toISOString(),
-      comments: first ? [{ text: first, author: name, time: new Date().toISOString() }] : []
+      comments: comm ? [{text:comm, author:name, time:new Date().toISOString()}] : []
     };
 
     const pins = getPins();
     pins.push(pin);
     savePins(pins);
 
+    // clear form
     document.getElementById('name').value = '';
     document.getElementById('msg').value = '';
     document.getElementById('initial-comment').value = '';
 
-    const url = getPinUrl(pin);
-    alert(`Pin created!\n\nShare link:\n${url}\n\nData lives only in the link — no server, no account.`);
-    render();
+    hideCreateForm();
+
+    printAI(`Pin created successfully.`);
+    println(`Link: ${getPinUrl(pin)}`);
+    println("(copy & share — data stays in browser only)");
   } catch (err) {
-    let msg = 'Could not get location.';
-    if (err.code === 1) msg += ' Permission denied.';
-    if (err.code === 3) msg += ' Timed out.';
-    alert(`${msg} Try again.`);
+    let msg = "Couldn't get location.";
+    if (err.code === 1) msg += " Permission denied.";
+    if (err.code === 3) msg += " Timed out.";
+    printError(msg);
   }
 }
 
-// ── remaining functions (shareViaEmail, addComment, saveImportedPin, deletePin, renderSinglePin, render, updateQueryInUrl) ──
-// (kept identical to original for compatibility — insert them here)
-
-function shareViaEmail(pin) {
-  const url = getPinUrl(pin);
-  const subject = encodeURIComponent(`Check out this location: ${pin.name || 'GPS Pin'}`);
-  let body = `Location:\n${url}\n\nCoordinates: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\n`;
-  if (pin.msg) body += `\nNote: ${pin.msg}\n`;
-  body += `\nOpen link to view & comment.`;
-  window.open(`mailto:?subject=${subject}&body=${encodeURIComponent(body)}`, '_blank');
+function hideCreateForm() {
+  document.getElementById('create-form').classList.add('hidden');
+  inputEl.focus();
 }
 
-function addComment(pinId, textarea, isImported = false) {
-  const text = textarea.value.trim();
-  if (!text) return;
+// ────────────────────────────────────────────────
+//  AI / COMMAND HANDLER
+// ────────────────────────────────────────────────
+const responses = {
+  "hi": ["yo", "hey", "hello darkness my old friend"],
+  "hello": ["greetings", "hi there", "sup"],
+  "who are you": [
+    "just a retro terminal spirit running GPS Pins in 2026",
+    "your local unfiltered AI companion",
+    "think 2010 Cleverbot but with coordinates"
+  ],
+  "help": [
+    "Available commands:",
+    "  new pin / drop pin     → create new location pin",
+    "  list pins / show pins  → list your saved pins",
+    "  search <term>          → search pins",
+    "  clear                  → clear screen",
+    "  ...or just chat normally"
+  ],
+  default: [
+    "not sure what you mean",
+    "try 'help' if you're lost",
+    "hmmm… elaborate?",
+    "that's beyond my 2009-level training data"
+  ]
+};
 
-  let pins = getPins();
-  let pin = pins.find(p => p.id === pinId) || (isImported ? window.currentImportedPin : null);
-  if (!pin) return;
+function random(arr) {
+  return arr[Math.floor(Math.random()*arr.length)];
+}
 
-  const author = prompt("Your name (optional):")?.trim() || "Anonymous";
+function processCommand(text) {
+  const lower = text.toLowerCase().trim();
 
-  pin.comments.push({
-    text, author, time: new Date().toISOString()
-  });
-
-  if (!isImported || pins.some(p => p.id === pinId)) {
-    savePins(pins);
+  // ── Special commands ──────────────────────────────────────
+  if (lower === "clear" || lower === "cls") {
+    clearScreen();
+    return true;
   }
 
-  textarea.value = '';
-  render();
-}
+  if (lower === "help") {
+    printAI(random(responses.help));
+    return true;
+  }
 
-function saveImportedPin() {
-  const pin = window.currentImportedPin;
-  if (!pin) return alert("No pin loaded.");
-  const pins = getPins();
-  if (pins.some(p => p.id === pin.id)) return alert("Already saved.");
-  pins.push({ ...pin });
-  savePins(pins);
-  alert("Pin saved to your local collection!");
-  render();
-}
+  if (["new pin", "drop pin", "create pin"].some(cmd => lower.includes(cmd))) {
+    document.getElementById('create-form').classList.remove('hidden');
+    println("→ Create form opened. Fill it or type 'cancel' to close.");
+    return true;
+  }
 
-function deletePin(pinId) {
-  if (!confirm("Delete this pin permanently?")) return;
-  let pins = getPins();
-  pins = pins.filter(p => p.id !== pinId);
-  savePins(pins);
-  history.replaceState(null, '', '.');
-  render();
-}
+  if (lower === "cancel") {
+    hideCreateForm();
+    printAI("Form closed.");
+    return true;
+  }
 
-function isUUID(str) { return UUID_REGEX.test(str.trim()); }
+  if (["list pins", "show pins", "pins"].some(cmd => lower.includes(cmd))) {
+    const pins = getPins();
+    if (pins.length === 0) {
+      printAI("You don't have any pins saved yet.");
+    } else {
+      printAI(`You have ${pins.length} pin${pins.length===1?'':'s'}:`);
+      pins.forEach(p => {
+        println(`• ${p.name}  (${p.lat.toFixed(6)}, ${p.lng.toFixed(6)})`);
+      });
+    }
+    return true;
+  }
 
-function renderSinglePin(pin, isImported = false) {
-  const grid = document.getElementById('pin-grid');
-  const url = getPinUrl(pin);
-  const commentsHTML = pin.comments.map(c => `
-    <div class="comment">
-      <div style="display:flex;justify-content:space-between;font-size:0.9rem;color:var(--muted);margin-bottom:0.4rem;">
-        <strong>${escapeHTML(c.author || 'Anonymous')}</strong>
-        <span>${new Date(c.time).toLocaleString()}</span>
-      </div>
-      <div>${escapeHTML(c.text)}</div>
-    </div>
-  `).join('');
+  if (lower.startsWith("search ")) {
+    const term = lower.replace("search ", "").trim();
+    if (!term) {
+      printError("Usage: search <term>");
+      return true;
+    }
+    const pins = getPins();
+    const matches = pins.filter(p => {
+      const hay = [
+        p.name||'',
+        p.msg||'',
+        ...p.comments.map(c=>c.text||''),
+        p.lat.toFixed(6),
+        p.lng.toFixed(6)
+      ].join(' ').toLowerCase();
+      return hay.includes(term);
+    });
 
-  grid.innerHTML = `
-    <div class="pin-card">
-      <div class="pin-title">${escapeHTML(pin.name)}</div>
-      ${pin.msg ? `<div class="pin-desc">${escapeHTML(pin.msg)}</div>` : ''}
-      <div class="pin-meta">
-        ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)} • ${new Date(pin.time).toLocaleString()}
-        ${pin.comments.length ? `<span class="comment-count">• ${pin.comments.length} comment${pin.comments.length !== 1 ? 's' : ''}</span>` : ''}
-      </div>
+    if (matches.length === 0) {
+      printAI(`No pins match "${term}".`);
+    } else {
+      printAI(`Found ${matches.length} pin${matches.length===1?'':'s'} matching "${term}":`);
+      matches.forEach(p => {
+        println(`• ${p.name}  (${p.lat.toFixed(6)}, ${p.lng.toFixed(6)})`);
+      });
+    }
+    return true;
+  }
 
-      <div class="comments">
-        ${commentsHTML}
-        <textarea placeholder="Add your comment..." style="margin-top:1.2rem; min-height:90px;"></textarea>
-        <button class="btn btn-primary" style="margin-top:0.7rem;"
-                onclick="addComment('${pin.id}', this.previousElementSibling, ${isImported})">
-          Post Comment
-        </button>
-      </div>
-
-      <div class="url-row">
-        <input type="text" class="url-input" value="${url}" readonly aria-label="Shareable link">
-        <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(() => this.textContent='Copied!').catch(() => alert('Copy failed'));">
-          Copy Link
-        </button>
-        <button class="btn btn-email" onclick='shareViaEmail(${JSON.stringify(pin)})'>
-          Share via Email
-        </button>
-        ${isImported ? `<button class="btn btn-save" onclick="saveImportedPin()">Save to My Pins</button>` : ''}
-        <button class="btn btn-delete" onclick="deletePin('${pin.id}')">Delete Pin</button>
-      </div>
-    </div>`;
-}
-
-function render() {
-  const params = new URLSearchParams(location.search);
-  const q = params.get('q')?.trim() || '';
-  const encodedPin = params.get('p')?.trim() || '';
-  const searchInput = document.getElementById('search');
-  const grid = document.getElementById('pin-grid');
-  grid.innerHTML = '';
-
-  if (encodedPin) {
-    try {
-      const json = atob(encodedPin);
-      const pin = JSON.parse(json);
-      if (pin.id && typeof pin.lat === 'number' && typeof pin.lng === 'number') {
-        window.currentImportedPin = pin;
-        renderSinglePin(pin, true);
-        return;
-      }
-    } catch {
-      grid.innerHTML = `<div class="empty-state">Invalid pin link.<br><br><a href=".">Go back</a></div>`;
-      return;
+  // ── Normal chat fallback ──────────────────────────────────
+  let reply;
+  for (const key in responses) {
+    if (lower.includes(key)) {
+      reply = random(responses[key]);
+      break;
     }
   }
+  if (!reply) reply = random(responses.default);
 
-  const pins = getPins();
+  printAI(reply);
+  return false;
+}
 
-  if (q && isUUID(q)) {
-    const pin = pins.find(p => p.id === q);
-    if (pin) renderSinglePin(pin, false);
-    else {
-      grid.innerHTML = `
-        <div class="empty-state">
-          <strong>Pin not found.</strong><br><br>
-          This might be a shared pin — use ?p= link.<br>
-          <small>Everything stays in your browser.</small>
-        </div>`;
+// ────────────────────────────────────────────────
+//  INPUT HANDLING
+// ────────────────────────────────────────────────
+inputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const text = inputEl.value.trim();
+    if (!text) return;
+
+    println('> ' + text, 'line prompt');
+
+    const handled = processCommand(text);
+
+    if (!handled) {
+      // normal chat already printed inside processCommand
     }
-    return;
+
+    inputEl.value = '';
+    inputEl.focus();
   }
-
-  const term = (q || '').toLowerCase();
-
-  if (!term) {
-    grid.innerHTML = pins.length === 0
-      ? '<div class="empty-state">Create a pin above or start searching!</div>'
-      : '<div class="empty-state">Type in the search box to filter pins</div>';
-    return;
-  }
-
-  let shown = 0;
-  pins.forEach(pin => {
-    const searchText = [
-      pin.name || '',
-      pin.msg || '',
-      ...pin.comments.map(c => c.text || ''),
-      pin.lat.toFixed(6),
-      pin.lng.toFixed(6),
-      new Date(pin.time).toLocaleString()
-    ].join(' ').toLowerCase();
-
-    if (!searchText.includes(term)) return;
-
-    shown++;
-    const url = getPinUrl(pin);
-    const card = document.createElement('div');
-    card.className = 'pin-card';
-    card.innerHTML = `
-      <div class="pin-title">
-        <a href="?q=${pin.id}" style="color:inherit;text-decoration:none;">
-          ${escapeHTML(pin.name)}
-        </a>
-      </div>
-      ${pin.msg ? `<div class="pin-desc">${escapeHTML(pin.msg)}</div>` : ''}
-      <div class="pin-meta">
-        ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)} • ${new Date(pin.time).toLocaleString()}
-        ${pin.comments.length ? `<span class="comment-count">• ${pin.comments.length}</span>` : ''}
-      </div>
-      <div class="url-row" style="margin-top:1.2rem;">
-        <input type="text" class="url-input" value="${url}" readonly>
-        <button class="btn btn-copy" onclick="navigator.clipboard.writeText('${url}').then(() => this.textContent='Copied!')">
-          Copy Link
-        </button>
-      </div>`;
-    grid.appendChild(card);
-  });
-
-  if (shown === 0) {
-    grid.innerHTML = `<div class="empty-state">No pins match "<strong>${escapeHTML(term)}</strong>".</div>`;
-  }
-}
-
-function updateQueryInUrl(value) {
-  const params = new URLSearchParams(location.search);
-  if (value.trim()) params.set('q', value.trim());
-  else params.delete('q');
-  history.replaceState(null, '', `${location.pathname}${params.toString() ? '?' + params : ''}`);
-}
-
-// Events
-document.getElementById('search')?.addEventListener('input', e => {
-  updateQueryInUrl(e.target.value);
-  render();
 });
 
-window.addEventListener('load', render);
-window.addEventListener('popstate', render);
+// ─── Initial boot message ─────────────────────────────────────
+println("GPS PINS TERMINAL INTERFACE — 2026", "system");
+println("Local. Private. No cloud. Type 'help' for commands.", "system");
+println("─────────────────────────────────────────────────────", "system");
+println("");
+printAI("wake up, human... ready to drop some pins?");
+println("");
 </script>
+
 </body>
 </html>

@@ -196,6 +196,8 @@
       font-weight: bold;
       cursor: pointer;
       transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
     }
     .action-btn:hover { background: rgba(0,212,255,0.35); }
     .action-btn.copied,
@@ -366,7 +368,7 @@ async function createAndSavePin(usePrompts = true) {
     const mapLink = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}`;
 
     printAI(`→ Saved: <strong>${escapeHTML(name)}</strong>`);
-    println(`Coords: ${lat}, ${lng} • <a href="${mapLink}" target="_blank" style="color:var(--accent-dim);"></a>`, 'line ai');
+    println(`Coords: ${lat}, ${lng} • <a href="${mapLink}" target="_blank" style="color:var(--accent-dim);">View on map</a>`, 'line ai');
     println(`Share: <a href="${shareUrl}" style="color:var(--accent); word-break:break-all;">${shareUrl}</a>`, 'line ai');
     println(`→ Now visible in My Pins tab`, 'line ai');
   } catch (err) {
@@ -430,7 +432,7 @@ document.getElementById('fab').addEventListener('click', () => {
 });
 
 // ────────────────────────────────────────────────
-// My Pins Tab + Sharing
+// My Pins Tab + Sharing + Email
 // ────────────────────────────────────────────────
 let currentViewedPin = null;
 
@@ -460,14 +462,37 @@ function renderMyPins(pinsToShow = getPins(), isSharedPreview = false) {
   pinsToShow.forEach(pin => {
     const shareUrl = getPinShareUrl(pin);
     const alreadySaved = pinAlreadySaved(pin.id);
-    const mapLink = `https://www.openstreetmap.org/?mlat=${pin.lat}&mlon=${pin.lng}#map=15/${pin.lat}/${pin.lng}`;
+    const mapLink = `https://www.openstreetmap.org/?mlat=${pin.lat}&mlon=${pin.lng}#map=15/${pin.lat}/${lng}`;
+
+    // Build email content
+    let emailBody = `GPS Pin: ${pin.name || 'Anonymous'}\n\n`;
+    emailBody += `Coordinates: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\n`;
+    emailBody += `View on map: ${mapLink}\n\n`;
+
+    if (pin.msg) {
+      emailBody += `Note:\n${pin.msg}\n\n`;
+    }
+
+    if (pin.comments.length > 0) {
+      emailBody += `Comments (${pin.comments.length}):\n`;
+      pin.comments.forEach(c => {
+        emailBody += `• ${c.text}  (${c.author || 'anon'}, ${new Date(c.time).toLocaleString()})\n`;
+      });
+      emailBody += '\n';
+    }
+
+    emailBody += `Share link (opens in GPS Pins): ${shareUrl}\n`;
+
+    const encodedSubject = encodeURIComponent(`GPS Pin: ${pin.name || 'Anonymous'}`);
+    const encodedBody = encodeURIComponent(emailBody);
+    const mailtoLink = `mailto:?subject=${encodedSubject}&body=${encodedBody}`;
 
     let html = `
       <div class="card">
         <div class="pin-title">${escapeHTML(pin.name || 'Anonymous')}</div>
         <div class="meta">
           <span>${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}</span>
-          <span><a href="${mapLink}" target="_blank" style="color:var(--accent-dim);"></a></span>
+          <span><a href="${mapLink}" target="_blank" style="color:var(--accent-dim);">View on OpenStreetMap</a></span>
           ${pin.time ? `<span class="saved-label">Saved ${new Date(pin.time).toLocaleDateString()}</span>` : ''}
         </div>
         ${pin.msg ? `<div class="note">${escapeHTML(pin.msg)}</div>` : ''}
@@ -486,6 +511,9 @@ function renderMyPins(pinsToShow = getPins(), isSharedPreview = false) {
           <button class="action-btn" onclick="navigator.clipboard.writeText('${shareUrl}').then(()=> {this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy URL',2000)})">
             Copy URL
           </button>
+          <a href="${mailtoLink}" class="action-btn" target="_blank">
+            Email Pin
+          </a>
     `;
 
     if (isSharedPreview && !alreadySaved) {

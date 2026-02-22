@@ -57,7 +57,7 @@
       color: var(--muted);
       cursor: pointer;
       font-weight: bold;
-      transition: all 0.18s;
+      transition: all 0.18s ease;
     }
     .tab-btn.active {
       background: linear-gradient(135deg, var(--purple), var(--accent));
@@ -67,8 +67,8 @@
     .tab-content {
       flex: 1;
       display: none;
-      overflow: hidden;
       flex-direction: column;
+      overflow: hidden;
     }
     .tab-content.active { display: flex; }
 
@@ -160,24 +160,46 @@
       font-size: 1rem;
     }
     .share-row {
-      margin-top: 1.8rem;
+      margin-top: 1.2rem;
       display: flex;
       flex-wrap: wrap;
-      gap: 1rem;
+      gap: 0.6rem;
+      align-items: center;
     }
-    .action-btn {
-      padding: 0.6rem 1.4rem;
-      background: rgba(0,212,255,0.18);
-      border: 1px solid var(--accent-dim);
+    .action-btn, .copy-btn, .email-btn {
+      padding: 0.6rem 1.1rem;
       border-radius: 8px;
-      color: var(--accent);
       font-weight: bold;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
       text-decoration: none;
       display: inline-block;
+      border: 1px solid;
+      font-size: 0.9rem;
+    }
+    .action-btn {
+      background: rgba(0,212,255,0.18);
+      border-color: var(--accent-dim);
+      color: var(--accent);
     }
     .action-btn:hover { background: rgba(0,212,255,0.35); }
+    .copy-btn {
+      background: rgba(187,134,252,0.18);
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+    .copy-btn:hover { background: rgba(187,134,252,0.35); }
+    .copy-btn.copied {
+      background: rgba(0,255,157,0.3);
+      color: #00ff9d;
+      border-color: #00ff9d;
+    }
+    .email-btn {
+      background: rgba(187,134,252,0.25);
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+    .email-btn:hover { background: rgba(187,134,252,0.45); }
 
     #fab {
       position: fixed;
@@ -197,7 +219,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.2s;
+      transition: transform 0.2s ease;
     }
     #fab:hover { transform: scale(1.1); }
     #fab:active { transform: scale(0.95); }
@@ -206,7 +228,7 @@
       .tabs { flex-direction: column; gap: 0.6rem; }
       .tab-btn { width: 100%; }
       .share-row { flex-direction: column; align-items: stretch; }
-      .action-btn { width: 100%; text-align: center; }
+      .action-btn, .copy-btn, .email-btn { width: 100%; text-align: center; }
       #fab { bottom: 16px; right: 16px; width: 56px; height: 56px; font-size: 2rem; }
     }
   </style>
@@ -266,32 +288,48 @@ function getPinShareUrl(pin) {
   return `${location.origin}${location.pathname}#p=${btoa(JSON.stringify(publicPin))}`;
 }
 
+async function copyToClipboard(text, btn) {
+  try {
+    await navigator.clipboard.writeText(text);
+    const original = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = original;
+      btn.classList.remove('copied');
+    }, 1800);
+  } catch (err) {
+    console.error('Clipboard copy failed', err);
+    alert('Could not copy — please select manually.');
+  }
+}
+
 // ────────────────────────────────────────────────
-// Terminal Helpers
+// Terminal helpers
 // ────────────────────────────────────────────────
 const terminal = document.getElementById('terminal');
 const inputEl  = document.getElementById('input');
 
-function println(txt, cls = 'line') {
+function println(html, cls = 'line') {
   const div = document.createElement('div');
   div.className = cls;
-  div.innerHTML = txt;
+  div.innerHTML = html;
   terminal.appendChild(div);
   terminal.scrollTop = terminal.scrollHeight;
 }
 
-function printInfo(txt)  { println(txt, 'line info'); }
-function printError(txt) { println(txt, 'line error'); }
-function printSystem(txt){ println(txt, 'line system'); }
-function clearScreen()   { terminal.innerHTML = ''; }
+function printInfo(html)  { println(html, 'line info'); }
+function printError(html) { println(html, 'line error'); }
+function printSystem(html){ println(html, 'line system'); }
+function clearScreen()    { terminal.innerHTML = ''; }
 
 // ────────────────────────────────────────────────
-// Simple command handler (no AI)
+// Command handler
 // ────────────────────────────────────────────────
 function handleCommand(text) {
   const cmd = text.trim().toLowerCase();
 
-  if (cmd === '' || cmd === 'clear' || cmd === 'cls') {
+  if (!cmd || cmd === 'clear' || cmd === 'cls') {
     clearScreen();
     return;
   }
@@ -299,38 +337,38 @@ function handleCommand(text) {
   if (cmd === 'help' || cmd === '?' || cmd === 'h') {
     printInfo(`
 Available commands:
-  help / ? / h              → this help
-  clear / cls               → clear screen
-  save / drop / + / new     → save current location
-  list / pins               → list all pins
-  count                     → show number of pins
-  recent                    → show 5 most recent pins
+  help / ? / h          → show this help
+  clear / cls           → clear screen
+  save / drop / + / new → save current location
+  list / pins           → list all saved pins
+  count                 → show number of pins
+  recent                → show 5 most recent pins
 
 Type a command and press Enter.
-Tap the + button to quickly save your location.
+Use the + button to quickly drop a pin.
     `);
     return;
   }
 
-  if (['save', 'drop', '+', 'new'].includes(cmd)) {
+  if (['save','drop','+','new'].includes(cmd)) {
     document.getElementById('fab').click();
     return;
   }
 
   if (cmd === 'count') {
-    const pins = getPins();
-    printInfo(`You have ${pins.length} pin${pins.length === 1 ? '' : 's'} saved.`);
+    const count = getPins().length;
+    printInfo(`You have ${count} pin${count === 1 ? '' : 's'} saved.`);
     return;
   }
 
-  if (['list', 'pins'].includes(cmd)) {
+  if (['list','pins'].includes(cmd)) {
     const pins = getPins();
     if (!pins.length) {
       printInfo("No pins saved yet. Tap + or type 'save'.");
       return;
     }
     let out = `Saved pins (${pins.length}):\n\n`;
-    pins.forEach((p, i) => {
+    pins.forEach((p,i) => {
       out += `${i+1}. ${escapeHTML(p.name || 'Unnamed')}  (${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}) — ${new Date(p.time).toLocaleString()}\n`;
     });
     printInfo(out);
@@ -338,13 +376,13 @@ Tap the + button to quickly save your location.
   }
 
   if (cmd === 'recent') {
-    const pins = getPins().slice().reverse().slice(0, 5);
-    if (!pins.length) {
+    const recent = getPins().slice().reverse().slice(0,5);
+    if (!recent.length) {
       printInfo("No pins yet.");
       return;
     }
     let out = "Most recent pins:\n\n";
-    pins.forEach((p, i) => {
+    recent.forEach((p,i) => {
       out += `${i+1}. ${escapeHTML(p.name || 'Unnamed')}  (${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}) — ${new Date(p.time).toLocaleString()}\n`;
     });
     printInfo(out);
@@ -364,7 +402,6 @@ inputEl.addEventListener('keydown', e => {
   if (!text) return;
 
   println('> ' + escapeHTML(text), 'line prompt');
-
   handleCommand(text);
 
   inputEl.value = '';
@@ -372,7 +409,7 @@ inputEl.addEventListener('keydown', e => {
 });
 
 // ────────────────────────────────────────────────
-// FAB: Save current location
+// Save pin (FAB) — now with Email button too
 // ────────────────────────────────────────────────
 document.getElementById('fab').addEventListener('click', async () => {
   let name = lastUsedName || 'Pin ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
@@ -380,7 +417,7 @@ document.getElementById('fab').addEventListener('click', async () => {
   localStorage.setItem('gps-pins-last-name', name);
 
   if (!navigator.geolocation) {
-    printError("Geolocation not supported in this browser.");
+    printError("Geolocation not supported.");
     return;
   }
 
@@ -396,9 +433,7 @@ document.getElementById('fab').addEventListener('click', async () => {
 
     const pin = {
       id: crypto.randomUUID(),
-      lat,
-      lng,
-      name,
+      lat, lng, name,
       time: new Date().toISOString()
     };
 
@@ -410,14 +445,45 @@ document.getElementById('fab').addEventListener('click', async () => {
 
     printInfo(`Saved: <strong>${escapeHTML(name)}</strong>`);
     println(`   ${lat}, ${lng}`, 'line info');
-    println(`Share link: <a href="${url}" style="color:var(--accent);">${url}</a>`, 'line info');
+
+    const coordsTime = `${lat}, ${lng} — ${new Date(pin.time).toLocaleString()}`;
+    const emailSubject = encodeURIComponent(`Check out this GPS Pin: ${name}`);
+    const emailBody = encodeURIComponent(
+      `Hi,\n\n` +
+      `Here's a private GPS pin I saved:\n` +
+      `Name: ${name}\n` +
+      `Coordinates: ${coordsTime}\n` +
+      `Share link: ${url}\n\n` +
+      `Open it in GPS Pins app to view.\n\n`
+    );
+
+    const mailtoLink = `mailto:?subject=${emailSubject}&body=${emailBody}`;
+
+    const linkLine = document.createElement('div');
+    linkLine.className = 'line info';
+    linkLine.innerHTML = `Share: <a href="${url}" target="_blank" style="color:var(--accent);">${url}</a> `;
+    
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-btn';
+    copyBtn.textContent = 'Copy URL';
+    copyBtn.onclick = () => copyToClipboard(url, copyBtn);
+    
+    const emailBtn = document.createElement('a');
+    emailBtn.className = 'email-btn';
+    emailBtn.href = mailtoLink;
+    emailBtn.textContent = 'Email';
+    
+    linkLine.appendChild(copyBtn);
+    linkLine.appendChild(emailBtn);
+    terminal.appendChild(linkLine);
+    terminal.scrollTop = terminal.scrollHeight;
   } catch (err) {
     printError("Location error" + (err.code===1 ? " → permission denied" : err.code===3 ? " → timeout" : ""));
   }
 });
 
 // ────────────────────────────────────────────────
-// My Pins tab + search
+// My Pins tab — now with Email button per pin
 // ────────────────────────────────────────────────
 function renderMyPins(pinsToShow = getPins()) {
   const container = document.getElementById('pins-container');
@@ -429,6 +495,19 @@ function renderMyPins(pinsToShow = getPins()) {
   }
 
   pinsToShow.forEach(pin => {
+    const url = getPinShareUrl(pin);
+    const coordsTime = `${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)} — ${new Date(pin.time).toLocaleString()}`;
+    const emailSubject = encodeURIComponent(`Check out this GPS Pin: ${pin.name || 'Unnamed'}`);
+    const emailBody = encodeURIComponent(
+      `Hi,\n\n` +
+      `Here's a private GPS pin:\n` +
+      `Name: ${pin.name || 'Unnamed'}\n` +
+      `Coordinates: ${coordsTime}\n` +
+      `Share link: ${url}\n\n` +
+      `Open it in GPS Pins app to view.\n\n`
+    );
+    const mailtoLink = `mailto:?subject=${emailSubject}&body=${emailBody}`;
+
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
@@ -438,21 +517,23 @@ function renderMyPins(pinsToShow = getPins()) {
         <span>${new Date(pin.time).toLocaleString()}</span>
       </div>
       <div class="share-row">
-        <a href="${getPinShareUrl(pin)}" class="action-btn" target="_blank">Share</a>
+        <a href="${url}" class="action-btn" target="_blank">Open / Share</a>
+        <button class="copy-btn">Copy URL</button>
+        <a href="${mailtoLink}" class="email-btn">Email</a>
       </div>
     `;
+    card.querySelector('.copy-btn').onclick = () => copyToClipboard(url, card.querySelector('.copy-btn'));
     container.appendChild(card);
   });
 }
 
 document.getElementById('search').addEventListener('input', e => {
   const term = e.target.value.toLowerCase().trim();
-  if (!term) return renderMyPins();
-  const filtered = getPins().filter(p =>
-    [(p.name||'').toLowerCase(), p.lat.toFixed(6), p.lng.toFixed(6)]
-      .join(' ').includes(term)
+  renderMyPins(
+    term ? getPins().filter(p =>
+      [(p.name||'').toLowerCase(), p.lat.toFixed(6), p.lng.toFixed(6)].join(' ').includes(term)
+    ) : getPins()
   );
-  renderMyPins(filtered);
 });
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -460,8 +541,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     btn.classList.add('active');
-    const tabEl = document.getElementById(btn.dataset.tab + '-tab');
-    tabEl.classList.add('active');
+    document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
 
     if (btn.dataset.tab === 'terminal') inputEl.focus();
     else if (btn.dataset.tab === 'pins') renderMyPins();
@@ -469,7 +549,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // ────────────────────────────────────────────────
-// Handle shared pin links (#p=...)
+// Shared pin link handler
 // ────────────────────────────────────────────────
 window.addEventListener('hashchange', () => {
   const hash = location.hash.slice(1);
@@ -479,7 +559,7 @@ window.addEventListener('hashchange', () => {
     document.querySelector('[data-tab="terminal"]').click();
     printInfo(`Received shared pin: <strong>${escapeHTML(pin.name||'Unnamed')}</strong>`);
     println(`   ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`, 'line info');
-    println(`Type <strong>save</strong> to store it locally.`, 'line system');
+    println(`Type <strong>save</strong> or tap + to store it.`, 'line system');
     history.replaceState(null, null, ' ');
   } catch {
     printError("Invalid share link.");
@@ -488,7 +568,7 @@ window.addEventListener('hashchange', () => {
 if (location.hash) window.dispatchEvent(new HashChangeEvent('hashchange'));
 
 // ────────────────────────────────────────────────
-// Boot message
+// Boot
 // ────────────────────────────────────────────────
 printSystem("GPS Pins • Private & Local — 2026");
 printSystem("100% offline • No tracking • Data stays on device");

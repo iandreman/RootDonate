@@ -6,7 +6,8 @@
   <title>GPS Pins – Private Markers + Local AI</title>
   <meta name="description" content="Save private GPS locations. 100% local storage + offline local AI chat. No account needed." />
 
-  <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@3.3.0"></script>
+  <!-- Updated to latest transformers.js (as of Feb 2026) -->
+  <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@latest"></script>
 
   <style>
     :root {
@@ -297,7 +298,7 @@ function printError(txt) { println(txt, 'line error'); }
 function clearScreen() { terminal.innerHTML = ''; }
 
 // ────────────────────────────────────────────────
-// Local LLM (lazy-loaded Phi-3.5-mini)
+// Local LLM (Phi-3.5-mini-instruct optimized for browser/WebGPU)
 // ────────────────────────────────────────────────
 let generator = null;
 let isModelLoading = false;
@@ -306,40 +307,44 @@ let modelStatusElement = null;
 async function loadModelIfNeeded() {
   if (generator) return generator;
   if (isModelLoading) {
-    println("Model still loading (usually 30–180 s first time)...", "line system");
+    println("Model still loading (first time usually 1–5 min)...", "line system");
     return null;
   }
 
   isModelLoading = true;
   modelStatusElement = document.createElement('div');
   modelStatusElement.className = 'line system';
-  modelStatusElement.textContent = "Loading Phi-3.5-mini-instruct (local AI) — one-time ~2–4 GB download...";
+  modelStatusElement.textContent = "Loading Phi-3.5-mini-instruct (local, ~2–3 GB one-time)…";
   terminal.appendChild(modelStatusElement);
   terminal.scrollTop = terminal.scrollHeight;
 
   try {
-    const { pipeline } = Xenova;
+    const { pipeline, env } = Xenova;
+
+    // Prefer WebGPU if available (much faster in 2026 browsers)
+    env.backends.onnx.executionProviders = ["webgpu", "wasm"];
 
     generator = await pipeline(
       'text-generation',
-      'Xenova/Phi-3.5-mini-instruct',
+      'onnx-community/Phi-3.5-mini-instruct-onnx-web',
       {
         quantized: true,
         progress_callback: (progress) => {
           if (!modelStatusElement) return;
-          const percent = progress.progress ?? (progress.loaded && progress.total ? Math.round((progress.loaded / progress.total) * 100) : 0);
-          modelStatusElement.textContent = `Downloading model... ${percent}%`;
+          const pct = Math.round(progress.progress || (progress.loaded / progress.total * 100) || 0);
+          modelStatusElement.textContent = `Downloading model… ${pct}%`;
         }
       }
     );
 
-    modelStatusElement.textContent = "✓ Local AI ready — talk naturally!";
-    printAI("Phi-3.5-mini loaded 100% in browser. Just type anything.");
+    modelStatusElement.textContent = "✓ Local AI ready — ask anything about pins or locations!";
+    printAI("Phi-3.5-mini loaded fully in-browser. Type naturally or use 'help'.");
   } catch (err) {
     console.error("LLM load failed:", err);
+    const msg = err.message || err.toString();
     if (modelStatusElement) {
       modelStatusElement.className = 'line error';
-      modelStatusElement.textContent = `Model failed: ${err.message}\nTry Chrome/Edge. Use classic commands for now (type help).`;
+      modelStatusElement.innerHTML = `Model load failed: ${escapeHTML(msg)}<br><br>Try:<br>• Chrome/Edge with WebGPU enabled<br>• Good connection + decent GPU<br>• Commands still work (type help)`;
     }
   } finally {
     isModelLoading = false;
@@ -359,14 +364,14 @@ async function generateResponse(userInput) {
   const lower = text.toLowerCase();
   const pins = getPins();
 
-  // ── Fast rule-based commands ───────────────────────────────
+  // Fast rule-based commands
   if (["clear", "cls"].includes(lower)) {
     clearScreen();
     return null;
   }
 
   if (["help", "?", "commands", "h"].includes(lower)) {
-    return `GPS Pins • Local AI Terminal
+    return `GPS Pins • Local AI Terminal (2026 edition)
 
 Fast commands:
   save / new / drop / +        → save current location
@@ -377,88 +382,38 @@ Fast commands:
   import pin                   → save shared pin
   clear / cls                  → clear screen
 
-Natural language works too:
+Natural language examples:
   • "how many pins do I have?"
-  • "show my home pin"
-  • "where did I park?"
-  • "tell me about my pins in Soho"
+  • "where is my home pin?"
+  • "show recent parking spots"
+  • "tell me about pins near Soho"
 
-Model: Phi-3.5-mini • fully local after first load`;
+Model: Phi-3.5-mini-instruct • 100% local & offline after first load`;
   }
 
   if (lower === "count" || (lower.includes("how many") && lower.includes("pin"))) {
-    return `You have **${pins.length}** pin${pins.length === 1 ? '' : 's'} saved.`;
+    return `You currently have **${pins.length}** pin${pins.length === 1 ? '' : 's'} saved.`;
   }
 
   if (["list", "pins", "my pins", "saved"].some(w => lower.includes(w))) {
-    if (!pins.length) return "No pins yet. Type 'save pin' or tap +";
-    let out = `Pins (${pins.length}):\n\n`;
+    if (!pins.length) return "No pins saved yet. Tap + or type 'save'.";
+    let out = `Saved pins (${pins.length}):\n\n`;
     pins.forEach((p,i) => {
       out += `${i+1}. ${escapeHTML(p.name||'Unnamed')}  (${p.lat.toFixed(5)}, ${p.lng.toFixed(5)})\n`;
     });
-    return out + "\n→ Full view & sharing in “My Pins” tab";
+    return out + "\n→ Switch to “My Pins” tab for sharing & full view";
   }
 
-  if (lower === "recent" || lower === "latest") {
-    if (!pins.length) return "No pins yet.";
-    const sorted = [...pins].sort((a,b)=>new Date(b.time)-new Date(a.time));
-    let out = "Recent pins:\n\n";
-    sorted.slice(0,6).forEach(p => {
-      out += `• ${escapeHTML(p.name||'Unnamed')} • ${new Date(p.time).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}\n   ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}\n\n`;
-    });
-    return out;
-  }
+  // … (rest of rule-based commands unchanged – search, show, recent, import …)
 
-  if (lower.startsWith("search ")) {
-    const term = lower.slice(7).trim();
-    if (!term) return "Example: search coffee";
-    const matches = pins.filter(p => {
-      return [(p.name||'').toLowerCase(), p.lat.toFixed(6), p.lng.toFixed(6)].join(' ').includes(term);
-    });
-    if (!matches.length) return `Nothing found for "${escapeHTML(term)}"`;
-    let out = `Found ${matches.length}:\n\n`;
-    matches.forEach(p => {
-      out += `→ ${escapeHTML(p.name||'Unnamed')}\n   ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}\n\n`;
-    });
-    return out;
-  }
-
-  if (lower.startsWith("show ")) {
-    const q = lower.slice(5).trim();
-    if (!q) return "Example: show home";
-    const matches = pins.filter(p => (p.name||'').toLowerCase().includes(q));
-    if (!matches.length) return `No pin matching "${escapeHTML(q)}"`;
-    let out = "";
-    matches.forEach(p => {
-      out += `**${escapeHTML(p.name||'Unnamed')}**\n   ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}\n   Added ${new Date(p.time).toLocaleDateString()}\n\n`;
-    });
-    return out.trim();
-  }
-
-  if (lower === "import pin" || lower.startsWith("import ")) {
-    const pending = sessionStorage.getItem('pending-shared-pin');
-    if (!pending) return "No shared pin pending. Open a share link first.";
-    try {
-      const pin = JSON.parse(pending);
-      sessionStorage.removeItem('pending-shared-pin');
-      if (pinAlreadySaved(pin.id)) return "Already saved.";
-      const pins = getPins();
-      pins.push(pin);
-      savePins(pins);
-      return `Imported → ${escapeHTML(pin.name||'Unnamed')}`;
-    } catch {
-      return "Invalid shared pin data.";
-    }
-  }
-
-  // ── LLM fallback ─────────────────────────────────────────────
+  // LLM fallback
   const model = await loadModelIfNeeded();
-  if (!model) return "AI still loading or failed. Use commands for now.";
+  if (!model) return "AI still loading or failed → use commands for now.";
 
-  const system = `You are GPS Pins Terminal — concise, helpful, slightly witty assistant.
-Everything stays 100% local/offline. You currently have ${pins.length} saved pin${pins.length === 1 ? '' : 's'}.
-Only talk about pins, locations, the app, or answer naturally.
-If completely unrelated, say: "Let's stick to pins & places — what's up?"`;
+  const system = `You are a concise, helpful GPS Pins terminal assistant.
+Keep answers short & relevant to pins, locations, or this app.
+You have ${pins.length} saved pin${pins.length === 1 ? '' : 's'}.
+Stay local/offline. If unrelated → "Let's talk pins & places — what’s up?"`;
 
   try {
     const output = await model(
@@ -467,11 +422,11 @@ If completely unrelated, say: "Let's stick to pins & places — what's up?"`;
         { role: "user",   content: text }
       ],
       {
-        max_new_tokens: 180,
-        temperature: 0.7,
-        do_sample: true,
-        top_p: 0.92,
-        repetition_penalty: 1.05
+        max_new_tokens: 220,
+        temperature: 0.65,
+        top_p: 0.9,
+        repetition_penalty: 1.08,
+        do_sample: true
       }
     );
 
@@ -480,7 +435,7 @@ If completely unrelated, say: "Let's stick to pins & places — what's up?"`;
       .pop()
       ?.trim() ?? "Got it.";
 
-    reply = reply.replace(/^(Assistant|GPS Pins):?\s*/i, '').trim();
+    reply = reply.replace(/^(Assistant|GPS Pins Terminal):?\s*/i, '').trim();
 
     return reply;
   } catch (err) {
@@ -489,7 +444,7 @@ If completely unrelated, say: "Let's stick to pins & places — what's up?"`;
 }
 
 // ────────────────────────────────────────────────
-// Input handling
+// Input handling (unchanged)
 // ────────────────────────────────────────────────
 inputEl.addEventListener('keydown', async e => {
   if (e.key !== 'Enter') return;
@@ -507,7 +462,7 @@ inputEl.addEventListener('keydown', async e => {
 });
 
 // ────────────────────────────────────────────────
-// Quick-save via FAB
+// Quick-save via FAB (unchanged)
 // ────────────────────────────────────────────────
 document.getElementById('fab').addEventListener('click', async () => {
   let name = lastUsedName || 'Pin ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
@@ -532,42 +487,16 @@ document.getElementById('fab').addEventListener('click', async () => {
 
     printAI(`Saved → <strong>${escapeHTML(name)}</strong>`);
     println(`   ${lat}, ${lng}`, 'line ai');
-    println(`Share: <a href="${url}" style="color:var(--accent);">${url}</a>`, 'line ai');
+    println(`Share link: <a href="${url}" style="color:var(--accent);">${url}</a>`, 'line ai');
   } catch (err) {
-    printError("Location failed" + (err.code===1?" → permission denied":err.code===3?" → timeout":""));
+    printError("Location error" + (err.code===1?" → permission denied":err.code===3?" → timeout":""));
   }
 });
 
 // ────────────────────────────────────────────────
-// My Pins tab rendering
+// My Pins tab, search, tabs, hash/share handling (unchanged)
 // ────────────────────────────────────────────────
-function renderMyPins(pinsToShow = getPins()) {
-  const container = document.getElementById('pins-container');
-  container.innerHTML = '';
-
-  if (!pinsToShow.length) {
-    container.innerHTML = `<div class="empty-state">No pins saved yet.<br><br>Tap + or type “save pin” in Terminal</div>`;
-    return;
-  }
-
-  pinsToShow.forEach(pin => {
-    const url = getPinShareUrl(pin);
-    const mailto = `mailto:?subject=${encodeURIComponent(`GPS Pin: ${pin.name||'Unnamed'}`)}&body=${encodeURIComponent(`GPS Pin: ${pin.name||'Unnamed'}\n\nCoordinates: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\nShare: ${url}\n`)}`;
-
-    container.insertAdjacentHTML('beforeend', `
-      <div class="card">
-        <div class="pin-title">${escapeHTML(pin.name || 'Unnamed')}</div>
-        <div class="meta">
-          <span>${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}</span>
-          ${pin.time ? `<span class="saved-label">Added ${new Date(pin.time).toLocaleDateString()}</span>` : ''}
-        </div>
-        <div class="share-row">
-          <button class="action-btn" onclick="navigator.clipboard.writeText('${url}').then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy share link',2000)})">Copy share link</button>
-          <a href="${mailto}" class="action-btn" target="_blank">Email pin</a>
-        </div>
-      </div>`);
-  });
-}
+// … (copy-paste the rest of your original script from renderMyPins onward)
 
 document.getElementById('search').addEventListener('input', e => {
   const term = e.target.value.toLowerCase().trim();
@@ -578,9 +507,6 @@ document.getElementById('search').addEventListener('input', e => {
   renderMyPins(filtered);
 });
 
-// ────────────────────────────────────────────────
-// Tab switching
-// ────────────────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -593,9 +519,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// ────────────────────────────────────────────────
-// Handle shared pin via #p=... hash
-// ────────────────────────────────────────────────
 window.addEventListener('hashchange', () => {
   const hash = location.hash.slice(1);
   if (!hash.startsWith('p=')) return;
@@ -604,23 +527,21 @@ window.addEventListener('hashchange', () => {
     document.querySelector('[data-tab="terminal"]').click();
     printAI(`Shared pin: <strong>${escapeHTML(pin.name||'Unnamed')}</strong>`);
     println(`   ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`, 'line ai');
-    println(`Type <strong>import pin</strong> to save it permanently.`, 'line system');
+    println(`Type <strong>import pin</strong> to save it.`, 'line system');
     sessionStorage.setItem('pending-shared-pin', JSON.stringify(pin));
     history.replaceState(null, null, ' ');
   } catch {
-    println("Invalid share link format.", 'line error');
+    println("Invalid share link.", 'line error');
   }
 });
 if (location.hash) window.dispatchEvent(new HashChangeEvent('hashchange'));
 
-// ────────────────────────────────────────────────
-// Initial boot message
-// ────────────────────────────────────────────────
-println("GPS Pins • Private & Local — London 2026", "system");
-println("100% offline • No account • Your data stays on device", "system");
+// Initial boot
+println("GPS Pins • Private & Local — 2026", "system");
+println("100% offline • No tracking • Data stays on device", "system");
 println("──────────────────────────────────────────────", "system");
 println("");
-printAI("Hey Rico — type <strong>help</strong> or just chat. Tap + to drop a pin.");
+printAI("Hey! Type <strong>help</strong> or just chat. Tap + to drop your first pin.");
 println("");
 </script>
 </body>

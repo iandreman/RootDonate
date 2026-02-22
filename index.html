@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GPS Pins – Private Location Markers + Local AI</title>
-  <meta name="description" content="Save private GPS locations. 100% local storage + offline local AI chat. No account." />
+  <title>GPS Pins – Private Markers + Local AI</title>
+  <meta name="description" content="Save private GPS locations. 100% local storage + offline local AI chat. No account needed." />
 
   <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@3.3.0"></script>
 
@@ -223,7 +223,7 @@
 
 <header>
   <h1>GPS Pins</h1>
-  <div class="subtitle">Private markers + local AI chat • 100% offline</div>
+  <div class="subtitle">Private markers • Local AI chat • 100% offline</div>
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="terminal">Terminal</button>
@@ -246,11 +246,11 @@
   <div id="pins-container"></div>
 </div>
 
-<button id="fab" title="Create new pin at current location">+</button>
+<button id="fab" title="Drop pin at current location">+</button>
 
 <script>
 // ────────────────────────────────────────────────
-// Shared
+// Shared Utilities
 // ────────────────────────────────────────────────
 const STORAGE_KEY = 'gps-pins-v4';
 let lastUsedName = localStorage.getItem('gps-pins-last-name') || '';
@@ -279,7 +279,7 @@ function pinAlreadySaved(pinId) {
 }
 
 // ────────────────────────────────────────────────
-// Terminal & Pin Creation
+// Terminal Output Helpers
 // ────────────────────────────────────────────────
 const terminal = document.getElementById('terminal');
 const inputEl  = document.getElementById('input');
@@ -297,81 +297,91 @@ function printError(txt) { println(txt, 'line error'); }
 function clearScreen() { terminal.innerHTML = ''; }
 
 // ────────────────────────────────────────────────
-// LLM (lazy load)
+// Local LLM (lazy-loaded Phi-3.5-mini)
 // ────────────────────────────────────────────────
 let generator = null;
 let isModelLoading = false;
-let modelStatusLine = null;
+let modelStatusElement = null;
 
 async function loadModelIfNeeded() {
   if (generator) return generator;
   if (isModelLoading) {
-    println("Model still loading (30–180 s first time)...", "line system");
+    println("Model still loading (usually 30–180 s first time)...", "line system");
     return null;
   }
 
   isModelLoading = true;
-  modelStatusLine = document.createElement('div');
-  modelStatusLine.className = 'line system';
-  modelStatusLine.textContent = "Loading Phi-3.5-mini (local AI) – one-time ~2–4 GB download...";
-  terminal.appendChild(modelStatusLine);
+  modelStatusElement = document.createElement('div');
+  modelStatusElement.className = 'line system';
+  modelStatusElement.textContent = "Loading Phi-3.5-mini-instruct (local AI) — one-time ~2–4 GB download...";
+  terminal.appendChild(modelStatusElement);
   terminal.scrollTop = terminal.scrollHeight;
 
   try {
     const { pipeline } = Xenova;
+
     generator = await pipeline(
       'text-generation',
       'Xenova/Phi-3.5-mini-instruct',
       {
         quantized: true,
         progress_callback: (progress) => {
-          if (modelStatusLine) {
-            modelStatusLine.textContent = `Loading model... ${Math.round((progress.loaded / progress.total) * 100) || progress.progress * 100}%`;
-          }
+          if (!modelStatusElement) return;
+          const percent = progress.progress ?? (progress.loaded && progress.total ? Math.round((progress.loaded / progress.total) * 100) : 0);
+          modelStatusElement.textContent = `Downloading model... ${percent}%`;
         }
       }
     );
-    modelStatusLine.textContent = "Local AI ready ✓  Now talk naturally!";
-    println("Phi-3.5-mini loaded 100% in browser. Type anything.", "line ai");
+
+    modelStatusElement.textContent = "✓ Local AI ready — talk naturally!";
+    printAI("Phi-3.5-mini loaded 100% in browser. Just type anything.");
   } catch (err) {
-    console.error(err);
-    modelStatusLine.className = 'line error';
-    modelStatusLine.textContent = `Model load failed: ${err.message}\nTry Chrome/Edge. Use classic commands for now (type help).`;
+    console.error("LLM load failed:", err);
+    if (modelStatusElement) {
+      modelStatusElement.className = 'line error';
+      modelStatusElement.textContent = `Model failed: ${err.message}\nTry Chrome/Edge. Use classic commands for now (type help).`;
+    }
   } finally {
     isModelLoading = false;
+    modelStatusElement = null;
   }
+
   return generator;
 }
 
 // ────────────────────────────────────────────────
-// generateResponse – rules + LLM fallback
+// Generate response: fast rules → LLM fallback
 // ────────────────────────────────────────────────
-async function generateResponse(text) {
-  const lower = text.toLowerCase().trim();
+async function generateResponse(userInput) {
+  const text = userInput.trim();
+  if (!text) return null;
+
+  const lower = text.toLowerCase();
   const pins = getPins();
 
-  // Fast rules
+  // ── Fast rule-based commands ───────────────────────────────
   if (["clear", "cls"].includes(lower)) {
     clearScreen();
     return null;
   }
 
-  if (["help", "?", "commands"].includes(lower)) {
-    return `GPS Pins + Local AI Terminal
+  if (["help", "?", "commands", "h"].includes(lower)) {
+    return `GPS Pins • Local AI Terminal
 
-Classic commands:
-  + / save / new / drop pin     → save current location
-  list / pins / recent / count  → show pins
-  search <term>                 → find pins
-  show <name>                   → details
-  import pin                    → add shared pin
-  clear / cls                   → clear screen
+Fast commands:
+  save / new / drop / +        → save current location
+  list / pins / count          → show all pins
+  recent                       → latest pins
+  search <term>                → find pins
+  show <name>                  → show details
+  import pin                   → save shared pin
+  clear / cls                  → clear screen
 
-Now also talk naturally:
+Natural language works too:
   • "how many pins do I have?"
-  • "show me my home pin"
-  • "where is the nearest coffee?"
-  • "remind me about work"
+  • "show my home pin"
+  • "where did I park?"
+  • "tell me about my pins in Soho"
 
 Model: Phi-3.5-mini • fully local after first load`;
   }
@@ -386,15 +396,15 @@ Model: Phi-3.5-mini • fully local after first load`;
     pins.forEach((p,i) => {
       out += `${i+1}. ${escapeHTML(p.name||'Unnamed')}  (${p.lat.toFixed(5)}, ${p.lng.toFixed(5)})\n`;
     });
-    return out + "\n→ Full view in My Pins tab";
+    return out + "\n→ Full view & sharing in “My Pins” tab";
   }
 
   if (lower === "recent" || lower === "latest") {
     if (!pins.length) return "No pins yet.";
     const sorted = [...pins].sort((a,b)=>new Date(b.time)-new Date(a.time));
-    let out = "Recent:\n\n";
-    sorted.slice(0,6).forEach(p=>{
-      out += `• ${escapeHTML(p.name||'Unnamed')}  •  ${new Date(p.time).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}\n   ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}\n\n`;
+    let out = "Recent pins:\n\n";
+    sorted.slice(0,6).forEach(p => {
+      out += `• ${escapeHTML(p.name||'Unnamed')} • ${new Date(p.time).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}\n   ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}\n\n`;
     });
     return out;
   }
@@ -402,12 +412,12 @@ Model: Phi-3.5-mini • fully local after first load`;
   if (lower.startsWith("search ")) {
     const term = lower.slice(7).trim();
     if (!term) return "Example: search coffee";
-    const matches = pins.filter(p=>{
+    const matches = pins.filter(p => {
       return [(p.name||'').toLowerCase(), p.lat.toFixed(6), p.lng.toFixed(6)].join(' ').includes(term);
     });
-    if (!matches.length) return `No matches for "${escapeHTML(term)}"`;
+    if (!matches.length) return `Nothing found for "${escapeHTML(term)}"`;
     let out = `Found ${matches.length}:\n\n`;
-    matches.forEach(p=>{
+    matches.forEach(p => {
       out += `→ ${escapeHTML(p.name||'Unnamed')}\n   ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}\n\n`;
     });
     return out;
@@ -416,10 +426,10 @@ Model: Phi-3.5-mini • fully local after first load`;
   if (lower.startsWith("show ")) {
     const q = lower.slice(5).trim();
     if (!q) return "Example: show home";
-    const matches = pins.filter(p=>(p.name||'').toLowerCase().includes(q));
+    const matches = pins.filter(p => (p.name||'').toLowerCase().includes(q));
     if (!matches.length) return `No pin matching "${escapeHTML(q)}"`;
     let out = "";
-    matches.forEach(p=>{
+    matches.forEach(p => {
       out += `**${escapeHTML(p.name||'Unnamed')}**\n   ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}\n   Added ${new Date(p.time).toLocaleDateString()}\n\n`;
     });
     return out.trim();
@@ -441,35 +451,45 @@ Model: Phi-3.5-mini • fully local after first load`;
     }
   }
 
-  // ── LLM fallback ───────────────────────────────────────
-  const gen = await loadModelIfNeeded();
-  if (!gen) return "AI loading or failed. Use commands above.";
+  // ── LLM fallback ─────────────────────────────────────────────
+  const model = await loadModelIfNeeded();
+  if (!model) return "AI still loading or failed. Use commands for now.";
 
-  const system = `You are GPS Pins Terminal — concise, helpful, witty assistant for private GPS pins.
-Everything is local/offline. Current pins: ${pins.length}.
+  const system = `You are GPS Pins Terminal — concise, helpful, slightly witty assistant.
+Everything stays 100% local/offline. You currently have ${pins.length} saved pin${pins.length === 1 ? '' : 's'}.
 Only talk about pins, locations, the app, or answer naturally.
-If unrelated, say: "Let's stick to pins and locations — what's up?"`;
+If completely unrelated, say: "Let's stick to pins & places — what's up?"`;
 
   try {
-    const output = await gen([
-      {role:"system", content:system},
-      {role:"user",   content:text}
-    ], {
-      max_new_tokens: 160,
-      temperature: 0.75,
-      do_sample: true,
-      top_p: 0.9
-    });
+    const output = await model(
+      [
+        { role: "system", content: system },
+        { role: "user",   content: text }
+      ],
+      {
+        max_new_tokens: 180,
+        temperature: 0.7,
+        do_sample: true,
+        top_p: 0.92,
+        repetition_penalty: 1.05
+      }
+    );
 
-    let reply = output[0].generated_text.split(/Assistant:|You:/).pop()?.trim() || "Got it.";
+    let reply = output[0].generated_text
+      .split(/(?:Assistant:|You:)/i)
+      .pop()
+      ?.trim() ?? "Got it.";
+
+    reply = reply.replace(/^(Assistant|GPS Pins):?\s*/i, '').trim();
+
     return reply;
   } catch (err) {
-    return `AI error: ${err.message}\nTry again or use classic commands.`;
+    return `AI error: ${err.message}\nTry again or type "help".`;
   }
 }
 
 // ────────────────────────────────────────────────
-// Input handler (async)
+// Input handling
 // ────────────────────────────────────────────────
 inputEl.addEventListener('keydown', async e => {
   if (e.key !== 'Enter') return;
@@ -486,7 +506,9 @@ inputEl.addEventListener('keydown', async e => {
   inputEl.focus();
 });
 
-// Floating button → quick pin
+// ────────────────────────────────────────────────
+// Quick-save via FAB
+// ────────────────────────────────────────────────
 document.getElementById('fab').addEventListener('click', async () => {
   let name = lastUsedName || 'Pin ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   name = prompt("Pin name:", name)?.trim() || 'Untitled';
@@ -524,7 +546,7 @@ function renderMyPins(pinsToShow = getPins()) {
   container.innerHTML = '';
 
   if (!pinsToShow.length) {
-    container.innerHTML = `<div class="empty-state">No pins yet.<br><br>Tap + or type “save pin” in Terminal</div>`;
+    container.innerHTML = `<div class="empty-state">No pins saved yet.<br><br>Tap + or type “save pin” in Terminal</div>`;
     return;
   }
 
@@ -556,7 +578,9 @@ document.getElementById('search').addEventListener('input', e => {
   renderMyPins(filtered);
 });
 
-// Tabs
+// ────────────────────────────────────────────────
+// Tab switching
+// ────────────────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -569,7 +593,9 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// Shared pin via hash
+// ────────────────────────────────────────────────
+// Handle shared pin via #p=... hash
+// ────────────────────────────────────────────────
 window.addEventListener('hashchange', () => {
   const hash = location.hash.slice(1);
   if (!hash.startsWith('p=')) return;
@@ -578,19 +604,21 @@ window.addEventListener('hashchange', () => {
     document.querySelector('[data-tab="terminal"]').click();
     printAI(`Shared pin: <strong>${escapeHTML(pin.name||'Unnamed')}</strong>`);
     println(`   ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`, 'line ai');
-    println(`Type <strong>import pin</strong> to save it.`, 'line system');
+    println(`Type <strong>import pin</strong> to save it permanently.`, 'line system');
     sessionStorage.setItem('pending-shared-pin', JSON.stringify(pin));
     history.replaceState(null, null, ' ');
   } catch {
-    println("Invalid share link.", 'line error');
+    println("Invalid share link format.", 'line error');
   }
 });
 if (location.hash) window.dispatchEvent(new HashChangeEvent('hashchange'));
 
-// Boot
-println("GPS Pins + Local AI — London 2026", "system");
-println("100% local • Private • Offline", "system");
-println("────────────────────────────────────────", "system");
+// ────────────────────────────────────────────────
+// Initial boot message
+// ────────────────────────────────────────────────
+println("GPS Pins • Private & Local — London 2026", "system");
+println("100% offline • No account • Your data stays on device", "system");
+println("──────────────────────────────────────────────", "system");
 println("");
 printAI("Hey Rico — type <strong>help</strong> or just chat. Tap + to drop a pin.");
 println("");

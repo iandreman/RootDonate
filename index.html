@@ -343,10 +343,8 @@ liveStatusLine.style.padding = '0.4rem 1rem';
 liveStatusLine.style.zIndex = '10';
 liveStatusLine.style.borderBottom = '1px solid var(--border)';
 
-// We'll append this once when terminal becomes visible
-
 function startLiveGPS() {
-  if (watchId !== null) return; // already watching
+  if (watchId !== null) return;
 
   if (!navigator.geolocation) {
     printError("Geolocation not supported by this browser.");
@@ -364,7 +362,6 @@ function startLiveGPS() {
       document.getElementById('live-gps').textContent = `${lat}, ${lng}`;
       document.getElementById('live-acc').textContent = acc;
 
-      // Optional: small log line every ~10–15 seconds (not every update)
       if (Math.random() < 0.3) {
         println(`Live update: ${lat}, ${lng}  (±${acc}m)`, 'line info');
       }
@@ -376,11 +373,7 @@ function startLiveGPS() {
       printError(msg);
       stopLiveGPS();
     },
-    {
-      enableHighAccuracy: true,
-      timeout: 8000,
-      maximumAge: 3000
-    }
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 3000 }
   );
 }
 
@@ -397,22 +390,16 @@ function stopLiveGPS() {
 let clockInterval = null;
 
 function startLiveClock() {
-  if (clockInterval !== null) return; // already running
-
-  updateClock(); // initial update
-  clockInterval = setInterval(updateClock, 1000); // update every second
+  if (clockInterval !== null) return;
+  updateClock();
+  clockInterval = setInterval(updateClock, 1000);
 }
 
 function updateClock() {
   const now = new Date();
   const timeStr = now.toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
   });
   document.getElementById('live-time').textContent = timeStr;
 }
@@ -498,13 +485,13 @@ Use the + button to quickly drop a pin.
 
   if (cmd === 'live' || cmd === 'startlive' || cmd === 'track') {
     startLiveGPS();
-    startLiveClock(); // add this
+    startLiveClock();
     return;
   }
 
   if (cmd === 'stoplive' || cmd === 'stop' || cmd === 'nostalk') {
     stopLiveGPS();
-    stopLiveClock(); // add this
+    stopLiveClock();
     return;
   }
 
@@ -555,7 +542,7 @@ inputEl.addEventListener('keydown', e => {
 });
 
 // ────────────────────────────────────────────────
-// Save pin (FAB) — now with Email button too
+// Save pin (FAB) + Email button
 // ────────────────────────────────────────────────
 document.getElementById('fab').addEventListener('click', async () => {
   let name = lastUsedName || 'Pin ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
@@ -629,7 +616,7 @@ document.getElementById('fab').addEventListener('click', async () => {
 });
 
 // ────────────────────────────────────────────────
-// My Pins tab — now with Email button per pin
+// My Pins tab + Email button
 // ────────────────────────────────────────────────
 function renderMyPins(pinsToShow = getPins()) {
   const container = document.getElementById('pins-container');
@@ -691,19 +678,15 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
     if (btn.dataset.tab === 'terminal') {
       inputEl.focus();
-      // Add live status bar if not already there
       if (!document.getElementById('live-gps')) {
         const terminalDiv = document.getElementById('terminal');
         terminalDiv.parentElement.insertBefore(liveStatusLine, terminalDiv);
       }
-      // Optional: auto-start live tracking when opening terminal
-      // startLiveGPS();
-      // startLiveClock();   ← uncomment if you want them always on
     }
     else if (btn.dataset.tab === 'pins') {
       renderMyPins();
-      stopLiveGPS(); // optional: stop when leaving terminal
-      stopLiveClock(); // add this
+      stopLiveGPS();
+      stopLiveClock();
     }
   });
 });

@@ -170,17 +170,25 @@
       font-size: 0.96rem;
       color: var(--muted);
       word-break: break-all;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
     }
 
-    .copy-share {
-      margin-left: 1rem;
+    .copy-share, .email-pin {
+      margin-left: 0.5rem;
       background: color-mix(in srgb, var(--purple) 18%, transparent);
       border: 1px solid var(--purple);
       color: var(--purple);
-      padding: 0.48rem 1rem;
+      padding: 0.4rem 0.9rem;
       border-radius: 6px;
       cursor: pointer;
       transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+    .copy-share:hover, .email-pin:hover {
+      background: color-mix(in srgb, var(--purple) 30%, transparent);
     }
     .copy-share.copied {
       background: rgba(86,212,100,0.28) !important;
@@ -212,12 +220,11 @@
 
 <header>
   <h1>GPS Pins</h1>
-  <div class="subtitle">private offline locations • URLs • share links • email backup</div>
+  <div class="subtitle">private offline locations • URLs • share links • email single pin</div>
 
   <div class="controls">
     <button class="btn active" data-tab="terminal">Terminal</button>
     <button class="btn" data-tab="pins">Pins <span id="pins-count">0</span></button>
-    <button class="btn" id="email-pins-btn">Email My Pins</button>
     <button class="btn" id="theme-toggle">☀️ Light</button>
   </div>
 </header>
@@ -226,7 +233,7 @@
   <div id="terminal" role="log" aria-live="polite"></div>
   <div class="input-line">
     <span class="prompt">></span>
-    <input id="input" type="text" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" autofocus placeholder="paste url, pastejson, help…"/>
+    <input id="input" type="text" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" autofocus placeholder="paste url or share link…"/>
   </div>
 </div>
 
@@ -238,7 +245,7 @@
 <button id="fab" title="Save current location">+</button>
 
 <script>
-const STORAGE_KEY = 'gps-pins-v20';
+const STORAGE_KEY = 'gps-pins-v21'; // bumped for new feature
 let pins = loadPins();
 let lastUsedName = localStorage.getItem('gps-pins-lastname') || '';
 
@@ -248,7 +255,6 @@ const pinsList   = document.getElementById('pins-container');
 const searchEl   = document.getElementById('search');
 const count      = document.getElementById('pins-count');
 const themeBtn   = document.getElementById('theme-toggle');
-const emailPinsBtn = document.getElementById('email-pins-btn');
 const fab        = document.getElementById('fab');
 const body       = document.body;
 
@@ -277,8 +283,36 @@ function escape(s = '') {
 }
 
 function getShareUrl(pin) {
-  const data = {id: pin.id, n: pin.name, u: pin.url||null, la: pin.lat??null, lo: pin.lng??null, acc: pin.accuracy??null, t: pin.time};
+  const data = {n: pin.name, u: pin.url||null, la: pin.lat??null, lo: pin.lng??null, acc: pin.accuracy??null, t: pin.time};
   return `${location.origin}${location.pathname}#p=${btoa(JSON.stringify(data))}`;
+}
+
+function emailSinglePin(pin) {
+  const shareUrl = getShareUrl(pin);
+  let content = '';
+  let subject = '';
+
+  if (pin.url && pin.lat == null) {
+    // URL pin
+    subject = `URL Pin: ${pin.name}`;
+    content = `Name: ${pin.name}\nURL: ${pin.url}\nSaved: ${new Date(pin.time).toLocaleString()}\n\nShare link (click to view/add):\n${shareUrl}`;
+  } else if (pin.lat != null) {
+    // GPS pin (with or without URL)
+    subject = `GPS Pin: ${pin.name}`;
+    content = `Name: ${pin.name}\nCoordinates: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}` +
+              (pin.accuracy ? ` (±${Math.round(pin.accuracy)} m)` : '') +
+              `\nSaved: ${new Date(pin.time).toLocaleString()}\n\n` +
+              (pin.url ? `Associated URL: ${pin.url}\n\n` : '') +
+              `Share link (click to view/add):\n${shareUrl}`;
+  }
+
+  const encodedSubject = encodeURIComponent(subject);
+  const encodedBody = encodeURIComponent(content + "\n\n---\nCreated with GPS Pins app");
+
+  const mailto = `mailto:?subject=${encodedSubject}&body=${encodedBody}`;
+  window.location.href = mailto;
+
+  println(`<span class="success">Opening email for "${escape(pin.name)}"…</span>`);
 }
 
 async function copyToClipboard(text, btn) {
@@ -314,14 +348,13 @@ async function copyToClipboard(text, btn) {
           time: Date.now()
         });
         savedCount++;
-        messages.push(`URL: ${data.u.slice(0, 60)}${data.u.length > 60 ? '…' : ''}`);
+        messages.push(`URL: ${data.u.slice(0,60)}${data.u.length>60?'…':''}`);
       }
 
       if (data.la != null && data.lo != null) {
         const gpsExists = pins.some(p =>
-          p.lat === data.la &&
-          p.lng === data.lo &&
-          Math.abs((p.accuracy || 0) - (data.acc || 0)) < 2
+          p.lat === data.la && p.lng === data.lo &&
+          Math.abs((p.accuracy||0) - (data.acc||0)) < 2
         );
         if (!gpsExists) {
           pins.push({
@@ -333,33 +366,28 @@ async function copyToClipboard(text, btn) {
             time: Date.now()
           });
           savedCount++;
-          messages.push(`GPS: ${data.la.toFixed(6)}, ${data.lo.toFixed(6)}${data.acc ? ` (±${Math.round(data.acc)}m)` : ''}`);
+          messages.push(`GPS: ${data.la.toFixed(6)}, ${data.lo.toFixed(6)}${data.acc?` (±${Math.round(data.acc)}m)`:''}`);
         }
       }
 
       if (savedCount > 0) {
-        println(`<span class="success">Auto-saved ${savedCount} pin${savedCount > 1 ? 's' : ''} from share link:</span>`);
-        messages.forEach(msg => println(`<span class="success">  • ${msg}</span>`));
+        println(`<span class="success">Auto-saved ${savedCount} pin${savedCount>1?'s':''} from share link:</span>`);
+        messages.forEach(m => println(`<span class="success">  • ${m}</span>`));
         savePins();
         refreshPinsIfVisible();
       } else {
-        println(`<span class="info">Nothing new — already in My Pins</span>`);
+        println(`<span class="info">Nothing new — already saved</span>`);
       }
     } else {
       try {
         const u = new URL(text);
-        const fullUrl = u.href;
-        if (pins.some(p => p.url === fullUrl)) {
-          println(`<span class="info">This URL is already saved</span>`);
+        const full = u.href;
+        if (pins.some(p => p.url === full)) {
+          println(`<span class="info">URL already saved</span>`);
         } else {
-          const name = u.hostname.replace(/^www\./, '') || 'Link';
-          if (confirm(`Save this URL pin?\n\n${name}\n${text.slice(0, 80)}${text.length > 80 ? '…' : ''}`)) {
-            pins.push({
-              id: generateId(),
-              name,
-              url: fullUrl,
-              time: Date.now()
-            });
+          const name = u.hostname.replace(/^www\./,'') || 'Link';
+          if (confirm(`Save URL pin?\n\n${name}\n${text.slice(0,80)}${text.length>80?'…':''}`)) {
+            pins.push({id:generateId(), name, url:full, time:Date.now()});
             if (savePins()) {
               println(`<span class="success">Saved URL pin "${escape(name)}"</span>`);
               refreshPinsIfVisible();
@@ -373,72 +401,8 @@ async function copyToClipboard(text, btn) {
       btn.textContent = orig;
       btn.classList.remove('copied');
     }, 1600);
-
   } catch (err) {
-    console.error(err);
-    alert('Copy failed — please copy manually.');
-  }
-}
-
-function emailMyPins() {
-  if (pins.length === 0) {
-    alert("No pins to email.");
-    return;
-  }
-
-  const jsonString = JSON.stringify(pins, null, 2);
-  const encoded = encodeURIComponent(jsonString);
-
-  const subject = encodeURIComponent("My GPS Pins Backup");
-  const body = encodeURIComponent(
-    "Here is my GPS Pins backup (locations + URLs).\n\n" +
-    "To import on another device/browser:\n" +
-    "1. Open GPS Pins app\n" +
-    "2. Go to Terminal tab\n" +
-    "3. Paste the entire JSON below and press Enter\n\n" +
-    jsonString + "\n\n" +
-    "(If too long, copy from this email and paste into the app.)"
-  );
-
-  const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
-
-  println(`<span class="success">Opening email client with My Pins data…</span>`);
-  window.location.href = mailtoLink;
-}
-
-function importJsonFromPaste(jsonStr) {
-  try {
-    const imported = JSON.parse(jsonStr.trim());
-    if (!Array.isArray(imported)) throw new Error("Not an array");
-
-    let added = 0;
-    imported.forEach(imp => {
-      const isDup = pins.some(p => {
-        if (imp.url && p.url === imp.url) return true;
-        if (imp.lat != null && imp.lng != null &&
-            p.lat === imp.lat && p.lng === imp.lng &&
-            Math.abs((p.accuracy || 0) - (imp.accuracy || 0)) < 2) return true;
-        return false;
-      });
-
-      if (!isDup) {
-        pins.push({
-          ...imp,
-          id: imp.id || generateId(),
-          time: imp.time || Date.now()
-        });
-        added++;
-      }
-    });
-
-    if (added > 0 && savePins()) {
-      println(`<span class="success">Imported ${added} new pin${added > 1 ? 's' : ''} (duplicates skipped)</span>`);
-      refreshPinsIfVisible();
-    } else {
-      println(`<span class="info">No new pins added (all duplicates or empty)</span>`);
-    }
-  } catch (err) {
-    println(`<span class="error">Invalid JSON: ${err.message}</span>`);
+    alert('Copy failed');
   }
 }
 
@@ -458,9 +422,7 @@ const print = {
 };
 
 function refreshPinsIfVisible() {
-  if (document.querySelector('[data-tab="pins"].active')) {
-    renderPins(searchEl.value);
-  }
+  if (document.querySelector('[data-tab="pins"].active')) renderPins(searchEl.value);
 }
 
 function toggleTheme() {
@@ -479,52 +441,21 @@ if (localStorage.getItem('gps-pins-theme')) {
   themeBtn.textContent = th === 'light' ? '🌙 Dark' : '☀️ Light';
 }
 
-emailPinsBtn.addEventListener('click', emailMyPins);
-
 input.addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     e.preventDefault();
     const txt = input.value.trim();
     if (!txt) return;
-
-    const lower = txt.toLowerCase();
-
     println(`<span class="prompt">></span> ${escape(txt)}`);
 
-    if (lower === 'help') {
+    if (txt.toLowerCase() === 'help') {
       print.info('help → this help');
       print.info('clear → clear terminal');
-      print.info('paste url → save URL pin (confirm)');
-      print.info('pastejson → paste full JSON backup to import pins');
-    } else if (lower === 'clear') {
+      print.info('paste url or share link → auto-import if share link, confirm if normal URL');
+    } else if (txt.toLowerCase() === 'clear') {
       terminal.innerHTML = '';
-    } else if (lower === 'pastejson') {
-      const jsonInput = prompt("Paste the full JSON backup here:");
-      if (jsonInput && jsonInput.trim()) {
-        importJsonFromPaste(jsonInput);
-      }
     } else {
-      // Try as URL
-      let u;
-      try { u = new URL(txt.startsWith('http') ? txt : 'https://'+txt); }
-      catch {}
-      if (u) {
-        const h = u.href;
-        if (pins.some(p => p.url === h)) {
-          print.info('Already saved.');
-        } else {
-          let n = u.hostname.replace(/^www\./,'');
-          if (u.pathname && u.pathname !== '/') n += ` / ${u.pathname.split('/')[1] || ''}`;
-          n = n.slice(0,60) || 'Link';
-          pins.push({id:generateId(), name:n, url:h, time:Date.now()});
-          if (savePins()) {
-            print.success(`Saved URL pin "${escape(n)}"`);
-            refreshPinsIfVisible();
-          }
-        }
-      } else {
-        print.error('Invalid URL or unknown command');
-      }
+      copyToClipboard(txt, {textContent:'temp', classList:{add:()=>{},remove:()=>{}}});
     }
     input.value = '';
   }
@@ -539,7 +470,7 @@ fab.addEventListener('click', () => {
       const name = lastUsedName || `Location ${new Date().toLocaleTimeString()}`;
       pins.push({id:generateId(), name, lat, lng, accuracy, time:Date.now()});
       if (savePins()) {
-        print.success(`Saved GPS pin: ${lat.toFixed(6)}, ${lng.toFixed(6)} (±${accuracy.toFixed(0)}m)`);
+        print.success(`Saved GPS: ${lat.toFixed(6)}, ${lng.toFixed(6)} (±${accuracy.toFixed(0)}m)`);
         refreshPinsIfVisible();
       }
       lastUsedName = name;
@@ -597,8 +528,9 @@ function renderPins(q = '') {
     const share = getShareUrl(p);
     html += `
       <div class="share-line">
-        Share: ${escape(share)}
+        Share: ${escape(share.slice(0,60))}${share.length > 60 ? '…' : ''}
         <button class="copy-share" data-url="${escape(share)}">Copy</button>
+        <button class="email-pin" data-pin-id="${p.id}">Email this pin</button>
       </div>`;
 
     card.innerHTML = html;
@@ -609,19 +541,27 @@ function renderPins(q = '') {
     btn.addEventListener('click', () => copyToClipboard(btn.dataset.url, btn));
     btn.dataset.listener = 'true';
   });
+
+  pinsList.querySelectorAll('.email-pin:not([data-listener])').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pinId = btn.dataset.pinId;
+      const pin = pins.find(p => p.id === pinId);
+      if (pin) emailSinglePin(pin);
+    });
+    btn.dataset.listener = 'true';
+  });
 }
 
 // Boot
 terminal.innerHTML = '';
 print.system('<span style="font-size:1.25rem; font-weight:700;">GPS Pins</span>');
-print.system('100% local • offline • private • email backup');
+print.system('100% local • offline • private');
 println('─'.repeat(60), 'system');
 println('');
-print.info('Paste URL → save URL pin (confirm)');
-print.info('Share link "Copy" → auto-saves URL + GPS');
-print.info('+ → save current GPS location');
-print.info('"Email My Pins" button → open email with all pins as JSON');
-print.info('Terminal: pastejson → paste JSON backup to import');
+print.info('Paste URL or share link → auto-import share link, confirm normal URL');
+print.info('Share link "Copy" → copy share link');
+print.info('Share link "Email this pin" → email single pin');
+print.info('+ → save current location');
 println('');
 print.info('Ready.');
 println('');

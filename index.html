@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GPS Pins – Private Markers + URLs</title>
-  <meta name="description" content="Save private GPS locations & URLs. 100% local, offline, no account." />
+  <meta name="description" content="Save private GPS locations & URLs. 100% local, offline, no account."/>
 
   <style>
     :root {
@@ -43,7 +43,7 @@
     }
 
     h1 {
-      font-size: 2.1rem;
+      font-size: clamp(1.8rem, 5vw, 2.1rem);
       background: linear-gradient(90deg, var(--purple), var(--accent));
       -webkit-background-clip: text;
       background-clip: text;
@@ -103,10 +103,7 @@
       flex-direction: column;
       overflow: hidden;
     }
-
-    .tab-content.active {
-      display: flex;
-    }
+    .tab-content.active { display: flex; }
 
     #terminal-tab .terminal {
       flex: 1;
@@ -117,7 +114,7 @@
     }
 
     .line {
-      margin: 0.4rem 0;
+      margin: 0.5rem 0;
       white-space: pre-wrap;
       word-break: break-word;
     }
@@ -127,16 +124,6 @@
     .system    { color: #778899; }
     .error     { color: var(--danger); }
     .success   { color: var(--accent-dim); font-weight: bold; }
-
-    .storage-warning {
-      background: rgba(255,85,85,0.15);
-      border: 1px solid var(--danger);
-      color: #ffaaaa;
-      padding: 1rem;
-      margin: 1.2rem;
-      border-radius: 8px;
-      text-align: center;
-    }
 
     .input-line {
       display: flex;
@@ -168,9 +155,7 @@
       animation: blink 1.2s step-end infinite;
     }
 
-    @keyframes blink {
-      50% { opacity: 0; }
-    }
+    @keyframes blink { 50% { opacity: 0; } }
 
     #pins-tab {
       padding: 1.5rem;
@@ -202,9 +187,7 @@
       transition: transform 0.15s ease;
     }
 
-    .card:hover {
-      transform: translateY(-2px);
-    }
+    .card:hover { transform: translateY(-2px); }
 
     .pin-title {
       color: var(--accent);
@@ -213,9 +196,7 @@
       word-break: break-all;
     }
 
-    .url-pin .pin-title {
-      color: var(--purple);
-    }
+    .url-pin .pin-title { color: var(--purple); }
 
     .meta {
       color: var(--muted);
@@ -248,11 +229,7 @@
       align-items: center;
     }
 
-    .action-btn,
-    .copy-btn,
-    .email-btn,
-    .open-url-btn,
-    .refresh-btn {
+    .action-btn, .copy-btn, .email-btn, .open-url-btn, .refresh-btn {
       padding: 0.6rem 1.3rem;
       border-radius: 8px;
       font-weight: bold;
@@ -264,43 +241,19 @@
       font-size: 0.9rem;
     }
 
-    .action-btn {
-      background: rgba(0,212,255,0.18);
-      border-color: var(--accent-dim);
-      color: var(--accent);
-    }
+    .action-btn          { background: rgba(0,212,255,0.18); border-color: var(--accent-dim); color: var(--accent); }
+    .action-btn:hover    { background: rgba(0,212,255,0.35); }
 
-    .action-btn:hover {
-      background: rgba(0,212,255,0.35);
-    }
+    .copy-btn            { background: rgba(187,134,252,0.18); border-color: var(--purple); color: var(--purple); }
+    .copy-btn:hover      { background: rgba(187,134,252,0.35); }
+    .copy-btn.copied     { background: rgba(0,255,157,0.3); color: #00ff9d; border-color: #00ff9d; }
 
-    .copy-btn {
-      background: rgba(187,134,252,0.18);
-      border-color: var(--purple);
-      color: var(--purple);
-    }
-
-    .copy-btn:hover {
-      background: rgba(187,134,252,0.35);
-    }
-
-    .copy-btn.copied {
-      background: rgba(0,255,157,0.3);
-      color: #00ff9d;
-      border-color: #00ff9d;
-    }
-
-    .email-btn,
-    .open-url-btn {
+    .email-btn, .open-url-btn {
       background: rgba(187,134,252,0.25);
       border-color: var(--purple);
       color: var(--purple);
     }
-
-    .email-btn:hover,
-    .open-url-btn:hover {
-      background: rgba(187,134,252,0.45);
-    }
+    .email-btn:hover, .open-url-btn:hover { background: rgba(187,134,252,0.45); }
 
     .refresh-btn {
       background: rgba(0,255,157,0.18);
@@ -331,7 +284,7 @@
       transition: transform 0.2s ease;
     }
 
-    #fab:hover { transform: scale(1.1); }
+    #fab:hover  { transform: scale(1.1); }
     #fab:active { transform: scale(0.95); }
 
     @media (max-width: 560px) {
@@ -348,12 +301,12 @@
 
 <header>
   <h1>GPS Pins</h1>
-  <div class="subtitle">Private markers + URLs • 100% offline • local only</div>
+  <div class="subtitle">Private markers + URLs • 100% offline</div>
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="terminal">Terminal</button>
     <button class="tab-btn" data-tab="pins">
-      My Pins <span class="badge" id="pins-count">0</span>
+      My Pins<span class="badge" id="pins-count">0</span>
     </button>
   </div>
 </header>
@@ -362,28 +315,19 @@
   <div class="terminal" id="terminal"></div>
   <div class="input-line">
     <span class="prompt">></span>
-    <input id="input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus />
+    <input id="input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" autofocus/>
     <span class="cursor"></span>
   </div>
 </div>
 
 <div id="pins-tab" class="tab-content">
   <div class="collection-header">My Saved Pins & URLs</div>
-
-  <div id="storage-error" class="storage-warning" style="display:none;">
-    <strong>⚠️ Storage access failed</strong><br />
-    May be full, blocked, or you're in private/incognito mode.<br />
-    Try a normal tab or free up some space.
-  </div>
-
-  <input type="text" id="search" placeholder="Search name, URL or coordinates…" />
-
-  <button class="refresh-btn">↻ Refresh list</button>
-
+  <input type="text" id="search" placeholder="Search name, URL or coordinates…"/>
+  <button class="refresh-btn">↻ Refresh Pins List</button>
   <div id="pins-container"></div>
 </div>
 
-<button id="fab" title="Save current location">+</button>
+<button id="fab" title="Drop pin at current location">+</button>
 
 <script>
 // ────────────────────────────────────────────────
@@ -400,12 +344,8 @@ function escapeHTML(str = '') {
 function getPins() {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
-    if (!data) return [];
-    const parsed = JSON.parse(data);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (err) {
-    console.error('localStorage read failed:', err);
-    document.getElementById('storage-error').style.display = 'block';
+    return data ? JSON.parse(data) : [];
+  } catch {
     return [];
   }
 }
@@ -414,11 +354,10 @@ function savePins(pins) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(pins));
     updatePinsCount();
-    document.getElementById('storage-error')?.style.display = 'none';
     return true;
   } catch (err) {
     console.error('localStorage write failed:', err);
-    alert('Save failed — storage may be full, blocked, or in private mode.\nTry removing old pins or using normal mode.');
+    alert('Could not save — storage may be full, blocked, or in private mode.');
     return false;
   }
 }
@@ -441,7 +380,7 @@ function getPinShareUrl(pin) {
     lng: pin.lng,
     name: pin.name,
     url: pin.url || null,
-    time: pin.time,
+    time: pin.time
   };
   return `${location.origin}${location.pathname}#p=${btoa(JSON.stringify(publicPin))}`;
 }
@@ -457,12 +396,12 @@ async function copyToClipboard(text, button) {
       button.classList.remove('copied');
     }, 1800);
   } catch {
-    alert('Clipboard access failed — copy manually.');
+    alert('Clipboard copy failed — please copy manually.');
   }
 }
 
 // ────────────────────────────────────────────────
-// Auto-import from #p=... hash
+// Auto-import from #p=...
 // ────────────────────────────────────────────────
 function tryImportSharedPin() {
   const hash = location.hash;
@@ -489,19 +428,15 @@ function tryImportSharedPin() {
       accuracy: data.accuracy ?? null,
       time: data.time,
       url: data.url || null,
-      imported: true,
+      imported: true
     };
 
     pins.push(newPin);
     if (savePins(pins)) {
-      printSuccess(`Imported shared pin → ${escapeHTML(newPin.name)}`);
       document.querySelector('.tab-btn[data-tab="pins"]').click();
       history.replaceState(null, null, location.pathname);
     }
-  } catch (err) {
-    console.warn('Failed to import shared pin:', err);
-    printError('Failed to import shared pin (invalid or corrupted link)');
-  }
+  } catch {}
 }
 
 window.addEventListener('hashchange', tryImportSharedPin);
@@ -512,56 +447,51 @@ window.addEventListener('hashchange', tryImportSharedPin);
 const terminal = document.getElementById('terminal');
 const inputEl  = document.getElementById('input');
 
-function println(html, className = 'line') {
+function println(html, cls = 'line') {
   const div = document.createElement('div');
-  div.className = className;
+  div.className = cls;
   div.innerHTML = html;
   terminal.appendChild(div);
   terminal.scrollTop = terminal.scrollHeight;
 }
 
-function printInfo(msg)    { println(msg, 'line info');    }
-function printError(msg)   { println(msg, 'line error');   }
-function printSystem(msg)  { println(msg, 'line system');  }
-function printSuccess(msg) { println(msg, 'line success'); }
+function printInfo(html)   { println(html, 'line info'); }
+function printError(html)  { println(html, 'line error'); }
+function printSystem(html) { println(html, 'line system'); }
+function printSuccess(html) { println(html, 'line success'); }
 function clearScreen()     { terminal.innerHTML = ''; }
 
 function showBootMessages() {
-  printSystem('GPS Pins  •  local storage only');
-  printSystem('────────────────────────────────────────');
-  printInfo('Paste https:// URL           → auto-save as pin');
-  printInfo('Click + button                → save current location');
-  printInfo('Open shared #p=... link       → auto-import');
-  printInfo("Type 'help'                   → show commands");
-  println('');
-  printSystem(`Last used name: ${lastUsedName || '(none)'}`);
+  printSystem("GPS Pins • local storage only");
+  printSystem("----------------------------------------");
+  printInfo("Paste any https:// or http:// URL to auto-save");
+  printInfo("Click + to save current location");
+  printInfo("Open shared #p=... link to import");
+  printInfo("Type help for commands");
+  println("");
+  printSystem(`Last name: ${lastUsedName || '(none)'}`);
 }
 
 showBootMessages();
 
 // ────────────────────────────────────────────────
-// Tab switching
+// Tabs
 // ────────────────────────────────────────────────
-function switchTab(tabId) {
-  document.querySelectorAll('.tab-btn, .tab-content').forEach(el => el.classList.remove('active'));
-
-  document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
-  document.getElementById(`${tabId}-tab`).classList.add('active');
-
-  if (tabId === 'pins') {
-    renderPins(searchInput.value);
-  }
-}
-
 document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`${btn.dataset.tab}-tab`).classList.add('active');
+    if (btn.dataset.tab === 'pins') renderPins(searchInput.value);
+  });
 });
 
 // ────────────────────────────────────────────────
 // Pins rendering
 // ────────────────────────────────────────────────
 const pinsContainer = document.getElementById('pins-container');
-const searchInput   = document.getElementById('search');
+const searchInput = document.getElementById('search');
 
 function renderPins(filter = '') {
   const pins = getPins();
@@ -579,53 +509,47 @@ function renderPins(filter = '') {
     pinsContainer.innerHTML = `
       <div class="empty-state">
         📍 No pins saved yet<br><br>
-        • Paste a https:// URL in the terminal<br>
-        • Click the + button to save your current location<br>
+        • Paste a https:// or http:// URL in Terminal<br>
+        • Click + to save your location<br>
         • Open a shared #p=... link to import
       </div>`;
     return;
   }
 
   filtered.forEach(pin => {
-    const isUrlPin = !!pin.url;
+    const isUrl = !!pin.url;
     const shareUrl = getPinShareUrl(pin);
-    const mapsUrl = pin.lat && pin.lng
-      ? `https://www.google.com/maps/search/?api=1&query=${pin.lat},${pin.lng}`
-      : null;
+    const maps = pin.lat && pin.lng ? `https://www.google.com/maps/search/?api=1&query=${pin.lat},${pin.lng}` : null;
 
-    const subject = encodeURIComponent(`Check out: ${pin.name || (isUrlPin ? 'Saved URL' : '(Unnamed)')}`);
-    let body = `${pin.name || (isUrlPin ? 'Saved URL' : '(Unnamed pin)')}\n\n`;
-    if (isUrlPin) body += `🔗 URL: ${pin.url}\n\n`;
+    const subject = encodeURIComponent(`Check out: ${pin.name || (isUrl ? 'Saved URL' : '(Unnamed)')}`);
+    let body = `${pin.name || (isUrl ? 'Saved URL' : '(Unnamed pin)')}\n\n`;
+    if (isUrl) body += `🔗 URL: ${pin.url}\n\n`;
     if (pin.lat && pin.lng) {
-      body += `📍 ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\n`;
-      body += `View: ${mapsUrl}\nAccuracy: ±${Math.round(pin.accuracy || 0)} m\n`;
+      body += `📍 ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\nView: ${maps}\nAccuracy: ±${Math.round(pin.accuracy || 0)} m\n`;
     }
     body += `Saved: ${new Date(pin.time).toLocaleString()}\n\nOpen: ${shareUrl}`;
 
-    const mailto = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
+    const email = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
 
     const card = document.createElement('div');
-    card.className = `card ${isUrlPin ? 'url-pin' : ''} ${pin.imported ? 'imported' : ''}`;
+    card.className = `card ${isUrl ? 'url-pin' : ''} ${pin.imported ? 'imported' : ''}`;
 
-    let title = escapeHTML(pin.name || (isUrlPin ? 'URL Pin' : '(Unnamed)'));
-    if (isUrlPin) {
-      title = `<a href="${escapeHTML(pin.url)}" target="_blank" style="color:var(--purple); text-decoration:underline;">${title}</a>`;
-    }
+    let title = escapeHTML(pin.name || (isUrl ? 'URL Pin' : '(Unnamed)'));
+    if (isUrl) title = `<a href="${escapeHTML(pin.url)}" target="_blank" style="color:var(--purple);text-decoration:underline;">${title}</a>`;
 
     card.innerHTML = `
-      <div class="pin-title">${isUrlPin ? '🔗 ' : '📍 '}${title}${pin.imported ? ' <small>(imported)</small>' : ''}</div>
+      <div class="pin-title">${isUrl ? '🔗 ' : '📍 '}${title}${pin.imported ? ' <small>(imported)</small>' : ''}</div>
       <div class="meta">
         ${pin.lat && pin.lng ? `<span>📍 ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}</span>` : '<span>🌐 No location</span>'}
         ${pin.lat && pin.lng ? `<span>±${Math.round(pin.accuracy || 0)} m</span>` : ''}
         <span>${new Date(pin.time).toLocaleString()}</span>
       </div>
-      ${isUrlPin ? `
-        <div style="margin:1rem 0 0.8rem;">
-          <a href="${escapeHTML(pin.url)}" target="_blank" class="open-url-btn">→ Open URL</a>
-        </div>` : ''}
+      ${isUrl ? `<div style="margin:1rem 0 0.8rem;">
+        <a href="${escapeHTML(pin.url)}" target="_blank" class="open-url-btn">→ Open URL</a>
+      </div>` : ''}
       <div class="share-row">
         <button class="action-btn copy-btn" data-copy="${shareUrl}">Copy share link</button>
-        <a href="${mailto}" class="action-btn email-btn" target="_blank">Share via Email</a>
+        <a href="${email}" class="action-btn email-btn" target="_blank">Share via Email</a>
       </div>
     `;
 
@@ -641,11 +565,11 @@ searchInput.addEventListener('input', e => renderPins(e.target.value));
 document.querySelector('.refresh-btn').addEventListener('click', () => renderPins(searchInput.value));
 
 // ────────────────────────────────────────────────
-// Save current location (FAB)
+// + Button – Save current location
 // ────────────────────────────────────────────────
 document.getElementById('fab').addEventListener('click', async () => {
   const defaultName = lastUsedName || `Pin ${getPins().length + 1}`;
-  const name = prompt('Name for this pin?', defaultName);
+  const name = prompt("Name for this pin?", defaultName);
   if (name === null) return;
 
   const trimmed = name.trim();
@@ -655,13 +579,11 @@ document.getElementById('fab').addEventListener('click', async () => {
   }
 
   try {
-    const pos = await new Promise((resolve, reject) =>
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: true,
-        timeout: 12000,
-        maximumAge: 0,
-      })
-    );
+    const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }));
 
     const pin = {
       id: generateId(),
@@ -669,26 +591,25 @@ document.getElementById('fab').addEventListener('click', async () => {
       lat: pos.coords.latitude,
       lng: pos.coords.longitude,
       accuracy: Math.round(pos.coords.accuracy),
-      time: Date.now(),
+      time: Date.now()
     };
 
     const pins = getPins();
     pins.push(pin);
 
     if (savePins(pins)) {
-      printSuccess(`Saved → ${escapeHTML(pin.name)} @ ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`);
-      switchTab('pins');
+      printSuccess(`Pin saved → ${escapeHTML(pin.name)} @ ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`);
+      document.querySelector('.tab-btn[data-tab="pins"]').click();
     }
   } catch (err) {
-    printError('Location access failed.');
-    if (err.code === 1) printError('→ Permission denied');
-    if (err.code === 3) printError('→ Timeout — try again');
-    console.error(err);
+    printError("Location access failed.");
+    if (err.code === 1) printError("→ Permission denied");
+    if (err.code === 3) printError("→ Timeout — try again");
   }
 });
 
 // ────────────────────────────────────────────────
-// Terminal command handler
+// Commands
 // ────────────────────────────────────────────────
 function handleCommand(input) {
   const parts = input.trim().split(/\s+/);
@@ -696,39 +617,33 @@ function handleCommand(input) {
   const arg = parts.slice(1).join(' ').trim();
 
   if (cmd === 'help') {
-    printInfo('Available commands:');
-    printInfo('  help       → this help');
-    printInfo('  list       → show all saved pins');
-    printInfo('  clear      → clear terminal screen');
-    printInfo('  clear all  → delete ALL pins (with confirmation)');
-    println('');
-    printInfo('Other ways to save:');
-    printInfo('  • Paste https:// URL directly');
-    printInfo('  • Click + button to save location');
-    printInfo('  • Open #p=... shared link to import');
+    printInfo("Commands: help, list, clear, clear all");
+    printInfo("• Paste http(s):// URL → auto-save");
+    printInfo("• + button → save location");
+    printInfo("• Shared #p=... link → auto-import");
     return;
   }
 
   if (cmd === 'list') {
     const pins = getPins();
-    if (!pins.length) return printInfo('No pins saved yet.');
-    printInfo(`Total pins: ${pins.length}`);
+    if (!pins.length) return printInfo("No pins yet.");
+    printInfo(`Total: ${pins.length}`);
     pins.forEach(p => {
       let line = `• ${escapeHTML(p.name || '(Unnamed)')} `;
-      if (p.url) line += '[URL] ';
+      if (p.url) line += `[URL] `;
       if (p.lat && p.lng) line += `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)} `;
       line += `(${new Date(p.time).toLocaleDateString()})`;
-      if (p.imported) line += ' [imported]';
+      if (p.imported) line += ` [imported]`;
       println(line, 'line info');
     });
     return;
   }
 
   if (cmd === 'clear' && arg === 'all') {
-    if (confirm('Delete ALL saved pins & URLs?\nThis cannot be undone.')) {
+    if (confirm("Delete ALL pins/URLs? This cannot be undone.")) {
       savePins([]);
       renderPins();
-      printSystem('All pins cleared.');
+      printSystem("All data cleared.");
     }
     return;
   }
@@ -740,40 +655,58 @@ function handleCommand(input) {
   }
 
   printError(`Unknown command: ${escapeHTML(cmd)}`);
-  printInfo("Type 'help' for commands.");
+  printInfo("Type help for commands.");
 }
 
 // ────────────────────────────────────────────────
-// Terminal input
+// Input: improved URL detection + commands
 // ────────────────────────────────────────────────
 inputEl.addEventListener('keydown', async e => {
   if (e.key !== 'Enter') return;
+
   const text = inputEl.value.trim();
   if (!text) return;
 
-  const urlPattern = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
+  let urlObj = null;
+  try {
+    urlObj = new URL(text.startsWith('http') ? text : 'https://' + text);
+    if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') throw new Error();
+  } catch {
+    urlObj = null;
+  }
 
-  if (urlPattern.test(text)) {
+  if (urlObj) {
     e.preventDefault();
     println('> ' + escapeHTML(text), 'line prompt');
 
+    // Nice auto-name: domain + first path segment
+    let name = urlObj.hostname;
+    if (urlObj.pathname && urlObj.pathname !== '/') {
+      const segment = urlObj.pathname.split('/')[1];
+      if (segment) name += ` / ${segment}`;
+    }
+    if (name.length > 60) name = name.slice(0, 57) + '…';
+
     const pin = {
       id: generateId(),
-      name: text.substring(0, 80) + (text.length > 80 ? '…' : ''),
-      url: text,
+      name,
+      url: urlObj.href,
       lat: null,
       lng: null,
       accuracy: null,
-      time: Date.now(),
+      time: Date.now()
     };
 
     const pins = getPins();
-    pins.push(pin);
-
-    if (savePins(pins)) {
-      printSuccess(`URL saved → ${escapeHTML(pin.name)}`);
-      println(`  ${pin.url}`, 'line info');
-      switchTab('pins');
+    if (pins.some(p => p.url === pin.url)) {
+      printInfo("→ This URL is already saved.");
+    } else {
+      pins.push(pin);
+      if (savePins(pins)) {
+        printSuccess(`URL saved → ${escapeHTML(pin.name)}`);
+        println(`  ${pin.url}`, 'line info');
+        document.querySelector('.tab-btn[data-tab="pins"]').click();
+      }
     }
 
     inputEl.value = '';
@@ -781,7 +714,7 @@ inputEl.addEventListener('keydown', async e => {
     return;
   }
 
-  // Command mode
+  // Command
   e.preventDefault();
   println('> ' + escapeHTML(text), 'line prompt');
   handleCommand(text);

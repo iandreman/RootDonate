@@ -32,11 +32,7 @@
       --shadow: 0 4px 16px rgba(0,0,0,0.12);
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin:0; padding:0; box-sizing:border-box; }
 
     body {
       background: var(--bg);
@@ -97,11 +93,7 @@
     .btn:hover    { background: color-mix(in srgb, var(--accent) 24%, transparent); }
     .btn.active   { background: var(--accent); color: #000; border-color: var(--accent); }
 
-    .tab-content {
-      display: none;
-      flex: 1;
-      flex-direction: column;
-    }
+    .tab-content { display: none; flex: 1; flex-direction: column; }
     .tab-content.active { display: flex; }
 
     #terminal-tab { flex: 1; display: flex; flex-direction: column; }
@@ -114,11 +106,7 @@
       line-height: 1.65;
     }
 
-    .line {
-      margin: 0.48rem 0;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
+    .line { margin: 0.48rem 0; white-space: pre-wrap; word-break: break-word; }
 
     .prompt       { color: var(--accent-dim); font-weight: bold; }
     .info         { color: var(--accent-dim); }
@@ -146,10 +134,7 @@
       font-size: 1.08rem;
     }
 
-    #pins-tab {
-      padding: 1.6rem;
-      overflow-y: auto;
-    }
+    #pins-tab { padding: 1.6rem; overflow-y: auto; }
 
     #search {
       width: 100%;
@@ -182,40 +167,6 @@
     }
     .url-pin .pin-title { color: var(--purple); }
 
-    .meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.4rem 2rem;
-      color: var(--muted);
-      font-size: 0.97rem;
-      margin: 0.7rem 0;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.9rem;
-      margin-top: 1.1rem;
-    }
-
-    .small-btn {
-      padding: 0.58rem 1.2rem;
-      font-size: 0.94rem;
-      border-radius: 8px;
-      cursor: pointer;
-      background: color-mix(in srgb, var(--accent) 15%, transparent);
-      border: 1px solid var(--border);
-      color: var(--accent);
-      transition: all 0.2s;
-    }
-    .small-btn:hover { background: color-mix(in srgb, var(--accent) 28%, transparent); }
-
-    .copy-btn.copied {
-      background: rgba(86,212,100,0.28) !important;
-      color: #56d364 !important;
-      border-color: #56d364 !important;
-    }
-
     .share-line {
       margin-top: 0.9rem;
       font-size: 0.96rem;
@@ -231,6 +182,12 @@
       padding: 0.48rem 1rem;
       border-radius: 6px;
       cursor: pointer;
+    }
+
+    .copy-share.copied {
+      background: rgba(86,212,100,0.28) !important;
+      color: #56d364 !important;
+      border-color: #56d364 !important;
     }
 
     #fab {
@@ -259,8 +216,6 @@
       #terminal { padding: 1.3rem 1.5rem; }
       .card { padding: 1.3rem; margin: 1.1rem 0; }
       #fab { bottom: 24px; right: 24px; width: 62px; height: 62px; font-size: 2.3rem; }
-      .actions { flex-direction: column; gap: 0.8rem; }
-      .small-btn { width: 100%; text-align: center; }
     }
   </style>
 </head>
@@ -294,9 +249,9 @@
 
 <script>
 // ────────────────────────────────────────────────
-// Core variables & helpers
+// Core
 // ────────────────────────────────────────────────
-const STORAGE_KEY = 'gps-pins-v12-2025';
+const STORAGE_KEY = 'gps-pins-v13';
 let pins = loadPins();
 let lastUsedName = localStorage.getItem('gps-pins-lastname') || '';
 let trackingWatchId = null;
@@ -376,20 +331,19 @@ const print = {
 };
 
 // ────────────────────────────────────────────────
-// Boot / welcome
+// Boot screen
 // ────────────────────────────────────────────────
 terminalEl.innerHTML = '';
 print.system('<span style="font-size:1.25rem;font-weight:700;">GPS Pins</span>');
 print.system('100% local • offline • private');
 println('─'.repeat(48), 'system');
 println('');
-print.info('Paste URL <b>→ auto-saves + share link</b>');
-print.info('Tap <b>+</b> <b>→ save current location</b>');
-print.info('Double-tap / long-press + <b>→ name it</b>');
-print.info('<b>track on</b> / <b>track off</b> → continuous logging');
-print.info('Type <b>help</b> for more commands');
+print.info('Paste any URL → <b>saves to My Pins</b> + share link appears');
+print.info('Tap + → save current location (double-tap/long-press to name)');
+print.info('<b>track on</b> / <b>track off</b> → continuous GPS logging');
+print.info('Type <b>help</b> for commands');
 println('');
-print.info('Ready. Paste something or tap + to start.');
+print.info('Ready. Paste a link or tap + to begin.');
 println('');
 
 // ────────────────────────────────────────────────
@@ -412,23 +366,23 @@ document.querySelectorAll('.btn[data-tab]').forEach(btn => {
 });
 
 // ────────────────────────────────────────────────
-// Render pins list
+// Render My Pins
 // ────────────────────────────────────────────────
 function renderPins(filter = '') {
   pinsContainer.innerHTML = '';
   const q = filter.toLowerCase().trim();
 
   const shown = pins.filter(p =>
-    !q || 
+    !q ||
     p.name?.toLowerCase().includes(q) ||
     p.url?.toLowerCase().includes(q) ||
-    p.lat?.toString().includes(q) ||
-    p.lng?.toString().includes(q) ||
+    (p.lat && p.lat.toString().includes(q)) ||
+    (p.lng && p.lng.toString().includes(q)) ||
     getShareUrl(p).toLowerCase().includes(q)
   );
 
   if (!shown.length) {
-    pinsContainer.innerHTML = '<div style="text-align:center;padding:4rem 1rem;color:var(--muted);">No matching pins.</div>';
+    pinsContainer.innerHTML = '<div style="text-align:center; padding:4rem 1rem; color:var(--muted);">No matching pins found.</div>';
     return;
   }
 
@@ -439,13 +393,13 @@ function renderPins(filter = '') {
     let html = `<div class="pin-title">${escapeHTML(pin.name)}</div>`;
 
     if (pin.url) {
-      html += `<a href="${escapeHTML(pin.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--purple);word-break:break-all;">${escapeHTML(pin.url)}</a>`;
+      html += `<a href="${escapeHTML(pin.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--purple); word-break:break-all;">${escapeHTML(pin.url)}</a>`;
     } else if (pin.lat != null && pin.lng != null) {
-      html += `<div style="font-family:monospace;margin:0.6rem 0;">
+      html += `<div style="font-family:monospace; margin:0.6rem 0;">
         ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}
         ${pin.accuracy ? `<span style="color:var(--muted);"> (±${pin.accuracy} m)</span>` : ''}
       </div>`;
-      html += `<div style="color:var(--muted);font-size:0.94rem;">
+      html += `<div style="color:var(--muted); font-size:0.94rem;">
         ${new Date(pin.time).toLocaleString([], {dateStyle:'medium', timeStyle:'short'})}
       </div>`;
     }
@@ -453,7 +407,7 @@ function renderPins(filter = '') {
     const share = getShareUrl(pin);
     html += `
       <div class="share-line">
-        Share: ${escapeHTML(share)}
+        Share link: ${escapeHTML(share)}
         <button class="copy-share small-btn" data-url="${escapeHTML(share)}">Copy</button>
       </div>`;
 
@@ -461,7 +415,6 @@ function renderPins(filter = '') {
     pinsContainer.appendChild(card);
   });
 
-  // Re-attach copy listeners only to new buttons
   pinsContainer.querySelectorAll('.copy-share:not([data-listener])').forEach(btn => {
     btn.addEventListener('click', () => copy(btn.dataset.url, btn));
     btn.dataset.listener = '1';
@@ -469,7 +422,16 @@ function renderPins(filter = '') {
 }
 
 // ────────────────────────────────────────────────
-// FAB – Save current position
+// Helper: refresh pins list if visible
+// ────────────────────────────────────────────────
+function refreshPinsIfVisible() {
+  if (document.querySelector('[data-tab="pins"].active')) {
+    renderPins(searchEl.value);
+  }
+}
+
+// ────────────────────────────────────────────────
+// FAB – Save location
 // ────────────────────────────────────────────────
 document.getElementById('fab').addEventListener('click', async e => {
   const now = Date.now();
@@ -478,7 +440,6 @@ document.getElementById('fab').addEventListener('click', async e => {
 
   let name = lastUsedName || `Pin ${pins.length + 1}`;
 
-  // Double-click or long-press → prompt name
   if (e.detail >= 2) {
     const custom = prompt("Name this location?", name);
     if (custom === null) return;
@@ -491,12 +452,8 @@ document.getElementById('fab').addEventListener('click', async e => {
   }
 
   try {
-    const pos = await new Promise((ok, fail) =>
-      navigator.geolocation.getCurrentPosition(ok, fail, {
-        enableHighAccuracy: true,
-        timeout: 14000,
-        maximumAge: 0
-      })
+    const pos = await new Promise((res, rej) =>
+      navigator.geolocation.getCurrentPosition(res, rej, {enableHighAccuracy:true, timeout:14000, maximumAge:0})
     );
 
     const pin = {
@@ -510,28 +467,28 @@ document.getElementById('fab').addEventListener('click', async e => {
 
     pins.push(pin);
     if (savePins()) {
-      const url = getShareUrl(pin);
-      print.success(`Saved → ${escapeHTML(name)} @ ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`);
-      println(`<span class="share-line">Share: ${escapeHTML(url)} <button class="copy-share" data-url="${escapeHTML(url)}">Copy</button></span>`, 'info');
+      const share = getShareUrl(pin);
+      print.success(`Location saved → ${escapeHTML(name)}`);
+      println(`<span class="share-line">Share link: ${escapeHTML(share)} <button class="copy-share" data-url="${escapeHTML(share)}">Copy</button></span>`, 'info');
 
       pinsContainer.querySelectorAll('.copy-share:not([data-listener])').forEach(b => {
         b.addEventListener('click', () => copy(b.dataset.url, b));
         b.dataset.listener = '1';
       });
 
-      if (document.querySelector('[data-tab="pins"].active')) renderPins(searchEl.value);
+      refreshPinsIfVisible();
     }
   } catch (err) {
-    print.error("Location failed: " + (err.code === 1 ? "permission denied" : err.message));
+    print.error("Location error: " + (err.code === 1 ? "permission denied" : err.message));
   }
 });
 
 // ────────────────────────────────────────────────
-// Continuous tracking
+// Tracking
 // ────────────────────────────────────────────────
 function startTracking() {
   if (trackingWatchId) return;
-  print.info("Tracking started — points ≈ every 15 s");
+  print.info("Tracking started — new point ~every 15s");
   trackingWatchId = navigator.geolocation.watchPosition(pos => {
     const name = `Track ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
     const pin = {
@@ -545,20 +502,20 @@ function startTracking() {
     pins.push(pin);
     savePins();
 
-    const url = getShareUrl(pin);
+    const share = getShareUrl(pin);
     println(`→ ${name} @ ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`, 'info');
-    println(`<span class="share-line">Share: ${escapeHTML(url)} <button class="copy-share" data-url="${escapeHTML(url)}">Copy</button></span>`, 'info');
+    println(`<span class="share-line">Share link: ${escapeHTML(share)} <button class="copy-share" data-url="${escapeHTML(share)}">Copy</button></span>`, 'info');
 
     pinsContainer.querySelectorAll('.copy-share:not([data-listener])').forEach(b => {
       b.addEventListener('click', () => copy(b.dataset.url, b));
       b.dataset.listener = '1';
     });
 
-    if (document.querySelector('[data-tab="pins"].active')) renderPins(searchEl.value);
+    refreshPinsIfVisible();
   }, err => {
-    print.error("Tracking error: " + err.message);
+    print.error("Tracking failed: " + err.message);
     stopTracking();
-  }, { enableHighAccuracy: true, timeout: 16000, maximumAge: 0 });
+  }, {enableHighAccuracy:true, timeout:16000, maximumAge:0});
 }
 
 function stopTracking() {
@@ -570,7 +527,7 @@ function stopTracking() {
 }
 
 // ────────────────────────────────────────────────
-// Command input
+// Input (URL + commands)
 // ────────────────────────────────────────────────
 inputEl.addEventListener('keydown', async e => {
   if (e.key !== 'Enter') return;
@@ -581,36 +538,39 @@ inputEl.addEventListener('keydown', async e => {
 
   println(`<span class="prompt">> ${escapeHTML(val)}</span>`);
 
-  // ── URL detection ───────────────────────────────
-  let url;
+  // ── Try as URL ─────────────────────────────────
+  let urlObj;
   try {
-    url = new URL(val.startsWith('http') ? val : 'https://' + val);
+    urlObj = new URL(val.startsWith('http') ? val : 'https://' + val);
   } catch {}
 
-  if (url) {
-    if (pins.some(p => p.url === url.href)) {
-      print.info("Already saved.");
-    } else {
-      let name = url.hostname.replace(/^www\./, '');
-      if (url.pathname && url.pathname !== '/') {
-        const part = url.pathname.split('/')[1];
-        if (part) name += ` / ${part}`;
-      }
-      name = name.slice(0, 68);
+  if (urlObj) {
+    const fullUrl = urlObj.href;
 
-      const pin = { id: generateId(), name, url: url.href, time: Date.now() };
+    if (pins.some(p => p.url === fullUrl)) {
+      print.info("This URL is already saved.");
+    } else {
+      let name = urlObj.hostname.replace(/^www\./, '');
+      if (urlObj.pathname && urlObj.pathname !== '/') {
+        const segment = urlObj.pathname.split('/')[1];
+        if (segment) name += ` / ${segment}`;
+      }
+      name = name.slice(0, 68) || 'Link';
+
+      const pin = { id: generateId(), name, url: fullUrl, time: Date.now() };
       pins.push(pin);
+
       if (savePins()) {
         const share = getShareUrl(pin);
-        print.success(`Saved → ${escapeHTML(name)}`);
-        println(`<span class="share-line">Share: ${escapeHTML(share)} <button class="copy-share" data-url="${escapeHTML(share)}">Copy</button></span>`, 'info');
+        print.success(`URL saved → ${escapeHTML(name)}`);
+        println(`<span class="share-line">Share link: ${escapeHTML(share)} <button class="copy-share" data-url="${escapeHTML(share)}">Copy</button></span>`, 'info');
 
         pinsContainer.querySelectorAll('.copy-share:not([data-listener])').forEach(b => {
           b.addEventListener('click', () => copy(b.dataset.url, b));
           b.dataset.listener = '1';
         });
 
-        if (document.querySelector('[data-tab="pins"].active')) renderPins(searchEl.value);
+        refreshPinsIfVisible();
       }
     }
     inputEl.value = '';
@@ -618,15 +578,15 @@ inputEl.addEventListener('keydown', async e => {
     return;
   }
 
-  // ── Commands ────────────────────────────────────
-  const cmd = val.toLowerCase();
+  // ── Commands ───────────────────────────────────
+  const cmd = val.toLowerCase().trim();
   if (cmd === 'help') {
-    print.info('Available commands:');
+    print.info('Commands:');
     println('• track on       – start continuous GPS logging');
     println('• track off      – stop tracking');
     println('• clear          – clear terminal');
     println('• list           – show all pins in terminal');
-    println('• clear all      – delete ALL pins (confirmation needed)');
+    println('• clear all      – delete ALL pins (with confirmation)');
   }
   else if (cmd === 'track on')  startTracking();
   else if (cmd === 'track off') stopTracking();
@@ -635,7 +595,7 @@ inputEl.addEventListener('keydown', async e => {
     print.system('Terminal cleared.');
   }
   else if (cmd === 'list') {
-    if (!pins.length) print.info('No pins yet.');
+    if (!pins.length) print.info('No pins saved yet.');
     else pins.forEach(p => {
       let line = `→ ${escapeHTML(p.name)}`;
       if (p.url) line += `  ${escapeHTML(p.url)}`;
@@ -648,12 +608,12 @@ inputEl.addEventListener('keydown', async e => {
       pins = [];
       savePins();
       print.success('All pins deleted.');
-      if (document.querySelector('[data-tab="pins"].active')) renderPins();
+      refreshPinsIfVisible();
     }
   }
   else {
     print.error(`Unknown command: ${escapeHTML(val)}`);
-    print.info('Type <b>help</b> to see commands');
+    print.info('Type <b>help</b> to see available commands');
   }
 
   inputEl.value = '';
@@ -661,7 +621,7 @@ inputEl.addEventListener('keydown', async e => {
 });
 
 // ────────────────────────────────────────────────
-// Search & theme toggle
+// Search & theme
 // ────────────────────────────────────────────────
 searchEl.addEventListener('input', () => {
   if (document.querySelector('[data-tab="pins"].active')) {
@@ -670,8 +630,8 @@ searchEl.addEventListener('input', () => {
 });
 
 document.getElementById('theme-toggle').addEventListener('click', () => {
-  const current = document.body.getAttribute('data-theme') || 'dark';
-  const next = current === 'dark' ? 'light' : 'dark';
+  const cur = document.body.getAttribute('data-theme') || 'dark';
+  const next = cur === 'dark' ? 'light' : 'dark';
   document.body.setAttribute('data-theme', next);
   document.getElementById('theme-toggle').textContent = next === 'dark' ? '☀️ Light' : '🌙 Dark';
 });
@@ -680,7 +640,7 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
 // Init
 // ────────────────────────────────────────────────
 countEl.textContent = pins.length;
-renderPins(); // initial render (empty ok)
+renderPins();
 inputEl.focus();
 </script>
 </body>

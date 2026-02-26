@@ -288,52 +288,76 @@ async function copyToClipboard(text, btn) {
     btn.textContent = 'Copied!';
     btn.classList.add('copied');
 
-    let urlObj;
-    try {
-      urlObj = new URL(text);
-      if (!['http:','https:'].includes(urlObj.protocol)) throw new Error();
-    } catch {
-      setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1600);
-      return;
+    // Try to extract original URL & name from share link
+    let originalUrl = null;
+    let originalName = null;
+
+    if (isAppShareLink(text)) {
+      try {
+        const hashPart = text.split('#p=')[1];
+        if (hashPart) {
+          const decoded = JSON.parse(atob(hashPart));
+          if (decoded.u) {
+            originalUrl = decoded.u;
+            originalName = decoded.n || 'Link';
+          }
+        }
+      } catch (e) {}
     }
 
-    const href = urlObj.href;
+    let shouldSave = false;
+    let nameToShow = originalName || (new URL(text).hostname?.replace(/^www\./, '') || 'this link');
 
-    if (pins.some(p => p.url === href)) {
-      println(`<span class="info">This link is already saved in My Pins.</span>`);
-    } else {
-      let shouldSave = true;
-      let name = urlObj.hostname.replace(/^www\./, '');
-      if (urlObj.pathname && urlObj.pathname !== '/') {
-        const seg = urlObj.pathname.split('/')[1];
-        if (seg) name += ` / ${seg}`;
-      }
-      name = name.slice(0, 60) || 'Link';
-
-      if (isAppShareLink(text)) {
-        shouldSave = confirm(`Save this share link to My Pins?\n\n${name}\n\nThe full URL will be kept.`);
-      }
-
-      if (shouldSave) {
-        pins.push({
-          id: generateId(),
-          name,
-          url: href,           // ← keeps the original URL (share link or normal)
-          time: Date.now()
-        });
-        if (savePins()) {
-          println(`<span class="success">Saved to My Pins: "${escape(name)}"</span>`);
-          switchToPinsTab();
-        }
+    if (originalUrl) {
+      // We have original → ask to save original
+      if (pins.some(p => p.url === originalUrl)) {
+        println(`<span class="info">Original already saved in My Pins</span>`);
       } else {
-        println(`<span class="system">Save cancelled.</span>`);
+        shouldSave = confirm(
+          `Save the ORIGINAL URL to My Pins?\n\n` +
+          `${originalName || nameToShow}\n` +
+          `${originalUrl.slice(0, 80)}${originalUrl.length > 80 ? '...' : ''}`
+        );
       }
+    } else {
+      // No original found → fallback ask for the copied link
+      if (pins.some(p => p.url === text)) {
+        println(`<span class="info">This link already saved in My Pins</span>`);
+      } else {
+        shouldSave = confirm(
+          `Save this link to My Pins?\n\n` +
+          `${nameToShow}\n` +
+          `${text.slice(0, 80)}${text.length > 80 ? '...' : ''}`
+        );
+      }
+    }
+
+    if (shouldSave) {
+      const finalUrl = originalUrl || text;
+      const finalName = originalName || nameToShow;
+
+      pins.push({
+        id: generateId(),
+        name: finalName,
+        url: finalUrl,
+        time: Date.now()
+      });
+
+      if (savePins()) {
+        println(`<span class="success">Saved to My Pins: "${escape(finalName)}"</span>`);
+        refreshPinsIfVisible();
+      } else {
+        println(`<span class="error">Could not save — storage issue</span>`);
+      }
+    } else {
+      println(`<span class="system">Save cancelled</span>`);
     }
 
     setTimeout(() => {
       btn.textContent = orig;
       btn.classList.remove('copied');
     }, 1600);
+
   } catch {
     alert('Copy failed — please copy manually.');
   }
@@ -514,7 +538,7 @@ print.system('100% local • offline • private');
 println('─'.repeat(50), 'system');
 println('');
 print.info('Paste URL + Enter → save');
-print.info('Copy share link → asks to save to My Pins');
+print.info('Click "Copy" on share link → copies link + asks to save original URL');
 print.info('+ → save current location');
 print.info('help → commands');
 println('');

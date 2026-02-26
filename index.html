@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GPS Pins – Private Markers + URLs</title>
-  <meta name="description" content="Save private GPS locations & URLs. 100% local, offline, no account.">
+  <meta name="description" content="Save private GPS locations & URLs. 100% local, offline, no account."/>
 
   <style>
     :root {
@@ -22,160 +22,239 @@
 
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      background:var(--bg); color:var(--text);
-      font-family:'Courier New',Courier,monospace;
-      min-height:100vh; display:flex; flex-direction:column;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Courier New', Courier, monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     header {
-      padding:1rem 1.4rem;
-      background:rgba(0,0,0,0.6);
-      border-bottom:1px solid var(--border);
-      text-align:center;
+      padding: 1rem 1.4rem;
+      background: rgba(0,0,0,0.6);
+      border-bottom: 1px solid var(--border);
+      text-align: center;
     }
 
     h1 {
-      font-size:2.1rem;
-      background:linear-gradient(90deg,var(--purple),var(--accent));
-      -webkit-background-clip:text;
-      background-clip:text;
-      color:transparent;
+      font-size: 2.1rem;
+      background: linear-gradient(90deg, var(--purple), var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
 
-    .subtitle { color:var(--muted); font-size:0.95rem; margin-top:0.5rem; }
+    .subtitle { color: var(--muted); font-size: 0.95rem; margin-top: 0.5rem; }
 
     .tabs {
-      margin:1.2rem 0 0.8rem;
-      display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;
+      margin: 1.2rem 0 0.8rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
 
     .tab-btn {
-      padding:0.7rem 1.6rem;
-      background:rgba(255,255,255,0.06);
-      border:1px solid var(--border);
-      border-radius:8px;
-      color:var(--muted);
-      cursor:pointer; font-weight:bold;
-      transition:all 0.18s ease;
+      padding: 0.7rem 1.6rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.18s ease;
+      position: relative;
     }
 
     .tab-btn.active {
-      background:linear-gradient(135deg,var(--purple),var(--accent));
-      color:#000; border-color:transparent;
+      background: linear-gradient(135deg, var(--purple), var(--accent));
+      color: #000;
+      border-color: transparent;
     }
 
-    .tab-content { flex:1; display:none; flex-direction:column; overflow:hidden; }
-    .tab-content.active { display:flex; }
+    .tab-btn .badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: var(--accent-dim);
+      color: #000;
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 10px;
+      min-width: 16px;
+      text-align: center;
+      box-shadow: 0 0 6px rgba(0,255,157,0.5);
+      display: none;
+    }
+
+    .tab-content { flex: 1; display: none; flex-direction: column; overflow: hidden; }
+    .tab-content.active { display: flex; }
 
     #terminal-tab .terminal {
-      flex:1; padding:1.3rem 1.8rem; overflow-y:auto;
-      line-height:1.55; font-size:1rem;
+      flex: 1;
+      padding: 1.3rem 1.8rem;
+      overflow-y: auto;
+      line-height: 1.55;
+      font-size: 1rem;
     }
 
-    .line { margin:0.5rem 0; white-space:pre-wrap; word-break:break-word; }
-    .prompt    { color:var(--accent-dim); }
-    .info      { color:#00ffea; }
-    .system    { color:#778899; }
-    .error     { color:var(--danger); }
-    .success   { color:var(--accent-dim); font-weight:bold; }
+    .line { margin: 0.5rem 0; white-space: pre-wrap; word-break: break-word; }
+    .prompt    { color: var(--accent-dim); }
+    .info      { color: #00ffea; }
+    .system    { color: #778899; }
+    .error     { color: var(--danger); }
+    .success   { color: var(--accent-dim); font-weight: bold; }
 
     .input-line {
-      display:flex; align-items:flex-start;
-      padding:1rem 1.8rem;
-      background:rgba(0,0,0,0.4);
-      border-top:1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 1rem 1.8rem;
+      background: rgba(0,0,0,0.4);
+      border-top: 1px solid var(--border);
+      gap: 0.8rem;
     }
 
-    .input-line .prompt { margin-right:1rem; flex-shrink:0; }
+    .input-line .prompt { flex-shrink: 0; }
 
     #input {
-      flex:1; background:transparent; border:none;
-      color:var(--accent); font:inherit; outline:none;
-      caret-color:var(--accent);
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--accent);
+      font: inherit;
+      outline: none;
+      caret-color: var(--accent);
+      min-width: 0;
     }
 
     .cursor {
-      display:inline-block; width:10px; height:1.3em;
-      background:var(--accent);
-      animation:blink 1.2s step-end infinite;
-      margin-left:5px;
+      display: inline-block;
+      width: 10px;
+      height: 1.3em;
+      background: var(--accent);
+      animation: blink 1.2s step-end infinite;
     }
 
-    @keyframes blink { 50% { opacity:0; } }
+    @keyframes blink { 50% { opacity: 0; } }
 
-    #pins-tab { padding:1.5rem; overflow-y:auto; }
-    .collection-header { text-align:center; margin:0 0 1.6rem; color:var(--accent); font-size:1.5rem; }
-    .empty-state { text-align:center; color:var(--muted); padding:6rem 1.5rem; font-size:1.15rem; line-height:1.7; }
+    #pins-tab { padding: 1.5rem; overflow-y: auto; }
+    .collection-header { text-align: center; margin: 0 0 1.6rem; color: var(--accent); font-size: 1.5rem; }
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      padding: 8rem 1.5rem;
+      font-size: 1.2rem;
+      line-height: 1.6;
+    }
 
     .card {
-      background:rgba(20,24,34,0.97);
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:1.5rem; margin:1.3rem 0;
-      box-shadow:var(--shadow);
+      background: rgba(20,24,34,0.97);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.3rem 0;
+      box-shadow: var(--shadow);
+      transition: transform 0.15s ease;
     }
 
-    .pin-title { color:var(--accent); font-size:1.4rem; margin-bottom:0.7rem; word-break:break-all; }
-    .url-pin .pin-title { color:var(--purple); }
+    .card:hover { transform: translateY(-2px); }
+
+    .pin-title { color: var(--accent); font-size: 1.4rem; margin-bottom: 0.7rem; word-break: break-all; }
+    .url-pin .pin-title { color: var(--purple); }
 
     .meta {
-      color:var(--muted); font-size:0.95rem; margin:0.8rem 0;
-      display:flex; flex-wrap:wrap; gap:1.6rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin: 0.8rem 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.6rem;
     }
 
     #search {
-      width:100%; max-width:500px; padding:0.9rem;
-      margin:0 auto 1.8rem; display:block;
-      background:rgba(255,255,255,0.05); border:1px solid var(--border);
-      border-radius:10px; color:var(--text); font-family:inherit; font-size:1rem;
+      width: 100%;
+      max-width: 500px;
+      padding: 0.9rem;
+      margin: 0 auto 1.8rem;
+      display: block;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1rem;
     }
 
     .share-row {
-      margin-top:1.2rem; display:flex; flex-wrap:wrap; gap:0.8rem; align-items:center;
+      margin-top: 1.2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      align-items: center;
     }
 
     .action-btn, .copy-btn, .email-btn, .open-url-btn, .refresh-btn {
-      padding:0.6rem 1.3rem; border-radius:8px;
-      font-weight:bold; cursor:pointer; transition:all 0.2s ease;
-      text-decoration:none; display:inline-block; border:1px solid; font-size:0.9rem;
+      padding: 0.6rem 1.3rem;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+      border: 1px solid;
+      font-size: 0.9rem;
     }
 
-    .action-btn { background:rgba(0,212,255,0.18); border-color:var(--accent-dim); color:var(--accent); }
-    .action-btn:hover { background:rgba(0,212,255,0.35); }
+    .action-btn { background: rgba(0,212,255,0.18); border-color: var(--accent-dim); color: var(--accent); }
+    .action-btn:hover { background: rgba(0,212,255,0.35); }
 
-    .copy-btn { background:rgba(187,134,252,0.18); border-color:var(--purple); color:var(--purple); }
-    .copy-btn:hover { background:rgba(187,134,252,0.35); }
-    .copy-btn.copied { background:rgba(0,255,157,0.3); color:#00ff9d; border-color:#00ff9d; }
+    .copy-btn { background: rgba(187,134,252,0.18); border-color: var(--purple); color: var(--purple); }
+    .copy-btn:hover { background: rgba(187,134,252,0.35); }
+    .copy-btn.copied { background: rgba(0,255,157,0.3); color: #00ff9d; border-color: #00ff9d; }
 
-    .email-btn { background:rgba(0,212,255,0.12); border-color:var(--accent); color:var(--accent); }
-    .email-btn:hover { background:rgba(0,212,255,0.28); }
-
-    .open-url-btn { background:rgba(187,134,252,0.25); border-color:var(--purple); color:var(--purple); }
-    .open-url-btn:hover { background:rgba(187,134,252,0.45); }
+    .email-btn, .open-url-btn { background: rgba(187,134,252,0.25); border-color: var(--purple); color: var(--purple); }
+    .email-btn:hover, .open-url-btn:hover { background: rgba(187,134,252,0.45); }
 
     .refresh-btn {
-      background:rgba(0,255,157,0.18); border-color:var(--accent-dim); color:var(--accent-dim);
-      margin:1rem auto; display:block;
+      background: rgba(0,255,157,0.18);
+      border-color: var(--accent-dim);
+      color: var(--accent-dim);
+      margin: 1rem auto;
+      display: block;
     }
-    .refresh-btn:hover { background:rgba(0,255,157,0.35); }
 
     #fab {
-      position:fixed; bottom:24px; right:24px; width:64px; height:64px;
-      background:linear-gradient(135deg,var(--purple),var(--accent));
-      color:#000; border:none; border-radius:50%; font-size:2.2rem; font-weight:bold;
-      box-shadow:0 6px 20px rgba(0,0,0,0.5); cursor:pointer; z-index:1000;
-      display:flex; align-items:center; justify-content:center; transition:transform 0.2s ease;
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--purple), var(--accent));
+      color: #000;
+      border: none;
+      border-radius: 50%;
+      font-size: 2.2rem;
+      font-weight: bold;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+      cursor: pointer;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease;
     }
 
-    #fab:hover { transform:scale(1.1); }
-    #fab:active { transform:scale(0.95); }
+    #fab:hover { transform: scale(1.1); }
+    #fab:active { transform: scale(0.95); }
 
-    @media (max-width:560px) {
-      .tabs { flex-direction:column; gap:0.6rem; }
-      .tab-btn { width:100%; }
-      .share-row { flex-direction:column; align-items:stretch; }
-      .action-btn, .copy-btn, .email-btn, .open-url-btn { width:100%; text-align:center; }
-      #fab { bottom:16px; right:16px; width:56px; height:56px; font-size:2rem; }
+    @media (max-width: 560px) {
+      .tabs { flex-direction: column; gap: 0.6rem; }
+      .tab-btn { width: 100%; }
+      .share-row { flex-direction: column; align-items: stretch; }
+      .action-btn, .copy-btn, .email-btn, .open-url-btn { width: 100%; text-align: center; }
+      #fab { bottom: 16px; right: 16px; width: 56px; height: 56px; font-size: 2rem; }
+      .input-line { flex-direction: column; align-items: flex-start; padding: 1rem; }
     }
   </style>
 </head>
@@ -187,7 +266,7 @@
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="terminal">Terminal</button>
-    <button class="tab-btn" data-tab="pins">My Pins</button>
+    <button class="tab-btn" data-tab="pins">My Pins<span class="badge" id="pins-count">0</span></button>
   </div>
 </header>
 
@@ -195,14 +274,14 @@
   <div class="terminal" id="terminal"></div>
   <div class="input-line">
     <span class="prompt">></span>
-    <input id="input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus>
+    <input id="input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus/>
     <span class="cursor"></span>
   </div>
 </div>
 
 <div id="pins-tab" class="tab-content">
   <div class="collection-header">My Saved Pins & URLs</div>
-  <input type="text" id="search" placeholder="Search name, URL or coordinates…">
+  <input type="text" id="search" placeholder="Search name, URL or coordinates…"/>
   <button class="refresh-btn">↻ Refresh Pins List</button>
   <div id="pins-container"></div>
 </div>
@@ -211,7 +290,7 @@
 
 <script>
 // ────────────────────────────────────────────────
-// Utilities
+// Core
 // ────────────────────────────────────────────────
 const STORAGE_KEY = 'gps-pins-v7';
 let lastUsedName = localStorage.getItem('gps-pins-last-name') || '';
@@ -225,8 +304,7 @@ function getPins() {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     return data ? JSON.parse(data) : [];
-  } catch (e) {
-    console.warn('Failed to parse pins:', e);
+  } catch {
     return [];
   }
 }
@@ -234,13 +312,20 @@ function getPins() {
 function savePins(pins) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(pins));
-    console.log('Saved pins. Total now:', pins.length);
+    updatePinsCount();
     return true;
   } catch (e) {
     console.error('localStorage write failed:', e);
-    alert('Save failed — storage may be blocked or full.');
+    alert('Save failed — storage may be blocked, full, or in private mode.');
     return false;
   }
+}
+
+function updatePinsCount() {
+  const count = getPins().length;
+  const badge = document.getElementById('pins-count');
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'inline' : 'none';
 }
 
 function generateId() {
@@ -262,14 +347,13 @@ async function copyToClipboard(text, btn) {
       btn.textContent = original;
       btn.classList.remove('copied');
     }, 1800);
-  } catch (err) {
-    console.error('Clipboard failed', err);
-    alert('Copy failed — select manually.');
+  } catch {
+    alert('Copy failed — please select manually.');
   }
 }
 
 // ────────────────────────────────────────────────
-// Auto-import shared pin from URL hash (#p=...)
+// Auto-import from #p=...
 // ────────────────────────────────────────────────
 function tryImportSharedPin() {
   const hash = location.hash;
@@ -280,19 +364,10 @@ function tryImportSharedPin() {
     const json = atob(encoded);
     const data = JSON.parse(json);
 
-    // Basic validation
-    if (!data.id || !data.time || data.lat == null || data.lng == null) {
-      printError("Invalid shared pin format.");
-      return;
-    }
+    if (!data.id || !data.time || data.lat == null || data.lng == null) return;
 
     const pins = getPins();
-    const alreadyExists = pins.some(p => p.id === data.id);
-
-    if (alreadyExists) {
-      printInfo("This pin is already saved in My Pins.");
-      // Optional: still switch to pins tab
-      // document.querySelector('.tab-btn[data-tab="pins"]').click();
+    if (pins.some(p => p.id === data.id)) {
       history.replaceState(null, null, location.pathname);
       return;
     }
@@ -305,35 +380,21 @@ function tryImportSharedPin() {
       accuracy: data.accuracy ?? null,
       time: data.time,
       url: data.url || null,
-      // Optional: mark as imported for styling/filtering later
       imported: true
     };
 
     pins.push(newPin);
-
     if (savePins(pins)) {
-      printSuccess(`Imported shared pin → ${escapeHTML(newPin.name)}`);
-      if (newPin.lat != null && newPin.lng != null) {
-        printInfo(`  ${newPin.lat.toFixed(6)}, ${newPin.lng.toFixed(6)}`);
-      }
-      if (newPin.url) {
-        printInfo(`  🔗 ${newPin.url}`);
-      }
-
-      // Auto-switch to My Pins tab after import
       document.querySelector('.tab-btn[data-tab="pins"]').click();
-
-      // Clean URL so refresh doesn't re-import
-      history.replaceState(null, null, location.pathname + location.search);
+      history.replaceState(null, null, location.pathname);
     }
-  } catch (err) {
-    console.error("Shared pin import failed", err);
-    printError("Could not import this shared link (corrupted or unsupported format).");
-  }
+  } catch {}
 }
 
+window.addEventListener('hashchange', tryImportSharedPin);
+
 // ────────────────────────────────────────────────
-// Terminal output
+// Terminal
 // ────────────────────────────────────────────────
 const terminal = document.getElementById('terminal');
 const inputEl  = document.getElementById('input');
@@ -350,26 +411,36 @@ function printInfo(html)  { println(html, 'line info'); }
 function printError(html) { println(html, 'line error'); }
 function printSystem(html) { println(html, 'line system'); }
 function printSuccess(html) { println(html, 'line success'); }
-function clearScreen()    { terminal.innerHTML = ''; }
+function clearScreen() { terminal.innerHTML = ''; }
+
+function bootMessages() {
+  printSystem("GPS Pins • local storage only");
+  printSystem("----------------------------------------");
+  printInfo("Paste https:// URL to auto-save");
+  printInfo("Click + to save current location");
+  printInfo("Open shared #p=... link to import");
+  printInfo("Type help for more commands");
+  println("");
+  printSystem(`Last name: ${lastUsedName || '(none)'}`);
+}
+
+bootMessages();
 
 // ────────────────────────────────────────────────
-// Tab switching
+// Tabs
 // ────────────────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     btn.classList.add('active');
-    const tab = document.getElementById(btn.dataset.tab + '-tab');
-    tab.classList.add('active');
-    if (btn.dataset.tab === 'pins') {
-      renderPins();
-    }
+    document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
+    if (btn.dataset.tab === 'pins') renderPins();
   });
 });
 
 // ────────────────────────────────────────────────
-// Render pins (with optional imported styling support)
+// Pins rendering
 // ────────────────────────────────────────────────
 const pinsContainer = document.getElementById('pins-container');
 const searchInput = document.getElementById('search');
@@ -387,7 +458,13 @@ function renderPins(filter = '') {
   );
 
   if (!filtered.length) {
-    pinsContainer.innerHTML = '<div class="empty-state">No pins found yet.<br>Paste a https:// URL or use + button.</div>';
+    pinsContainer.innerHTML = `
+      <div class="empty-state">
+        📍 No pins saved yet<br><br>
+        • Paste a https:// URL in Terminal<br>
+        • Click + to save your location<br>
+        • Open a shared #p=... link to import
+      </div>`;
     return;
   }
 
@@ -401,8 +478,6 @@ function renderPins(filter = '') {
     if (isUrl) body += `🔗 URL: ${pin.url}\n\n`;
     if (pin.lat && pin.lng) {
       body += `📍 ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\nView: ${maps}\nAccuracy: ±${Math.round(pin.accuracy || 0)} m\n`;
-    } else {
-      body += `(No location data)\n`;
     }
     body += `Saved: ${new Date(pin.time).toLocaleString()}\n\nOpen: ${shareUrl}`;
 
@@ -442,19 +517,7 @@ searchInput.addEventListener('input', e => renderPins(e.target.value));
 document.querySelector('.refresh-btn').addEventListener('click', () => renderPins(searchInput.value));
 
 // ────────────────────────────────────────────────
-// Optional: visual distinction for imported pins
-// Add this to your <style> block if you want:
-// .card.imported {
-//   border-left: 4px solid var(--accent-dim);
-//   background: rgba(0, 212, 255, 0.07);
-// }
-// .card.imported .pin-title small {
-//   color: var(--muted);
-//   font-size: 0.85rem;
-// }
-
-// ────────────────────────────────────────────────
-// Save current location via FAB
+// + Button – Save current location
 // ────────────────────────────────────────────────
 document.getElementById('fab').addEventListener('click', async () => {
   let name = prompt("Name for this pin?", lastUsedName || `Pin ${getPins().length + 1}`);
@@ -468,7 +531,9 @@ document.getElementById('fab').addEventListener('click', async () => {
 
   try {
     const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {
-      enableHighAccuracy: true, timeout: 10000, maximumAge: 0
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
     }));
 
     const pin = {
@@ -485,19 +550,17 @@ document.getElementById('fab').addEventListener('click', async () => {
 
     if (savePins(pins)) {
       printSuccess(`Pin saved → ${escapeHTML(pin.name)} @ ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`);
-      printInfo("→ Showing <strong>My Pins</strong> tab");
-      renderPins(searchInput.value);
       document.querySelector('.tab-btn[data-tab="pins"]').click();
     }
   } catch (err) {
     printError("Location access failed.");
-    if (err.code === 1) printError("→ Permission denied (check browser settings)");
+    if (err.code === 1) printError("→ Permission denied");
     if (err.code === 3) printError("→ Timeout — try again");
   }
 });
 
 // ────────────────────────────────────────────────
-// Command handler
+// Basic commands
 // ────────────────────────────────────────────────
 function handleCommand(input) {
   const parts = input.trim().split(/\s+/);
@@ -506,16 +569,16 @@ function handleCommand(input) {
 
   if (cmd === 'help') {
     printInfo("Commands: help, list, clear, clear all");
-    printInfo("Paste https:// URL → auto-saves + shows pins");
-    printInfo("+ button → save current position (auto-switches to pins)");
-    printInfo("Copy pins URL to save pins link → auto-imports to My Pins");
+    printInfo("Paste https:// URL → auto-save");
+    printInfo("+ button → save location");
+    printInfo("Shared #p=... link → auto-import");
     return;
   }
 
   if (cmd === 'list') {
     const pins = getPins();
-    if (!pins.length) return printInfo("No pins saved yet.");
-    printInfo(`Total: ${pins.length} item${pins.length === 1 ? '' : 's'}`);
+    if (!pins.length) return printInfo("No pins yet.");
+    printInfo(`Total: ${pins.length}`);
     pins.forEach(p => {
       let line = `• ${escapeHTML(p.name || '(Unnamed)')} `;
       if (p.url) line += `[URL] `;
@@ -528,12 +591,10 @@ function handleCommand(input) {
   }
 
   if (cmd === 'clear' && args === 'all') {
-    if (confirm("Delete ALL saved pins/URLs?")) {
+    if (confirm("Delete ALL pins/URLs?")) {
       savePins([]);
       renderPins();
       printSystem("All data cleared.");
-    } else {
-      printSystem("Cancelled.");
     }
     return;
   }
@@ -545,27 +606,11 @@ function handleCommand(input) {
   }
 
   printError(`Unknown command: ${escapeHTML(cmd)}`);
-  printInfo("Type <strong>help</strong> for commands.");
+  printInfo("Type help for commands.");
 }
 
 // ────────────────────────────────────────────────
-// Boot messages
-// ────────────────────────────────────────────────
-function bootMessages() {
-  printSystem("GPS Pins • local storage only");
-  printSystem("----------------------------------------");
-  printInfo("Paste https:// URL → auto-saves + shows list");
-  printInfo("Click + to save current location (auto-switches to pins)");
-  printInfo("Open shared #p=... link → auto-imports to My Pins");
-  printInfo("Type 'help' for commands");
-  println("");
-  printSystem(`Last used name: ${lastUsedName || '(none)'}`);
-}
-
-bootMessages();
-
-// ────────────────────────────────────────────────
-// Input handler – URL auto-save
+// Input handler – URL auto-save + commands
 // ────────────────────────────────────────────────
 inputEl.addEventListener('keydown', async e => {
   if (e.key !== 'Enter') return;
@@ -576,14 +621,12 @@ inputEl.addEventListener('keydown', async e => {
 
   if (urlPattern.test(text)) {
     e.preventDefault();
-    const url = text;
-
-    println('> ' + escapeHTML(url), 'line prompt');
+    println('> ' + escapeHTML(text), 'line prompt');
 
     const pin = {
       id: generateId(),
-      name: url.substring(0, 80) + (url.length > 80 ? '…' : ''),
-      url: url,
+      name: text.substring(0, 80) + (text.length > 80 ? '…' : ''),
+      url: text,
       lat: null,
       lng: null,
       accuracy: null,
@@ -596,7 +639,6 @@ inputEl.addEventListener('keydown', async e => {
     if (savePins(pins)) {
       printSuccess(`URL saved → ${escapeHTML(pin.name)}`);
       println(`  ${pin.url}`, 'line info');
-      renderPins(searchInput.value);
       document.querySelector('.tab-btn[data-tab="pins"]').click();
     }
 
@@ -605,7 +647,7 @@ inputEl.addEventListener('keydown', async e => {
     return;
   }
 
-  // Normal command
+  // Command
   e.preventDefault();
   println('> ' + escapeHTML(text), 'line prompt');
   handleCommand(text);
@@ -614,12 +656,10 @@ inputEl.addEventListener('keydown', async e => {
 });
 
 // ────────────────────────────────────────────────
-// Run shared pin import when page loads
+// Init
 // ────────────────────────────────────────────────
+updatePinsCount();
 tryImportSharedPin();
-
-// Also handle hash changes (rare, but good practice)
-window.addEventListener('hashchange', tryImportSharedPin);
 </script>
 </body>
 </html>

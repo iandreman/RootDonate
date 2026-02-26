@@ -19,6 +19,7 @@
       --border: rgba(88,166,255,0.18);
       --shadow: 0 6px 24px rgba(0,0,0,0.55);
     }
+
     [data-theme="light"] {
       --bg: #ffffff;
       --surface: #f6f8fa;
@@ -36,7 +37,7 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: system-ui, sans-serif;
+      font-family: system-ui, -apple-system, sans-serif;
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
@@ -61,7 +62,12 @@
       text-align: center;
     }
 
-    .subtitle { color: var(--muted); text-align: center; font-size: 0.96rem; margin-top: 0.4rem; }
+    .subtitle {
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.96rem;
+      margin-top: 0.4rem;
+    }
 
     .controls {
       display: flex;
@@ -79,20 +85,29 @@
       border: 1px solid var(--border);
       background: color-mix(in srgb, var(--accent) 12%, transparent);
       color: var(--accent);
-      transition: all 0.22s;
+      transition: all 0.22s ease;
     }
+
     .btn:hover    { background: color-mix(in srgb, var(--accent) 24%, transparent); }
     .btn.active   { background: var(--accent); color: #000; }
 
-    .tab-content { display: none; flex: 1; flex-direction: column; }
-    .tab-content.active { display: flex; }
+    .tab-content {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+    }
+
+    .tab-content.active {
+      display: flex;
+    }
 
     #terminal-tab { flex: 1; display: flex; flex-direction: column; }
+
     #terminal {
       flex: 1;
       padding: 1.6rem 1.8rem;
       overflow-y: auto;
-      font-family: 'Consolas', monospace;
+      font-family: 'Consolas', 'Courier New', monospace;
       font-size: clamp(1.02rem, 3.2vw, 1.12rem);
       line-height: 1.65;
     }
@@ -145,8 +160,9 @@
       padding: 1.5rem;
       margin: 1.3rem 0;
       box-shadow: var(--shadow);
-      transition: transform 0.2s;
+      transition: transform 0.2s ease;
     }
+
     .card:hover { transform: translateY(-4px); }
 
     .pin-title {
@@ -155,6 +171,7 @@
       color: var(--accent);
       word-break: break-all;
     }
+
     .url-pin .pin-title { color: var(--purple); }
 
     .share-line {
@@ -172,7 +189,9 @@
       padding: 0.48rem 1rem;
       border-radius: 6px;
       cursor: pointer;
+      transition: all 0.2s;
     }
+
     .copy-share.copied {
       background: rgba(86,212,100,0.28) !important;
       color: #56d364 !important;
@@ -193,8 +212,9 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.6);
       cursor: pointer;
       z-index: 999;
-      transition: all 0.24s;
+      transition: all 0.24s ease;
     }
+
     #fab:hover  { transform: scale(1.14); }
     #fab:active { transform: scale(0.92); }
   </style>
@@ -228,20 +248,17 @@
 <button id="fab">+</button>
 
 <script>
-// ────────────────────────────────────────────────
-// Core
-// ────────────────────────────────────────────────
 const STORAGE_KEY = 'gps-pins-v15';
 let pins = loadPins();
 let lastUsedName = localStorage.getItem('gps-pins-lastname') || '';
-let trackingWatchId = null;
-let lastFabClick = 0;
 
 const terminal   = document.getElementById('terminal');
 const input      = document.getElementById('input');
 const pinsList   = document.getElementById('pins-container');
 const search     = document.getElementById('search');
 const count      = document.getElementById('pins-count');
+const themeBtn   = document.getElementById('theme-toggle');
+const body       = document.body;
 
 function loadPins() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
@@ -259,9 +276,13 @@ function savePins() {
   }
 }
 
-function generateId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,10); }
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+}
 
-function escape(s='') { return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
+function escape(s = '') {
+  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+}
 
 function getShareUrl(pin) {
   const data = {id:pin.id, n:pin.name, u:pin.url||null, la:pin.lat??null, lo:pin.lng??null, acc:pin.accuracy??null, t:pin.time};
@@ -275,7 +296,7 @@ async function copyToClipboard(text, btn) {
     btn.textContent = 'Copied!';
     btn.classList.add('copied');
 
-    // ── Auto-save copied content if it's a valid URL ───────────────────────
+    // Auto-save valid URL if copied
     let copiedUrl;
     try {
       copiedUrl = new URL(text);
@@ -294,13 +315,13 @@ async function copyToClipboard(text, btn) {
         }
         autoName = autoName.slice(0, 60) || 'Copied link';
 
-        const newPin = {
+        pins.push({
           id: generateId(),
           name: autoName,
           url: href,
           time: Date.now()
-        };
-        pins.push(newPin);
+        });
+
         if (savePins()) {
           println(`<span class="success">URL auto-saved as "${escape(autoName)}"</span>`, 'success');
           refreshPinsIfVisible();
@@ -317,7 +338,7 @@ async function copyToClipboard(text, btn) {
   }
 }
 
-function println(html, cls='line') {
+function println(html, cls = 'line') {
   const div = document.createElement('div');
   div.className = cls;
   div.innerHTML = html;
@@ -338,36 +359,42 @@ function refreshPinsIfVisible() {
   }
 }
 
-// Boot screen
-terminal.innerHTML = '';
-print.system('<span style="font-size:1.25rem;font-weight:700;">GPS Pins</span>');
-print.system('100% local • offline • private');
-println('─'.repeat(50), 'system');
-println('');
-print.info('Paste URL → saves + creates share link');
-print.info('Copy any URL or share-link → <b>auto-saves as new pin</b>');
-print.info('Tap + → save location (double/long-press to name)');
-print.info('<b>help</b> → commands');
-println('');
-print.info('Ready.');
-println('');
+// ── Theme Toggle ───────────────────────────────────────
+function toggleTheme() {
+  const current = body.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  body.setAttribute('data-theme', next);
+  themeBtn.textContent = next === 'light' ? '🌙 Dark' : '☀️ Light';
+  localStorage.setItem('gps-pins-theme', next);
+}
 
-// ────────────────────────────────────────────────
-// Tabs + Render Pins (kept minimal for brevity)
-// ────────────────────────────────────────────────
-document.querySelectorAll('[data-tab]').forEach(b => {
-  b.onclick = () => {
-    document.querySelectorAll('[data-tab]').forEach(x => x.classList.remove('active'));
-    b.classList.add('active');
+themeBtn.addEventListener('click', toggleTheme);
+
+// Restore saved theme
+const savedTheme = localStorage.getItem('gps-pins-theme');
+if (savedTheme) {
+  body.setAttribute('data-theme', savedTheme);
+  themeBtn.textContent = savedTheme === 'light' ? '🌙 Dark' : '☀️ Light';
+}
+
+// ── Tab switching ──────────────────────────────────────
+document.querySelectorAll('[data-tab]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    document.getElementById(b.dataset.tab + '-tab').classList.add('active');
-    if (b.dataset.tab === 'pins') renderPins(search.value);
-  };
+    document.getElementById(`${btn.dataset.tab}-tab`).classList.add('active');
+
+    if (btn.dataset.tab === 'pins') {
+      renderPins(search.value);
+    }
+  });
 });
 
-function renderPins(q = '') {
+function renderPins(query = '') {
   pinsList.innerHTML = '';
-  q = q.toLowerCase().trim();
+  const q = query.toLowerCase().trim();
 
   const filtered = pins.filter(p =>
     !q ||
@@ -392,7 +419,7 @@ function renderPins(q = '') {
       html += `<a href="${escape(p.url)}" target="_blank" style="color:var(--purple);word-break:break-all;">${escape(p.url)}</a>`;
     } else if (p.lat != null) {
       html += `<div style="font-family:monospace;margin:0.5rem 0;">
-        ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}${p.accuracy ? ` (±${p.accuracy}m)` : ''}
+        ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}${p.accuracy ? ` (±${p.accuracy.toFixed(0)}m)` : ''}
       </div>
       <div style="color:var(--muted);font-size:0.94rem;">
         ${new Date(p.time).toLocaleString()}
@@ -410,14 +437,26 @@ function renderPins(q = '') {
     pinsList.appendChild(card);
   });
 
+  // Attach copy listeners (only once per button)
   pinsList.querySelectorAll('.copy-share:not([data-listener])').forEach(btn => {
     btn.addEventListener('click', () => copyToClipboard(btn.dataset.url, btn));
     btn.dataset.listener = '1';
   });
 }
 
-// FAB, input handling, theme toggle, init... (same as before, omitted for space)
-// You can copy-paste them from your previous working version
+// ── Boot screen ────────────────────────────────────────
+terminal.innerHTML = '';
+print.system('<span style="font-size:1.25rem;font-weight:700;">GPS Pins</span>');
+print.system('100% local • offline • private');
+println('─'.repeat(50), 'system');
+println('');
+print.info('Paste URL → saves + creates share link');
+print.info('Copy any URL or share-link → <b>auto-saves as new pin</b>');
+print.info('Tap + → save location (double/long-press to name)');
+print.info('<b>help</b> → commands');
+println('');
+print.info('Ready.');
+println('');
 
 // Init
 count.textContent = pins.length;

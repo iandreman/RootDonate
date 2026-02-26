@@ -182,6 +182,11 @@
       border-radius: 6px;
     }
 
+    .copy-btn.copied {
+      background: rgba(86,212,100,0.25) !important;
+      color: #56d364 !important;
+    }
+
     #fab {
       position: fixed;
       bottom: 28px;
@@ -243,7 +248,7 @@
 // ────────────────────────────────────────────────
 // Core
 // ────────────────────────────────────────────────
-const STORAGE_KEY = 'gps-pins-v9';
+const STORAGE_KEY = 'gps-pins-v10';
 let pins = getPins();
 let lastName = localStorage.getItem('gps-pins-lastname') || '';
 let trackingWatchId = null;
@@ -274,6 +279,34 @@ function generateId() { return Date.now().toString(36) + Math.random().toString(
 
 function escape(s='') { return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
 
+function getShareUrl(pin) {
+  const data = {
+    id: pin.id,
+    name: pin.name,
+    url: pin.url || null,
+    lat: pin.lat ?? null,
+    lng: pin.lng ?? null,
+    accuracy: pin.accuracy ?? null,
+    time: pin.time
+  };
+  return `${location.origin}${location.pathname}#p=${btoa(JSON.stringify(data))}`;
+}
+
+async function copyToClipboard(text, btn) {
+  try {
+    await navigator.clipboard.writeText(text);
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.classList.remove('copied');
+    }, 1800);
+  } catch {
+    alert('Copy failed – please copy manually.');
+  }
+}
+
 function println(html, cls='line') {
   const div = document.createElement('div');
   div.className = cls;
@@ -288,13 +321,13 @@ function printInfo(msg)    { println(msg, 'info'); }
 function printSystem(msg)  { println(msg, 'system'); }
 
 // ────────────────────────────────────────────────
-// Boot screen
+// Boot
 // ────────────────────────────────────────────────
-println('<span class="system">GPS Pins v9 • autosave URLs & GPS • ' + new Date().toLocaleDateString() + '</span>');
+println('<span class="system">GPS Pins v10 • autosave URLs & GPS • ' + new Date().toLocaleDateString() + '</span>');
 println('<span class="system">──────────────────────────────────────────────</span>');
-printInfo('Paste or type any URL → <b>autosaves to My Pins</b>');
-printInfo('Click + → <b>quick autosave</b> current location');
-printInfo('Double-tap / long-press + → custom name');
+printInfo('Paste/type URL → autosaves to My Pins');
+printInfo('Click + → quick autosave current location');
+printInfo('Double-tap/long-press + → custom name');
 printInfo('Type <b>track on</b> → continuous GPS autosave');
 printInfo('Type <b>help</b> for commands');
 println('');
@@ -313,7 +346,7 @@ document.querySelectorAll('[data-tab]').forEach(btn => {
   });
 });
 
-// Theme toggle
+// Theme
 const themeToggle = document.getElementById('theme-toggle');
 themeToggle.addEventListener('click', () => {
   const cur = document.body.dataset.theme;
@@ -348,36 +381,35 @@ function renderPins(filter = '') {
 
   shown.forEach(p => {
     const isUrl = !!p.url;
-    const coords = p.lat && p.lng ? `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}` : '—';
+    const coords = p.lat && p.lng ? `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}` : null;
     const acc = p.accuracy ? `±${Math.round(p.accuracy)} m` : '';
+    const shareUrl = getShareUrl(p);
+
+    let bodyText = `${p.name || (isUrl ? 'Saved URL' : 'Pin')}\n\n`;
+    if (isUrl) bodyText += `URL: ${p.url}\n\n`;
+    if (coords) bodyText += `Location: ${coords}\n${acc ? 'Accuracy: ' + acc + '\n' : ''}`;
+    bodyText += `Saved: ${new Date(p.time).toLocaleString()}\n\nOpen/share: ${shareUrl}`;
+
+    const emailHref = `mailto:?subject=${encodeURIComponent('Check out: ' + (p.name || (isUrl ? 'URL' : 'Pin')))}&body=${encodeURIComponent(bodyText)}`;
 
     const card = document.createElement('div');
     card.className = `card ${isUrl ? 'url-pin' : ''}`;
     card.innerHTML = `
       <div class="pin-title">${isUrl ? '🔗 ' : '📍 '}${escape(p.name || (isUrl ? 'URL' : 'Pin'))}</div>
       <div class="meta">
-        <span>${coords}</span>
+        ${coords ? `<span>${coords}</span>` : '<span>No location</span>'}
         ${acc ? `<span>${acc}</span>` : ''}
         <span>${new Date(p.time).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
       </div>
       ${isUrl ? `<div style="margin:0.9rem 0;"><a href="${escape(p.url)}" target="_blank" style="color:var(--purple); font-weight:500;">→ Open URL</a></div>` : ''}
       <div class="actions">
-        <button class="btn small-btn copy-coords" data-coords="${coords}">Copy coords</button>
-        <button class="btn small-btn copy-name" data-name="${escape(p.name||'')||'(no name)'}">Copy name</button>
+        <button class="btn small-btn copy-share" data-url="${escape(shareUrl)}">Copy share URL</button>
+        <a href="${emailHref}" target="_blank" class="btn small-btn email-share">Share via Email</a>
       </div>
     `;
 
-    card.querySelectorAll('button').forEach(b => {
-      b.addEventListener('click', async e => {
-        const t = e.target;
-        if (t.classList.contains('copy-coords') || t.classList.contains('copy-name')) {
-          const txt = t.dataset.coords || t.dataset.name;
-          await navigator.clipboard.writeText(txt);
-          const orig = t.textContent;
-          t.textContent = 'Copied!';
-          setTimeout(() => t.textContent = orig, 1400);
-        }
-      });
+    card.querySelector('.copy-share')?.addEventListener('click', e => {
+      copyToClipboard(e.target.dataset.url, e.target);
     });
 
     pinsContainer.appendChild(card);
@@ -387,7 +419,7 @@ function renderPins(filter = '') {
 searchInput.addEventListener('input', e => renderPins(e.target.value));
 
 // ────────────────────────────────────────────────
-// Quick GPS save
+// Quick GPS save + tracking functions (unchanged from previous)
 // ────────────────────────────────────────────────
 document.getElementById('fab').addEventListener('click', async e => {
   const now = Date.now();
@@ -434,9 +466,6 @@ document.getElementById('fab').addEventListener('click', async e => {
 document.getElementById('fab').addEventListener('mousedown', () => window.lastFabDown = Date.now());
 document.getElementById('fab').addEventListener('touchstart', () => window.lastFabDown = Date.now());
 
-// ────────────────────────────────────────────────
-// Continuous GPS tracking
-// ────────────────────────────────────────────────
 function startTracking() {
   if (trackingWatchId) return;
   printInfo("Tracking started — autosaving GPS points every ~15 seconds");
@@ -467,7 +496,7 @@ function stopTracking() {
 }
 
 // ────────────────────────────────────────────────
-// Input handling – URL autosave + commands
+// Input handling
 // ────────────────────────────────────────────────
 input.addEventListener('keydown', async e => {
   if (e.key !== 'Enter') return;
@@ -478,7 +507,6 @@ input.addEventListener('keydown', async e => {
 
   println(`<span class="prompt">> ${escape(text)}</span>`);
 
-  // URL autosave
   let url;
   try {
     url = new URL(text.match(/^https?:\/\//) ? text : 'https://' + text);
@@ -511,7 +539,6 @@ input.addEventListener('keydown', async e => {
     return;
   }
 
-  // Commands
   const [cmd, ...args] = text.toLowerCase().split(/\s+/);
   const arg = args.join(' ');
 

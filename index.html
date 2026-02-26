@@ -117,7 +117,7 @@
     }
 
     .line {
-      margin: 0.5rem 0;
+      margin: 0.4rem 0;
       white-space: pre-wrap;
       word-break: break-word;
     }
@@ -133,7 +133,7 @@
       border: 1px solid var(--danger);
       color: #ffaaaa;
       padding: 1rem;
-      margin: 1rem;
+      margin: 1.2rem;
       border-radius: 8px;
       text-align: center;
     }
@@ -348,7 +348,7 @@
 
 <header>
   <h1>GPS Pins</h1>
-  <div class="subtitle">Private markers + URLs • 100% offline</div>
+  <div class="subtitle">Private markers + URLs • 100% offline • local only</div>
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="terminal">Terminal</button>
@@ -371,18 +371,19 @@
   <div class="collection-header">My Saved Pins & URLs</div>
 
   <div id="storage-error" class="storage-warning" style="display:none;">
-    <strong>⚠️ Could not load pins — storage may be full, blocked, or in private mode.</strong><br>
-    Try in a normal browser tab (not incognito). You may need to clear some data or use another browser.
+    <strong>⚠️ Could not access storage</strong><br>
+    Storage may be full, blocked, or you're in private/incognito mode.<br>
+    Try a normal browser tab or clear some space.
   </div>
 
   <input type="text" id="search" placeholder="Search name, URL or coordinates…">
 
-  <button class="refresh-btn">↻ Refresh Pins List</button>
+  <button class="refresh-btn">↻ Refresh list</button>
 
   <div id="pins-container"></div>
 </div>
 
-<button id="fab" title="Drop pin at current location">+</button>
+<button id="fab" title="Save current location">+</button>
 
 <script>
 // ────────────────────────────────────────────────
@@ -417,7 +418,7 @@ function savePins(pins) {
     return true;
   } catch (err) {
     console.error('localStorage write failed:', err);
-    alert('Could not save — storage may be full, blocked, or in private mode.\nTry removing old pins or using normal mode.');
+    alert('Could not save — storage may be full, blocked, or in private mode.\nTry removing old pins or switching to normal mode.');
     return false;
   }
 }
@@ -524,12 +525,12 @@ function printSuccess(msg) { println(msg, 'line success'); }
 function clearScreen()     { terminal.innerHTML = ''; }
 
 function showBootMessages() {
-  printSystem("GPS Pins • local storage only");
-  printSystem("----------------------------------------");
-  printInfo("Paste https:// URL to auto-save");
-  printInfo("Click + to save current location");
-  printInfo("Open shared #p=... link to import");
-  printInfo("Type help for commands");
+  printSystem("GPS Pins  •  local storage only");
+  printSystem("────────────────────────────────────────");
+  printInfo("Paste https:// URL          → auto-save as pin");
+  printInfo("Click + FAB                  → save current location");
+  printInfo("Open shared #p=... link      → auto-import");
+  printInfo("Type help                    → show commands");
   println("");
   printSystem(`Last used name: ${lastUsedName || '(none)'}`);
 }
@@ -576,9 +577,9 @@ function renderPins(filter = '') {
     pinsContainer.innerHTML = `
       <div class="empty-state">
         📍 No pins saved yet<br><br>
-        • Paste a https:// URL in Terminal<br>
-        • Click + to save your location<br>
-        • Open a shared #p=... link to import
+        • Paste a https:// URL in the terminal<br>
+        • Click the + button to save your current location<br>
+        • Open a shared #p=... link to import a pin
       </div>`;
     return;
   }
@@ -657,7 +658,7 @@ document.getElementById('fab').addEventListener('click', async () => {
     const pos = await new Promise((resolve, reject) =>
       navigator.geolocation.getCurrentPosition(resolve, reject, {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 12000,
         maximumAge: 0
       })
     );
@@ -675,13 +676,14 @@ document.getElementById('fab').addEventListener('click', async () => {
     pins.push(pin);
 
     if (savePins(pins)) {
-      printSuccess(`Pin saved → ${escapeHTML(pin.name)} @ ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`);
+      printSuccess(`Saved → ${escapeHTML(pin.name)} @ ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`);
       document.querySelector('.tab-btn[data-tab="pins"]').click();
     }
   } catch (err) {
-    printError("Could not get location.");
+    printError("Location access failed.");
     if (err.code === 1) printError("→ Permission denied");
     if (err.code === 3) printError("→ Timeout — try again");
+    console.error(err);
   }
 });
 
@@ -694,17 +696,23 @@ function handleCommand(input) {
   const arg = parts.slice(1).join(' ').trim();
 
   if (cmd === 'help') {
-    printInfo("Commands: help, list, clear, clear all");
-    printInfo("• Paste https:// URL → auto-save as pin");
-    printInfo("• + button → save current location");
-    printInfo("• Shared #p=... link → auto-import");
+    printInfo("Available commands:");
+    printInfo("  help          → this help");
+    printInfo("  list          → show all saved pins");
+    printInfo("  clear         → clear terminal screen");
+    printInfo("  clear all     → delete ALL saved pins (with confirmation)");
+    println("");
+    printInfo("Other ways to save:");
+    printInfo("  • Paste https:// URL directly");
+    printInfo("  • Click + button to save location");
+    printInfo("  • Open #p=... shared link to import");
     return;
   }
 
   if (cmd === 'list') {
     const pins = getPins();
-    if (!pins.length) return printInfo("No pins yet.");
-    printInfo(`Total: ${pins.length}`);
+    if (!pins.length) return printInfo("No pins saved yet.");
+    printInfo(`Total pins: ${pins.length}`);
     pins.forEach(p => {
       let line = `• ${escapeHTML(p.name || '(Unnamed)')} `;
       if (p.url) line += `[URL] `;
@@ -717,10 +725,10 @@ function handleCommand(input) {
   }
 
   if (cmd === 'clear' && arg === 'all') {
-    if (confirm("Delete ALL saved pins and URLs? This cannot be undone.")) {
+    if (confirm("Delete ALL saved pins & URLs?\nThis cannot be undone.")) {
       savePins([]);
       renderPins();
-      printSystem("All data cleared.");
+      printSystem("All pins cleared.");
     }
     return;
   }
@@ -732,7 +740,7 @@ function handleCommand(input) {
   }
 
   printError(`Unknown command: ${escapeHTML(cmd)}`);
-  printInfo("Type help for available commands.");
+  printInfo("Type 'help' for commands.");
 }
 
 // ────────────────────────────────────────────────

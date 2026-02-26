@@ -217,7 +217,7 @@
 
 <script>
 // ────────────────────────────────────────────────
-// Utilities
+// Utilities (unchanged)
 // ────────────────────────────────────────────────
 const STORAGE_KEY = 'gps-pins-v6';
 let lastUsedName = localStorage.getItem('gps-pins-last-name') || '';
@@ -275,7 +275,7 @@ async function copyToClipboard(text, btn) {
 }
 
 // ────────────────────────────────────────────────
-// Terminal
+// Terminal output helpers (unchanged)
 // ────────────────────────────────────────────────
 const terminal = document.getElementById('terminal');
 const inputEl  = document.getElementById('input');
@@ -295,7 +295,7 @@ function printSuccess(html) { println(html, 'line success'); }
 function clearScreen()    { terminal.innerHTML = ''; }
 
 // ────────────────────────────────────────────────
-// Tab switching + auto-render
+// Tab switching + auto-render (unchanged)
 // ────────────────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -309,7 +309,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // ────────────────────────────────────────────────
-// Render pins
+// Render pins (unchanged)
 // ────────────────────────────────────────────────
 const pinsContainer = document.getElementById('pins-container');
 const searchInput = document.getElementById('search');
@@ -382,7 +382,7 @@ searchInput.addEventListener('input', e => renderPins(e.target.value));
 document.querySelector('.refresh-btn').addEventListener('click', () => renderPins(searchInput.value));
 
 // ────────────────────────────────────────────────
-// Save current location (FAB)
+// Save current location via FAB (unchanged)
 // ────────────────────────────────────────────────
 document.getElementById('fab').addEventListener('click', async () => {
   let name = prompt("Name for this pin?", lastUsedName || `Pin ${getPins().length + 1}`);
@@ -422,7 +422,7 @@ document.getElementById('fab').addEventListener('click', async () => {
 });
 
 // ────────────────────────────────────────────────
-// Command handler
+// Command handler (unchanged)
 // ────────────────────────────────────────────────
 function handleCommand(input) {
   const parts = input.trim().split(/\s+/);
@@ -431,7 +431,7 @@ function handleCommand(input) {
 
   if (cmd === 'help') {
     printInfo("Commands: help, list, clear, clear all");
-    printInfo("• Paste https:// URL → save with location");
+    printInfo("• Paste https:// URL → auto-saves it (location optional)");
     printInfo("• + button → save current position");
     return;
   }
@@ -477,9 +477,9 @@ function handleCommand(input) {
 function bootMessages() {
   printSystem("GPS Pins – local storage • Debug mode");
   printSystem("----------------------------------------");
-  printInfo("Paste any https:// URL to save it");
-  printInfo("Use + button for current location");
-  printInfo("Type 'help' for more commands");
+  printInfo("Paste any https:// URL → auto-saves it");
+  printInfo("Use + button for current location pin");
+  printInfo("Type 'help' for commands");
   println("");
   printSystem(`Last used name: ${lastUsedName || '(none)'}`);
 }
@@ -487,7 +487,7 @@ function bootMessages() {
 bootMessages();
 
 // ────────────────────────────────────────────────
-// Input handler (Enter key)
+// Input handler – MAIN CHANGE HERE
 // ────────────────────────────────────────────────
 inputEl.addEventListener('keydown', async e => {
   if (e.key !== 'Enter') return;
@@ -498,63 +498,56 @@ inputEl.addEventListener('keydown', async e => {
 
   if (urlPattern.test(text)) {
     e.preventDefault();
+    const url = text;
 
-    if (!confirm(`Save this URL with current position?\n\n${text}`)) {
-      println('> ' + escapeHTML(text), 'line prompt');
-      printError("Save cancelled.");
-      inputEl.value = '';
-      inputEl.focus();
-      return;
+    println('> ' + escapeHTML(url), 'line prompt');
+
+    let pin = {
+      id: generateId(),
+      name: url.substring(0, 80) + (url.length > 80 ? '…' : ''),
+      url: url,
+      lat: null,
+      lng: null,
+      accuracy: null,
+      time: Date.now()
+    };
+
+    let locationSuccess = false;
+
+    // Ask if user wants location too
+    if (confirm(`Also attach your current location to this URL?\n\n${url}\n\n(Cancel = save URL only)`)) {
+      printSystem("Getting location...");
+      try {
+        const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {
+          enableHighAccuracy: true, timeout: 10000, maximumAge: 0
+        }));
+        pin.lat = pos.coords.latitude;
+        pin.lng = pos.coords.longitude;
+        pin.accuracy = Math.round(pos.coords.accuracy);
+        locationSuccess = true;
+      } catch (err) {
+        printError("Location failed.");
+        if (err.code === 1) printError("→ Permission denied");
+        if (err.code === 3) printError("→ Timeout");
+        // still save the URL
+      }
+    } else {
+      printSystem("Saving URL without location…");
     }
 
-    println('> ' + escapeHTML(text), 'line prompt');
-    printSystem("Getting location...");
+    const pins = getPins();
+    pins.push(pin);
 
-    try {
-      const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {
-        enableHighAccuracy: true, timeout: 10000, maximumAge: 0
-      }));
-
-      const pin = {
-        id: generateId(),
-        name: text.substring(0, 80) + (text.length > 80 ? '…' : ''),
-        url: text,
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-        accuracy: Math.round(pos.coords.accuracy),
-        time: Date.now()
-      };
-
-      const pins = getPins();
-      pins.push(pin);
-      if (savePins(pins)) {
+    if (savePins(pins)) {
+      if (locationSuccess) {
         printSuccess(`URL + location saved → ${escapeHTML(pin.name)}`);
         println(`  ${pin.url}`, 'line info');
         println(`  ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)} (±${pin.accuracy}m)`, 'line info');
-        renderPins(searchInput.value);
-      }
-    } catch (err) {
-      // Fallback: save URL only
-      const pin = {
-        id: generateId(),
-        name: text.substring(0, 80) + (text.length > 80 ? '…' : ''),
-        url: text,
-        lat: null,
-        lng: null,
-        accuracy: null,
-        time: Date.now()
-      };
-
-      const pins = getPins();
-      pins.push(pin);
-      if (savePins(pins)) {
-        printSuccess(`URL saved (no location) → ${escapeHTML(pin.name)}`);
+      } else {
+        printSuccess(`URL saved → ${escapeHTML(pin.name)}`);
         println(`  ${pin.url}`, 'line info');
-        renderPins(searchInput.value);
       }
-
-      if (err.code === 1) printError("→ Location permission denied");
-      if (err.code === 3) printError("→ Location timeout");
+      renderPins(searchInput.value);
     }
 
     inputEl.value = '';

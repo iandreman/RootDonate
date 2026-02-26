@@ -300,7 +300,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     tab.classList.add('active');
     if (btn.dataset.tab === 'pins') {
       renderPins();
-      printSystem("Showing latest pins…");
     }
   });
 });
@@ -379,7 +378,7 @@ searchInput.addEventListener('input', e => renderPins(e.target.value));
 document.querySelector('.refresh-btn').addEventListener('click', () => renderPins(searchInput.value));
 
 // ────────────────────────────────────────────────
-// Save current location via FAB
+// Save current location via FAB  →  now auto-switches to My Pins
 // ────────────────────────────────────────────────
 document.getElementById('fab').addEventListener('click', async () => {
   let name = prompt("Name for this pin?", lastUsedName || `Pin ${getPins().length + 1}`);
@@ -407,16 +406,17 @@ document.getElementById('fab').addEventListener('click', async () => {
 
     const pins = getPins();
     pins.push(pin);
+
     if (savePins(pins)) {
       printSuccess(`Pin saved → ${escapeHTML(pin.name)} @ ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`);
-      renderPins(searchInput.value);           // ← FIXED: refresh list
-      // Optional: switch to pins tab after save
-      // document.querySelector('.tab-btn[data-tab="pins"]').click();
+      printInfo("→ Switched to <strong>My Pins</strong> tab");
+      renderPins(searchInput.value);
+      document.querySelector('.tab-btn[data-tab="pins"]').click();  // ← auto-switch
     }
   } catch (err) {
-    printError("Location failed.");
-    if (err.code === 1) printError("→ Permission denied");
-    if (err.code === 3) printError("→ Timeout");
+    printError("Location access failed.");
+    if (err.code === 1) printError("→ Permission denied (check browser settings)");
+    if (err.code === 3) printError("→ Timeout — try again");
   }
 });
 
@@ -430,8 +430,8 @@ function handleCommand(input) {
 
   if (cmd === 'help') {
     printInfo("Commands: help, list, clear, clear all");
-    printInfo("Paste https:// URL → auto-saves it");
-    printInfo("+ button → save current position");
+    printInfo("Paste https:// URL → auto-saves + shows pins");
+    printInfo("+ button → save current position (auto-switches to pins)");
     return;
   }
 
@@ -476,9 +476,9 @@ function handleCommand(input) {
 function bootMessages() {
   printSystem("GPS Pins • local storage only");
   printSystem("----------------------------------------");
-  printInfo("Paste any https:// URL → auto-saves it");
-  printInfo("Use + button for current location pin");
-  printInfo("Type 'help' for commands");
+  printInfo("Paste https:// URL → auto-saves + shows list");
+  printInfo("Click + to save current location (auto-switches to pins)");
+  printInfo("Type 'help' for more commands");
   println("");
   printSystem(`Last used name: ${lastUsedName || '(none)'}`);
 }
@@ -486,7 +486,7 @@ function bootMessages() {
 bootMessages();
 
 // ────────────────────────────────────────────────
-// Input handler – QUICK URL AUTOSAVE + AUTO-SWITCH + REFRESH
+// Input handler – URL auto-save + auto-switch
 // ────────────────────────────────────────────────
 inputEl.addEventListener('keydown', async e => {
   if (e.key !== 'Enter') return;
@@ -517,8 +517,7 @@ inputEl.addEventListener('keydown', async e => {
     if (savePins(pins)) {
       printSuccess(`URL saved → ${escapeHTML(pin.name)}`);
       println(`  ${pin.url}`, 'line info');
-      
-      renderPins(searchInput.value);                    // ← FIXED: refresh immediately
+      renderPins(searchInput.value);
       document.querySelector('.tab-btn[data-tab="pins"]').click();
     }
 
@@ -527,7 +526,7 @@ inputEl.addEventListener('keydown', async e => {
     return;
   }
 
-  // Normal command handling
+  // Normal command
   e.preventDefault();
   println('> ' + escapeHTML(text), 'line prompt');
   handleCommand(text);

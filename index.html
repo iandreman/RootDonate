@@ -288,69 +288,169 @@ async function copyToClipboard(text, btn) {
     btn.textContent = 'Copied!';
     btn.classList.add('copied');
 
-    // Try to extract original URL & name from share link
     let originalUrl = null;
     let originalName = null;
+    let originalLat = null;
+    let originalLng = null;
+    let originalAcc = null;
 
     if (isAppShareLink(text)) {
       try {
         const hashPart = text.split('#p=')[1];
         if (hashPart) {
           const decoded = JSON.parse(atob(hashPart));
-          if (decoded.u) {
-            originalUrl = decoded.u;
-            originalName = decoded.n || 'Link';
-          }
+          originalUrl = decoded.u || null;
+          originalName = decoded.n || null;
+          originalLat = decoded.la ?? null;
+          originalLng = decoded.lo ?? null;
+          originalAcc = decoded.acc ?? null;
         }
       } catch (e) {}
     }
 
-    let shouldSave = false;
-    let nameToShow = originalName || (new URL(text).hostname?.replace(/^www\./, '') || 'this link');
+    let savedSomething = false;
 
-    if (originalUrl) {
-      // We have original → ask to save original
-      if (pins.some(p => p.url === originalUrl)) {
-        println(`<span class="info">Original already saved in My Pins</span>`);
+    // ──────────────────────────────────────────────────────────────
+    // CASE: Share link with BOTH URL + GPS
+    // ──────────────────────────────────────────────────────────────
+    if (originalUrl && originalLat != null && originalLng != null) {
+      const urlAlreadySaved = pins.some(p => p.url === originalUrl);
+      const locAlreadySaved = pins.some(p =>
+        p.lat === originalLat && p.lng === originalLng &&
+        Math.abs((p.accuracy || 0) - (originalAcc || 0)) < 1
+      );
+
+      if (urlAlreadySaved && locAlreadySaved) {
+        println(`<span class="info">Both original URL and location already saved.</span>`);
       } else {
-        shouldSave = confirm(
+        const wantsBoth = confirm(
+          `Save original content from this share link?\n\n` +
+          `📍 ${originalLat.toFixed(6)}, ${originalLng.toFixed(6)}${originalAcc ? ` (±${Math.round(originalAcc)} m)` : ''}\n` +
+          `🔗 ${originalName || 'Link'}\n${originalUrl.slice(0, 70)}${originalUrl.length > 70 ? '…' : ''}`
+        );
+
+        if (wantsBoth) {
+          // Save URL if not already present
+          if (!urlAlreadySaved) {
+            pins.push({
+              id: generateId(),
+              name: originalName || (new URL(originalUrl).hostname?.replace(/^www\./, '') || 'Link'),
+              url: originalUrl,
+              time: Date.now()
+            });
+            savedSomething = true;
+          }
+          // Save location if not already present
+          if (!locAlreadySaved) {
+            pins.push({
+              id: generateId(),
+              name: originalName || `Location ${new Date().toLocaleDateString()}`,
+              lat: originalLat,
+              lng: originalLng,
+              accuracy: originalAcc,
+              time: Date.now()
+            });
+            savedSomething = true;
+          }
+          if (savedSomething && savePins()) {
+            println(`<span class="success">Saved original URL + GPS coordinates</span>`);
+            refreshPinsIfVisible();
+          }
+        } else {
+          println(`<span class="system">Save cancelled</span>`);
+        }
+      }
+    }
+    // ──────────────────────────────────────────────────────────────
+    // CASE: Share link with ONLY URL
+    // ──────────────────────────────────────────────────────────────
+    else if (originalUrl) {
+      if (pins.some(p => p.url === originalUrl)) {
+        println(`<span class="info">Original URL already saved in My Pins</span>`);
+      } else {
+        const shouldSave = confirm(
           `Save the ORIGINAL URL to My Pins?\n\n` +
-          `${originalName || nameToShow}\n` +
+          `${originalName || (new URL(originalUrl).hostname?.replace(/^www\./, '') || 'Link')}\n` +
           `${originalUrl.slice(0, 80)}${originalUrl.length > 80 ? '...' : ''}`
         );
+        if (shouldSave) {
+          pins.push({
+            id: generateId(),
+            name: originalName || (new URL(originalUrl).hostname?.replace(/^www\./, '') || 'Link'),
+            url: originalUrl,
+            time: Date.now()
+          });
+          if (savePins()) {
+            println(`<span class="success">Saved to My Pins: "${escape(originalName || 'Link')}"</span>`);
+            refreshPinsIfVisible();
+          }
+        } else {
+          println(`<span class="system">Save cancelled</span>`);
+        }
       }
-    } else {
-      // No original found → fallback ask for the copied link
+    }
+    // ──────────────────────────────────────────────────────────────
+    // CASE: Share link with ONLY GPS (no URL)
+    // ──────────────────────────────────────────────────────────────
+    else if (originalLat != null && originalLng != null) {
+      const locAlreadySaved = pins.some(p =>
+        p.lat === originalLat && p.lng === originalLng &&
+        Math.abs((p.accuracy || 0) - (originalAcc || 0)) < 1
+      );
+
+      if (locAlreadySaved) {
+        println(`<span class="info">This location already saved.</span>`);
+      } else {
+        const shouldSave = confirm(
+          `Save this GPS location?\n\n` +
+          `${originalName || 'Pinned location'}\n` +
+          `${originalLat.toFixed(6)}, ${originalLng.toFixed(6)}${originalAcc ? ` (±${Math.round(originalAcc)} m)` : ''}`
+        );
+        if (shouldSave) {
+          pins.push({
+            id: generateId(),
+            name: originalName || `Location ${new Date().toLocaleDateString()}`,
+            lat: originalLat,
+            lng: originalLng,
+            accuracy: originalAcc,
+            time: Date.now()
+          });
+          if (savePins()) {
+            println(`<span class="success">Saved original GPS location</span>`);
+            refreshPinsIfVisible();
+          }
+        } else {
+          println(`<span class="system">Save cancelled</span>`);
+        }
+      }
+    }
+    // ──────────────────────────────────────────────────────────────
+    // FALLBACK: regular link (not a share link)
+    // ──────────────────────────────────────────────────────────────
+    else {
       if (pins.some(p => p.url === text)) {
         println(`<span class="info">This link already saved in My Pins</span>`);
       } else {
-        shouldSave = confirm(
+        const shouldSave = confirm(
           `Save this link to My Pins?\n\n` +
-          `${nameToShow}\n` +
+          `${(new URL(text).hostname?.replace(/^www\./, '') || 'this link')}\n` +
           `${text.slice(0, 80)}${text.length > 80 ? '...' : ''}`
         );
+        if (shouldSave) {
+          pins.push({
+            id: generateId(),
+            name: new URL(text).hostname?.replace(/^www\./, '') || 'Link',
+            url: text,
+            time: Date.now()
+          });
+          if (savePins()) {
+            println(`<span class="success">Saved link to My Pins</span>`);
+            refreshPinsIfVisible();
+          }
+        } else {
+          println(`<span class="system">Save cancelled</span>`);
+        }
       }
-    }
-
-    if (shouldSave) {
-      const finalUrl = originalUrl || text;
-      const finalName = originalName || nameToShow;
-
-      pins.push({
-        id: generateId(),
-        name: finalName,
-        url: finalUrl,
-        time: Date.now()
-      });
-
-      if (savePins()) {
-        println(`<span class="success">Saved to My Pins: "${escape(finalName)}"</span>`);
-        refreshPinsIfVisible();
-      } else {
-        println(`<span class="error">Could not save — storage issue</span>`);
-      }
-    } else {
-      println(`<span class="system">Save cancelled</span>`);
     }
 
     setTimeout(() => {
@@ -538,7 +638,7 @@ print.system('100% local • offline • private');
 println('─'.repeat(50), 'system');
 println('');
 print.info('Paste URL + Enter → save');
-print.info('Click "Copy" on share link → copies link + asks to save original URL');
+print.info('Click "Copy" on share link → copies link + asks to save original content');
 print.info('+ → save current location');
 print.info('help → commands');
 println('');

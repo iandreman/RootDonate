@@ -186,12 +186,12 @@
       margin-top: 1.2rem;
       display: flex;
       flex-wrap: wrap;
-      gap: 0.6rem;
+      gap: 0.8rem;
       align-items: center;
     }
 
-    .action-btn, .copy-btn {
-      padding: 0.6rem 1.1rem;
+    .action-btn, .copy-btn, .email-btn {
+      padding: 0.6rem 1.3rem;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
@@ -221,6 +221,13 @@
       border-color: #00ff9d;
     }
 
+    .email-btn {
+      background: rgba(0,212,255,0.12);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .email-btn:hover { background: rgba(0,212,255,0.28); }
+
     #fab {
       position: fixed;
       bottom: 24px;
@@ -249,7 +256,7 @@
       .tabs { flex-direction: column; gap: 0.6rem; }
       .tab-btn { width: 100%; }
       .share-row { flex-direction: column; align-items: stretch; }
-      .action-btn, .copy-btn { width: 100%; text-align: center; }
+      .action-btn, .copy-btn, .email-btn { width: 100%; text-align: center; }
       #fab { bottom: 16px; right: 16px; width: 56px; height: 56px; font-size: 2rem; }
     }
 
@@ -396,6 +403,21 @@ function renderPins(filter = '') {
   }
 
   filtered.forEach(pin => {
+    const shareUrl = getPinShareUrl(pin);
+    const mapsLink = `https://www.google.com/maps/search/?api=1&query=${pin.lat},${pin.lng}`;
+    const subject = encodeURIComponent(`Check out this location pin: ${pin.name || '(Unnamed)'}`);
+    const body = encodeURIComponent(
+      `${pin.name || '(Unnamed pin)'}\n\n` +
+      `📍 Coordinates: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}\n` +
+      `View on map: ${mapsLink}\n` +
+      `Accuracy: ±${Math.round(pin.accuracy || 0)} m\n` +
+      `Saved: ${new Date(pin.time).toLocaleString()}\n\n` +
+      `Open this pin in GPS Pins app:\n${shareUrl}\n\n` +
+      `(100% private & offline — share link contains only this single location)`
+    );
+
+    const emailHref = `mailto:?subject=${subject}&body=${body}`;
+
     const card = document.createElement('div');
     card.className = 'card';
 
@@ -407,7 +429,8 @@ function renderPins(filter = '') {
         <span>${new Date(pin.time).toLocaleString()}</span>
       </div>
       <div class="share-row">
-        <button class="action-btn copy-btn" data-copy="${getPinShareUrl(pin)}">Copy share link</button>
+        <button class="action-btn copy-btn" data-copy="${shareUrl}">Copy share link</button>
+        <a href="${emailHref}" class="action-btn email-btn" target="_blank">Share via Email</a>
       </div>
     `;
 
@@ -486,7 +509,6 @@ function handleCommand(input) {
   }
 
   if (cmd === 'save') {
-    // We'll let FAB handle interactive save for now
     printInfo(`Use the + button (FAB) to save a named pin with current location.`);
     printInfo(`Command-line save coming soon.`);
     return;
@@ -542,7 +564,7 @@ function bootMessages() {
 bootMessages();
 
 // ────────────────────────────────────────────────
-// URL paste + location logging (already good)
+// URL paste + location logging
 // ────────────────────────────────────────────────
 inputEl.addEventListener('keydown', async function(e) {
   if (e.key !== 'Enter') return;

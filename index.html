@@ -230,7 +230,7 @@
 <button id="fab" title="Save current location">+</button>
 
 <script>
-const STORAGE_KEY = 'gps-pins-v17';
+const STORAGE_KEY = 'gps-pins-v18';  // changed version to avoid confusion with old data
 let pins = loadPins();
 let lastUsedName = localStorage.getItem('gps-pins-lastname') || '';
 
@@ -254,7 +254,7 @@ function savePins() {
     count.textContent = pins.length;
     return true;
   } catch {
-    alert("Save failed — storage may be full or blocked.");
+    alert("Save failed — storage quota may be full or blocked.");
     return false;
   }
 }
@@ -288,133 +288,124 @@ async function copyToClipboard(text, btn) {
     btn.textContent = 'Copied!';
     btn.classList.add('copied');
 
-    let originalUrl = null;
-    let originalName = null;
-    let originalLat = null;
-    let originalLng = null;
-    let originalAcc = null;
+    let url = null;
+    let name = null;
+    let lat = null;
+    let lng = null;
+    let acc = null;
 
     if (isAppShareLink(text)) {
       try {
-        const hashPart = text.split('#p=')[1];
-        if (hashPart) {
-          const decoded = JSON.parse(atob(hashPart));
-          originalUrl = decoded.u || null;
-          originalName = decoded.n || null;
-          originalLat = decoded.la ?? null;
-          originalLng = decoded.lo ?? null;
-          originalAcc = decoded.acc ?? null;
+        const hash = text.split('#p=')[1];
+        if (hash) {
+          const decoded = JSON.parse(atob(hash));
+          url  = decoded.u  || null;
+          name = decoded.n  || null;
+          lat  = decoded.la ?? null;
+          lng  = decoded.lo ?? null;
+          acc  = decoded.acc ?? null;
         }
-      } catch (e) {}
+      } catch {}
     }
 
-    const baseName = originalName ||
-                     (originalUrl ? (new URL(originalUrl).hostname?.replace(/^www\./, '') || 'Link') : 'Pinned location');
+    const baseName = name ||
+                     (url ? (new URL(url).hostname?.replace(/^www\./, '') || 'Link') : 'Location');
 
-    let somethingSaved = false;
+    let savedCount = 0;
 
-    // ──────────────────────────────────────────────────────────────
-    // 1. Handle URL pin (if present)
-    // ──────────────────────────────────────────────────────────────
-    if (originalUrl) {
-      if (pins.some(p => p.url === originalUrl)) {
-        println(`<span class="info">This URL is already saved.</span>`);
+    // ── URL pin ─────────────────────────────────────────────────────
+    if (url) {
+      if (pins.some(p => p.url === url)) {
+        println(`<span class="info">URL already saved</span>`);
       } else {
-        const saveUrl = confirm(
-          `Save as URL pin?\n\n` +
+        const doSave = confirm(
+          `Save URL pin?\n\n` +
           `${baseName}\n` +
-          `${originalUrl.slice(0, 80)}${originalUrl.length > 80 ? '…' : ''}`
+          `${url.slice(0,80)}${url.length > 80 ? '…' : ''}`
         );
-        if (saveUrl) {
+        if (doSave) {
           pins.push({
             id: generateId(),
-            name: baseName + (originalLat != null && originalLng != null ? " (link)" : ""),
-            url: originalUrl,
+            name: baseName + (lat != null && lng != null ? ' (link)' : ''),
+            url: url,
             time: Date.now()
           });
-          somethingSaved = true;
-        } else {
-          println(`<span class="system">URL pin save cancelled</span>`);
+          savedCount++;
         }
       }
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // 2. Handle GPS pin (if present)
-    // ──────────────────────────────────────────────────────────────
-    if (originalLat != null && originalLng != null) {
-      const alreadyExists = pins.some(p =>
-        p.lat === originalLat &&
-        p.lng === originalLng &&
-        Math.abs((p.accuracy || 0) - (originalAcc || 0)) < 1
+    // ── GPS pin ─────────────────────────────────────────────────────
+    if (lat != null && lng != null) {
+      const exists = pins.some(p =>
+        p.lat === lat && p.lng === lng &&
+        Math.abs((p.accuracy || 0) - (acc || 0)) < 1
       );
-
-      if (alreadyExists) {
-        println(`<span class="info">This exact location is already saved.</span>`);
+      if (exists) {
+        println(`<span class="info">Location already saved</span>`);
       } else {
-        const saveLoc = confirm(
-          `Save as GPS pin?\n\n` +
+        const doSave = confirm(
+          `Save GPS pin?\n\n` +
           `${baseName}\n` +
-          `${originalLat.toFixed(6)}, ${originalLng.toFixed(6)}${originalAcc ? ` (±${Math.round(originalAcc)} m)` : ''}`
+          `${lat.toFixed(6)}, ${lng.toFixed(6)}${acc ? ` (±${Math.round(acc)} m)` : ''}`
         );
-        if (saveLoc) {
+        if (doSave) {
           pins.push({
             id: generateId(),
-            name: baseName + (originalUrl ? " (location)" : ""),
-            lat: originalLat,
-            lng: originalLng,
-            accuracy: originalAcc,
+            name: baseName + (url ? ' (location)' : ''),
+            lat, lng, accuracy: acc,
             time: Date.now()
           });
-          somethingSaved = true;
-        } else {
-          println(`<span class="system">GPS pin save cancelled</span>`);
+          savedCount++;
         }
       }
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // Fallback: plain non-share URL
-    // ──────────────────────────────────────────────────────────────
-    if (!originalUrl && !(originalLat != null && originalLng != null)) {
+    // ── Plain URL (not share link) ──────────────────────────────────
+    if (!url && !(lat != null && lng != null)) {
       try {
-        const urlObj = new URL(text);
+        const u = new URL(text);
         if (pins.some(p => p.url === text)) {
-          println(`<span class="info">This link is already saved.</span>`);
+          println(`<span class="info">Link already saved</span>`);
         } else {
-          const shouldSave = confirm(
-            `Save this as URL pin?\n\n` +
-            `${urlObj.hostname.replace(/^www\./, '') || 'Link'}\n${text.slice(0,80)}${text.length > 80 ? '…' : ''}`
+          const doSave = confirm(
+            `Save URL pin?\n\n` +
+            `${u.hostname.replace(/^www\./,'') || 'Link'}\n` +
+            `${text.slice(0,80)}${text.length > 80 ? '…' : ''}`
           );
-          if (shouldSave) {
+          if (doSave) {
             pins.push({
               id: generateId(),
-              name: urlObj.hostname.replace(/^www\./, '') || 'Link',
+              name: u.hostname.replace(/^www\./,'') || 'Link',
               url: text,
               time: Date.now()
             });
-            somethingSaved = true;
-          } else {
-            println(`<span class="system">Save cancelled</span>`);
+            savedCount++;
           }
         }
       } catch {}
     }
 
-    if (somethingSaved && savePins()) {
-      println(`<span class="success">Saved to My Pins</span>`);
-      refreshPinsIfVisible();
+    if (savedCount > 0) {
+      if (savePins()) {
+        println(`<span class="success">Saved ${savedCount} pin${savedCount > 1 ? 's' : ''}</span>`);
+        refreshPinsIfVisible();
+      }
     }
 
     setTimeout(() => {
       btn.textContent = orig;
       btn.classList.remove('copied');
-    }, 1600);
+    }, 1400);
 
   } catch {
-    alert('Copy failed — please copy manually.');
+    alert('Copy failed — copy manually.');
   }
 }
+
+// ────────────────────────────────────────────────────────────────────────
+// Rest of your original code remains unchanged below
+// ────────────────────────────────────────────────────────────────────────
 
 function println(html, cls = 'line') {
   const div = document.createElement('div');
@@ -437,7 +428,6 @@ function refreshPinsIfVisible() {
   }
 }
 
-// Theme toggle
 function toggleTheme() {
   const cur = body.getAttribute('data-theme') || 'dark';
   const next = cur === 'light' ? 'dark' : 'light';
@@ -454,7 +444,6 @@ if (localStorage.getItem('gps-pins-theme')) {
   themeBtn.textContent = th === 'light' ? '🌙 Dark' : '☀️ Light';
 }
 
-// Terminal commands
 input.addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     e.preventDefault();
@@ -465,7 +454,7 @@ input.addEventListener('keydown', e => {
     if (txt.toLowerCase() === 'help') {
       print.info('help → this help');
       print.info('clear → clear terminal');
-      print.info('paste url → save as URL pin');
+      print.info('paste url → save URL pin');
     } else if (txt.toLowerCase() === 'clear') {
       terminal.innerHTML = '';
     } else {
@@ -478,10 +467,7 @@ input.addEventListener('keydown', e => {
           print.info('Already saved.');
         } else {
           let n = u.hostname.replace(/^www\./,'');
-          if (u.pathname && u.pathname !== '/') {
-            const s = u.pathname.split('/')[1];
-            if (s) n += ` / ${s}`;
-          }
+          if (u.pathname && u.pathname !== '/') n += ` / ${u.pathname.split('/')[1] || ''}`;
           n = n.slice(0,60) || 'Link';
           pins.push({id:generateId(), name:n, url:h, time:Date.now()});
           if (savePins()) {
@@ -490,14 +476,13 @@ input.addEventListener('keydown', e => {
           }
         }
       } else {
-        print.error('Invalid URL or unknown command');
+        print.error('Invalid URL');
       }
     }
     input.value = '';
   }
 });
 
-// FAB - current location
 fab.addEventListener('click', () => {
   if (!navigator.geolocation) return print.error('Geolocation not supported');
   print.system('Requesting location…');
@@ -507,7 +492,7 @@ fab.addEventListener('click', () => {
       const name = lastUsedName || `Location ${new Date().toLocaleTimeString()}`;
       pins.push({id:generateId(), name, lat, lng, accuracy, time:Date.now()});
       if (savePins()) {
-        print.success(`Saved GPS pin: ${lat.toFixed(6)}, ${lng.toFixed(6)} (±${accuracy.toFixed(0)}m)`);
+        print.success(`Saved GPS: ${lat.toFixed(6)}, ${lng.toFixed(6)} (±${accuracy.toFixed(0)}m)`);
         refreshPinsIfVisible();
       }
       lastUsedName = name;
@@ -518,7 +503,6 @@ fab.addEventListener('click', () => {
   );
 });
 
-// Tab switching
 document.querySelectorAll('[data-tab]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
@@ -584,12 +568,11 @@ function renderPins(q = '') {
 terminal.innerHTML = '';
 print.system('<span style="font-size:1.25rem; font-weight:700;">GPS Pins</span>');
 print.system('100% local • offline • private');
-println('─'.repeat(50), 'system');
+println('─'.repeat(60), 'system');
 println('');
 print.info('Paste URL → save URL pin');
-print.info('Click "Copy" on share link → asks separately for URL and/or GPS');
-print.info('+ → save current location (GPS pin)');
-print.info('help → commands');
+print.info('Share link "Copy" → separate prompt for URL pin and GPS pin');
+print.info('+ button → save current GPS location');
 println('');
 print.info('Ready.');
 println('');

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GPS Pins – Private Markers + URLs</title>
-  <meta name="description" content="Save private GPS locations & URLs. 100% local, offline, no account."/>
+  <meta name="description" content="Save private GPS locations & URLs. 100% local, offline, no account.">
 
   <style>
     :root {
@@ -20,141 +20,327 @@
       --shadow:    0 4px 20px rgba(0,0,0,0.4);
     }
 
-    * { margin:0; padding:0; box-sizing:border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      background:var(--bg); color:var(--text);
-      font-family:'Courier New',Courier,monospace;
-      min-height:100vh; display:flex; flex-direction:column;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Courier New', Courier, monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
+
     header {
-      padding:1rem 1.4rem;
-      background:rgba(0,0,0,0.6);
-      border-bottom:1px solid var(--border);
-      text-align:center;
+      padding: 1rem 1.4rem;
+      background: rgba(0,0,0,0.6);
+      border-bottom: 1px solid var(--border);
+      text-align: center;
     }
+
     h1 {
-      font-size:2.1rem;
-      background:linear-gradient(90deg,var(--purple),var(--accent));
-      -webkit-background-clip:text; background-clip:text;
-      color:transparent;
+      font-size: 2.1rem;
+      background: linear-gradient(90deg, var(--purple), var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
-    .subtitle { color:var(--muted); font-size:0.95rem; margin-top:0.5rem; }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+    }
+
     .tabs {
-      margin:1.2rem 0 0.8rem;
-      display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;
+      margin: 1.2rem 0 0.8rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
+
     .tab-btn {
-      padding:0.7rem 1.6rem;
-      background:rgba(255,255,255,0.06); border:1px solid var(--border);
-      border-radius:8px; color:var(--muted); cursor:pointer;
-      font-weight:bold; transition:all 0.18s ease; position:relative;
+      padding: 0.7rem 1.6rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.18s ease;
+      position: relative;
     }
+
     .tab-btn.active {
-      background:linear-gradient(135deg,var(--purple),var(--accent));
-      color:#000; border-color:transparent;
+      background: linear-gradient(135deg, var(--purple), var(--accent));
+      color: #000;
+      border-color: transparent;
     }
+
     .tab-btn .badge {
-      position:absolute; top:-6px; right:-6px;
-      background:var(--accent-dim); color:#000;
-      font-size:0.7rem; padding:2px 6px; border-radius:10px;
-      min-width:16px; text-align:center;
-      box-shadow:0 0 6px rgba(0,255,157,0.5);
-      display:none;
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: var(--accent-dim);
+      color: #000;
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 10px;
+      min-width: 16px;
+      text-align: center;
+      box-shadow: 0 0 6px rgba(0,255,157,0.5);
+      display: none;
     }
-    .tab-content { flex:1; display:none; flex-direction:column; overflow:hidden; }
-    .tab-content.active { display:flex; }
+
+    .tab-content {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .tab-content.active {
+      display: flex;
+    }
+
     #terminal-tab .terminal {
-      flex:1; padding:1.3rem 1.8rem; overflow-y:auto;
-      line-height:1.55; font-size:1rem;
+      flex: 1;
+      padding: 1.3rem 1.8rem;
+      overflow-y: auto;
+      line-height: 1.55;
+      font-size: 1rem;
     }
-    .line { margin:0.5rem 0; white-space:pre-wrap; word-break:break-word; }
-    .prompt    { color:var(--accent-dim); }
-    .info      { color:#00ffea; }
-    .system    { color:#778899; }
-    .error     { color:var(--danger); }
-    .success   { color:var(--accent-dim); font-weight:bold; }
+
+    .line {
+      margin: 0.5rem 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .prompt    { color: var(--accent-dim); }
+    .info      { color: #00ffea; }
+    .system    { color: #778899; }
+    .error     { color: var(--danger); }
+    .success   { color: var(--accent-dim); font-weight: bold; }
+
     .storage-warning {
-      background:rgba(255,85,85,0.15); border:1px solid var(--danger);
-      color:#ffaaaa; padding:1rem; margin:1rem; border-radius:8px;
-      text-align:center;
+      background: rgba(255,85,85,0.15);
+      border: 1px solid var(--danger);
+      color: #ffaaaa;
+      padding: 1rem;
+      margin: 1rem;
+      border-radius: 8px;
+      text-align: center;
     }
+
     .input-line {
-      display:flex; align-items:center; padding:1rem 1.8rem;
-      background:rgba(0,0,0,0.4); border-top:1px solid var(--border); gap:0.8rem;
+      display: flex;
+      align-items: center;
+      padding: 1rem 1.8rem;
+      background: rgba(0,0,0,0.4);
+      border-top: 1px solid var(--border);
+      gap: 0.8rem;
     }
-    .input-line .prompt { flex-shrink:0; }
+
+    .input-line .prompt { flex-shrink: 0; }
+
     #input {
-      flex:1; background:transparent; border:none;
-      color:var(--accent); font:inherit; outline:none;
-      caret-color:var(--accent); min-width:0;
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--accent);
+      font: inherit;
+      outline: none;
+      caret-color: var(--accent);
+      min-width: 0;
     }
+
     .cursor {
-      display:inline-block; width:10px; height:1.3em;
-      background:var(--accent); animation:blink 1.2s step-end infinite;
+      display: inline-block;
+      width: 10px;
+      height: 1.3em;
+      background: var(--accent);
+      animation: blink 1.2s step-end infinite;
     }
-    @keyframes blink { 50% { opacity:0; } }
-    #pins-tab { padding:1.5rem; overflow-y:auto; }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    #pins-tab {
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+
     .collection-header {
-      text-align:center; margin:0 0 1.6rem;
-      color:var(--accent); font-size:1.5rem;
+      text-align: center;
+      margin: 0 0 1.6rem;
+      color: var(--accent);
+      font-size: 1.5rem;
     }
+
     .empty-state {
-      text-align:center; color:var(--muted); padding:8rem 1.5rem;
-      font-size:1.2rem; line-height:1.6;
+      text-align: center;
+      color: var(--muted);
+      padding: 8rem 1.5rem;
+      font-size: 1.2rem;
+      line-height: 1.6;
     }
+
     .card {
-      background:rgba(20,24,34,0.97); border:1px solid var(--border);
-      border-radius:12px; padding:1.5rem; margin:1.3rem 0;
-      box-shadow:var(--shadow); transition:transform 0.15s ease;
+      background: rgba(20,24,34,0.97);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.3rem 0;
+      box-shadow: var(--shadow);
+      transition: transform 0.15s ease;
     }
-    .card:hover { transform:translateY(-2px); }
-    .pin-title { color:var(--accent); font-size:1.4rem; margin-bottom:0.7rem; word-break:break-all; }
-    .url-pin .pin-title { color:var(--purple); }
+
+    .card:hover {
+      transform: translateY(-2px);
+    }
+
+    .pin-title {
+      color: var(--accent);
+      font-size: 1.4rem;
+      margin-bottom: 0.7rem;
+      word-break: break-all;
+    }
+
+    .url-pin .pin-title {
+      color: var(--purple);
+    }
+
     .meta {
-      color:var(--muted); font-size:0.95rem; margin:0.8rem 0;
-      display:flex; flex-wrap:wrap; gap:1.6rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin: 0.8rem 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.6rem;
     }
+
     #search {
-      width:100%; max-width:500px; padding:0.9rem;
-      margin:0 auto 1.8rem; display:block;
-      background:rgba(255,255,255,0.05); border:1px solid var(--border);
-      border-radius:10px; color:var(--text); font-family:inherit; font-size:1rem;
+      width: 100%;
+      max-width: 500px;
+      padding: 0.9rem;
+      margin: 0 auto 1.8rem;
+      display: block;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1rem;
     }
+
     .share-row {
-      margin-top:1.2rem; display:flex; flex-wrap:wrap; gap:0.8rem; align-items:center;
+      margin-top: 1.2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      align-items: center;
     }
-    .action-btn, .copy-btn, .email-btn, .open-url-btn, .refresh-btn {
-      padding:0.6rem 1.3rem; border-radius:8px; font-weight:bold;
-      cursor:pointer; transition:all 0.2s ease; text-decoration:none;
-      display:inline-block; border:1px solid; font-size:0.9rem;
-    }
-    .action-btn { background:rgba(0,212,255,0.18); border-color:var(--accent-dim); color:var(--accent); }
-    .action-btn:hover { background:rgba(0,212,255,0.35); }
-    .copy-btn { background:rgba(187,134,252,0.18); border-color:var(--purple); color:var(--purple); }
-    .copy-btn:hover { background:rgba(187,134,252,0.35); }
-    .copy-btn.copied { background:rgba(0,255,157,0.3); color:#00ff9d; border-color:#00ff9d; }
-    .email-btn, .open-url-btn { background:rgba(187,134,252,0.25); border-color:var(--purple); color:var(--purple); }
-    .email-btn:hover, .open-url-btn:hover { background:rgba(187,134,252,0.45); }
+
+    .action-btn,
+    .copy-btn,
+    .email-btn,
+    .open-url-btn,
     .refresh-btn {
-      background:rgba(0,255,157,0.18); border-color:var(--accent-dim);
-      color:var(--accent-dim); margin:1rem auto; display:block;
+      padding: 0.6rem 1.3rem;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+      border: 1px solid;
+      font-size: 0.9rem;
     }
+
+    .action-btn {
+      background: rgba(0,212,255,0.18);
+      border-color: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .action-btn:hover {
+      background: rgba(0,212,255,0.35);
+    }
+
+    .copy-btn {
+      background: rgba(187,134,252,0.18);
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+
+    .copy-btn:hover {
+      background: rgba(187,134,252,0.35);
+    }
+
+    .copy-btn.copied {
+      background: rgba(0,255,157,0.3);
+      color: #00ff9d;
+      border-color: #00ff9d;
+    }
+
+    .email-btn,
+    .open-url-btn {
+      background: rgba(187,134,252,0.25);
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+
+    .email-btn:hover,
+    .open-url-btn:hover {
+      background: rgba(187,134,252,0.45);
+    }
+
+    .refresh-btn {
+      background: rgba(0,255,157,0.18);
+      border-color: var(--accent-dim);
+      color: var(--accent-dim);
+      margin: 1rem auto;
+      display: block;
+    }
+
     #fab {
-      position:fixed; bottom:24px; right:24px; width:64px; height:64px;
-      background:linear-gradient(135deg,var(--purple),var(--accent));
-      color:#000; border:none; border-radius:50%; font-size:2.2rem; font-weight:bold;
-      box-shadow:0 6px 20px rgba(0,0,0,0.5); cursor:pointer; z-index:1000;
-      display:flex; align-items:center; justify-content:center; transition:transform 0.2s ease;
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--purple), var(--accent));
+      color: #000;
+      border: none;
+      border-radius: 50%;
+      font-size: 2.2rem;
+      font-weight: bold;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+      cursor: pointer;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease;
     }
-    #fab:hover { transform:scale(1.1); }
-    #fab:active { transform:scale(0.95); }
-    @media (max-width:560px) {
-      .tabs { flex-direction:column; gap:0.6rem; }
-      .tab-btn { width:100%; }
-      .share-row { flex-direction:column; align-items:stretch; }
-      .action-btn, .copy-btn, .email-btn, .open-url-btn { width:100%; text-align:center; }
-      #fab { bottom:16px; right:16px; width:56px; height:56px; font-size:2rem; }
-      .input-line { flex-direction:column; align-items:flex-start; padding:1rem; }
+
+    #fab:hover { transform: scale(1.1); }
+    #fab:active { transform: scale(0.95); }
+
+    @media (max-width: 560px) {
+      .tabs { flex-direction: column; gap: 0.6rem; }
+      .tab-btn { width: 100%; }
+      .share-row { flex-direction: column; align-items: stretch; }
+      .action-btn, .copy-btn, .email-btn, .open-url-btn { width: 100%; text-align: center; }
+      #fab { bottom: 16px; right: 16px; width: 56px; height: 56px; font-size: 2rem; }
+      .input-line { flex-direction: column; align-items: flex-start; padding: 1rem; }
     }
   </style>
 </head>
@@ -163,6 +349,7 @@
 <header>
   <h1>GPS Pins</h1>
   <div class="subtitle">Private markers + URLs • 100% offline</div>
+
   <div class="tabs">
     <button class="tab-btn active" data-tab="terminal">Terminal</button>
     <button class="tab-btn" data-tab="pins">
@@ -175,19 +362,23 @@
   <div class="terminal" id="terminal"></div>
   <div class="input-line">
     <span class="prompt">></span>
-    <input id="input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus/>
+    <input id="input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus>
     <span class="cursor"></span>
   </div>
 </div>
 
 <div id="pins-tab" class="tab-content">
   <div class="collection-header">My Saved Pins & URLs</div>
+
   <div id="storage-error" class="storage-warning" style="display:none;">
     <strong>⚠️ Could not load pins — storage may be full, blocked, or in private mode.</strong><br>
     Try in a normal browser tab (not incognito). You may need to clear some data or use another browser.
   </div>
-  <input type="text" id="search" placeholder="Search name, URL or coordinates…"/>
+
+  <input type="text" id="search" placeholder="Search name, URL or coordinates…">
+
   <button class="refresh-btn">↻ Refresh Pins List</button>
+
   <div id="pins-container"></div>
 </div>
 
@@ -201,7 +392,7 @@ const STORAGE_KEY = 'gps-pins-v7';
 let lastUsedName = localStorage.getItem('gps-pins-last-name') || '';
 
 function escapeHTML(str = '') {
-  const map = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
   return str.replace(/[&<>"']/g, m => map[m]);
 }
 
@@ -210,8 +401,7 @@ function getPins() {
     const data = localStorage.getItem(STORAGE_KEY);
     if (!data) return [];
     const parsed = JSON.parse(data);
-    if (!Array.isArray(parsed)) throw new Error("Not an array");
-    return parsed;
+    return Array.isArray(parsed) ? parsed : [];
   } catch (err) {
     console.error("localStorage read failed:", err);
     document.getElementById('storage-error').style.display = 'block';
@@ -227,7 +417,7 @@ function savePins(pins) {
     return true;
   } catch (err) {
     console.error('localStorage write failed:', err);
-    alert('Could not save — storage quota full, blocked, or in private mode.\nTry removing old pins or using normal mode.');
+    alert('Could not save — storage may be full, blocked, or in private mode.\nTry removing old pins or using normal mode.');
     return false;
   }
 }
@@ -240,13 +430,17 @@ function updatePinsCount() {
 }
 
 function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 }
 
 function getPinShareUrl(pin) {
   const publicPin = {
-    id: pin.id, lat: pin.lat, lng: pin.lng,
-    name: pin.name, url: pin.url || null, time: pin.time
+    id: pin.id,
+    lat: pin.lat,
+    lng: pin.lng,
+    name: pin.name,
+    url: pin.url || null,
+    time: pin.time
   };
   return `${location.origin}${location.pathname}#p=${btoa(JSON.stringify(publicPin))}`;
 }
@@ -262,12 +456,12 @@ async function copyToClipboard(text, button) {
       button.classList.remove('copied');
     }, 1800);
   } catch {
-    alert('Clipboard failed — copy manually.');
+    alert('Clipboard access failed — please copy manually.');
   }
 }
 
 // ────────────────────────────────────────────────
-// Auto-import shared pin from #p=...
+// Auto-import shared pin from URL hash (#p=...)
 // ────────────────────────────────────────────────
 function tryImportSharedPin() {
   const hash = location.hash;
@@ -277,6 +471,7 @@ function tryImportSharedPin() {
     const encoded = hash.slice(3);
     const json = atob(encoded);
     const data = JSON.parse(json);
+
     if (!data.id || !data.time || data.lat == null || data.lng == null) return;
 
     const pins = getPins();
@@ -301,13 +496,15 @@ function tryImportSharedPin() {
       document.querySelector('.tab-btn[data-tab="pins"]').click();
       history.replaceState(null, null, location.pathname);
     }
-  } catch {}
+  } catch (err) {
+    console.warn("Failed to import shared pin:", err);
+  }
 }
 
 window.addEventListener('hashchange', tryImportSharedPin);
 
 // ────────────────────────────────────────────────
-// Terminal helpers
+// Terminal output helpers
 // ────────────────────────────────────────────────
 const terminal = document.getElementById('terminal');
 const inputEl  = document.getElementById('input');
@@ -320,9 +517,9 @@ function println(html, className = 'line') {
   terminal.scrollTop = terminal.scrollHeight;
 }
 
-function printInfo(msg)    { println(msg, 'line info'); }
-function printError(msg)   { println(msg, 'line error'); }
-function printSystem(msg)  { println(msg, 'line system'); }
+function printInfo(msg)    { println(msg, 'line info');    }
+function printError(msg)   { println(msg, 'line error');   }
+function printSystem(msg)  { println(msg, 'line system');  }
 function printSuccess(msg) { println(msg, 'line success'); }
 function clearScreen()     { terminal.innerHTML = ''; }
 
@@ -346,6 +543,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
     btn.classList.add('active');
     const tab = document.getElementById(`${btn.dataset.tab}-tab`);
     tab.classList.add('active');
@@ -357,7 +555,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // ────────────────────────────────────────────────
-// Pins rendering
+// Pins list rendering
 // ────────────────────────────────────────────────
 const pinsContainer = document.getElementById('pins-container');
 const searchInput   = document.getElementById('search');
@@ -408,7 +606,7 @@ function renderPins(filter = '') {
 
     let title = escapeHTML(pin.name || (isUrlPin ? 'URL Pin' : '(Unnamed)'));
     if (isUrlPin) {
-      title = `<a href="${escapeHTML(pin.url)}" target="_blank" style="color:var(--purple);text-decoration:underline;">${title}</a>`;
+      title = `<a href="${escapeHTML(pin.url)}" target="_blank" style="color:var(--purple); text-decoration:underline;">${title}</a>`;
     }
 
     card.innerHTML = `
@@ -456,9 +654,11 @@ document.getElementById('fab').addEventListener('click', async () => {
   }
 
   try {
-    const pos = await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, {
-        enableHighAccuracy:true, timeout:10000, maximumAge:0
+    const pos = await new Promise((resolve, reject) =>
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
       })
     );
 
@@ -495,8 +695,8 @@ function handleCommand(input) {
 
   if (cmd === 'help') {
     printInfo("Commands: help, list, clear, clear all");
-    printInfo("• Paste https:// URL → auto-save");
-    printInfo("• + button → save location");
+    printInfo("• Paste https:// URL → auto-save as pin");
+    printInfo("• + button → save current location");
     printInfo("• Shared #p=... link → auto-import");
     return;
   }
@@ -536,7 +736,7 @@ function handleCommand(input) {
 }
 
 // ────────────────────────────────────────────────
-// Input handling
+// Terminal input handling
 // ────────────────────────────────────────────────
 inputEl.addEventListener('keydown', async e => {
   if (e.key !== 'Enter') return;
@@ -551,9 +751,11 @@ inputEl.addEventListener('keydown', async e => {
 
     const pin = {
       id: generateId(),
-      name: text.substring(0,80) + (text.length > 80 ? '…' : ''),
+      name: text.substring(0, 80) + (text.length > 80 ? '…' : ''),
       url: text,
-      lat: null, lng: null, accuracy: null,
+      lat: null,
+      lng: null,
+      accuracy: null,
       time: Date.now()
     };
 
@@ -581,7 +783,7 @@ inputEl.addEventListener('keydown', async e => {
 });
 
 // ────────────────────────────────────────────────
-// Init
+// Initialization
 // ────────────────────────────────────────────────
 updatePinsCount();
 tryImportSharedPin();

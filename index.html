@@ -298,7 +298,10 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.add('active');
     const tab = document.getElementById(btn.dataset.tab + '-tab');
     tab.classList.add('active');
-    if (btn.dataset.tab === 'pins') renderPins();
+    if (btn.dataset.tab === 'pins') {
+      renderPins();
+      printSystem("Showing latest pins…");
+    }
   });
 });
 
@@ -406,7 +409,9 @@ document.getElementById('fab').addEventListener('click', async () => {
     pins.push(pin);
     if (savePins(pins)) {
       printSuccess(`Pin saved → ${escapeHTML(pin.name)} @ ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`);
-      renderPins(searchInput.value);
+      renderPins(searchInput.value);           // ← FIXED: refresh list
+      // Optional: switch to pins tab after save
+      // document.querySelector('.tab-btn[data-tab="pins"]').click();
     }
   } catch (err) {
     printError("Location failed.");
@@ -481,7 +486,7 @@ function bootMessages() {
 bootMessages();
 
 // ────────────────────────────────────────────────
-// Input handler – QUICK URL AUTOSAVE + AUTO-SWITCH TO PINS TAB
+// Input handler – QUICK URL AUTOSAVE + AUTO-SWITCH + REFRESH
 // ────────────────────────────────────────────────
 inputEl.addEventListener('keydown', async e => {
   if (e.key !== 'Enter') return;
@@ -513,7 +518,7 @@ inputEl.addEventListener('keydown', async e => {
       printSuccess(`URL saved → ${escapeHTML(pin.name)}`);
       println(`  ${pin.url}`, 'line info');
       
-      // Auto-switch to My Pins tab after save
+      renderPins(searchInput.value);                    // ← FIXED: refresh immediately
       document.querySelector('.tab-btn[data-tab="pins"]').click();
     }
 

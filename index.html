@@ -213,17 +213,12 @@
 
 <header>
   <h1>GPS Pins</h1>
-  <div class="subtitle">Private markers • URLs • 100% offline</div>
+  <div class="subtitle">Private markers • URLs • 100% offline • autosave</div>
 
   <div class="controls">
     <button class="btn active" data-tab="terminal">Terminal</button>
     <button class="btn" data-tab="pins">My Pins <span id="pins-count">0</span></button>
     <button class="btn" id="theme-toggle">☀️ Light</button>
-    <button class="btn" id="export-btn">Export JSON</button>
-    <label class="btn">
-      Import JSON
-      <input type="file" id="import-file" accept=".json" style="display:none"/>
-    </label>
   </div>
 </header>
 
@@ -240,13 +235,13 @@
   <div id="pins-container"></div>
 </div>
 
-<button id="fab" title="Quick-save current location (hold for name)">+</button>
+<button id="fab" title="Quick-save current location (hold/double-tap for name)">+</button>
 
 <script>
 // ────────────────────────────────────────────────
 // Core
 // ────────────────────────────────────────────────
-const STORAGE_KEY = 'gps-pins-v8';
+const STORAGE_KEY = 'gps-pins-v9';
 let pins = getPins();
 let lastName = localStorage.getItem('gps-pins-lastname') || '';
 let trackingWatchId = null;
@@ -293,14 +288,15 @@ function printSystem(msg)  { println(msg, 'system'); }
 // ────────────────────────────────────────────────
 // Boot
 // ────────────────────────────────────────────────
-println('<span class="system">GPS Pins v8 • local only • ' + new Date().toLocaleDateString() + '</span>');
-println('<span class="system">─'.repeat(40) + '</span>');
-printInfo('Paste URL → auto-save');
-printInfo('Type <b>track on</b> → start GPS trail');
-printInfo('Click + → quick save location');
+println('<span class="system">GPS Pins v9 • autosave URLs & GPS • local only • ' + new Date().toLocaleDateString() + '</span>');
+println('<span class="system">─'.repeat(50) + '</span>');
+printInfo('Paste/type URL → <b>autosaves to My Pins</b>');
+printInfo('Click + → <b>quick autosave</b> current location');
+printInfo('Long-press + → name it first');
+printInfo('Type <b>track on</b> → continuous GPS tracking (autosaves points)');
 printInfo('Type <b>help</b> for commands');
 println('');
-if (lastName) printSystem(`Last used name: ${escape(lastName)}`);
+if (lastName) printSystem(`Last name used: ${escape(lastName)}`);
 
 // ────────────────────────────────────────────────
 // Tabs
@@ -346,13 +342,12 @@ function renderPins(filter = '') {
   );
 
   if (!shown.length) {
-    pinsContainer.innerHTML = '<div style="text-align:center;padding:6rem 1rem;color:var(--muted);">No pins match your search yet.<br>Try dropping one with the + button!</div>';
+    pinsContainer.innerHTML = '<div style="text-align:center;padding:6rem 1rem;color:var(--muted);">No pins saved yet.<br>Paste URL or tap + to start!</div>';
     return;
   }
 
   shown.forEach(p => {
     const isUrl = !!p.url;
-    const mapsLink = p.lat && p.lng ? `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}` : '';
     const coords = p.lat && p.lng ? `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}` : '—';
     const acc = p.accuracy ? `±${Math.round(p.accuracy)} m` : '';
 
@@ -365,9 +360,8 @@ function renderPins(filter = '') {
         ${acc ? `<span>${acc}</span>` : ''}
         <span>${new Date(p.time).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
       </div>
-      ${isUrl ? `<div style="margin:0.8rem 0;"><a href="${escape(p.url)}" target="_blank" style="color:var(--purple);">→ Open link</a></div>` : ''}
+      ${isUrl ? `<div style="margin:0.8rem 0;"><a href="${escape(p.url)}" target="_blank" style="color:var(--purple);">→ Open URL</a></div>` : ''}
       <div class="actions">
-        ${mapsLink ? `<a href="${mapsLink}" target="_blank" class="btn small-btn">Map</a>` : ''}
         <button class="btn small-btn copy-coords" data-coords="${coords}">Copy coords</button>
         <button class="btn small-btn copy-name" data-name="${escape(p.name||'')||'(no name)'}">Copy name</button>
       </div>
@@ -393,18 +387,17 @@ function renderPins(filter = '') {
 searchInput.addEventListener('input', e => renderPins(e.target.value));
 
 // ────────────────────────────────────────────────
-// Quick Save (FAB)
+// Quick autosave current location
 // ────────────────────────────────────────────────
 document.getElementById('fab').addEventListener('click', async e => {
   const now = Date.now();
-  if (now - lastFabClick < 600) return; // debounce
+  if (now - lastFabClick < 600) return;
   lastFabClick = now;
 
   let name = lastName || `Pin ${pins.length + 1}`;
 
-  // Hold/long-press detection for custom name
   if (e.detail === 2 || (now - (window.lastFabDown || 0) > 600)) {
-    const custom = prompt("Name for this pin?", name);
+    const custom = prompt("Name this GPS pin?", name);
     if (custom === null) return;
     name = custom.trim() || name;
   }
@@ -430,26 +423,25 @@ document.getElementById('fab').addEventListener('click', async e => {
 
     pins.push(pin);
     if (savePins()) {
-      printSuccess(`Saved → ${escape(name)} @ ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`);
+      printSuccess(`GPS pin autosaved → ${escape(name)} @ ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`);
       if (document.querySelector('[data-tab="pins"].active')) renderPins();
     }
   } catch (err) {
-    printError("Location failed: " + (err.code === 1 ? "permission denied" : err.message));
+    printError("Couldn't get location: " + (err.code === 1 ? "permission denied" : err.message));
   }
 });
 
-// Long-press detection helper
 document.getElementById('fab').addEventListener('mousedown', () => window.lastFabDown = Date.now());
 document.getElementById('fab').addEventListener('touchstart', () => window.lastFabDown = Date.now());
 
 // ────────────────────────────────────────────────
-// Track mode (continuous logging)
+// Continuous tracking / autosave GPS points
 // ────────────────────────────────────────────────
 function startTracking() {
   if (trackingWatchId) return;
-  printInfo("Tracking started — saving position ~every 15s");
+  printInfo("Continuous GPS tracking started — autosaving new points ~every 15s");
   trackingWatchId = navigator.geolocation.watchPosition(pos => {
-    const name = `Track ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+    const name = `Track ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
     pins.push({
       id: generateId(),
       name,
@@ -459,9 +451,9 @@ function startTracking() {
       time: Date.now()
     });
     savePins();
-    println(`→ ${name} ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`, 'info');
+    println(`→ Autosaved ${name} @ ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`, 'info');
   }, err => {
-    printError("Tracking error: " + err.message);
+    printError("Tracking stopped due to error: " + err.message);
     stopTracking();
   }, {enableHighAccuracy:true, timeout:15000, maximumAge:0});
 }
@@ -470,46 +462,12 @@ function stopTracking() {
   if (trackingWatchId) {
     navigator.geolocation.clearWatch(trackingWatchId);
     trackingWatchId = null;
-    printInfo("Tracking stopped.");
+    printInfo("Continuous GPS tracking stopped.");
   }
 }
 
 // ────────────────────────────────────────────────
-// Export / Import
-// ────────────────────────────────────────────────
-document.getElementById('export-btn').onclick = () => {
-  const data = JSON.stringify(pins, null, 2);
-  const blob = new Blob([data], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `gps-pins-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-};
-
-document.getElementById('import-file').onchange = e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const imported = JSON.parse(ev.target.result);
-      if (!Array.isArray(imported)) throw new Error("Not an array");
-      const before = pins.length;
-      pins = [...pins, ...imported.filter(p => p.id && !pins.some(ex => ex.id === p.id))];
-      savePins();
-      printSuccess(`Imported ${pins.length - before} new pins`);
-      if (document.querySelector('[data-tab="pins"].active')) renderPins();
-    } catch (err) {
-      printError("Import failed: " + err.message);
-    }
-  };
-  reader.readAsText(file);
-};
-
-// ────────────────────────────────────────────────
-// Commands & Input
+// Input: URL autosave + commands
 // ────────────────────────────────────────────────
 input.addEventListener('keydown', async e => {
   if (e.key !== 'Enter') return;
@@ -520,16 +478,15 @@ input.addEventListener('keydown', async e => {
 
   println(`<span class="prompt">> ${escape(text)}</span>`);
 
-  // URL detection
+  // URL → autosave to My Pins
   let url;
   try {
     url = new URL(text.match(/^https?:\/\//) ? text : 'https://' + text);
   } catch {}
 
   if (url) {
-    const existing = pins.some(p => p.url === url.href);
-    if (existing) {
-      printInfo("→ Already saved.");
+    if (pins.some(p => p.url === url.href)) {
+      printInfo("→ This URL is already saved in My Pins.");
     } else {
       let name = url.hostname.replace(/^www\./, '');
       if (url.pathname && url.pathname !== '/') {
@@ -545,7 +502,7 @@ input.addEventListener('keydown', async e => {
         time: Date.now()
       });
       if (savePins()) {
-        printSuccess(`URL saved → ${escape(name)}`);
+        printSuccess(`URL autosaved to My Pins → ${escape(name)}`);
         if (document.querySelector('[data-tab="pins"].active')) renderPins();
       }
     }
@@ -559,10 +516,10 @@ input.addEventListener('keydown', async e => {
   const arg = args.join(' ');
 
   if (cmd === 'help') {
-    printInfo("track on/off → GPS trail mode");
-    printInfo("clear      → clear terminal");
-    printInfo("clear all  → delete all pins (!)");
-    printInfo("list       → show all pins");
+    printInfo("track on/off → continuous GPS autosave");
+    printInfo("clear       → clear terminal");
+    printInfo("clear all   → delete all pins (!)");
+    printInfo("list        → show all saved pins");
   }
   else if (cmd === 'track') {
     if (arg === 'on') startTracking();
@@ -570,10 +527,10 @@ input.addEventListener('keydown', async e => {
     else printInfo("Usage: track on / track off");
   }
   else if (cmd === 'clear' && arg === 'all') {
-    if (confirm("Delete ALL saved pins forever?")) {
+    if (confirm("Delete ALL saved pins and URLs?")) {
       pins = [];
       savePins();
-      printSystem("All pins deleted.");
+      printSystem("All pins cleared.");
       if (document.querySelector('[data-tab="pins"].active')) renderPins();
     }
   }
@@ -582,9 +539,9 @@ input.addEventListener('keydown', async e => {
     println('<span class="system">Terminal cleared</span>');
   }
   else if (cmd === 'list') {
-    if (!pins.length) printInfo("No pins yet.");
+    if (!pins.length) printInfo("No pins saved yet.");
     else {
-      printInfo(`Total: ${pins.length}`);
+      printInfo(`Total saved: ${pins.length}`);
       pins.forEach(p => {
         let line = `• ${escape(p.name || '(no name)')} `;
         if (p.url) line += `[URL] `;
@@ -595,7 +552,7 @@ input.addEventListener('keydown', async e => {
     }
   }
   else {
-    printError(`Unknown command: ${escape(cmd)}`);
+    printError(`Unknown: ${escape(cmd)}`);
     printInfo("Type help for commands");
   }
 

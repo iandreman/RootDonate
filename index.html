@@ -19,7 +19,13 @@
       --border:    rgba(0,212,255,0.18);
       --shadow:    0 4px 20px rgba(0,0,0,0.4);
     }
-    * { margin:0; padding:0; box-sizing:border-box; }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       background: var(--bg);
       color: var(--text);
@@ -28,12 +34,14 @@
       display: flex;
       flex-direction: column;
     }
+
     header {
       padding: 1rem 1.4rem;
       background: rgba(0,0,0,0.6);
       border-bottom: 1px solid var(--border);
       text-align: center;
     }
+
     h1 {
       font-size: 2.1rem;
       background: linear-gradient(90deg, var(--purple), var(--accent));
@@ -41,7 +49,13 @@
       background-clip: text;
       color: transparent;
     }
-    .subtitle { color: var(--muted); font-size: 0.95rem; margin-top: 0.5rem; }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+    }
+
     .tabs {
       margin: 1.2rem 0 0.8rem;
       display: flex;
@@ -49,6 +63,7 @@
       gap: 1rem;
       flex-wrap: wrap;
     }
+
     .tab-btn {
       padding: 0.7rem 1.6rem;
       background: rgba(255,255,255,0.06);
@@ -59,18 +74,23 @@
       font-weight: bold;
       transition: all 0.18s ease;
     }
+
     .tab-btn.active {
       background: linear-gradient(135deg, var(--purple), var(--accent));
       color: #000;
       border-color: transparent;
     }
+
     .tab-content {
       flex: 1;
       display: none;
       flex-direction: column;
       overflow: hidden;
     }
-    .tab-content.active { display: flex; }
+
+    .tab-content.active {
+      display: flex;
+    }
 
     #terminal-tab .terminal {
       flex: 1;
@@ -79,7 +99,13 @@
       line-height: 1.55;
       font-size: 1rem;
     }
-    .line { margin: 0.5rem 0; white-space: pre-wrap; word-break: break-word; }
+
+    .line {
+      margin: 0.5rem 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
     .prompt    { color: var(--accent-dim); }
     .info      { color: #00ffea; }
     .system    { color: #778899; }
@@ -92,7 +118,12 @@
       background: rgba(0,0,0,0.4);
       border-top: 1px solid var(--border);
     }
-    .input-line .prompt { margin-right: 1rem; flex-shrink: 0; }
+
+    .input-line .prompt {
+      margin-right: 1rem;
+      flex-shrink: 0;
+    }
+
     #input {
       flex: 1;
       background: transparent;
@@ -102,6 +133,7 @@
       outline: none;
       caret-color: var(--accent);
     }
+
     .cursor {
       display: inline-block;
       width: 10px;
@@ -110,18 +142,23 @@
       animation: blink 1.2s step-end infinite;
       margin-left: 5px;
     }
-    @keyframes blink { 50% { opacity: 0; } }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
 
     #pins-tab {
       padding: 1.5rem;
       overflow-y: auto;
     }
+
     .collection-header {
       text-align: center;
       margin: 0 0 1.6rem;
       color: var(--accent);
       font-size: 1.5rem;
     }
+
     .empty-state {
       text-align: center;
       color: var(--muted);
@@ -129,6 +166,7 @@
       font-size: 1.15rem;
       line-height: 1.7;
     }
+
     .card {
       background: rgba(20,24,34,0.97);
       border: 1px solid var(--border);
@@ -137,7 +175,13 @@
       margin: 1.3rem 0;
       box-shadow: var(--shadow);
     }
-    .pin-title { color: var(--accent); font-size: 1.4rem; margin-bottom: 0.7rem; }
+
+    .pin-title {
+      color: var(--accent);
+      font-size: 1.4rem;
+      margin-bottom: 0.7rem;
+    }
+
     .meta {
       color: var(--muted);
       font-size: 0.95rem;
@@ -146,6 +190,7 @@
       flex-wrap: wrap;
       gap: 1.6rem;
     }
+
     #search {
       width: 100%;
       max-width: 500px;
@@ -159,6 +204,7 @@
       font-family: inherit;
       font-size: 1rem;
     }
+
     .share-row {
       margin-top: 1.2rem;
       display: flex;
@@ -166,8 +212,11 @@
       gap: 0.6rem;
       align-items: center;
     }
-    .action-btn, .copy-btn, .email-btn {
-      padding: 0.6rem 1.1rem;
+
+    .action-btn,
+    .copy-btn,
+    .email-btn {
+      padding:     0.6rem 1.1rem;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
@@ -177,29 +226,42 @@
       border: 1px solid;
       font-size: 0.9rem;
     }
+
     .action-btn {
       background: rgba(0,212,255,0.18);
       border-color: var(--accent-dim);
       color: var(--accent);
     }
-    .action-btn:hover { background: rgba(0,212,255,0.35); }
+
+    .action-btn:hover {
+      background: rgba(0,212,255,0.35);
+    }
+
     .copy-btn {
       background: rgba(187,134,252,0.18);
       border-color: var(--purple);
       color: var(--purple);
     }
-    .copy-btn:hover { background: rgba(187,134,252,0.35); }
+
+    .copy-btn:hover {
+      background: rgba(187,134,252,0.35);
+    }
+
     .copy-btn.copied {
       background: rgba(0,255,157,0.3);
       color: #00ff9d;
       border-color: #00ff9d;
     }
+
     .email-btn {
       background: rgba(187,134,252,0.25);
       border-color: var(--purple);
       color: var(--purple);
     }
-    .email-btn:hover { background: rgba(187,134,252,0.45); }
+
+    .email-btn:hover {
+      background: rgba(187,134,252,0.45);
+    }
 
     #fab {
       position: fixed;
@@ -221,21 +283,32 @@
       justify-content: center;
       transition: transform 0.2s ease;
     }
-    #fab:hover { transform: scale(1.1); }
+
+    #fab:hover  { transform: scale(1.1); }
     #fab:active { transform: scale(0.95); }
 
     @media (max-width: 560px) {
       .tabs { flex-direction: column; gap: 0.6rem; }
       .tab-btn { width: 100%; }
       .share-row { flex-direction: column; align-items: stretch; }
-      .action-btn, .copy-btn, .email-btn { width: 100%; text-align: center; }
-      #fab { bottom: 16px; right: 16px; width: 56px; height: 56px; font-size: 2rem; }
+      .action-btn, .copy-btn, .email-btn {
+        width: 100%;
+        text-align: center;
+      }
+      #fab {
+        bottom: 16px;
+        right: 16px;
+        width: 56px;
+        height: 56px;
+        font-size: 2rem;
+      }
     }
+
     .line.system.live {
-      background: rgba(0, 180, 120, 0.15);
-      border-left: 4px solid #00ff9d;
-      padding-left: 1rem;
-      margin: 0.6rem 0;
+      background:    rgba(0, 180, 120, 0.15);
+      border-left:   4px solid #00ff9d;
+      padding-left:  1rem;
+      margin:        0.6rem 0;
     }
   </style>
 </head>
@@ -276,13 +349,16 @@ const STORAGE_KEY = 'gps-pins-v4';
 let lastUsedName = localStorage.getItem('gps-pins-last-name') || '';
 
 function escapeHTML(str = '') {
-  const map = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
   return str.replace(/[&<>"']/g, m => map[m]);
 }
 
 function getPins() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-  catch { return []; }
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch {
+    return [];
+  }
 }
 
 function savePins(pins) {
@@ -311,7 +387,7 @@ async function copyToClipboard(text, btn) {
 }
 
 // ────────────────────────────────────────────────
-// Terminal helpers
+// Terminal output helpers
 // ────────────────────────────────────────────────
 const terminal = document.getElementById('terminal');
 const inputEl  = document.getElementById('input');
@@ -324,35 +400,28 @@ function println(html, cls = 'line') {
   terminal.scrollTop = terminal.scrollHeight;
 }
 
-function printInfo(html)  { println(html, 'line info'); }
+function printInfo(html)  { println(html, 'line info');  }
 function printError(html) { println(html, 'line error'); }
-function printSystem(html){ println(html, 'line system'); }
+function printSystem(html){ println(html, 'line system');}
 function clearScreen()    { terminal.innerHTML = ''; }
 
 // ────────────────────────────────────────────────
-// Paste URL detection → log with current position
+// URL paste → log with location detection
 // ────────────────────────────────────────────────
-inputEl.addEventListener('paste', function(e) {
-  // We let the paste happen first, then check on Enter
-  // But we can also check immediately if we want to be more proactive
-});
-
 inputEl.addEventListener('keydown', async function(e) {
   if (e.key !== 'Enter') return;
 
   const text = inputEl.value.trim();
   if (!text) return;
 
-  // Very simple URL pattern (http, https, no spaces)
   const urlPattern = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
 
   if (urlPattern.test(text)) {
-    e.preventDefault(); // stop normal command processing
+    e.preventDefault();
 
     const confirmed = confirm(`Log this URL with current position?\n\n${text}`);
 
     if (!confirmed) {
-      // User said no → treat as normal command / text
       println('> ' + escapeHTML(text), 'line prompt');
       printError("URL logging cancelled.");
       inputEl.value = '';
@@ -366,7 +435,7 @@ inputEl.addEventListener('keydown', async function(e) {
     try {
       const pos = await new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: false,  // faster lookup
+          enableHighAccuracy: false,
           timeout: 7000,
           maximumAge: 30000
         });
@@ -382,7 +451,6 @@ inputEl.addEventListener('keydown', async function(e) {
       println(`  ${new Date().toLocaleString()}`, 'line system');
 
     } catch (err) {
-      // GPS not available / denied / timeout
       printInfo(`URL logged (location unavailable):`);
       println(`  ${text}`, 'line info');
       println(`  ${new Date().toLocaleString()}`, 'line system');
@@ -399,19 +467,25 @@ inputEl.addEventListener('keydown', async function(e) {
     return;
   }
 
-  // Normal command flow if not a URL
+  // Normal command handling
   e.preventDefault();
   println('> ' + escapeHTML(text), 'line prompt');
-  handleCommand(text);
+  handleCommand(text);           // ← you still need to implement this
   inputEl.value = '';
   inputEl.focus();
 });
 
 // ────────────────────────────────────────────────
-// (rest of your original script remains here)
+// TODO: Implement the rest of the functionality:
+//   • handleCommand()
+//   • live GPS tracking
+//   • save pin logic
+//   • render pins list + search
+//   • hashchange handler for shared pins
+//   • FAB click → drop pin
+//   • tab switching
+//   • initial boot messages
 // ────────────────────────────────────────────────
-// Live GPS, commands, save pin, render pins, hashchange handler, boot messages...
-// ... paste the rest of your <script> content here (from // Live GPS tracking down to the end)
 
 </script>
 </body>

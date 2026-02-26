@@ -61,12 +61,7 @@
       margin: 0;
     }
 
-    .subtitle {
-      color: var(--muted);
-      text-align: center;
-      font-size: 0.95rem;
-      margin-top: 0.4rem;
-    }
+    .subtitle { color: var(--muted); text-align:center; font-size:0.95rem; margin-top:0.4rem; }
 
     .controls {
       display: flex;
@@ -180,11 +175,25 @@
       padding: 0.55rem 1.1rem;
       font-size: 0.92rem;
       border-radius: 6px;
+      cursor: pointer;
     }
 
     .copy-btn.copied {
       background: rgba(86,212,100,0.25) !important;
       color: #56d364 !important;
+    }
+
+    .share-line {
+      margin-top: 0.6rem;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .share-line button {
+      margin-left: 0.8rem;
+      background: rgba(187,134,252,0.15);
+      border: 1px solid var(--purple);
+      color: var(--purple);
     }
 
     #fab {
@@ -201,9 +210,6 @@
       box-shadow: 0 8px 28px rgba(0,0,0,0.55);
       cursor: pointer;
       z-index: 999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       transition: all 0.2s;
     }
     #fab:hover { transform: scale(1.14); }
@@ -248,7 +254,7 @@
 // ────────────────────────────────────────────────
 // Core
 // ────────────────────────────────────────────────
-const STORAGE_KEY = 'gps-pins-v10';
+const STORAGE_KEY = 'gps-pins-v11';
 let pins = getPins();
 let lastName = localStorage.getItem('gps-pins-lastname') || '';
 let trackingWatchId = null;
@@ -323,10 +329,10 @@ function printSystem(msg)  { println(msg, 'system'); }
 // ────────────────────────────────────────────────
 // Boot
 // ────────────────────────────────────────────────
-println('<span class="system">GPS Pins v10 • autosave URLs & GPS • ' + new Date().toLocaleDateString() + '</span>');
+println('<span class="system">GPS Pins v11 • autosave URLs & GPS • ' + new Date().toLocaleDateString() + '</span>');
 println('<span class="system">──────────────────────────────────────────────</span>');
-printInfo('Paste/type URL → autosaves to My Pins');
-printInfo('Click + → quick autosave current location');
+printInfo('Paste/type URL → autosaves to My Pins + shows share link');
+printInfo('Click + → quick autosave GPS + shows share link');
 printInfo('Double-tap/long-press + → custom name');
 printInfo('Type <b>track on</b> → continuous GPS autosave');
 printInfo('Type <b>help</b> for commands');
@@ -334,7 +340,7 @@ println('');
 if (lastName) printSystem(`Last name: ${escape(lastName)}`);
 
 // ────────────────────────────────────────────────
-// Tabs
+// Tabs & Theme (unchanged)
 // ────────────────────────────────────────────────
 document.querySelectorAll('[data-tab]').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -346,7 +352,6 @@ document.querySelectorAll('[data-tab]').forEach(btn => {
   });
 });
 
-// Theme
 const themeToggle = document.getElementById('theme-toggle');
 themeToggle.addEventListener('click', () => {
   const cur = document.body.dataset.theme;
@@ -361,7 +366,7 @@ if (localStorage.getItem('gps-pins-theme') === 'light') {
 }
 
 // ────────────────────────────────────────────────
-// Render My Pins
+// Render My Pins (unchanged)
 // ────────────────────────────────────────────────
 function renderPins(filter = '') {
   const term = (filter || '').toLowerCase().trim();
@@ -419,7 +424,7 @@ function renderPins(filter = '') {
 searchInput.addEventListener('input', e => renderPins(e.target.value));
 
 // ────────────────────────────────────────────────
-// Quick GPS save + tracking functions (unchanged from previous)
+// Quick GPS save – now prints share URL + copy button
 // ────────────────────────────────────────────────
 document.getElementById('fab').addEventListener('click', async e => {
   const now = Date.now();
@@ -455,7 +460,14 @@ document.getElementById('fab').addEventListener('click', async e => {
 
     pins.push(pin);
     if (savePins()) {
+      const shareUrl = getShareUrl(pin);
       printSuccess(`GPS pin saved → ${escape(name)} @ ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`);
+      println(`<span class="share-line">Share link: ${escape(shareUrl.slice(0,80))}${shareUrl.length > 80 ? '...' : ''} <button class="small-btn copy-share" data-url="${escape(shareUrl)}">Copy</button></span>`, 'info');
+
+      // Attach listener to the new button in terminal
+      const newBtn = terminal.querySelector('.copy-share:last-child');
+      if (newBtn) newBtn.addEventListener('click', ev => copyToClipboard(ev.target.dataset.url, ev.target));
+
       if (document.querySelector('[data-tab="pins"].active')) renderPins();
     }
   } catch (err) {
@@ -466,21 +478,32 @@ document.getElementById('fab').addEventListener('click', async e => {
 document.getElementById('fab').addEventListener('mousedown', () => window.lastFabDown = Date.now());
 document.getElementById('fab').addEventListener('touchstart', () => window.lastFabDown = Date.now());
 
+// ────────────────────────────────────────────────
+// Continuous tracking – also shows share URL per point
+// ────────────────────────────────────────────────
 function startTracking() {
   if (trackingWatchId) return;
   printInfo("Tracking started — autosaving GPS points every ~15 seconds");
   trackingWatchId = navigator.geolocation.watchPosition(pos => {
     const name = `Track ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
-    pins.push({
+    const pin = {
       id: generateId(),
       name,
       lat: pos.coords.latitude,
       lng: pos.coords.longitude,
       accuracy: Math.round(pos.coords.accuracy),
       time: Date.now()
-    });
+    };
+    pins.push(pin);
     savePins();
+
+    const shareUrl = getShareUrl(pin);
     println(`→ Saved ${name} @ ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`, 'info');
+    println(`<span class="share-line">Share: ${escape(shareUrl.slice(0,80))}${shareUrl.length > 80 ? '...' : ''} <button class="small-btn copy-share" data-url="${escape(shareUrl)}">Copy</button></span>`, 'info');
+
+    // Listener for new copy button
+    const newBtn = terminal.querySelector('.copy-share:last-child');
+    if (newBtn) newBtn.addEventListener('click', ev => copyToClipboard(ev.target.dataset.url, ev.target));
   }, err => {
     printError("Tracking error: " + err.message);
     stopTracking();
@@ -496,7 +519,7 @@ function stopTracking() {
 }
 
 // ────────────────────────────────────────────────
-// Input handling
+// URL autosave – already shows success (you can add share URL here too if wanted)
 // ────────────────────────────────────────────────
 input.addEventListener('keydown', async e => {
   if (e.key !== 'Enter') return;
@@ -523,14 +546,21 @@ input.addEventListener('keydown', async e => {
       }
       name = name.slice(0, 70);
 
-      pins.push({
+      const pin = {
         id: generateId(),
         name,
         url: url.href,
         time: Date.now()
-      });
+      };
+      pins.push(pin);
       if (savePins()) {
+        const shareUrl = getShareUrl(pin);
         printSuccess(`URL saved to My Pins → ${escape(name)}`);
+        println(`<span class="share-line">Share link: ${escape(shareUrl.slice(0,80))}${shareUrl.length > 80 ? '...' : ''} <button class="small-btn copy-share" data-url="${escape(shareUrl)}">Copy</button></span>`, 'info');
+
+        const newBtn = terminal.querySelector('.copy-share:last-child');
+        if (newBtn) newBtn.addEventListener('click', ev => copyToClipboard(ev.target.dataset.url, ev.target));
+
         if (document.querySelector('[data-tab="pins"].active')) renderPins();
       }
     }
@@ -539,6 +569,7 @@ input.addEventListener('keydown', async e => {
     return;
   }
 
+  // Commands (unchanged) ...
   const [cmd, ...args] = text.toLowerCase().split(/\s+/);
   const arg = args.join(' ');
 
@@ -547,25 +578,21 @@ input.addEventListener('keydown', async e => {
     printInfo("clear          → clear terminal");
     printInfo("clear all      → delete everything");
     printInfo("list           → show all pins");
-  }
-  else if (cmd === 'track') {
+  } else if (cmd === 'track') {
     if (arg === 'on') startTracking();
     else if (arg === 'off') stopTracking();
     else printInfo("Use: track on / track off");
-  }
-  else if (cmd === 'clear' && arg === 'all') {
+  } else if (cmd === 'clear' && arg === 'all') {
     if (confirm("Delete ALL pins & URLs?")) {
       pins = [];
       savePins();
       printSystem("Everything deleted.");
       if (document.querySelector('[data-tab="pins"].active')) renderPins();
     }
-  }
-  else if (cmd === 'clear') {
+  } else if (cmd === 'clear') {
     terminal.innerHTML = '';
     println('<span class="system">Terminal cleared</span>');
-  }
-  else if (cmd === 'list') {
+  } else if (cmd === 'list') {
     if (!pins.length) printInfo("No pins yet.");
     else {
       printInfo(`Total: ${pins.length}`);
@@ -577,8 +604,7 @@ input.addEventListener('keydown', async e => {
         println(line, 'info');
       });
     }
-  }
-  else {
+  } else {
     printError(`Unknown command: ${escape(cmd)}`);
     printInfo("Type help for commands");
   }

@@ -269,6 +269,70 @@ async function copyToClipboard(text, btn) {
 }
 
 // ────────────────────────────────────────────────
+// Auto-import shared pin from URL hash (#p=...)
+// ────────────────────────────────────────────────
+function tryImportSharedPin() {
+  const hash = location.hash;
+  if (!hash.startsWith('#p=')) return;
+
+  try {
+    const encoded = hash.slice(3);
+    const json = atob(encoded);
+    const data = JSON.parse(json);
+
+    // Basic validation
+    if (!data.id || !data.time || data.lat == null || data.lng == null) {
+      printError("Invalid shared pin format.");
+      return;
+    }
+
+    const pins = getPins();
+    const alreadyExists = pins.some(p => p.id === data.id);
+
+    if (alreadyExists) {
+      printInfo("This pin is already saved in My Pins.");
+      // Optional: still switch to pins tab
+      // document.querySelector('.tab-btn[data-tab="pins"]').click();
+      history.replaceState(null, null, location.pathname);
+      return;
+    }
+
+    const newPin = {
+      id: data.id,
+      name: data.name || `Shared pin ${new Date(data.time).toLocaleDateString()}`,
+      lat: Number(data.lat),
+      lng: Number(data.lng),
+      accuracy: data.accuracy ?? null,
+      time: data.time,
+      url: data.url || null,
+      // Optional: mark as imported for styling/filtering later
+      imported: true
+    };
+
+    pins.push(newPin);
+
+    if (savePins(pins)) {
+      printSuccess(`Imported shared pin → ${escapeHTML(newPin.name)}`);
+      if (newPin.lat != null && newPin.lng != null) {
+        printInfo(`  ${newPin.lat.toFixed(6)}, ${newPin.lng.toFixed(6)}`);
+      }
+      if (newPin.url) {
+        printInfo(`  🔗 ${newPin.url}`);
+      }
+
+      // Auto-switch to My Pins tab after import
+      document.querySelector('.tab-btn[data-tab="pins"]').click();
+
+      // Clean URL so refresh doesn't re-import
+      history.replaceState(null, null, location.pathname + location.search);
+    }
+  } catch (err) {
+    console.error("Shared pin import failed", err);
+    printError("Could not import this shared link (corrupted or unsupported format).");
+  }
+}
+
+// ────────────────────────────────────────────────
 // Terminal output
 // ────────────────────────────────────────────────
 const terminal = document.getElementById('terminal');
@@ -305,7 +369,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // ────────────────────────────────────────────────
-// Render pins
+// Render pins (with optional imported styling support)
 // ────────────────────────────────────────────────
 const pinsContainer = document.getElementById('pins-container');
 const searchInput = document.getElementById('search');
@@ -345,13 +409,13 @@ function renderPins(filter = '') {
     const email = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
 
     const card = document.createElement('div');
-    card.className = `card ${isUrl ? 'url-pin' : ''}`;
+    card.className = `card ${isUrl ? 'url-pin' : ''} ${pin.imported ? 'imported' : ''}`;
 
     let title = escapeHTML(pin.name || (isUrl ? 'URL Pin' : '(Unnamed)'));
     if (isUrl) title = `<a href="${escapeHTML(pin.url)}" target="_blank" style="color:var(--purple);text-decoration:underline;">${title}</a>`;
 
     card.innerHTML = `
-      <div class="pin-title">${isUrl ? '🔗 ' : '📍 '}${title}</div>
+      <div class="pin-title">${isUrl ? '🔗 ' : '📍 '}${title}${pin.imported ? ' <small>(imported)</small>' : ''}</div>
       <div class="meta">
         ${pin.lat && pin.lng ? `<span>📍 ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}</span>` : '<span>🌐 No location</span>'}
         ${pin.lat && pin.lng ? `<span>±${Math.round(pin.accuracy || 0)} m</span>` : ''}
@@ -378,7 +442,19 @@ searchInput.addEventListener('input', e => renderPins(e.target.value));
 document.querySelector('.refresh-btn').addEventListener('click', () => renderPins(searchInput.value));
 
 // ────────────────────────────────────────────────
-// Save current location via FAB → auto-switch to My Pins
+// Optional: visual distinction for imported pins
+// Add this to your <style> block if you want:
+// .card.imported {
+//   border-left: 4px solid var(--accent-dim);
+//   background: rgba(0, 212, 255, 0.07);
+// }
+// .card.imported .pin-title small {
+//   color: var(--muted);
+//   font-size: 0.85rem;
+// }
+
+// ────────────────────────────────────────────────
+// Save current location via FAB
 // ────────────────────────────────────────────────
 document.getElementById('fab').addEventListener('click', async () => {
   let name = prompt("Name for this pin?", lastUsedName || `Pin ${getPins().length + 1}`);
@@ -411,7 +487,6 @@ document.getElementById('fab').addEventListener('click', async () => {
       printSuccess(`Pin saved → ${escapeHTML(pin.name)} @ ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`);
       printInfo("→ Showing <strong>My Pins</strong> tab");
       renderPins(searchInput.value);
-      // Auto-switch to pins tab
       document.querySelector('.tab-btn[data-tab="pins"]').click();
     }
   } catch (err) {
@@ -433,6 +508,7 @@ function handleCommand(input) {
     printInfo("Commands: help, list, clear, clear all");
     printInfo("Paste https:// URL → auto-saves + shows pins");
     printInfo("+ button → save current position (auto-switches to pins)");
+    printInfo("Opening #p=... link → auto-imports to My Pins");
     return;
   }
 
@@ -445,6 +521,7 @@ function handleCommand(input) {
       if (p.url) line += `[URL] `;
       if (p.lat && p.lng) line += `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)} `;
       line += `(${new Date(p.time).toLocaleDateString()})`;
+      if (p.imported) line += ` [imported]`;
       println(line, 'line info');
     });
     return;
@@ -479,7 +556,8 @@ function bootMessages() {
   printSystem("----------------------------------------");
   printInfo("Paste https:// URL → auto-saves + shows list");
   printInfo("Click + to save current location (auto-switches to pins)");
-  printInfo("Type 'help' for more commands");
+  printInfo("Open shared #p=... link → auto-imports to My Pins");
+  printInfo("Type 'help' for commands");
   println("");
   printSystem(`Last used name: ${lastUsedName || '(none)'}`);
 }
@@ -487,7 +565,7 @@ function bootMessages() {
 bootMessages();
 
 // ────────────────────────────────────────────────
-// Input handler – URL auto-save + auto-switch
+// Input handler – URL auto-save
 // ────────────────────────────────────────────────
 inputEl.addEventListener('keydown', async e => {
   if (e.key !== 'Enter') return;
@@ -534,6 +612,14 @@ inputEl.addEventListener('keydown', async e => {
   inputEl.value = '';
   inputEl.focus();
 });
+
+// ────────────────────────────────────────────────
+// Run shared pin import when page loads
+// ────────────────────────────────────────────────
+tryImportSharedPin();
+
+// Also handle hash changes (rare, but good practice)
+window.addEventListener('hashchange', tryImportSharedPin);
 </script>
 </body>
 </html>

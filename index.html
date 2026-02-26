@@ -230,7 +230,7 @@
 <button id="fab" title="Save current location">+</button>
 
 <script>
-const STORAGE_KEY = 'gps-pins-v20'; // version bump
+const STORAGE_KEY = 'gps-pins-v20';
 let pins = loadPins();
 let lastUsedName = localStorage.getItem('gps-pins-lastname') || '';
 
@@ -272,15 +272,6 @@ function getShareUrl(pin) {
   return `${location.origin}${location.pathname}#p=${btoa(JSON.stringify(data))}`;
 }
 
-function isAppShareLink(text) {
-  try {
-    const url = new URL(text);
-    return url.hash.startsWith('#p=');
-  } catch {
-    return false;
-  }
-}
-
 async function copyToClipboard(text, btn) {
   try {
     await navigator.clipboard.writeText(text);
@@ -291,7 +282,6 @@ async function copyToClipboard(text, btn) {
     let data = null;
     let isOurShareLink = false;
 
-    // ── Detect & parse own share link ────────────────────────────────
     if (text.includes('#p=')) {
       try {
         const hashPart = text.split('#p=')[1].split(/[&#]/)[0];
@@ -307,7 +297,7 @@ async function copyToClipboard(text, btn) {
       const baseName = data.n ||
                        (data.u ? new URL(data.u).hostname?.replace(/^www\./, '') || 'Link' : 'Location');
 
-      // ── Auto-save URL if present and not duplicate ───────────────
+      // Auto-save URL pin if present and new
       if (data.u && !pins.some(p => p.url === data.u)) {
         pins.push({
           id: generateId(),
@@ -319,7 +309,7 @@ async function copyToClipboard(text, btn) {
         messages.push(`URL: ${data.u.slice(0, 60)}${data.u.length > 60 ? '…' : ''}`);
       }
 
-      // ── Auto-save GPS if present and not duplicate ───────────────
+      // Auto-save GPS pin if present and new
       if (data.la != null && data.lo != null) {
         const gpsExists = pins.some(p =>
           p.lat === data.la &&
@@ -340,7 +330,6 @@ async function copyToClipboard(text, btn) {
         }
       }
 
-      // ── Feedback ────────────────────────────────────────────────────
       if (savedCount > 0) {
         println(`<span class="success">Auto-saved ${savedCount} pin${savedCount > 1 ? 's' : ''} from share link:</span>`);
         messages.forEach(msg => println(`<span class="success">  • ${msg}</span>`));
@@ -351,7 +340,7 @@ async function copyToClipboard(text, btn) {
       }
     }
 
-    // ── Regular URL (not share link) — still confirm ────────────────
+    // Regular pasted URL → still ask
     else {
       try {
         const u = new URL(text);
@@ -386,10 +375,6 @@ async function copyToClipboard(text, btn) {
     alert('Copy failed — please copy manually.');
   }
 }
-
-// ────────────────────────────────────────────────────────────────────────
-// The rest remains unchanged
-// ────────────────────────────────────────────────────────────────────────
 
 function println(html, cls = 'line') {
   const div = document.createElement('div');
@@ -551,7 +536,7 @@ function renderPins(q = '') {
 // Boot
 terminal.innerHTML = '';
 print.system('<span style="font-size:1.25rem; font-weight:700;">GPS Pins</span>');
-print.system('100% local • offline • private • auto-import from share links');
+print.system('100% local • offline • private');
 println('─'.repeat(60), 'system');
 println('');
 print.info('Paste URL → save URL pin (confirm)');

@@ -692,17 +692,61 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // ────────────────────────────────────────────────
-// Shared pin link handler
+// Shared pin link handler (YOUR NEW IDEA IMPLEMENTED!)
 // ────────────────────────────────────────────────
 window.addEventListener('hashchange', () => {
   const hash = location.hash.slice(1);
   if (!hash.startsWith('p=')) return;
+
   try {
-    const pin = JSON.parse(atob(hash.slice(2)));
+    const sharedPin = JSON.parse(atob(hash.slice(2)));
+
+    // Force terminal tab
     document.querySelector('[data-tab="terminal"]').click();
-    printInfo(`Received shared pin: <strong>${escapeHTML(pin.name||'Unnamed')}</strong>`);
-    println(`   ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`, 'line info');
-    println(`Type <strong>save</strong> or tap + to store it.`, 'line system');
+
+    const pins = getPins();
+    let pinToImport = null;
+
+    if (sharedPin.id) {
+      // Modern share link with ID
+      const existsById = pins.some(p => p.id === sharedPin.id);
+      if (!existsById) {
+        pinToImport = {
+          id: sharedPin.id,
+          lat: Number(sharedPin.lat),
+          lng: Number(sharedPin.lng),
+          name: sharedPin.name || 'Imported Pin',
+          time: sharedPin.time || new Date().toISOString()
+        };
+      }
+    } else {
+      // Legacy share (no ID) – check by approximate coordinates
+      const existsByCoords = pins.some(p =>
+        Math.abs(p.lat - Number(sharedPin.lat)) < 0.00001 &&
+        Math.abs(p.lng - Number(sharedPin.lng)) < 0.00001
+      );
+      if (!existsByCoords) {
+        pinToImport = {
+          id: crypto.randomUUID(),
+          lat: Number(sharedPin.lat),
+          lng: Number(sharedPin.lng),
+          name: sharedPin.name || 'Imported Pin',
+          time: sharedPin.time || new Date().toISOString()
+        };
+      }
+    }
+
+    if (pinToImport) {
+      pins.push(pinToImport);
+      savePins(pins);
+      printInfo(`✅ <strong>Auto-saved shared pin:</strong> ${escapeHTML(pinToImport.name)}`);
+    } else {
+      printInfo(`📍 Shared pin already saved: <strong>${escapeHTML(sharedPin.name || 'Unnamed')}</strong>`);
+    }
+
+    println(`   ${Number(sharedPin.lat).toFixed(6)}, ${Number(sharedPin.lng).toFixed(6)}`, 'line info');
+    println(`   ✅ Now in "My Pins" (100% private & local)`, 'line system');
+
     history.replaceState(null, null, ' ');
   } catch {
     printError("Invalid share link.");
@@ -716,6 +760,7 @@ if (location.hash) window.dispatchEvent(new HashChangeEvent('hashchange'));
 printSystem("GPS Pins • Private & Local — 2026");
 printSystem("100% offline • No tracking • Data stays on device");
 printSystem("──────────────────────────────────────────────");
+printSystem("💡 Shared URLs now <strong>auto-save</strong> instantly!");
 println("");
 printInfo("Type <strong>help</strong> to see commands. Tap + to save your location.");
 println("");

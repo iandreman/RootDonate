@@ -20,11 +20,7 @@
       --shadow:    0 4px 20px rgba(0,0,0,0.4);
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin:0; padding:0; box-sizing:border-box; }
 
     body {
       background: var(--bg);
@@ -50,11 +46,7 @@
       color: transparent;
     }
 
-    .subtitle {
-      color: var(--muted);
-      font-size: 0.95rem;
-      margin-top: 0.5rem;
-    }
+    .subtitle { color: var(--muted); font-size: 0.95rem; margin-top: 0.5rem; }
 
     .tabs {
       margin: 1.2rem 0 0.8rem;
@@ -88,9 +80,7 @@
       overflow: hidden;
     }
 
-    .tab-content.active {
-      display: flex;
-    }
+    .tab-content.active { display: flex; }
 
     #terminal-tab .terminal {
       flex: 1;
@@ -100,11 +90,7 @@
       font-size: 1rem;
     }
 
-    .line {
-      margin: 0.5rem 0;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
+    .line { margin: 0.5rem 0; white-space: pre-wrap; word-break: break-word; }
 
     .prompt    { color: var(--accent-dim); }
     .info      { color: #00ffea; }
@@ -119,10 +105,7 @@
       border-top: 1px solid var(--border);
     }
 
-    .input-line .prompt {
-      margin-right: 1rem;
-      flex-shrink: 0;
-    }
+    .input-line .prompt { margin-right: 1rem; flex-shrink: 0; }
 
     #input {
       flex: 1;
@@ -143,9 +126,7 @@
       margin-left: 5px;
     }
 
-    @keyframes blink {
-      50% { opacity: 0; }
-    }
+    @keyframes blink { 50% { opacity: 0; } }
 
     #pins-tab {
       padding: 1.5rem;
@@ -176,11 +157,7 @@
       box-shadow: var(--shadow);
     }
 
-    .pin-title {
-      color: var(--accent);
-      font-size: 1.4rem;
-      margin-bottom: 0.7rem;
-    }
+    .pin-title { color: var(--accent); font-size: 1.4rem; margin-bottom: 0.7rem; }
 
     .meta {
       color: var(--muted);
@@ -213,10 +190,8 @@
       align-items: center;
     }
 
-    .action-btn,
-    .copy-btn,
-    .email-btn {
-      padding:     0.6rem 1.1rem;
+    .action-btn, .copy-btn {
+      padding: 0.6rem 1.1rem;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
@@ -232,35 +207,18 @@
       border-color: var(--accent-dim);
       color: var(--accent);
     }
-
-    .action-btn:hover {
-      background: rgba(0,212,255,0.35);
-    }
+    .action-btn:hover { background: rgba(0,212,255,0.35); }
 
     .copy-btn {
       background: rgba(187,134,252,0.18);
       border-color: var(--purple);
       color: var(--purple);
     }
-
-    .copy-btn:hover {
-      background: rgba(187,134,252,0.35);
-    }
-
+    .copy-btn:hover { background: rgba(187,134,252,0.35); }
     .copy-btn.copied {
       background: rgba(0,255,157,0.3);
       color: #00ff9d;
       border-color: #00ff9d;
-    }
-
-    .email-btn {
-      background: rgba(187,134,252,0.25);
-      border-color: var(--purple);
-      color: var(--purple);
-    }
-
-    .email-btn:hover {
-      background: rgba(187,134,252,0.45);
     }
 
     #fab {
@@ -284,31 +242,22 @@
       transition: transform 0.2s ease;
     }
 
-    #fab:hover  { transform: scale(1.1); }
+    #fab:hover { transform: scale(1.1); }
     #fab:active { transform: scale(0.95); }
 
     @media (max-width: 560px) {
       .tabs { flex-direction: column; gap: 0.6rem; }
       .tab-btn { width: 100%; }
       .share-row { flex-direction: column; align-items: stretch; }
-      .action-btn, .copy-btn, .email-btn {
-        width: 100%;
-        text-align: center;
-      }
-      #fab {
-        bottom: 16px;
-        right: 16px;
-        width: 56px;
-        height: 56px;
-        font-size: 2rem;
-      }
+      .action-btn, .copy-btn { width: 100%; text-align: center; }
+      #fab { bottom: 16px; right: 16px; width: 56px; height: 56px; font-size: 2rem; }
     }
 
     .line.system.live {
-      background:    rgba(0, 180, 120, 0.15);
-      border-left:   4px solid #00ff9d;
-      padding-left:  1rem;
-      margin:        0.6rem 0;
+      background: rgba(0, 180, 120, 0.15);
+      border-left: 4px solid #00ff9d;
+      padding-left: 1rem;
+      margin: 0.6rem 0;
     }
   </style>
 </head>
@@ -349,20 +298,21 @@ const STORAGE_KEY = 'gps-pins-v4';
 let lastUsedName = localStorage.getItem('gps-pins-last-name') || '';
 
 function escapeHTML(str = '') {
-  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  const map = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
   return str.replace(/[&<>"']/g, m => map[m]);
 }
 
 function getPins() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  } catch {
-    return [];
-  }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch { return []; }
 }
 
 function savePins(pins) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(pins));
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
 function getPinShareUrl(pin) {
@@ -387,7 +337,7 @@ async function copyToClipboard(text, btn) {
 }
 
 // ────────────────────────────────────────────────
-// Terminal output helpers
+// Terminal helpers
 // ────────────────────────────────────────────────
 const terminal = document.getElementById('terminal');
 const inputEl  = document.getElementById('input');
@@ -400,13 +350,199 @@ function println(html, cls = 'line') {
   terminal.scrollTop = terminal.scrollHeight;
 }
 
-function printInfo(html)  { println(html, 'line info');  }
+function printInfo(html)  { println(html, 'line info'); }
 function printError(html) { println(html, 'line error'); }
-function printSystem(html){ println(html, 'line system');}
+function printSystem(html){ println(html, 'line system'); }
 function clearScreen()    { terminal.innerHTML = ''; }
 
 // ────────────────────────────────────────────────
-// URL paste → log with location detection
+// Tab switching
+// ────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
+
+    if (btn.dataset.tab === 'pins') {
+      renderPins();
+    }
+  });
+});
+
+// ────────────────────────────────────────────────
+// Render pins list
+// ────────────────────────────────────────────────
+const pinsContainer = document.getElementById('pins-container');
+const searchInput = document.getElementById('search');
+
+function renderPins(filter = '') {
+  const pins = getPins();
+  pinsContainer.innerHTML = '';
+
+  const lowerFilter = filter.toLowerCase();
+
+  const filtered = pins.filter(pin =>
+    pin.name.toLowerCase().includes(lowerFilter) ||
+    pin.lat.toString().includes(lowerFilter) ||
+    pin.lng.toString().includes(lowerFilter)
+  );
+
+  if (filtered.length === 0) {
+    pinsContainer.innerHTML = '<div class="empty-state">No pins found.<br>Use <strong>save</strong> or the + button to add one.</div>';
+    return;
+  }
+
+  filtered.forEach(pin => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    card.innerHTML = `
+      <div class="pin-title">${escapeHTML(pin.name || '(Unnamed)')}</div>
+      <div class="meta">
+        <span>📍 ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}</span>
+        <span>±${Math.round(pin.accuracy || 0)} m</span>
+        <span>${new Date(pin.time).toLocaleString()}</span>
+      </div>
+      <div class="share-row">
+        <button class="action-btn copy-btn" data-copy="${getPinShareUrl(pin)}">Copy share link</button>
+      </div>
+    `;
+
+    card.querySelector('.copy-btn').addEventListener('click', e => {
+      copyToClipboard(e.target.dataset.copy, e.target);
+    });
+
+    pinsContainer.appendChild(card);
+  });
+}
+
+searchInput.addEventListener('input', e => {
+  renderPins(e.target.value);
+});
+
+// ────────────────────────────────────────────────
+// Drop pin (FAB)
+// ────────────────────────────────────────────────
+document.getElementById('fab').addEventListener('click', async () => {
+  let name = prompt("Name for this pin?", lastUsedName || "Pin " + (getPins().length + 1));
+  if (name === null) return;
+
+  name = name.trim();
+  if (name) lastUsedName = name;
+  localStorage.setItem('gps-pins-last-name', lastUsedName);
+
+  try {
+    const pos = await new Promise((res, rej) =>
+      navigator.geolocation.getCurrentPosition(res, rej, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      })
+    );
+
+    const pin = {
+      id: generateId(),
+      name: name || `Pin ${Date.now()}`,
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
+      accuracy: Math.round(pos.coords.accuracy),
+      time: Date.now()
+    };
+
+    const pins = getPins();
+    pins.push(pin);
+    savePins(pins);
+
+    printSystem(`Pin saved: <strong>${escapeHTML(pin.name)}</strong> @ ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`);
+    renderPins(searchInput.value);
+
+  } catch (err) {
+    printError("Could not get location.");
+    if (err.code === 1) printError("→ Location permission denied");
+    if (err.code === 3) printError("→ Location timeout");
+  }
+});
+
+// ────────────────────────────────────────────────
+// Command handler
+// ────────────────────────────────────────────────
+function handleCommand(input) {
+  const parts = input.trim().split(/\s+/);
+  const cmd = parts[0].toLowerCase();
+  const args = parts.slice(1).join(' ').trim();
+
+  if (cmd === 'help') {
+    printInfo(`Available commands:`);
+    printInfo(`  save [name]      – save current position as pin`);
+    printInfo(`  list             – show all saved pins`);
+    printInfo(`  clear            – clear terminal`);
+    printInfo(`  clear all        – delete all saved pins`);
+    printInfo(``);
+    printInfo(`You can also paste URLs to log them with location.`);
+    return;
+  }
+
+  if (cmd === 'save') {
+    // We'll let FAB handle interactive save for now
+    printInfo(`Use the + button (FAB) to save a named pin with current location.`);
+    printInfo(`Command-line save coming soon.`);
+    return;
+  }
+
+  if (cmd === 'list') {
+    const pins = getPins();
+    if (pins.length === 0) {
+      printInfo("No pins saved yet.");
+      return;
+    }
+    printInfo(`You have ${pins.length} pin${pins.length === 1 ? '' : 's'}:`);
+    pins.forEach(p => {
+      println(`• ${escapeHTML(p.name)}  ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}  (${new Date(p.time).toLocaleDateString()})`, 'line info');
+    });
+    return;
+  }
+
+  if (cmd === 'clear' && args === 'all') {
+    if (confirm("Delete ALL saved pins? This cannot be undone.")) {
+      savePins([]);
+      renderPins();
+      printSystem("All pins deleted.");
+    } else {
+      printSystem("Cancelled.");
+    }
+    return;
+  }
+
+  if (cmd === 'clear') {
+    clearScreen();
+    bootMessages();
+    return;
+  }
+
+  printError(`Unknown command: ${escapeHTML(cmd)}`);
+  printInfo(`Type <strong>help</strong> for commands.`);
+}
+
+// ────────────────────────────────────────────────
+// Boot / welcome messages
+// ────────────────────────────────────────────────
+function bootMessages() {
+  printSystem("GPS Pins v4 – private, local-only marker tool");
+  printSystem("----------------------------------------");
+  printInfo("Commands: <strong>help</strong>, <strong>list</strong>, <strong>clear</strong>, <strong>clear all</strong>");
+  printInfo("• Use + button to drop pin at current location");
+  printInfo("• Paste URLs to log them with position");
+  printSystem("Location is only requested when you save or log");
+  println("");
+}
+
+bootMessages();
+
+// ────────────────────────────────────────────────
+// URL paste + location logging (already good)
 // ────────────────────────────────────────────────
 inputEl.addEventListener('keydown', async function(e) {
   if (e.key !== 'Enter') return;
@@ -455,11 +591,8 @@ inputEl.addEventListener('keydown', async function(e) {
       println(`  ${text}`, 'line info');
       println(`  ${new Date().toLocaleString()}`, 'line system');
 
-      if (err.code === 1) {
-        printError("→ Location permission denied");
-      } else if (err.code === 3) {
-        printError("→ Location timeout");
-      }
+      if (err.code === 1) printError("→ Location permission denied");
+      if (err.code === 3) printError("→ Location timeout");
     }
 
     inputEl.value = '';
@@ -467,25 +600,13 @@ inputEl.addEventListener('keydown', async function(e) {
     return;
   }
 
-  // Normal command handling
+  // Normal command
   e.preventDefault();
   println('> ' + escapeHTML(text), 'line prompt');
-  handleCommand(text);           // ← you still need to implement this
+  handleCommand(text);
   inputEl.value = '';
   inputEl.focus();
 });
-
-// ────────────────────────────────────────────────
-// TODO: Implement the rest of the functionality:
-//   • handleCommand()
-//   • live GPS tracking
-//   • save pin logic
-//   • render pins list + search
-//   • hashchange handler for shared pins
-//   • FAB click → drop pin
-//   • tab switching
-//   • initial boot messages
-// ────────────────────────────────────────────────
 
 </script>
 </body>

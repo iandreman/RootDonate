@@ -378,7 +378,7 @@ searchInput.addEventListener('input', e => renderPins(e.target.value));
 document.querySelector('.refresh-btn').addEventListener('click', () => renderPins(searchInput.value));
 
 // ────────────────────────────────────────────────
-// Save current location via FAB  →  now auto-switches to My Pins
+// Save current location via FAB → auto-switch to My Pins
 // ────────────────────────────────────────────────
 document.getElementById('fab').addEventListener('click', async () => {
   let name = prompt("Name for this pin?", lastUsedName || `Pin ${getPins().length + 1}`);
@@ -409,9 +409,10 @@ document.getElementById('fab').addEventListener('click', async () => {
 
     if (savePins(pins)) {
       printSuccess(`Pin saved → ${escapeHTML(pin.name)} @ ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`);
-      printInfo("→ Switched to <strong>My Pins</strong> tab");
+      printInfo("→ Showing <strong>My Pins</strong> tab");
       renderPins(searchInput.value);
-      document.querySelector('.tab-btn[data-tab="pins"]').click();  // ← auto-switch
+      // Auto-switch to pins tab
+      document.querySelector('.tab-btn[data-tab="pins"]').click();
     }
   } catch (err) {
     printError("Location access failed.");

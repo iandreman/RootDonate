@@ -84,6 +84,25 @@
     .btn:hover    { background: color-mix(in srgb, var(--accent) 24%, transparent); }
     .btn.active   { background: var(--accent); color: #000; }
 
+    /* New: Monzo support button style */
+    .monzo-btn {
+      padding: 0.6rem 1.4rem;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--purple);
+      background: color-mix(in srgb, var(--purple) 15%, transparent);
+      color: var(--purple);
+      transition: all 0.22s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .monzo-btn:hover {
+      background: color-mix(in srgb, var(--purple) 28%, transparent);
+    }
+
     .tab-content { display: none; flex: 1; flex-direction: column; }
     .tab-content.active { display: flex; }
 
@@ -222,6 +241,16 @@
       font-size: 1.1rem;
     }
     #no-pins-message strong { color: var(--text); }
+
+    /* Optional footer */
+    footer {
+      padding: 1.5rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.92rem;
+      border-top: 1px solid var(--border);
+      margin-top: auto;
+    }
   </style>
 </head>
 <body data-theme="dark">
@@ -230,10 +259,24 @@
   <h1>GPS Pins</h1>
   <div class="subtitle">private offline locations • URLs • share links • email single pin</div>
 
+  <!-- Optional Monzo support text link -->
+  <div style="text-align:center; margin:0.8rem 0; font-size:0.95rem; color:var(--muted);">
+    Made with ❤️ • 
+    <a href="https://monzo.me/YOUR_MONZO_USERNAME" target="_blank" rel="noopener noreferrer" 
+       style="color:var(--purple); text-decoration:none; font-weight:500;">
+      Support via Monzo ☕
+    </a>
+  </div>
+
   <div class="controls">
     <button class="btn active" data-tab="terminal">Terminal</button>
     <button class="btn" data-tab="pins">My Pins <span id="pins-count">0</span></button>
     <button class="btn" id="theme-toggle">☀️ Light</button>
+    <!-- Optional Monzo button in controls -->
+    <a href="https://monzo.me/YOUR_MONZO_USERNAME" target="_blank" rel="noopener noreferrer" 
+       class="monzo-btn">
+      ☕ Monzo Support
+    </a>
   </div>
 </header>
 
@@ -254,6 +297,15 @@
     <p>Use the Terminal to paste URLs/share links,<br>or tap + to save current location.</p>
   </div>
 </div>
+
+<!-- Optional footer with Monzo link -->
+<footer>
+  GPS Pins — 100% local & private<br>
+  <a href="https://monzo.me/YOUR_MONZO_USERNAME" target="_blank" rel="noopener noreferrer" 
+     style="color:var(--purple); font-weight:500; text-decoration:none;">
+    Support development via Monzo ☕
+  </a>
+</footer>
 
 <button id="fab" title="Save current location">+</button>
 
@@ -340,7 +392,6 @@ function handleInput(txt) {
   let data = null;
   let isShareLink = false;
 
-  // Check if it's our share link
   if (txt.includes('#p=')) {
     try {
       const hashPart = txt.split('#p=')[1].split(/[&#?]/)[0];
@@ -355,7 +406,6 @@ function handleInput(txt) {
     const baseName = data.n ||
                      (data.u ? (new URL(data.u).hostname || 'Link').replace(/^www\./, '') : 'Location');
 
-    // Save URL part if present and new
     if (data.u && !pins.some(p => p.url === data.u)) {
       pins.push({
         id: generateId(),
@@ -366,7 +416,6 @@ function handleInput(txt) {
       savedCount++;
     }
 
-    // Save GPS part if present and new
     if (data.la != null && data.lo != null) {
       const exists = pins.some(p =>
         p.lat === data.la && p.lng === data.lo &&
@@ -394,7 +443,6 @@ function handleInput(txt) {
       println('<span class="info">Share link content already saved or empty.</span>');
     }
   } else {
-    // Normal URL
     try {
       const urlObj = new URL(txt);
       const fullUrl = urlObj.href;
@@ -582,6 +630,8 @@ print.info('Paste URL or share link → auto-import share links, confirm normal 
 print.info('"Copy" → copy share link');
 print.info('"Email" → send single pin');
 print.info('+ → save current location');
+// Optional: tiny Monzo note in terminal
+println('<span class="system">Like the tool? You can support via Monzo: <a href="https://monzo.me/YOUR_MONZO_USERNAME" target="_blank" style="color:var(--accent);">monzo.me/YOUR_MONZO_USERNAME</a> ☕</span>');
 println('');
 print.info('Ready.');
 println('');

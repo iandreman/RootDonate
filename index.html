@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CleverBot – Short Import Links</title>
+  <title>CleverBot – Short Import + Email</title>
   <style>
     :root {
       --bg: #0e1117;
@@ -13,6 +13,7 @@
       --accent: #58a6ff;
       --purple: #bc8cff;
       --border: #30363d;
+      --success: #3fb950;
     }
     body {
       background: var(--bg);
@@ -90,7 +91,7 @@
     .card.user   { border-left: 4px solid var(--accent); }
     .card.bot    { border-left: 4px solid var(--purple); }
     .sender { font-weight: bold; margin-bottom: 0.5rem; }
-    .text { line-height: 1.55; margin: 0.6rem 0; }
+    .text { line-height: 1.55; margin: 0.6rem 0; white-space: pre-wrap; }
     .meta { color: var(--muted); font-size: 0.9rem; }
     .import-link {
       margin: 1rem 0;
@@ -102,16 +103,31 @@
       color: #a5b4c2;
       word-break: break-all;
     }
-    .btn-copy {
-      background: rgba(88,166,255,0.14);
-      border: 1px solid var(--accent);
-      color: var(--accent);
+    .actions {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+    .btn-copy, .btn-email {
       padding: 0.5rem 1rem;
       border-radius: 6px;
       cursor: pointer;
       font-size: 0.95rem;
+      border: 1px solid;
+    }
+    .btn-copy {
+      background: rgba(88,166,255,0.14);
+      border-color: var(--accent);
+      color: var(--accent);
     }
     .btn-copy:hover { background: rgba(88,166,255,0.26); }
+    .btn-email {
+      background: rgba(59,185,80,0.12);
+      border-color: var(--success);
+      color: var(--success);
+    }
+    .btn-email:hover { background: rgba(59,185,80,0.24); }
   </style>
 </head>
 <body>
@@ -179,6 +195,15 @@ function createImportData(msg) {
   return `data:text/json;base64,${b64}`;
 }
 
+function createEmailText(msg) {
+  const from = msg.from === 'user' ? 'You' : 'CleverBot';
+  const when = new Date(msg.time).toLocaleString([], {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  });
+  return `${from}  —  ${when}\n${msg.text}\n`;
+}
+
 function renderHistory() {
   cards.innerHTML = '';
   if (messages.length === 0) {
@@ -191,14 +216,21 @@ function renderHistory() {
     const real = createImportData(m);
     const pretty = `cb-pin://${shortId(m)}`;
     const time = new Date(m.time).toLocaleString([], {dateStyle:'short', timeStyle:'short'});
+    const emailTxt = createEmailText(m);
+
     const card = document.createElement('div');
     card.className = `card ${m.from}`;
     card.innerHTML = `
       <div class="sender">${m.from === 'user' ? 'You' : 'Bot'}</div>
       <div class="text">${m.text.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
       <div class="meta">${time}</div>
-      <div class="import-link" title="This is what you paste in chat">${pretty}</div>
-      <button class="btn-copy" data-real="${real}">📋 Copy import link</button>
+
+      <div class="import-link" title="Paste this into chat to import">${pretty}</div>
+
+      <div class="actions">
+        <button class="btn-copy" data-real="${real}">📋 Copy import link</button>
+        <button class="btn-email" data-email="${encodeURIComponent(emailTxt)}">✉️ Copy for email</button>
+      </div>
     `;
     cards.appendChild(card);
   });
@@ -239,7 +271,6 @@ input.addEventListener('keydown', e => {
       log('<span style="color:#f85149;">Invalid import format</span>');
     }
   } else {
-    // Normal message
     const userMsg = { from: 'user', text: val, time: Date.now() };
     messages.push(userMsg);
     const botMsg = { from: 'bot', text: ['ok', 'nice', 'haha', 'got it', '👀'][Math.floor(Math.random()*5)], time: Date.now() + 100 };
@@ -252,17 +283,31 @@ input.addEventListener('keydown', e => {
   input.value = '';
 });
 
-// Copy button
+// Copy handlers
 document.addEventListener('click', e => {
-  if (!e.target.matches('.btn-copy')) return;
-  const real = e.target.dataset.real;
-  navigator.clipboard.writeText(real).then(() => {
-    const old = e.target.textContent;
-    e.target.textContent = 'Copied ✓';
-    setTimeout(() => { e.target.textContent = old; }, 1800);
-  }).catch(() => {
-    alert('Copy failed — real link:\n\n' + real);
-  });
+  const t = e.target;
+
+  if (t.matches('.btn-copy')) {
+    const real = t.dataset.real;
+    navigator.clipboard.writeText(real).then(() => {
+      const old = t.textContent;
+      t.textContent = 'Copied ✓';
+      setTimeout(() => { t.textContent = old; }, 1800);
+    }).catch(() => {
+      alert('Copy failed — real link:\n\n' + real);
+    });
+  }
+
+  if (t.matches('.btn-email')) {
+    const txt = decodeURIComponent(t.dataset.email);
+    navigator.clipboard.writeText(txt).then(() => {
+      const old = t.textContent;
+      t.textContent = 'Email text copied ✓';
+      setTimeout(() => { t.textContent = old; }, 1800);
+    }).catch(() => {
+      alert('Copy failed — text is:\n\n' + txt);
+    });
+  }
 });
 
 // Init

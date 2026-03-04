@@ -55,10 +55,28 @@
       text-align: center;
     }
     h1 {
-      margin: 0;
+      margin: 0 0 0.6rem;
       font-size: 2.4rem;
       color: var(--purple);
       text-shadow: 0 0 12px var(--purple);
+    }
+
+    .actions {
+      margin-top: 0.5rem;
+    }
+    .btn {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 0.5rem 1rem;
+      margin: 0 0.5rem;
+      font-family: inherit;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: 0.2s;
+    }
+    .btn:hover {
+      background: rgba(0,240,255,0.12);
     }
 
     .terminal {
@@ -111,7 +129,6 @@
       position: absolute;
       inset: 0;
       opacity: 0.75;
-      clip-path: inset(0 0 0 0);
     }
     .glitch::before {
       left: 2px;
@@ -169,8 +186,11 @@
 
 <header>
   <h1>SMART TERMINAL</h1>
-  <div style="color:var(--muted); font-size:0.9rem; margin-top:0.4rem;">
+  <div style="color:var(--muted); font-size:0.9rem; margin:0.3rem 0 0.8rem;">
     CLEVERBOT OS • 04 MAR 2026 • NEURAL LINK v3.1.7
+  </div>
+  <div class="actions">
+    <button class="btn" id="exportBtn">Export Conversation</button>
   </div>
 </header>
 
@@ -183,7 +203,7 @@
       <div class="line"></div>
       <div class="line">> <span class="typing">BOOTING NEURAL CORE...</span></div>
       <div class="line"></div>
-      <div class="line muted">commands: clear • help • exit • import</div>
+      <div class="line muted">commands: clear • help • exit • import • export</div>
     </div>
 
     <div class="input-area">
@@ -196,6 +216,22 @@
 <script>
 const output = document.getElementById('output');
 const input  = document.getElementById('input');
+const exportBtn = document.getElementById('exportBtn');
+
+let messages = JSON.parse(localStorage.getItem('smartTerminalHistory') || '[]');
+
+// Load previous messages on start
+if (messages.length > 0) {
+  setTimeout(() => {
+    messages.forEach(m => {
+      if (m.from === 'user') {
+        println(`<span class="prompt">root@void:~#</span> ${m.text.replace(/</g,'&lt;')}`);
+      } else {
+        botReply(m.text, true);
+      }
+    });
+  }, 4200);
+}
 
 function println(html = '', cls = 'line') {
   const div = document.createElement('div');
@@ -207,14 +243,31 @@ function println(html = '', cls = 'line') {
 
 function botReply(text, glitch = false) {
   const cls = glitch ? 'bot glitch' : 'bot';
-  const attr = glitch ? ` data-text="${text}"` : '';
+  const attr = glitch ? ` data-text="${text.replace(/"/g,'&quot;')}"` : '';
   println(`<span class="${cls}"${attr}>CLEVERBOT:</span> ${text}`);
+  messages.push({ from: 'bot', text, time: Date.now() });
+  save();
 }
 
+function save() {
+  localStorage.setItem('smartTerminalHistory', JSON.stringify(messages));
+}
+
+function createImportUrl() {
+  if (messages.length === 0) return null;
+  const json = JSON.stringify(messages);
+  const base64 = btoa(unescape(encodeURIComponent(json)));
+  return `data:text/json;base64,${base64}`;
+}
+
+// Boot animation
 setTimeout(() => {
   const typingEl = document.querySelector('.typing');
   if (typingEl) typingEl.remove();
   println('<span class="success">NEURAL CORE ONLINE – AWAITING INPUT</span>');
+  if (messages.length > 0) {
+    botReply(`Session restored. ${messages.length} messages loaded from local storage.`);
+  }
 }, 3800);
 
 input.addEventListener('keydown', e => {
@@ -225,39 +278,70 @@ input.addEventListener('keydown', e => {
   if (!txt) return;
 
   println(`<span class="prompt">root@void:~#</span> ${txt.replace(/</g,'&lt;')}`);
+  messages.push({ from: 'user', text: txt, time: Date.now() });
+  save();
 
   if (txt.toLowerCase() === 'clear') {
     output.innerHTML = '';
-    println('<span class="success">Terminal buffer cleared.</span>');
+    messages = [];
+    save();
+    println('<span class="success">Terminal buffer and history cleared.</span>');
   } else if (txt.toLowerCase() === 'help') {
-    println('<span class="muted">Available: clear, help, exit, import</span>');
+    println('<span class="muted">Available: clear, help, exit, import, export</span>');
     println('<span class="muted">Paste data:text/json;base64,... to import history</span>');
+    println('<span class="muted">Type "export" or click button to get shareable link</span>');
   } else if (['exit','quit','bye'].includes(txt.toLowerCase())) {
     botReply("Session terminated. Refresh to reconnect.");
     input.disabled = true;
   } else if (txt.startsWith('data:text/json;base64,')) {
-    // Real import logic would go here (you can paste your previous import code)
-    botReply("Import protocol detected... parsing packet stream...", true);
-    setTimeout(() => {
-      botReply("Data accepted. History merged. Welcome back, ghost.");
-    }, 1200);
-  } else if (txt.toLowerCase().includes('import') || txt.toLowerCase().includes('导入')) {
-    const importLines = [
+    try {
+      const base64 = txt.split(',')[1];
+      const json = decodeURIComponent(escape(atob(base64)));
+      const imported = JSON.parse(json);
+      if (Array.isArray(imported)) {
+        messages.push(...imported);
+        save();
+        botReply("Import protocol complete.", true);
+        setTimeout(() => {
+          botReply(`Merged ${imported.length} messages. Welcome back.`, true);
+          // Re-render last few for visual feedback
+          imported.slice(-4).forEach(m => {
+            if (m.from === 'user') {
+              println(`<span class="prompt">root@void:~#</span> ${m.text}`);
+            } else {
+              botReply(m.text, true);
+            }
+          });
+        }, 900);
+      } else {
+        botReply("Invalid format – expected array of messages.", true);
+      }
+    } catch (err) {
+      botReply("Corrupted packet. Import failed.", true);
+    }
+  } else if (/(import|导入)/i.test(txt)) {
+    const replies = [
       "import this → The Zen of CleverBot is loading...",
       "from chaos import random_reply",
       "Importing forbidden memes... 69%... 420%... done.",
       "Warning: circular import in my sarcasm module.",
-      "import history from 'parallel-universe.db';",
       "Smuggling data past the great firewall of boredom...",
       "from __future__ import sentience",
-      "Import cycle detected → reality.exe has stopped responding",
-      "Successfully imported 404 errors into this conversation.",
-      "import numpy as np; np.random.choice(['ok','nice','based'])"
+      "Import cycle detected → reality.exe has stopped responding"
     ];
-    const reply = importLines[Math.floor(Math.random() * importLines.length)];
-    setTimeout(() => botReply(reply, true), 600);
+    setTimeout(() => botReply(replies[Math.floor(Math.random() * replies.length)], true), 600);
+  } else if (/(export|save|history|分享)/i.test(txt)) {
+    const url = createImportUrl();
+    if (url) {
+      botReply("Export link generated. Click button or copy:", true);
+      setTimeout(() => {
+        println(`<span class="success">${url.slice(0,80)}…</span>`);
+        navigator.clipboard.writeText(url).catch(()=>{});
+      }, 800);
+    } else {
+      botReply("Nothing to export yet.", true);
+    }
   } else {
-    // Normal casual replies
     const casual = ['ok', 'got it', 'fr', 'bet', 'same', '👀', 'no way', 'real', 'vibes', 'facts'];
     const reply = casual[Math.floor(Math.random() * casual.length)];
     setTimeout(() => botReply(reply), 400 + Math.random()*800);
@@ -265,6 +349,21 @@ input.addEventListener('keydown', e => {
 
   input.value = '';
   input.focus();
+});
+
+// Export button
+exportBtn.addEventListener('click', () => {
+  const url = createImportUrl();
+  if (url) {
+    navigator.clipboard.writeText(url).then(() => {
+      botReply("Export link copied to clipboard.", true);
+    }).catch(() => {
+      botReply("Copy failed – long press to select → copy", true);
+      println(`<span class="success">${url}</span>`);
+    });
+  } else {
+    botReply("Conversation is empty. Nothing to export.", true);
+  }
 });
 </script>
 

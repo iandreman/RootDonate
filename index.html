@@ -3,105 +3,130 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CleverBot – Short Import + Email</title>
+  <title>Smart Terminal – CleverBot</title>
   <style>
     :root {
-      --bg: #0e1117;
-      --card: #161b22;
-      --text: #d0d7de;
-      --muted: #8b949e;
-      --accent: #58a6ff;
-      --purple: #bc8cff;
-      --border: #30363d;
-      --success: #3fb950;
+      --bg: #0a0e14;
+      --surface: #11151c;
+      --text: #c5d0e0;
+      --muted: #6c7989;
+      --accent: #5ab0ff;
+      --purple: #c39eff;
+      --green: #4fd68a;
+      --border: #1f2a3a;
     }
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: system-ui, sans-serif;
+      font-family: 'Consolas', 'Courier New', monospace;
       margin: 0;
       padding: 0;
       min-height: 100dvh;
+      line-height: 1.45;
     }
     header {
-      padding: 1.2rem 1.5rem;
-      background: rgba(13,17,23,0.9);
+      padding: 1rem 1.5rem;
+      background: rgba(10,14,20,0.92);
       border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(10px);
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 100;
     }
     h1 {
       margin: 0;
-      font-size: 2.4rem;
+      font-size: 2.1rem;
       text-align: center;
-      background: linear-gradient(90deg, var(--purple), var(--accent));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+      color: var(--purple);
+      letter-spacing: -0.5px;
     }
-    main { padding: 1.5rem; max-width: 860px; margin: 0 auto; }
-    .tab { display: none; }
-    .tab.active { display: block; }
-    .tabs { text-align: center; margin: 1.2rem 0; }
-    button {
-      padding: 0.6rem 1.4rem;
-      margin: 0 0.5rem;
+    .tabs {
+      text-align: center;
+      margin: 0.9rem 0 0.4rem;
+    }
+    .tab-btn {
+      background: transparent;
       border: 1px solid var(--border);
-      background: rgba(88,166,255,0.08);
-      color: var(--accent);
-      border-radius: 8px;
+      color: var(--muted);
+      padding: 0.5rem 1.2rem;
+      margin: 0 0.4rem;
+      border-radius: 6px;
       cursor: pointer;
-      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.18s;
     }
-    button.active { background: var(--accent); color: black; }
-    .input-line {
+    .tab-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(90,176,255,0.08);
+    }
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 1.2rem;
+    }
+    .terminal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      min-height: 60vh;
       display: flex;
-      gap: 0.8rem;
-      padding: 1rem;
-      background: #0d1117;
-      border-radius: 10px;
-      margin-top: 1rem;
+      flex-direction: column;
+    }
+    #output {
+      flex: 1;
+      padding: 1.3rem 1.5rem;
+      overflow-y: auto;
+      font-size: 1.02rem;
+    }
+    .line {
+      margin: 0.35rem 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .prompt { color: var(--accent); font-weight: bold; }
+    .bot    { color: var(--purple); }
+    .success { color: var(--green); }
+    .error   { color: #ff6b6b; }
+    .input-area {
+      display: flex;
+      align-items: center;
+      padding: 0.9rem 1.5rem;
+      background: rgba(0,0,0,0.35);
+      border-top: 1px solid var(--border);
+      gap: 0.6rem;
     }
     #input {
       flex: 1;
       background: transparent;
       border: none;
-      color: var(--accent);
-      font-size: 1.05rem;
+      color: var(--text);
+      font: inherit;
       outline: none;
+      caret-color: var(--accent);
     }
-    #output {
-      min-height: 200px;
-      padding: 1rem;
-      background: rgba(0,0,0,0.3);
-      border-radius: 10px;
-      font-family: Consolas, monospace;
-      white-space: pre-wrap;
-      line-height: 1.5;
-    }
-    .card {
-      background: var(--card);
+    .history-item {
+      background: rgba(20,25,35,0.6);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.2rem;
-      margin: 1.2rem 0;
-    }
-    .card.user   { border-left: 4px solid var(--accent); }
-    .card.bot    { border-left: 4px solid var(--purple); }
-    .sender { font-weight: bold; margin-bottom: 0.5rem; }
-    .text { line-height: 1.55; margin: 0.6rem 0; white-space: pre-wrap; }
-    .meta { color: var(--muted); font-size: 0.9rem; }
-    .import-link {
-      margin: 1rem 0;
-      padding: 0.7rem;
-      background: rgba(0,0,0,0.35);
       border-radius: 6px;
-      font-family: monospace;
-      font-size: 0.92rem;
-      color: #a5b4c2;
-      word-break: break-all;
+      padding: 1.1rem 1.3rem;
+      margin: 1.1rem 0;
+    }
+    .history-item.user   { border-left: 3px solid var(--accent); }
+    .history-item.bot    { border-left: 3px solid var(--purple); }
+    .sender-tag {
+      font-weight: bold;
+      margin-bottom: 0.4rem;
+      display: inline-block;
+    }
+    .msg-text {
+      margin: 0.5rem 0 0.9rem;
+      white-space: pre-wrap;
+    }
+    .timestamp {
+      color: var(--muted);
+      font-size: 0.88rem;
     }
     .actions {
       margin-top: 1rem;
@@ -109,209 +134,234 @@
       gap: 0.8rem;
       flex-wrap: wrap;
     }
-    .btn-copy, .btn-email {
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.95rem;
+    .btn {
+      padding: 0.45rem 1rem;
+      border-radius: 5px;
       border: 1px solid;
+      background: transparent;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.16s;
     }
-    .btn-copy {
-      background: rgba(88,166,255,0.14);
+    .btn-import {
       border-color: var(--accent);
       color: var(--accent);
     }
-    .btn-copy:hover { background: rgba(88,166,255,0.26); }
+    .btn-import:hover { background: rgba(90,176,255,0.12); }
     .btn-email {
-      background: rgba(59,185,80,0.12);
-      border-color: var(--success);
-      color: var(--success);
+      border-color: var(--green);
+      color: var(--green);
     }
-    .btn-email:hover { background: rgba(59,185,80,0.24); }
+    .btn-email:hover { background: rgba(79,214,138,0.12); }
+    .link-preview {
+      margin: 0.9rem 0;
+      padding: 0.6rem;
+      background: rgba(0,0,0,0.4);
+      border-radius: 5px;
+      font-size: 0.9rem;
+      color: #8899aa;
+      word-break: break-all;
+      font-family: monospace;
+    }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>CleverBot</h1>
+  <h1>Smart Terminal</h1>
   <div class="tabs">
-    <button class="active" data-tab="chat">Chat</button>
-    <button data-tab="history">History</button>
+    <button class="tab-btn active" data-tab="terminal">Terminal</button>
+    <button class="tab-btn" data-tab="history">History</button>
   </div>
 </header>
 
 <main>
 
-  <div id="chat" class="tab active">
-    <div id="output"></div>
-    <div class="input-line">
-      <span style="color:var(--accent); font-weight:bold;">></span>
-      <input id="input" placeholder="message or paste import link…" autofocus />
+  <div id="terminal" class="terminal">
+    <div id="output">
+      <div class="line success">┌────────────────────────────────────────────┐</div>
+      <div class="line success">│  Smart Terminal – CleverBot 2026 edition   │</div>
+      <div class="line success">└────────────────────────────────────────────┘</div>
+      <div class="line">Type messages or paste import links</div>
+      <div class="line muted">Commands: clear, help, exit</div>
+      <div class="line"></div>
+    </div>
+
+    <div class="input-area">
+      <span class="prompt">></span>
+      <input id="input" autocomplete="off" autofocus placeholder="..." />
     </div>
   </div>
 
-  <div id="history" class="tab">
-    <div id="cards"></div>
-    <div id="empty" style="text-align:center; padding:6rem 1rem; color:var(--muted); display:none;">
-      <div style="font-size:5rem; opacity:0.6;">💬</div>
-      <p><strong>No messages yet</strong></p>
+  <div id="history" class="terminal" style="display:none;">
+    <div id="history-content" style="padding:1.3rem 1.5rem;">
+      <!-- cards go here -->
     </div>
   </div>
 
 </main>
 
 <script>
-let messages = JSON.parse(localStorage.getItem('cb_pins_v1') || '[]');
+let messages = JSON.parse(localStorage.getItem('smart_terminal_msgs') || '[]');
 
 const output = document.getElementById('output');
 const input  = document.getElementById('input');
-const cards  = document.getElementById('cards');
-const empty  = document.getElementById('empty');
+const historyContent = document.getElementById('history-content');
 
-function log(html) {
+function println(html = '', cls = 'line') {
   const div = document.createElement('div');
+  div.className = cls;
   div.innerHTML = html;
   output.appendChild(div);
   output.scrollTop = output.scrollHeight;
 }
 
-function shortId(msg) {
-  const s = msg.text + msg.time + msg.from;
+function shortHash(msg) {
   let h = 0;
-  for (let i = 0; i < s.length; i++) {
-    h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  const str = msg.text + msg.time + msg.from;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) - h + str.charCodeAt(i)) | 0;
   }
-  return Math.abs(h).toString(36).slice(0, 11);
+  return Math.abs(h).toString(36).slice(0, 10);
 }
 
-function createImportData(msg) {
+function makeImportLink(msg) {
   const pair = [msg];
   const idx = messages.indexOf(msg);
-  if (idx >= 0 && idx + 1 < messages.length && messages[idx + 1].from === 'bot') {
-    pair.push(messages[idx + 1]);
+  if (idx >= 0 && idx + 1 < messages.length && messages[idx+1].from === 'bot') {
+    pair.push(messages[idx+1]);
   }
   const json = JSON.stringify(pair);
   const b64 = btoa(unescape(encodeURIComponent(json)));
   return `data:text/json;base64,${b64}`;
 }
 
-function createEmailText(msg) {
-  const from = msg.from === 'user' ? 'You' : 'CleverBot';
-  const when = new Date(msg.time).toLocaleString([], {
-    dateStyle: 'medium',
-    timeStyle: 'short'
+function makeEmailText(msg) {
+  const who = msg.from === 'user' ? 'You' : 'CleverBot';
+  const dt = new Date(msg.time).toLocaleString([], {
+    weekday: 'short', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit'
   });
-  return `${from}  —  ${when}\n${msg.text}\n`;
+  return `${who}  •  ${dt}\n${msg.text}\n`;
 }
 
 function renderHistory() {
-  cards.innerHTML = '';
+  historyContent.innerHTML = '';
   if (messages.length === 0) {
-    empty.style.display = 'block';
+    historyContent.innerHTML = '<div class="line muted" style="text-align:center; padding:4rem 0;">No messages yet...</div>';
     return;
   }
-  empty.style.display = 'none';
 
   messages.forEach(m => {
-    const real = createImportData(m);
-    const pretty = `cb-pin://${shortId(m)}`;
-    const time = new Date(m.time).toLocaleString([], {dateStyle:'short', timeStyle:'short'});
-    const emailTxt = createEmailText(m);
+    const importUrl = makeImportLink(m);
+    const emailTxt  = makeEmailText(m);
+    const pretty    = `cb-pin://${shortHash(m)}`;
+    const timeShort = new Date(m.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 
-    const card = document.createElement('div');
-    card.className = `card ${m.from}`;
-    card.innerHTML = `
-      <div class="sender">${m.from === 'user' ? 'You' : 'Bot'}</div>
-      <div class="text">${m.text.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
-      <div class="meta">${time}</div>
+    const div = document.createElement('div');
+    div.className = `history-item ${m.from}`;
+    div.innerHTML = `
+      <div class="sender-tag">${m.from === 'user' ? 'YOU' : 'BOT'}</div>
+      <div class="msg-text">${m.text.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
+      <div class="timestamp">[${timeShort}]</div>
 
-      <div class="import-link" title="Paste this into chat to import">${pretty}</div>
+      <div class="link-preview">Import: ${pretty}</div>
 
       <div class="actions">
-        <button class="btn-copy" data-real="${real}">📋 Copy import link</button>
-        <button class="btn-email" data-email="${encodeURIComponent(emailTxt)}">✉️ Copy for email</button>
+        <button class="btn btn-import" data-url="${importUrl}">Copy Import Link</button>
+        <button class="btn btn-email" data-email="${encodeURIComponent(emailTxt)}">Copy for Email</button>
       </div>
     `;
-    cards.appendChild(card);
+    historyContent.appendChild(div);
   });
 }
 
 // Tab switching
-document.querySelectorAll('[data-tab]').forEach(btn => {
+document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.getElementById(btn.dataset.tab).classList.add('active');
+
+    document.getElementById('terminal').style.display = btn.dataset.tab === 'terminal' ? 'flex' : 'none';
+    document.getElementById('history').style.display   = btn.dataset.tab === 'history'  ? 'block' : 'none';
+
     if (btn.dataset.tab === 'history') renderHistory();
   });
 });
 
-// Send / import
+// Input handling
 input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
-  let val = input.value.trim();
-  if (!val) return;
+  let txt = input.value.trim();
+  if (!txt) return;
 
-  log(`<span style="color:#58a6ff;">></span> ${val.replace(/</g,'&lt;')}`);
+  println(`<span class="prompt">></span> ${txt.replace(/</g,'&lt;')}`);
 
-  if (val.startsWith('data:text/json;base64,')) {
+  if (txt.toLowerCase() === 'clear') {
+    output.innerHTML = '';
+    println('<span class="success">Terminal cleared.</span>');
+  } else if (txt.toLowerCase() === 'help') {
+    println('<span class="muted">Commands: clear, help, exit</span>');
+    println('<span class="muted">Paste cb-pin://... or data:text/... to import</span>');
+  } else if (['exit','quit','bye'].includes(txt.toLowerCase())) {
+    println('<span class="muted">Goodbye. Refresh to restart.</span>');
+    input.disabled = true;
+  } else if (txt.startsWith('data:text/json;base64,')) {
     try {
-      const [, b64] = val.split(',');
+      const [,b64] = txt.split(',');
       const json = decodeURIComponent(escape(atob(b64)));
       const arr = JSON.parse(json);
       if (Array.isArray(arr)) {
         messages.push(...arr);
-        localStorage.setItem('cb_pins_v1', JSON.stringify(messages));
-        log('<span style="color:#56d364;">Imported ' + arr.length + ' message(s)</span>');
-        renderHistory();
+        localStorage.setItem('smart_terminal_msgs', JSON.stringify(messages));
+        println(`<span class="success">Imported ${arr.length} message(s)</span>`);
       }
     } catch (err) {
-      log('<span style="color:#f85149;">Invalid import format</span>');
+      println(`<span class="error">Invalid import data</span>`);
     }
   } else {
-    const userMsg = { from: 'user', text: val, time: Date.now() };
-    messages.push(userMsg);
-    const botMsg = { from: 'bot', text: ['ok', 'nice', 'haha', 'got it', '👀'][Math.floor(Math.random()*5)], time: Date.now() + 100 };
-    messages.push(botMsg);
-    localStorage.setItem('cb_pins_v1', JSON.stringify(messages));
-    log(`<span style="color:#bc8cff;">Bot:</span> ${botMsg.text}`);
-    renderHistory();
+    const userEntry = {from:'user', text:txt, time:Date.now()};
+    messages.push(userEntry);
+
+    const replies = ['ok', 'got it', 'interesting...', 'nice', '👀', 'haha true'];
+    const botText = replies[Math.floor(Math.random()*replies.length)];
+    const botEntry = {from:'bot', text:botText, time:Date.now()+80};
+    messages.push(botEntry);
+
+    localStorage.setItem('smart_terminal_msgs', JSON.stringify(messages));
+
+    println(`<span class="bot">CleverBot:</span> ${botText}`);
   }
 
   input.value = '';
+  input.focus();
 });
 
-// Copy handlers
+// Button clicks (copy)
 document.addEventListener('click', e => {
   const t = e.target;
+  if (!t.matches('.btn')) return;
 
-  if (t.matches('.btn-copy')) {
-    const real = t.dataset.real;
-    navigator.clipboard.writeText(real).then(() => {
-      const old = t.textContent;
-      t.textContent = 'Copied ✓';
-      setTimeout(() => { t.textContent = old; }, 1800);
-    }).catch(() => {
-      alert('Copy failed — real link:\n\n' + real);
-    });
+  if (t.matches('.btn-import')) {
+    navigator.clipboard.writeText(t.dataset.url).then(() => {
+      const orig = t.textContent;
+      t.textContent = 'Copied!';
+      setTimeout(() => t.textContent = orig, 1600);
+    }).catch(() => alert('Copy failed\n\n' + t.dataset.url));
   }
 
   if (t.matches('.btn-email')) {
-    const txt = decodeURIComponent(t.dataset.email);
-    navigator.clipboard.writeText(txt).then(() => {
-      const old = t.textContent;
-      t.textContent = 'Email text copied ✓';
-      setTimeout(() => { t.textContent = old; }, 1800);
-    }).catch(() => {
-      alert('Copy failed — text is:\n\n' + txt);
-    });
+    const text = decodeURIComponent(t.dataset.email);
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = t.textContent;
+      t.textContent = 'Email text copied!';
+      setTimeout(() => t.textContent = orig, 1800);
+    }).catch(() => alert('Copy failed\n\n' + text));
   }
 });
 
-// Init
-if (messages.length > 0) renderHistory();
+// Start
 input.focus();
 </script>
 </body>

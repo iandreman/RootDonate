@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GPS Pins – Private Markers & Share Links</title>
-  <meta name="description" content="Save GPS locations and URLs privately — 100% local, works offline."/>
+  <title>CleverBot Terminal – Chat like it's 2006</title>
+  <meta name="description" content="Talk to CleverBot in a retro terminal style — 100% browser local."/>
 
   <style>
     :root {
@@ -128,6 +128,7 @@
     .success      { color: #56d364; font-weight: 600; }
     .error        { color: var(--danger); font-weight: 600; }
     .system       { color: var(--muted); font-style: italic; }
+    .bot          { color: var(--purple); }
 
     .input-line {
       display: flex;
@@ -176,49 +177,6 @@
       box-shadow: 0 12px 32px rgba(0,0,0,0.5);
     }
 
-    .pin-title {
-      font-size: 1.38rem;
-      margin-bottom: 0.7rem;
-      color: var(--accent);
-      word-break: break-all;
-    }
-    .url-pin .pin-title { color: var(--purple); }
-
-    .share-line {
-      margin-top: 1.1rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-      align-items: center;
-      font-size: 0.97rem;
-      color: var(--muted);
-    }
-
-    .copy-share, .email-pin {
-      padding: 0.5rem 1.1rem;
-      border-radius: 8px;
-      font-size: 0.92rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .copy-share {
-      background: color-mix(in srgb, var(--purple) 18%, transparent);
-      border: 1px solid var(--purple);
-      color: var(--purple);
-    }
-    .email-pin {
-      background: color-mix(in srgb, var(--accent) 18%, transparent);
-      border: 1px solid var(--accent);
-      color: var(--accent);
-    }
-    .copy-share:hover, .email-pin:hover { opacity: 0.92; }
-    .copy-share.copied {
-      background: rgba(86,212,100,0.28) !important;
-      color: #56d364 !important;
-      border-color: #56d364 !important;
-    }
-
     #fab {
       position: fixed;
       bottom: 28px;
@@ -259,14 +217,13 @@
 <body data-theme="dark">
 
 <header>
-  <h1>GPS Pins</h1>
-  <div class="subtitle">private offline locations • URLs • share links • email single pin</div>
+  <h1>CleverBot</h1>
+  <div class="subtitle">talk to the legend • 100% browser • no server needed</div>
 
   <div class="controls">
     <button class="btn active" data-tab="terminal">Terminal</button>
-    <button class="btn" data-tab="pins">My Pins <span id="pins-count">0</span></button>
+    <button class="btn" data-tab="pins">Conversation History <span id="pins-count">0</span></button>
     <button class="btn" id="theme-toggle">☀️ Light</button>
-    <!-- Monzo support button -->
     <a href="https://monzo.me/iandreman" target="_blank" rel="noopener noreferrer" 
        class="monzo-btn">
       ☕ Support
@@ -278,30 +235,31 @@
   <div id="terminal" role="log" aria-live="polite"></div>
   <div class="input-line">
     <span class="prompt">></span>
-    <input id="input" type="text" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" autofocus placeholder="paste url or share link…"/>
+    <input id="input" type="text" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" autofocus placeholder="say something... (type clear / bye)"/>
   </div>
 </div>
 
 <div id="pins-tab" class="tab-content">
-  <input type="search" id="search" placeholder="Search name, url, coordinates, share links…" aria-label="Search saved pins"/>
+  <input type="search" id="search" placeholder="Search conversation history…" aria-label="Search messages"/>
   <div id="pins-container" role="list" aria-live="polite"></div>
   <div id="no-pins-message" style="display:none;">
-    <div style="font-size:4rem; margin-bottom:1.2rem;">📍</div>
-    <p><strong>No pins saved yet.</strong></p>
-    <p>Use the Terminal to paste URLs/share links,<br>or tap + to save current location.</p>
+    <div style="font-size:4rem; margin-bottom:1.2rem;">💬</div>
+    <p><strong>No messages yet.</strong></p>
+    <p>Start chatting in the Terminal tab!</p>
   </div>
 </div>
 
 <footer>
-  GPS Pins — 100% local & private
+  CleverBot Terminal — unofficial • may break if cleverbot.com changes
 </footer>
 
-<button id="fab" title="Save current location">+</button>
+<button id="fab" title="Clear conversation">🗑</button>
 
 <script>
-const STORAGE_KEY = 'gps-pins-v21';
-let pins = loadPins();
-let lastUsedName = localStorage.getItem('gps-pins-lastname') || '';
+const STORAGE_KEY = 'cleverbot-history-v1';
+let messages = loadMessages(); // renamed from pins → messages
+let conversationId = '';
+let cs = '';
 
 const terminal   = document.getElementById('terminal');
 const input      = document.getElementById('input');
@@ -313,15 +271,15 @@ const themeBtn   = document.getElementById('theme-toggle');
 const fab        = document.getElementById('fab');
 const body       = document.body;
 
-function loadPins() {
+function loadMessages() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
   catch { return []; }
 }
 
-function savePins() {
+function saveMessages() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(pins));
-    count.textContent = pins.length;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    count.textContent = messages.length;
     return true;
   } catch {
     alert("Save failed — storage may be full or blocked.");
@@ -329,134 +287,8 @@ function savePins() {
   }
 }
 
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2,10);
-}
-
 function escape(s = '') {
   return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
-}
-
-function getShareUrl(pin) {
-  const data = {n: pin.name, u: pin.url||null, la: pin.lat??null, lo: pin.lng??null, acc: pin.accuracy??null, t: pin.time};
-  return `${location.origin}${location.pathname}#p=${btoa(JSON.stringify(data))}`;
-}
-
-function emailSinglePin(pin) {
-  const shareUrl = getShareUrl(pin);
-  let subject = pin.lat != null ? `GPS Pin: ${pin.name}` : `URL Pin: ${pin.name}`;
-  let content = `Name: ${pin.name}\n`;
-  if (pin.url) content += `URL: ${pin.url}\n`;
-  if (pin.lat != null) {
-    content += `Coordinates: ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}` +
-               (pin.accuracy ? ` (±${Math.round(pin.accuracy)} m)` : '') + '\n';
-  }
-  content += `Saved: ${new Date(pin.time).toLocaleString()}\n\nShare link:\n${shareUrl}\n\n---\nCreated with GPS Pins`;
-  window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(content)}`;
-  println(`<span class="success">Opening email for "${escape(pin.name)}"…</span>`);
-}
-
-async function copyToClipboard(text, btn = null) {
-  try {
-    await navigator.clipboard.writeText(text);
-    if (btn) {
-      const orig = btn.textContent;
-      btn.textContent = 'Copied!';
-      btn.classList.add('copied');
-      setTimeout(() => {
-        btn.textContent = orig;
-        btn.classList.remove('copied');
-      }, 1600);
-    }
-  } catch {
-    println('<span class="error">Clipboard copy failed</span>');
-  }
-}
-
-function handleInput(txt) {
-  if (!txt) return;
-
-  println(`<span class="prompt">></span> ${escape(txt)}`);
-
-  let data = null;
-  let isShareLink = false;
-
-  if (txt.includes('#p=')) {
-    try {
-      const hashPart = txt.split('#p=')[1].split(/[&#?]/)[0];
-      data = JSON.parse(atob(hashPart));
-      isShareLink = !!(data && (data.n || data.u || (data.la != null && data.lo != null)));
-    } catch {}
-  }
-
-  let savedCount = 0;
-
-  if (isShareLink && data) {
-    const baseName = data.n ||
-                     (data.u ? (new URL(data.u).hostname || 'Link').replace(/^www\./, '') : 'Location');
-
-    if (data.u && !pins.some(p => p.url === data.u)) {
-      pins.push({
-        id: generateId(),
-        name: baseName + (data.la != null && data.lo != null ? ' (link)' : ''),
-        url: data.u,
-        time: Date.now()
-      });
-      savedCount++;
-    }
-
-    if (data.la != null && data.lo != null) {
-      const exists = pins.some(p =>
-        p.lat === data.la && p.lng === data.lo &&
-        Math.abs((p.accuracy || 0) - (data.acc || 0)) < 2
-      );
-      if (!exists) {
-        pins.push({
-          id: generateId(),
-          name: baseName + (data.u ? ' (location)' : ''),
-          lat: data.la,
-          lng: data.lo,
-          accuracy: data.acc,
-          time: Date.now()
-        });
-        savedCount++;
-      }
-    }
-
-    if (savedCount > 0) {
-      if (savePins()) {
-        println(`<span class="success">Imported ${savedCount} new pin${savedCount > 1 ? 's' : ''} from share link!</span>`);
-        refreshPinsIfVisible();
-      }
-    } else {
-      println('<span class="info">Share link content already saved or empty.</span>');
-    }
-  } else {
-    try {
-      const urlObj = new URL(txt);
-      const fullUrl = urlObj.href;
-      if (pins.some(p => p.url === fullUrl)) {
-        println('<span class="info">This URL is already saved.</span>');
-        return;
-      }
-
-      const suggestedName = (urlObj.hostname || 'Link').replace(/^www\./, '');
-      if (confirm(`Save this URL pin?\n\nName: ${suggestedName}\nURL: ${fullUrl.slice(0, 100)}${fullUrl.length > 100 ? '…' : ''}`)) {
-        pins.push({
-          id: generateId(),
-          name: suggestedName,
-          url: fullUrl,
-          time: Date.now()
-        });
-        if (savePins()) {
-          println(`<span class="success">Saved URL pin: ${escape(suggestedName)}</span>`);
-          refreshPinsIfVisible();
-        }
-      }
-    } catch {
-      println('<span class="error">Not a valid URL or share link format.</span>');
-    }
-  }
 }
 
 function println(html, cls = 'line') {
@@ -471,63 +303,105 @@ const print = {
   success: m => println(`<span class="success">${m}</span>`),
   error:   m => println(`<span class="error">${m}</span>`),
   info:    m => println(`<span class="info">${m}</span>`),
-  system:  m => println(`<span class="system">${m}</span>`)
+  system:  m => println(`<span class="system">${m}</span>`),
+  bot:     m => println(`<span class="bot">${m}</span>`),
 };
 
-function refreshPinsIfVisible() {
-  if (document.querySelector('[data-tab="pins"].active')) renderPins(searchEl.value);
+async function talk(msg) {
+  println(`<span class="prompt">></span> ${escape(msg)}`);
+
+  try {
+    const form = new URLSearchParams();
+    form.append('stimulus', msg);
+    if (conversationId) form.append('vText2', conversationId);
+    if (cs) form.append('sessionid', cs);
+
+    const res = await fetch('https://www.cleverbot.com/webservicemin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Origin': 'https://www.cleverbot.com',
+        'Referer': 'https://www.cleverbot.com/'
+      },
+      body: form.toString()
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const text = await res.text();
+    const parts = text.split('\r');
+
+    if (parts.length < 1 || !parts[0].trim()) {
+      print.system("(empty reply — try again)");
+      return;
+    }
+
+    const answer = parts[0].trim();
+    conversationId = parts[1] || conversationId;
+    cs = parts[2] || cs;
+
+    print.bot(escape(answer));
+    messages.push({ from: 'user', text: msg, time: Date.now() });
+    messages.push({ from: 'bot',  text: answer, time: Date.now() });
+    saveMessages();
+    refreshHistoryIfVisible();
+
+  } catch (err) {
+    print.error("Connection failed: " + err.message);
+    print.system("CleverBot might be down or the endpoint changed.");
+  }
 }
 
-function toggleTheme() {
-  const next = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-  body.setAttribute('data-theme', next);
-  themeBtn.textContent = next === 'light' ? '🌙 Dark' : '☀️ Light';
-  localStorage.setItem('gps-pins-theme', next);
+function bootSequence() {
+  terminal.innerHTML = '';
+  println('<span style="font-size:1.25rem; font-weight:700;">CleverBot Terminal</span>');
+  println('─'.repeat(60), 'system');
+  println('');
+  print.info('Type your message and press Enter');
+  print.info('Special commands: <strong>clear</strong>, <strong>reset</strong>, <strong>bye</strong>');
+  println('');
+  print.system('Connecting to the void...');
+  println('');
+  print.bot("Hi! How are you today?");
+  println('');
 }
 
-themeBtn.addEventListener('click', toggleTheme);
-if (localStorage.getItem('gps-pins-theme')) {
-  const th = localStorage.getItem('gps-pins-theme');
-  body.setAttribute('data-theme', th);
-  themeBtn.textContent = th === 'light' ? '🌙 Dark' : '☀️ Light';
-}
+bootSequence();
+count.textContent = messages.length;
 
-input.addEventListener('keydown', e => {
+input.addEventListener('keydown', async e => {
   if (e.key === 'Enter') {
     e.preventDefault();
     const txt = input.value.trim();
-    if (txt) {
-      handleInput(txt);
+    if (!txt) return;
+
+    if (['clear','reset'].includes(txt.toLowerCase())) {
+      bootSequence();
+      input.value = '';
+      return;
     }
+
+    if (['bye','exit','quit','goodbye'].includes(txt.toLowerCase())) {
+      print.system("Goodbye for now 👋 Come back anytime.");
+      input.disabled = true;
+      setTimeout(() => input.disabled = false, 4000);
+      input.value = '';
+      return;
+    }
+
+    await talk(txt);
     input.value = '';
   }
 });
 
-input.addEventListener('paste', () => {
-  setTimeout(() => {
-    const txt = input.value.trim();
-    if (txt) handleInput(txt);
-  }, 80);
-});
-
 fab.addEventListener('click', () => {
-  if (!navigator.geolocation) return print.error('Geolocation not supported');
-  print.system('Requesting location…');
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      const {latitude:lat, longitude:lng, accuracy} = pos.coords;
-      const name = lastUsedName || `Location ${new Date().toLocaleTimeString()}`;
-      pins.push({id:generateId(), name, lat, lng, accuracy, time:Date.now()});
-      if (savePins()) {
-        print.success(`Saved GPS: ${lat.toFixed(6)}, ${lng.toFixed(6)} (±${Math.round(accuracy)}m)`);
-        refreshPinsIfVisible();
-      }
-      lastUsedName = name;
-      localStorage.setItem('gps-pins-lastname', name);
-    },
-    err => print.error(`Location error: ${err.message}`),
-    {enableHighAccuracy: true, timeout: 10000, maximumAge: 0}
-  );
+  if (confirm("Clear entire conversation history?")) {
+    messages = [];
+    saveMessages();
+    bootSequence();
+    print.success("Conversation cleared.");
+  }
 });
 
 document.querySelectorAll('[data-tab]').forEach(btn => {
@@ -536,99 +410,67 @@ document.querySelectorAll('[data-tab]').forEach(btn => {
     btn.classList.add('active');
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
-    if (btn.dataset.tab === 'pins') renderPins(searchEl.value);
+    if (btn.dataset.tab === 'pins') renderHistory(searchEl.value);
   });
 });
 
-function renderPins(q = '') {
+function renderHistory(q = '') {
   pinsList.innerHTML = '';
   q = q.toLowerCase().trim();
 
-  const filtered = pins.filter(p =>
-    !q ||
-    (p.name   && p.name.toLowerCase().includes(q)) ||
-    (p.url    && p.url.toLowerCase().includes(q)) ||
-    (p.lat != null && `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`.includes(q)) ||
-    getShareUrl(p).toLowerCase().includes(q)
+  const filtered = messages.filter(m =>
+    !q || m.text.toLowerCase().includes(q)
   );
 
-  count.textContent = pins.length;
+  count.textContent = messages.length;
 
   if (!filtered.length) {
-    noPinsMsg.style.display = pins.length === 0 ? 'block' : 'none';
-    if (pins.length > 0) {
-      pinsList.innerHTML = '<div style="text-align:center; padding:4rem; color:var(--muted);">No matching pins found.</div>';
+    noPinsMsg.style.display = messages.length === 0 ? 'block' : 'none';
+    if (messages.length > 0) {
+      pinsList.innerHTML = '<div style="text-align:center; padding:4rem; color:var(--muted);">No matching messages.</div>';
     }
     return;
   }
 
   noPinsMsg.style.display = 'none';
 
-  filtered.forEach(p => {
+  filtered.forEach(m => {
     const card = document.createElement('div');
-    card.className = `card ${p.url && p.lat == null ? 'url-pin' : ''}`;
-    card.setAttribute('role', 'listitem');
-
-    let html = `<div class="pin-title">${escape(p.name)}</div>`;
-
-    if (p.url) {
-      html += `<a href="${escape(p.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--purple); display:block; margin:0.6rem 0; word-break:break-all;">${escape(p.url)}</a>`;
-    } else if (p.lat != null) {
-      html += `
-        <div style="font-family:monospace; margin:0.6rem 0; color:var(--accent-dim);">
-          ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}${p.accuracy ? ` (±${Math.round(p.accuracy)} m)` : ''}
-        </div>
-        <div style="color:var(--muted); font-size:0.95rem; margin-bottom:0.8rem;">
-          ${new Date(p.time).toLocaleString([], {dateStyle:'medium', timeStyle:'short'})}
-        </div>`;
-    }
-
-    const share = getShareUrl(p);
-    html += `
-      <div class="share-line">
-        <span style="flex:1; word-break:break-all;">Share: ${escape(share.slice(0,60))}${share.length>60?'…':''}</span>
-        <button class="copy-share" data-url="${escape(share)}">Copy</button>
-        <button class="email-pin" data-pin-id="${p.id}">Email</button>
-      </div>`;
-
-    card.innerHTML = html;
+    card.className = 'card';
+    card.innerHTML = `
+      <div style="font-weight:600; color: ${m.from==='user' ? 'var(--accent)' : 'var(--purple)'}">
+        ${m.from === 'user' ? 'You' : 'CleverBot'}
+      </div>
+      <div style="margin:0.6rem 0; white-space:pre-wrap;">${escape(m.text)}</div>
+      <div style="color:var(--muted); font-size:0.9rem;">
+        ${new Date(m.time).toLocaleString([], {dateStyle:'medium', timeStyle:'short'})}
+      </div>
+    `;
     pinsList.appendChild(card);
-  });
-
-  pinsList.querySelectorAll('.copy-share:not([data-listener])').forEach(btn => {
-    btn.addEventListener('click', () => copyToClipboard(btn.dataset.url, btn));
-    btn.dataset.listener = 'true';
-  });
-
-  pinsList.querySelectorAll('.email-pin:not([data-listener])').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const pin = pins.find(p => p.id === btn.dataset.pinId);
-      if (pin) emailSinglePin(pin);
-    });
-    btn.dataset.listener = 'true';
   });
 }
 
-// ────────────────────────────────────────────────
-// Boot sequence
-terminal.innerHTML = '';
-print.system('<span style="font-size:1.25rem; font-weight:700;">GPS Pins</span>');
-print.system('100% local • offline • private');
-println('─'.repeat(60), 'system');
-println('');
-print.info('Paste URL or share link → auto-imports share links, confirms normal URLs');
-print.info('"Copy" → copy share link');
-print.info('"Email" → send single pin via mailto');
-print.info('+ → save current location');
-println('<span class="system">Like the tool? You can support via <a href="https://monzo.me/iandreman" target="_blank" style="color:var(--accent);">Monzo ☕</a></span>');
-println('');
-print.info('Ready.');
-println('');
+function refreshHistoryIfVisible() {
+  if (document.querySelector('[data-tab="pins"].active')) {
+    renderHistory(searchEl.value);
+  }
+}
 
-count.textContent = pins.length;
-renderPins();
+themeBtn.addEventListener('click', () => {
+  const next = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  body.setAttribute('data-theme', next);
+  themeBtn.textContent = next === 'light' ? '🌙 Dark' : '☀️ Light';
+  localStorage.setItem('theme', next);
+});
+
+if (localStorage.getItem('theme')) {
+  const th = localStorage.getItem('theme');
+  body.setAttribute('data-theme', th);
+  themeBtn.textContent = th === 'light' ? '🌙 Dark' : '☀️ Light';
+}
+
+searchEl.addEventListener('input', () => renderHistory(searchEl.value));
 input.focus();
-searchEl.addEventListener('input', () => renderPins(searchEl.value));
 </script>
 </body>
 </html>

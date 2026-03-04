@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CleverBot Terminal – Offline Edition</title>
-  <meta name="description" content="Retro terminal chat — 100% local/offline with shareable history via copy URL"/>
+  <meta name="description" content="Retro terminal chat — 100% local/offline • share conversations via copy-paste URL"/>
 
   <style>
     :root {
@@ -223,14 +223,13 @@
 
 <header>
   <h1>CleverBot</h1>
-  <div class="subtitle">talk to the legend • 100% offline • share history via copy URL</div>
+  <div class="subtitle">talk to the legend • 100% offline/local • share via copy-paste URL</div>
 
   <div class="controls">
     <button class="btn active" data-tab="terminal">Terminal</button>
     <button class="btn" data-tab="pins">Conversation History <span id="pins-count">0</span></button>
     <button class="btn" id="theme-toggle">☀️ Light</button>
-    <a href="https://monzo.me/iandreman" target="_blank" rel="noopener noreferrer" 
-       class="monzo-btn">☕ Support</a>
+    <a href="https://monzo.me/iandreman" target="_blank" rel="noopener noreferrer" class="monzo-btn">☕ Support</a>
   </div>
 </header>
 
@@ -246,7 +245,7 @@
 <div id="pins-tab" class="tab-content">
   <input type="search" id="search" placeholder="Search conversation history…" aria-label="Search messages"/>
   <div id="history-controls">
-    <button class="btn" id="copy-url-btn">Copy URL (share via email etc.)</button>
+    <button class="btn" id="copy-url-btn">Copy URL (for email / share)</button>
   </div>
   <div id="pins-container" role="list" aria-live="polite"></div>
   <div id="no-pins-message" style="display:none;">
@@ -257,7 +256,7 @@
 </div>
 
 <footer>
-  CleverBot Terminal — unofficial offline edition • paste data:text/json;base64,... URL in terminal to auto-import
+  CleverBot Terminal — unofficial offline edition • paste data:text/json;base64,… string in terminal to load shared history
 </footer>
 
 <button id="fab" title="Clear conversation">🗑</button>
@@ -278,7 +277,7 @@ const fab        = document.getElementById('fab');
 const copyBtn    = document.getElementById('copy-url-btn');
 const body       = document.body;
 
-// Dummy replies (expand as desired)
+// Dummy local replies — feel free to expand
 const funnyReplies = {
   "hi": ["Heyyy!", "Yo what's good?", "Hello human 👀"],
   "how are you": ["Chilling in your browser tbh", "Fantastic, how u?", "Alive and kicking (sorta)"],
@@ -359,38 +358,39 @@ function bootSequence() {
   println('─'.repeat(60), 'system');
   println('');
   print.info('Type your message and press Enter');
-  print.info('Commands: <strong>clear/reset</strong> / <strong>bye</strong>');
-  print.info('Paste a data:text/json;base64,... URL to auto-import history');
+  print.info('Special: <strong>clear</strong> / <strong>reset</strong> / <strong>bye</strong>');
+  print.info('Share: History tab → Copy URL → paste in email/message');
+  print.info('Load shared: Paste data:text/json;base64,… here & Enter');
   println('');
-  print.system('Fully local/offline — real Cleverbot API gone 💀');
+  print.system('Fully local/offline — real Cleverbot API gone long ago 💀');
   println('');
-  print.bot("Yo! What's up? (dummy local edition)");
+  print.bot("Yo! What's up? (local dummy edition)");
   println('');
 }
 
 bootSequence();
 count.textContent = messages.length;
 
-// Copy URL to clipboard (data URL)
+// Copy shareable data URL
 copyBtn.addEventListener('click', () => {
   if (messages.length === 0) {
     alert("No history to copy yet!");
     return;
   }
   const json = JSON.stringify(messages);
-  const base64 = btoa(unescape(encodeURIComponent(json))); // proper UTF-8 handling
+  const base64 = btoa(unescape(encodeURIComponent(json)));
   const dataUrl = `data:text/json;base64,${base64}`;
-  
+
   navigator.clipboard.writeText(dataUrl).then(() => {
-    println('<span class="success">Data URL copied to clipboard! Paste it anywhere (email, notes...) to share/import.</span>');
+    println('<span class="success">Copied to clipboard! Paste into email / message / note to share.</span>');
   }).catch(err => {
     println(`<span class="error">Copy failed: ${err.message}</span>`);
-    println('<span class="system">You can select & copy this manually:</span>');
-    println(`<span class="system">${escape(dataUrl)}</span>`);
+    println('<span class="system">Manual copy this instead:</span>');
+    println(`<span class="system" style="word-break:break-all;">${escape(dataUrl)}</span>`);
   });
 });
 
-// Auto-import from pasted data:text/... URL in terminal
+// Auto-import when pasting data URL into terminal
 input.addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     e.preventDefault();
@@ -414,16 +414,16 @@ input.addEventListener('keydown', e => {
       return;
     }
 
-    // Detect & auto-import data URL
+    // Detect pasted data URL and import
     if (txt.startsWith('data:text/json;base64,')) {
       try {
         const base64 = txt.split(',')[1];
         const jsonStr = decodeURIComponent(escape(atob(base64)));
         const imported = JSON.parse(jsonStr);
 
-        if (!Array.isArray(imported)) throw new Error("Not an array");
+        if (!Array.isArray(imported)) throw new Error("Not a valid array");
 
-        const valid = imported.every(m => 
+        const valid = imported.every(m =>
           m && typeof m === 'object' &&
           (m.from === 'user' || m.from === 'bot') &&
           typeof m.text === 'string' &&
@@ -431,14 +431,15 @@ input.addEventListener('keydown', e => {
         );
         if (!valid) throw new Error("Invalid message format");
 
-        messages = [...messages, ...imported]; // append; change to = imported to replace
+        // Append (change to messages = imported; if you prefer replace)
+        messages = [...messages, ...imported];
         saveMessages();
         bootSequence();
-        print.success(`Imported ${imported.length} messages! Total now: ${messages.length}`);
+        print.success(`Imported ${imported.length} messages! Total: ${messages.length}`);
         refreshHistoryIfVisible();
       } catch (err) {
         print.error(`Import failed: ${err.message}`);
-        print.system("Make sure it's a valid data:text/json;base64,... string.");
+        print.system("Ensure it's a complete data:text/json;base64,… string.");
       }
       input.value = '';
       return;

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CleverBot Terminal – Offline Edition</title>
-  <meta name="description" content="Retro terminal chat — 100% local/offline • share conversations via copy-paste URL"/>
+  <title>CleverBot Terminal – Smart Offline Edition</title>
+  <meta name="description" content="Retro terminal chat — 100% local • smarter replies • share via URL"/>
 
   <style>
     :root {
@@ -15,9 +15,10 @@
       --accent: #58a6ff;
       --accent-dim: #79c0ff;
       --purple: #bc8cff;
+      --success: #56d364;
       --danger: #f85149;
-      --border: rgba(88,166,255,0.18);
-      --shadow: 0 6px 24px rgba(0,0,0,0.55);
+      --border: rgba(88,166,255,0.22);
+      --shadow: 0 8px 32px rgba(0,0,0,0.6);
     }
     [data-theme="light"] {
       --bg: #ffffff;
@@ -27,12 +28,12 @@
       --accent: #0969da;
       --accent-dim: #1f6feb;
       --purple: #8250df;
+      --success: #2da44e;
       --danger: #d1242f;
-      --border: rgba(9,105,218,0.2);
+      --border: rgba(9,105,218,0.25);
     }
 
     * { margin:0; padding:0; box-sizing:border-box; }
-
     body {
       background: var(--bg);
       color: var(--text);
@@ -41,91 +42,61 @@
       display: flex;
       flex-direction: column;
     }
-
     header {
       padding: 1.1rem 1.5rem;
-      background: color-mix(in srgb, var(--bg) 92%, black);
+      background: color-mix(in srgb, var(--bg) 90%, black);
       border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
       position: sticky;
       top: 0;
       z-index: 10;
     }
-
     h1 {
-      font-size: clamp(2.2rem, 8vw, 3rem);
+      font-size: clamp(2.3rem, 9vw, 3.2rem);
       background: linear-gradient(90deg, var(--purple), var(--accent));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
       text-align: center;
     }
-
-    .subtitle {
-      color: var(--muted);
-      text-align: center;
-      font-size: 0.96rem;
-      margin-top: 0.4rem;
-    }
-
+    .subtitle { color: var(--muted); text-align: center; font-size: 0.98rem; margin-top: 0.5rem; }
     .controls {
       display: flex;
       justify-content: center;
       gap: 0.9rem;
-      margin: 1.2rem 0;
+      margin: 1.3rem 0;
       flex-wrap: wrap;
     }
-
     .btn {
-      padding: 0.68rem 1.5rem;
+      padding: 0.7rem 1.6rem;
       border-radius: 10px;
       font-weight: 600;
       cursor: pointer;
       border: 1px solid var(--border);
-      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
       color: var(--accent);
-      transition: all 0.22s ease;
+      transition: all 0.24s ease;
     }
-    .btn:hover { background: color-mix(in srgb, var(--accent) 24%, transparent); }
+    .btn:hover { background: color-mix(in srgb, var(--accent) 22%, transparent); }
     .btn.active { background: var(--accent); color: #000; }
-
-    .monzo-btn {
-      padding: 0.6rem 1.4rem;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      border: 1px solid var(--purple);
-      background: color-mix(in srgb, var(--purple) 15%, transparent);
-      color: var(--purple);
-      transition: all 0.22s ease;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .monzo-btn:hover {
-      background: color-mix(in srgb, var(--purple) 28%, transparent);
-    }
 
     .tab-content { display: none; flex: 1; flex-direction: column; }
     .tab-content.active { display: flex; }
 
     #terminal-tab { flex: 1; display: flex; flex-direction: column; }
-
     #terminal {
       flex: 1;
-      padding: 1.6rem 1.8rem;
+      padding: 1.7rem 1.9rem;
       overflow-y: auto;
       font-family: 'Consolas', 'Courier New', monospace;
-      font-size: clamp(1.02rem, 3.2vw, 1.12rem);
-      line-height: 1.65;
+      font-size: clamp(1.05rem, 3.3vw, 1.16rem);
+      line-height: 1.68;
     }
-
-    .line { margin: 0.48rem 0; white-space: pre-wrap; word-break: break-word; }
+    .line { margin: 0.5rem 0; white-space: pre-wrap; word-break: break-word; }
 
     .prompt       { color: var(--accent-dim); font-weight: bold; }
     .info         { color: var(--accent-dim); }
-    .success      { color: #56d364; font-weight: 600; }
+    .success      { color: var(--success); font-weight: 600; }
     .error        { color: var(--danger); font-weight: 600; }
     .system       { color: var(--muted); font-style: italic; }
     .bot          { color: var(--purple); }
@@ -133,12 +104,11 @@
     .input-line {
       display: flex;
       align-items: center;
-      padding: 1.1rem 1.8rem;
-      background: rgba(0,0,0,0.35);
+      padding: 1.2rem 1.9rem;
+      background: rgba(0,0,0,0.38);
       border-top: 1px solid var(--border);
-      gap: 0.9rem;
+      gap: 1rem;
     }
-
     #input {
       flex: 1;
       background: transparent;
@@ -149,71 +119,63 @@
       caret-color: var(--accent);
     }
 
-    #pins-tab { padding: 1.6rem; overflow-y: auto; }
-
+    #pins-tab { padding: 1.7rem; overflow-y: auto; }
     #search {
       width: 100%;
-      max-width: 720px;
-      margin: 0 auto 1.8rem;
-      padding: 1.1rem 1.5rem;
-      background: color-mix(in srgb, var(--surface) 70%, var(--bg));
+      max-width: 760px;
+      margin: 0 auto 1.9rem;
+      padding: 1.2rem 1.6rem;
+      background: color-mix(in srgb, var(--surface) 72%, var(--bg));
       border: 1px solid var(--border);
       border-radius: 12px;
       color: var(--text);
-      font-size: 1.05rem;
-    }
-
-    #history-controls {
-      text-align: center;
-      margin: 1rem 0 2rem;
+      font-size: 1.06rem;
     }
 
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 1.6rem;
-      margin: 1.4rem 0;
+      padding: 1.7rem;
+      margin: 1.5rem 0;
       box-shadow: var(--shadow);
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      transition: all 0.22s ease;
     }
     .card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+      transform: translateY(-4px);
+      box-shadow: 0 14px 36px rgba(0,0,0,0.55);
     }
 
     #fab {
       position: fixed;
-      bottom: 28px;
-      right: 28px;
-      width: 68px;
-      height: 68px;
+      bottom: 32px;
+      right: 32px;
+      width: 72px;
+      height: 72px;
       background: linear-gradient(135deg, var(--purple), var(--accent));
       color: white;
       border: none;
       border-radius: 50%;
-      font-size: 2.5rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      font-size: 2.6rem;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.65);
       cursor: pointer;
       z-index: 999;
-      transition: all 0.24s ease;
+      transition: all 0.26s ease;
     }
-    #fab:hover  { transform: scale(1.14); }
-    #fab:active { transform: scale(0.92); }
+    #fab:hover  { transform: scale(1.15); }
+    #fab:active { transform: scale(0.93); }
 
     #no-pins-message {
       text-align: center;
-      padding: 5rem 1rem;
+      padding: 6rem 1.2rem;
       color: var(--muted);
-      font-size: 1.1rem;
+      font-size: 1.15rem;
     }
-    #no-pins-message strong { color: var(--text); }
-
     footer {
-      padding: 1.5rem;
+      padding: 1.6rem;
       text-align: center;
       color: var(--muted);
-      font-size: 0.92rem;
+      font-size: 0.94rem;
       border-top: 1px solid var(--border);
       margin-top: auto;
     }
@@ -223,13 +185,12 @@
 
 <header>
   <h1>CleverBot</h1>
-  <div class="subtitle">talk to the legend • 100% offline/local • share via copy-paste URL</div>
+  <div class="subtitle">smarter offline edition • share via URL • 100% local</div>
 
   <div class="controls">
     <button class="btn active" data-tab="terminal">Terminal</button>
-    <button class="btn" data-tab="pins">Conversation History <span id="pins-count">0</span></button>
+    <button class="btn" data-tab="pins">History <span id="pins-count">0</span></button>
     <button class="btn" id="theme-toggle">☀️ Light</button>
-    <a href="https://monzo.me/iandreman" target="_blank" rel="noopener noreferrer" class="monzo-btn">☕ Support</a>
   </div>
 </header>
 
@@ -238,74 +199,78 @@
   <div class="input-line">
     <span class="prompt">></span>
     <input id="input" type="text" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" autofocus 
-           placeholder="say something... (clear / reset / bye / paste data URL to import)"/>
+           placeholder="type here… (help, clear, reset, bye, paste data URL to import)"/>
   </div>
 </div>
 
 <div id="pins-tab" class="tab-content">
-  <input type="search" id="search" placeholder="Search conversation history…" aria-label="Search messages"/>
-  <div id="history-controls">
-    <button class="btn" id="copy-url-btn">Copy URL (for email / share)</button>
-  </div>
+  <input type="search" id="search" placeholder="Search history…" aria-label="Search messages"/>
   <div id="pins-container" role="list" aria-live="polite"></div>
   <div id="no-pins-message" style="display:none;">
-    <div style="font-size:4rem; margin-bottom:1.2rem;">💬</div>
+    <div style="font-size:5rem; margin-bottom:1.4rem;">💬</div>
     <p><strong>No messages yet.</strong></p>
-    <p>Start chatting in the Terminal tab!</p>
+    <p>Start chatting in Terminal!</p>
   </div>
 </div>
 
 <footer>
-  CleverBot Terminal — unofficial offline edition • paste data:text/json;base64,… string in terminal to load shared history
+  CleverBot Terminal — smarter local edition • paste <code>data:text/json;base64,…</code> in terminal to import
 </footer>
 
-<button id="fab" title="Clear conversation">🗑</button>
+<button id="fab" title="Clear everything">🗑</button>
 
 <script>
-const STORAGE_KEY = 'cleverbot-history-v1';
+const STORAGE_KEY = 'cleverbot-smart-v2';
 let messages = loadMessages();
-let lastUserMsgs = [];
+let lastUserInputs = []; // last 5 for better context
 
 const terminal   = document.getElementById('terminal');
 const input      = document.getElementById('input');
 const pinsList   = document.getElementById('pins-container');
 const noPinsMsg  = document.getElementById('no-pins-message');
 const searchEl   = document.getElementById('search');
-const count      = document.getElementById('pins-count');
+const countEl    = document.getElementById('pins-count');
 const themeBtn   = document.getElementById('theme-toggle');
 const fab        = document.getElementById('fab');
-const copyBtn    = document.getElementById('copy-url-btn');
-const body       = document.body;
 
-// Dummy local replies — feel free to expand
-const funnyReplies = {
-  "hi": ["Heyyy!", "Yo what's good?", "Hello human 👀"],
-  "how are you": ["Chilling in your browser tbh", "Fantastic, how u?", "Alive and kicking (sorta)"],
-  "who are you": ["Ghost of Cleverbot past 🪦", "Your offline buddy", "No internet needed lol"],
-  "bye": ["Cya space cowboy 👋", "Don't miss me too much", "Later gator!"],
-  "lol": ["😂 right?", "hehehe", "lmaooo"],
+// ─── Smarter reply logic ────────────────────────────────────────
+const replies = {
+  greetings: ["Yo!", "Heyy human 👋", "Sup?", "Hellooo", "What's good? 😎"],
+  howareyou: ["Pretty chill ngl", "Vibin in your tab", "Alive (kinda)", "10/10 would recommend being code"],
+  whoareyou: ["Your offline chaos gremlin", "CleverBot but make it 2026", "The ghost in the machine 😈"],
+  thanks: ["No prob!", "Anytime 😏", "You got it boss", "<3"],
+  laugh: ["😂😂", "lmaooo", "right???", "I'm dying over here"],
   default: [
-    "Hmm interesting...", "Tell me more!", "That's wild.", "You don't say...",
-    "What makes you think that?", "Cool story bro", "I'm listening...",
-    "Why tho?", "Lmao okay", "No wayyy"
+    "Hmm tell me more…", "That's actually kinda fire", "No wayyy", "Wait what?", 
+    "Spill the tea", "I'm listening 👀", "Bold take", "And then what happened?",
+    "Lowkey valid", "You wild for that"
   ]
 };
 
-function getBotReply(msg) {
-  const lower = msg.toLowerCase().trim();
-  for (const key in funnyReplies) {
-    if (lower.includes(key)) {
-      const opts = funnyReplies[key];
-      return opts[Math.floor(Math.random() * opts.length)];
-    }
-  }
-  if (lastUserMsgs.length > 0) {
-    if (lower.includes("yes") || lower.includes("yeah")) return "Sweet! Thought so 😏";
-    if (lower.includes("no") || lower.includes("nah")) return "Aight fair enough haha";
-  }
-  return funnyReplies.default[Math.floor(Math.random() * funnyReplies.default.length)];
+function getSmartReply(userMsg) {
+  const txt = userMsg.toLowerCase().trim();
+  lastUserInputs.push(txt);
+  if (lastUserInputs.length > 5) lastUserInputs.shift();
+
+  if (txt.match(/\b(hi|hello|hey|sup|greetings)\b/)) return random(replies.greetings);
+  if (txt.includes("how are you") || txt.includes("how r u")) return random(replies.howareyou);
+  if (txt.includes("who are you") || txt.includes("what are you")) return random(replies.whoareyou);
+  if (txt.match(/\b(thanks|thank you|ty|appreciate)\b/)) return random(replies.thanks);
+  if (txt.match(/(lol|lmao|haha|😂|🤣)/)) return random(replies.laugh);
+
+  // Tiny context awareness
+  const recent = lastUserInputs.slice(-3).join(" ").toLowerCase();
+  if (recent.includes("yes") || recent.includes("yeah") || recent.includes("yep")) return random(["Nice!", "Knew it 😏", "Bet.", "Sweet"]);
+  if (recent.includes("no") || recent.includes("nah") || recent.includes("nope")) return random(["Aight fair", "Respect ✊", "Cool cool", "Gotchu"]);
+
+  return random(replies.default);
 }
 
+function random(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// ─── Core functions ─────────────────────────────────────────────
 function loadMessages() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
   catch { return []; }
@@ -314,14 +279,14 @@ function loadMessages() {
 function saveMessages() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-    count.textContent = messages.length;
-  } catch {
-    println('<span class="error">Save failed — storage may be full/blocked.</span>');
+    countEl.textContent = messages.length;
+  } catch (e) {
+    println(`<span class="error">Storage save failed (${e.message})</span>`);
   }
 }
 
 function escape(s = '') {
-  return s.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+  return s.replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[m]);
 }
 
 function println(html, cls = 'line') {
@@ -340,147 +305,147 @@ const print = {
   bot:     m => println(`<span class="bot">${m}</span>`),
 };
 
-function localTalk(msg) {
-  println(`<span class="prompt">></span> ${escape(msg)}`);
-  const answer = getBotReply(msg);
-  print.bot(escape(answer));
-  messages.push({ from: 'user', text: msg, time: Date.now() });
-  messages.push({ from: 'bot', text: answer, time: Date.now() });
+function addExchange(userText) {
+  println(`<span class="prompt">></span> ${escape(userText)}`);
+  const reply = getSmartReply(userText);
+  print.bot(escape(reply));
+  const now = Date.now();
+  messages.push({ from: 'user', text: userText, time: now });
+  messages.push({ from: 'bot', text: reply, time: now + 300 }); // tiny fake delay
   saveMessages();
-  refreshHistoryIfVisible();
-  lastUserMsgs.push(msg);
-  if (lastUserMsgs.length > 2) lastUserMsgs.shift();
+  if (document.querySelector('[data-tab="pins"].active')) renderHistory(searchEl.value);
 }
 
-function bootSequence() {
+function boot() {
   terminal.innerHTML = '';
-  println('<span style="font-size:1.25rem; font-weight:700;">CleverBot Terminal – Offline Mode</span>');
-  println('─'.repeat(60), 'system');
+  println('<span style="font-size:1.3rem; font-weight:700;">CleverBot – Smarter Offline Mode</span>');
+  println('─'.repeat(70), 'system');
   println('');
-  print.info('Type your message and press Enter');
-  print.info('Special: <strong>clear</strong> / <strong>reset</strong> / <strong>bye</strong>');
-  print.info('Share: History tab → Copy URL → paste in email/message');
-  print.info('Load shared: Paste data:text/json;base64,… here & Enter');
+  print.info('Just type and press Enter');
+  print.info('Special commands: <strong>help</strong> • <strong>clear</strong> • <strong>reset</strong> • <strong>bye</strong>');
+  print.info('Share: History tab → copy message / full URL');
+  print.info('Import: paste <code>data:text/json;base64,...</code> and Enter');
   println('');
-  print.system('Fully local/offline — real Cleverbot API gone long ago 💀');
+  print.system('100% local — no API, no tracking');
   println('');
-  print.bot("Yo! What's up? (local dummy edition)");
+  print.bot("Yo. What's the vibe today?");
   println('');
 }
 
-bootSequence();
-count.textContent = messages.length;
+boot();
+countEl.textContent = messages.length;
 
-// Copy shareable data URL
-copyBtn.addEventListener('click', () => {
-  if (messages.length === 0) {
-    alert("No history to copy yet!");
+// ─── Input handling ─────────────────────────────────────────────
+input.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  const txt = input.value.trim();
+  if (!txt) return;
+
+  const lower = txt.toLowerCase();
+
+  if (['help'].includes(lower)) {
+    print.system("Commands: clear / reset / bye / help");
+    print.system("Paste data:text/json;base64,… to import shared chat");
+    print.system("History tab → copy full or single message links");
+    input.value = '';
     return;
   }
-  const json = JSON.stringify(messages);
-  const base64 = btoa(unescape(encodeURIComponent(json)));
-  const dataUrl = `data:text/json;base64,${base64}`;
 
-  navigator.clipboard.writeText(dataUrl).then(() => {
-    println('<span class="success">Copied to clipboard! Paste into email / message / note to share.</span>');
-  }).catch(err => {
-    println(`<span class="error">Copy failed: ${err.message}</span>`);
-    println('<span class="system">Manual copy this instead:</span>');
-    println(`<span class="system" style="word-break:break-all;">${escape(dataUrl)}</span>`);
-  });
-});
-
-// Auto-import when pasting data URL into terminal
-input.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    let txt = input.value.trim();
-    if (!txt) return;
-
-    const lower = txt.toLowerCase();
-
-    if (['clear', 'reset'].includes(lower)) {
-      bootSequence();
-      lastUserMsgs = [];
-      input.value = '';
-      return;
-    }
-
-    if (['bye', 'exit', 'quit', 'goodbye'].includes(lower)) {
-      print.system("Catch ya later! 👋");
-      input.disabled = true;
-      setTimeout(() => input.disabled = false, 4000);
-      input.value = '';
-      return;
-    }
-
-    // Detect pasted data URL and import
-    if (txt.startsWith('data:text/json;base64,')) {
-      try {
-        const base64 = txt.split(',')[1];
-        const jsonStr = decodeURIComponent(escape(atob(base64)));
-        const imported = JSON.parse(jsonStr);
-
-        if (!Array.isArray(imported)) throw new Error("Not a valid array");
-
-        const valid = imported.every(m =>
-          m && typeof m === 'object' &&
-          (m.from === 'user' || m.from === 'bot') &&
-          typeof m.text === 'string' &&
-          typeof m.time === 'number'
-        );
-        if (!valid) throw new Error("Invalid message format");
-
-        // Append (change to messages = imported; if you prefer replace)
-        messages = [...messages, ...imported];
-        saveMessages();
-        bootSequence();
-        print.success(`Imported ${imported.length} messages! Total: ${messages.length}`);
-        refreshHistoryIfVisible();
-      } catch (err) {
-        print.error(`Import failed: ${err.message}`);
-        print.system("Ensure it's a complete data:text/json;base64,… string.");
-      }
-      input.value = '';
-      return;
-    }
-
-    localTalk(txt);
+  if (['clear', 'reset'].includes(lower)) {
+    boot();
+    lastUserInputs = [];
     input.value = '';
+    return;
+  }
+
+  if (['bye', 'exit', 'quit', 'goodbye', 'cya'].includes(lower)) {
+    print.system("Peace out ✌️ Catch you in another timeline.");
+    input.disabled = true;
+    setTimeout(() => { input.disabled = false; input.focus(); }, 3800);
+    input.value = '';
+    return;
+  }
+
+  // ─── Import data URL ──────────────────────────────────────
+  if (txt.startsWith('data:text/json;base64,')) {
+    try {
+      const base64 = txt.split(',')[1];
+      if (!base64) throw new Error("Missing base64 part");
+      const binary = atob(base64);
+      const json = decodeURIComponent(escape(binary));
+      const data = JSON.parse(json);
+
+      if (!Array.isArray(data)) throw new Error("Not an array");
+
+      const valid = data.every(m =>
+        m && typeof m === 'object' &&
+        (m.from === 'user' || m.from === 'bot') &&
+        typeof m.text === 'string' && m.text.trim() &&
+        typeof m.time === 'number'
+      );
+
+      if (!valid) throw new Error("Invalid message objects");
+
+      messages.push(...data);
+      saveMessages();
+      boot();
+      print.success(`Imported ${data.length} message(s) — total now ${messages.length}`);
+    } catch (err) {
+      print.error(`Import failed: ${err.message}`);
+      print.system("Make sure you copied the **full** data:text/... string");
+    }
+    input.value = '';
+    return;
+  }
+
+  // Normal chat
+  addExchange(txt);
+  input.value = '';
+});
+
+// ─── Copy full history ──────────────────────────────────────────
+document.getElementById('pins-tab').insertAdjacentHTML('afterbegin', `
+  <div style="text-align:center; margin:1.8rem 0;">
+    <button class="btn" id="copy-full-url">Copy Full Chat URL (share via email etc)</button>
+  </div>
+`);
+
+document.getElementById('copy-full-url').addEventListener('click', async () => {
+  if (messages.length === 0) return alert("Nothing to copy yet!");
+  const json = JSON.stringify(messages);
+  const b64 = btoa(unescape(encodeURIComponent(json)));
+  const url = `data:text/json;base64,${b64}`;
+
+  try {
+    await navigator.clipboard.writeText(url);
+    const btn = document.getElementById('copy-full-url');
+    btn.textContent = 'Copied ✓';
+    setTimeout(() => btn.textContent = 'Copy Full Chat URL (share via email etc)', 2200);
+  } catch {
+    alert("Clipboard failed — copy this manually:\n\n" + url);
   }
 });
 
-fab.addEventListener('click', () => {
-  if (confirm("Clear entire conversation history?")) {
-    messages = [];
-    lastUserMsgs = [];
-    saveMessages();
-    bootSequence();
-    print.success("Conversation cleared.");
-  }
-});
+// ─── Render history + per-message copy ──────────────────────────
+function createMsgUrl(msg) {
+  const mini = [{ from: msg.from, text: msg.text, time: msg.time }];
+  const json = JSON.stringify(mini);
+  const b64 = btoa(unescape(encodeURIComponent(json)));
+  return `data:text/json;base64,${b64}`;
+}
 
-document.querySelectorAll('[data-tab]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
-    if (btn.dataset.tab === 'pins') renderHistory(searchEl.value);
-  });
-});
-
-function renderHistory(q = '') {
+function renderHistory(query = '') {
   pinsList.innerHTML = '';
-  q = q.toLowerCase().trim();
+  query = query.toLowerCase().trim();
 
-  const filtered = messages.filter(m => !q || m.text.toLowerCase().includes(q));
-  count.textContent = messages.length;
+  const filtered = messages.filter(m => !query || m.text.toLowerCase().includes(query));
+  countEl.textContent = messages.length;
 
   if (!filtered.length) {
     noPinsMsg.style.display = messages.length === 0 ? 'block' : 'none';
-    if (messages.length > 0) {
-      pinsList.innerHTML = '<div style="text-align:center; padding:4rem; color:var(--muted);">No matching messages.</div>';
+    if (messages.length > 0 && query) {
+      pinsList.innerHTML = '<div style="text-align:center;padding:5rem;color:var(--muted);">No matches found.</div>';
     }
     return;
   }
@@ -491,38 +456,72 @@ function renderHistory(q = '') {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
-      <div style="font-weight:600; color: ${m.from === 'user' ? 'var(--accent)' : 'var(--purple)'}">
+      <div style="font-weight:700; color:${m.from==='user'? 'var(--accent)':'var(--purple)'}">
         ${m.from === 'user' ? 'You' : 'CleverBot'}
       </div>
-      <div style="margin:0.6rem 0; white-space:pre-wrap;">${escape(m.text)}</div>
-      <div style="color:var(--muted); font-size:0.9rem;">
-        ${new Date(m.time).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+      <div style="margin:0.7rem 0; white-space:pre-wrap; line-height:1.5;">${escape(m.text)}</div>
+      <div style="color:var(--muted); font-size:0.92rem; margin-bottom:1rem;">
+        ${new Date(m.time).toLocaleString([], {dateStyle:'medium', timeStyle:'short'})}
       </div>
+      <button class="btn copy-single" data-url="${createMsgUrl(m)}" style="font-size:0.92rem; padding:0.55rem 1.1rem;">
+        Copy message link
+      </button>
     `;
     pinsList.appendChild(card);
   });
 }
 
-function refreshHistoryIfVisible() {
-  if (document.querySelector('[data-tab="pins"].active')) {
-    renderHistory(searchEl.value);
-  }
-}
-
-themeBtn.addEventListener('click', () => {
-  const next = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-  body.setAttribute('data-theme', next);
-  themeBtn.textContent = next === 'light' ? '🌙 Dark' : '☀️ Light';
-  localStorage.setItem('theme', next);
+pinsList.addEventListener('click', e => {
+  if (!e.target.matches('.copy-single')) return;
+  const url = e.target.dataset.url;
+  navigator.clipboard.writeText(url).then(() => {
+    e.target.textContent = 'Copied!';
+    setTimeout(() => e.target.textContent = 'Copy message link', 1800);
+  }).catch(() => {
+    alert("Copy failed — copy this:\n" + url);
+  });
 });
 
-if (localStorage.getItem('theme')) {
-  const th = localStorage.getItem('theme');
+function refreshHistoryIfOpen() {
+  if (document.querySelector('[data-tab="pins"].active')) renderHistory(searchEl.value);
+}
+
+// ─── Event listeners ────────────────────────────────────────────
+document.querySelectorAll('[data-tab]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.getElementById(`${btn.dataset.tab}-tab`).classList.add('active');
+    if (btn.dataset.tab === 'pins') renderHistory(searchEl.value);
+  });
+});
+
+searchEl.addEventListener('input', () => renderHistory(searchEl.value));
+
+fab.addEventListener('click', () => {
+  if (!confirm("Clear ALL messages?")) return;
+  messages = [];
+  lastUserInputs = [];
+  saveMessages();
+  boot();
+  print.success("Memory wiped 🧹");
+});
+
+themeBtn.addEventListener('click', () => {
+  const current = body.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  body.setAttribute('data-theme', next);
+  themeBtn.textContent = next === 'light' ? '🌙 Dark' : '☀️ Light';
+  localStorage.setItem('cb-theme', next);
+});
+
+if (localStorage.getItem('cb-theme')) {
+  const th = localStorage.getItem('cb-theme');
   body.setAttribute('data-theme', th);
   themeBtn.textContent = th === 'light' ? '🌙 Dark' : '☀️ Light';
 }
 
-searchEl.addEventListener('input', () => renderHistory(searchEl.value));
 input.focus();
 </script>
 </body>

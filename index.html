@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CleverBot Terminal – Chat like it's 2006</title>
-  <meta name="description" content="Talk to CleverBot in a retro terminal style — 100% browser local."/>
+  <title>CleverBot Terminal – Offline Edition</title>
+  <meta name="description" content="Retro terminal chat — now 100% local/offline since cleverbot.io is dead"/>
 
   <style>
     :root {
@@ -218,7 +218,7 @@
 
 <header>
   <h1>CleverBot</h1>
-  <div class="subtitle">talk to the legend • 100% browser • no server needed</div>
+  <div class="subtitle">talk to the legend • now 100% offline/local • rip cleverbot.io</div>
 
   <div class="controls">
     <button class="btn active" data-tab="terminal">Terminal</button>
@@ -250,16 +250,15 @@
 </div>
 
 <footer>
-  CleverBot Terminal — unofficial • may break if cleverbot.com changes
+  CleverBot Terminal — offline/local mode • original by andreman • cleverbot.com still alive but no free API
 </footer>
 
 <button id="fab" title="Clear conversation">🗑</button>
 
 <script>
 const STORAGE_KEY = 'cleverbot-history-v1';
-let messages = loadMessages(); // renamed from pins → messages
-let conversationId = '';
-let cs = '';
+let messages = loadMessages();
+let lastUserMsgs = []; // very simple short-term memory (last 2 messages)
 
 const terminal   = document.getElementById('terminal');
 const input      = document.getElementById('input');
@@ -271,6 +270,46 @@ const themeBtn   = document.getElementById('theme-toggle');
 const fab        = document.getElementById('fab');
 const body       = document.body;
 
+// === Simple local "AI" replies ===
+const funnyReplies = {
+  "hi": ["Heyyy!", "Yo what's good?", "Hello human  👀"],
+  "how are you": ["I'm just chilling in your browser tbh", "Fantastic, how u?", "Alive and kicking (sorta)"],
+  "who are you": ["I'm the ghost of Cleverbot past 🪦", "Your new offline buddy", "The one that never needs internet lol"],
+  "bye": ["Cya space cowboy 👋", "Don't miss me too much", "Later gator!"],
+  "lol": ["😂 right?", "hehehe", "lmaooo"],
+  default: [
+    "Hmm interesting...", "Tell me more!", "That's wild.", "You don't say...", 
+    "What makes you think that?", "Cool story bro", "I'm listening...", 
+    "Why tho?", "Lmao okay", "No wayyy"
+  ]
+};
+
+function getBotReply(msg) {
+  const lower = msg.toLowerCase().trim();
+  
+  // Check exact-ish matches first
+  for (const key in funnyReplies) {
+    if (lower.includes(key)) {
+      const opts = funnyReplies[key];
+      return opts[Math.floor(Math.random() * opts.length)];
+    }
+  }
+
+  // Very basic context from last messages
+  if (lastUserMsgs.length > 0) {
+    if (lower.includes("yes") || lower.includes("yeah")) {
+      return "Sweet! Thought so 😏";
+    }
+    if (lower.includes("no") || lower.includes("nah")) {
+      return "Aight fair enough haha";
+    }
+  }
+
+  // Random fallback
+  const defs = funnyReplies.default;
+  return defs[Math.floor(Math.random() * defs.length)];
+}
+
 function loadMessages() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
   catch { return []; }
@@ -280,10 +319,8 @@ function saveMessages() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
     count.textContent = messages.length;
-    return true;
   } catch {
     alert("Save failed — storage may be full or blocked.");
-    return false;
   }
 }
 
@@ -307,70 +344,41 @@ const print = {
   bot:     m => println(`<span class="bot">${m}</span>`),
 };
 
-async function talk(msg) {
+function localTalk(msg) {
   println(`<span class="prompt">></span> ${escape(msg)}`);
 
-  try {
-    const form = new URLSearchParams();
-    form.append('stimulus', msg);
-    if (conversationId) form.append('vText2', conversationId);
-    if (cs) form.append('sessionid', cs);
+  const answer = getBotReply(msg);
 
-    const res = await fetch('https://www.cleverbot.io', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Origin': 'https://www.cleverbot.com',
-        'Referer': 'https://www.cleverbot.com/'
-      },
-      body: form.toString()
-    });
+  print.bot(escape(answer));
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  messages.push({ from: 'user', text: msg, time: Date.now() });
+  messages.push({ from: 'bot',  text: answer, time: Date.now() });
+  saveMessages();
+  refreshHistoryIfVisible();
 
-    const text = await res.text();
-    const parts = text.split('\r');
-
-    if (parts.length < 1 || !parts[0].trim()) {
-      print.system("(empty reply — try again)");
-      return;
-    }
-
-    const answer = parts[0].trim();
-    conversationId = parts[1] || conversationId;
-    cs = parts[2] || cs;
-
-    print.bot(escape(answer));
-    messages.push({ from: 'user', text: msg, time: Date.now() });
-    messages.push({ from: 'bot',  text: answer, time: Date.now() });
-    saveMessages();
-    refreshHistoryIfVisible();
-
-  } catch (err) {
-    print.error("Connection failed: " + err.message);
-    print.system("CleverBot might be down or the endpoint changed.");
-  }
+  // Update short memory
+  lastUserMsgs.push(msg);
+  if (lastUserMsgs.length > 2) lastUserMsgs.shift();
 }
 
 function bootSequence() {
   terminal.innerHTML = '';
-  println('<span style="font-size:1.25rem; font-weight:700;">CleverBot Terminal</span>');
+  println('<span style="font-size:1.25rem; font-weight:700;">CleverBot Terminal – Offline Mode</span>');
   println('─'.repeat(60), 'system');
   println('');
   print.info('Type your message and press Enter');
   print.info('Special commands: <strong>clear</strong>, <strong>reset</strong>, <strong>bye</strong>');
   println('');
-  print.system('Connecting to the void...');
+  print.system('Running in local/offline mode — real Cleverbot API is long gone 💀');
   println('');
-  print.bot("Hi! How are you today?");
+  print.bot("Yo! What's up? (I'm just a silly local script now haha)");
   println('');
 }
 
 bootSequence();
 count.textContent = messages.length;
 
-input.addEventListener('keydown', async e => {
+input.addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     e.preventDefault();
     const txt = input.value.trim();
@@ -378,19 +386,20 @@ input.addEventListener('keydown', async e => {
 
     if (['clear','reset'].includes(txt.toLowerCase())) {
       bootSequence();
+      lastUserMsgs = [];
       input.value = '';
       return;
     }
 
     if (['bye','exit','quit','goodbye'].includes(txt.toLowerCase())) {
-      print.system("Goodbye for now 👋 Come back anytime.");
+      print.system("Catch ya later! 👋 (or just refresh lol)");
       input.disabled = true;
       setTimeout(() => input.disabled = false, 4000);
       input.value = '';
       return;
     }
 
-    await talk(txt);
+    localTalk(txt);
     input.value = '';
   }
 });
@@ -398,6 +407,7 @@ input.addEventListener('keydown', async e => {
 fab.addEventListener('click', () => {
   if (confirm("Clear entire conversation history?")) {
     messages = [];
+    lastUserMsgs = [];
     saveMessages();
     bootSequence();
     print.success("Conversation cleared.");

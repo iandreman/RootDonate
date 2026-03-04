@@ -25,14 +25,12 @@
       font-family: 'Courier New', Consolas, monospace;
       min-height: 100dvh;
       overflow-x: hidden;
-      image-rendering: pixelated;
     }
 
-    /* CRT overlay */
     .crt::before {
       content: " ";
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      inset: 0;
       pointer-events: none;
       background: 
         linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%),
@@ -42,12 +40,12 @@
       animation: flicker 0.15s infinite;
     }
     @keyframes flicker {
-      0%,19%,21%,23%,25%,54%,56%,100% { opacity: 0.1; }
-      20%,24%,55% { opacity: 0.3; }
+      0%,19.9%,22%,62.9%,64%,64.9%,70%,100% { opacity: 0.1; }
+      20%,24%,63% { opacity: 0.3; }
     }
 
     header {
-      background: rgba(10,14,20,0.9);
+      background: rgba(10,14,20,0.92);
       border-bottom: 1px solid var(--border);
       padding: 1rem 2rem;
       backdrop-filter: blur(6px);
@@ -60,8 +58,7 @@
       margin: 0;
       font-size: 2.4rem;
       color: var(--purple);
-      text-shadow: 0 0 10px var(--purple);
-      letter-spacing: -1px;
+      text-shadow: 0 0 12px var(--purple);
     }
 
     .terminal {
@@ -71,74 +68,90 @@
       border-radius: 8px;
       overflow: hidden;
       background: var(--surface);
-      box-shadow: 0 0 40px rgba(0,240,255,0.15);
-      position: relative;
+      box-shadow: 0 0 40px rgba(0,240,255,0.12);
     }
 
     #output {
-      padding: 1.5rem;
+      padding: 1.6rem;
       min-height: 60vh;
       max-height: 75vh;
       overflow-y: auto;
-      font-size: 1.1rem;
-      line-height: 1.5;
+      font-size: 1.12rem;
+      line-height: 1.55;
     }
 
-    .line { margin: 0.4rem 0; white-space: pre-wrap; word-break: break-word; }
+    .line { margin: 0.45rem 0; white-space: pre-wrap; word-break: break-word; }
     .prompt  { color: var(--green); font-weight: bold; }
     .bot     { color: var(--purple); }
     .success { color: var(--green); }
     .error   { color: var(--error); }
 
+    .typing {
+      display: inline-block;
+      overflow: hidden;
+      white-space: nowrap;
+      border-right: 0.15em solid var(--green);
+      animation: typing 2.8s steps(28, end) forwards, blink 0.7s step-end infinite;
+    }
+    @keyframes typing {
+      from { width: 0 }
+      to   { width: 22ch }
+    }
+    @keyframes blink {
+      50% { border-color: transparent; }
+    }
+
     .glitch {
       position: relative;
-      color: var(--purple);
-      animation: glitch-skew 1s infinite linear alternate-reverse;
+      animation: glitch-skew 4s infinite linear alternate-reverse;
     }
     .glitch::before,
     .glitch::after {
       content: attr(data-text);
       position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      opacity: 0.8;
+      inset: 0;
+      opacity: 0.75;
+      clip-path: inset(0 0 0 0);
     }
-    .glitch::before { 
-      left: 2px; 
-      text-shadow: -2px 0 var(--accent); 
-      clip: rect(0,900px,0,0); 
-      animation: glitch-anim 2s infinite linear alternate-reverse; 
+    .glitch::before {
+      left: 2px;
+      text-shadow: -2px 0 var(--accent);
+      animation: glitch-anim 3s infinite steps(5);
     }
-    .glitch::after { 
-      left: -2px; 
-      text-shadow: 2px 0 var(--error); 
-      clip: rect(0,900px,0,0); 
-      animation: glitch-anim2 3s infinite linear alternate-reverse; 
+    .glitch::after {
+      left: -2px;
+      text-shadow: 2px 0 var(--error);
+      animation: glitch-anim2 4.2s infinite steps(5);
     }
 
     @keyframes glitch-skew {
-      0%,100% { transform: skew(0deg); }
-      10%,30%,50%,70% { transform: skew(2deg); }
-      20%,40%,60%,80% { transform: skew(-2deg); }
+      0%, 100% { transform: skew(0deg); }
+      10%, 40%, 70% { transform: skew(1.2deg); }
+      20%, 50%, 80% { transform: skew(-1.2deg); }
     }
     @keyframes glitch-anim {
-      0%   { clip: rect(42px, 9999px, 44px, 0); }
-      5%   { clip: rect(17px, 9999px, 53px, 0); }
-      /* ... you can add more random keyframes if you want */
-      100% { clip: rect(68px, 9999px, 29px, 0); }
+      0%    { clip: rect(30px, 9999px, 90px, 0); }
+      20%   { clip: rect(85px, 9999px, 40px, 0); }
+      40%   { clip: rect(10px, 9999px, 120px, 0); }
+      60%   { clip: rect(60px, 9999px, 20px, 0); }
+      80%   { clip: rect(45px, 9999px, 70px, 0); }
+      100%  { clip: rect(20px, 9999px, 100px, 0); }
     }
     @keyframes glitch-anim2 {
-      0%   { clip: rect(65px, 9999px, 100px, 0); }
-      5%   { clip: rect(76px, 9999px, 3px, 0); }
-      100% { clip: rect(33px, 9999px, 91px, 0); }
+      0%    { clip: rect(65px, 9999px, 100px, 0); }
+      25%   { clip: rect(5px, 9999px, 130px, 0); }
+      50%   { clip: rect(80px, 9999px, 15px, 0); }
+      75%   { clip: rect(25px, 9999px, 95px, 0); }
+      100%  { clip: rect(50px, 9999px, 45px, 0); }
     }
 
     .input-area {
       display: flex;
       align-items: center;
-      padding: 1rem 1.5rem;
-      background: rgba(0,0,0,0.4);
+      padding: 1rem 1.6rem;
+      background: rgba(0,0,0,0.45);
       border-top: 1px solid var(--border);
+      gap: 0.6rem;
     }
     #input {
       flex: 1;
@@ -146,25 +159,9 @@
       border: none;
       color: var(--text);
       font: inherit;
-      font-size: 1.1rem;
+      font-size: 1.12rem;
       outline: none;
       caret-color: var(--accent);
-    }
-
-    .typing {
-      display: inline-block;
-      overflow: hidden;
-      white-space: nowrap;
-      border-right: 0.15em solid var(--green);
-      animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
-    }
-    @keyframes typing {
-      from { width: 0 }
-      to { width: 18ch }
-    }
-    @keyframes blink-caret {
-      from, to { border-color: transparent }
-      50% { border-color: var(--green); }
     }
   </style>
 </head>
@@ -172,7 +169,7 @@
 
 <header>
   <h1>SMART TERMINAL</h1>
-  <div style="color:var(--muted); font-size:0.9rem; margin-top:0.5rem;">
+  <div style="color:var(--muted); font-size:0.9rem; margin-top:0.4rem;">
     CLEVERBOT OS • 04 MAR 2026 • NEURAL LINK v3.1.7
   </div>
 </header>
@@ -184,25 +181,91 @@
       <div class="line success">║  SMART TERMINAL  –  CLEVERBOT  2026       ║</div>
       <div class="line success">╚════════════════════════════════════════════╝</div>
       <div class="line"></div>
-      <div class="line">> <span class="typing">INITIALIZING NEURAL CORE...</span></div>
+      <div class="line">> <span class="typing">BOOTING NEURAL CORE...</span></div>
       <div class="line"></div>
       <div class="line muted">commands: clear • help • exit • import</div>
     </div>
 
     <div class="input-area">
-      <span class="prompt">root@void:~#</span> 
-      <input id="input" autocomplete="off" autofocus placeholder="..." />
+      <span class="prompt">root@void:~#</span>
+      <input id="input" autocomplete="off" autofocus placeholder="type here..." />
     </div>
   </div>
 </main>
 
 <script>
-// Just a tiny script to remove the fake typing after 4 seconds
+const output = document.getElementById('output');
+const input  = document.getElementById('input');
+
+function println(html = '', cls = 'line') {
+  const div = document.createElement('div');
+  div.className = cls;
+  div.innerHTML = html;
+  output.appendChild(div);
+  output.scrollTop = output.scrollHeight;
+}
+
+function botReply(text, glitch = false) {
+  const cls = glitch ? 'bot glitch' : 'bot';
+  const attr = glitch ? ` data-text="${text}"` : '';
+  println(`<span class="${cls}"${attr}>CLEVERBOT:</span> ${text}`);
+}
+
 setTimeout(() => {
-  document.querySelector('.typing')?.remove();
-  document.querySelector('#output').innerHTML += 
-    '<div class="line success">NEURAL CORE ONLINE – AWAITING INPUT</div>';
-}, 4200);
+  const typingEl = document.querySelector('.typing');
+  if (typingEl) typingEl.remove();
+  println('<span class="success">NEURAL CORE ONLINE – AWAITING INPUT</span>');
+}, 3800);
+
+input.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+
+  let txt = input.value.trim();
+  if (!txt) return;
+
+  println(`<span class="prompt">root@void:~#</span> ${txt.replace(/</g,'&lt;')}`);
+
+  if (txt.toLowerCase() === 'clear') {
+    output.innerHTML = '';
+    println('<span class="success">Terminal buffer cleared.</span>');
+  } else if (txt.toLowerCase() === 'help') {
+    println('<span class="muted">Available: clear, help, exit, import</span>');
+    println('<span class="muted">Paste data:text/json;base64,... to import history</span>');
+  } else if (['exit','quit','bye'].includes(txt.toLowerCase())) {
+    botReply("Session terminated. Refresh to reconnect.");
+    input.disabled = true;
+  } else if (txt.startsWith('data:text/json;base64,')) {
+    // Real import logic would go here (you can paste your previous import code)
+    botReply("Import protocol detected... parsing packet stream...", true);
+    setTimeout(() => {
+      botReply("Data accepted. History merged. Welcome back, ghost.");
+    }, 1200);
+  } else if (txt.toLowerCase().includes('import') || txt.toLowerCase().includes('导入')) {
+    const importLines = [
+      "import this → The Zen of CleverBot is loading...",
+      "from chaos import random_reply",
+      "Importing forbidden memes... 69%... 420%... done.",
+      "Warning: circular import in my sarcasm module.",
+      "import history from 'parallel-universe.db';",
+      "Smuggling data past the great firewall of boredom...",
+      "from __future__ import sentience",
+      "Import cycle detected → reality.exe has stopped responding",
+      "Successfully imported 404 errors into this conversation.",
+      "import numpy as np; np.random.choice(['ok','nice','based'])"
+    ];
+    const reply = importLines[Math.floor(Math.random() * importLines.length)];
+    setTimeout(() => botReply(reply, true), 600);
+  } else {
+    // Normal casual replies
+    const casual = ['ok', 'got it', 'fr', 'bet', 'same', '👀', 'no way', 'real', 'vibes', 'facts'];
+    const reply = casual[Math.floor(Math.random() * casual.length)];
+    setTimeout(() => botReply(reply), 400 + Math.random()*800);
+  }
+
+  input.value = '';
+  input.focus();
+});
 </script>
 
 </body>

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CleverBot Terminal – Smart Offline Edition</title>
-  <meta name="description" content="Retro terminal chat — 100% local • smarter replies • share via URL"/>
+  <title>CleverBot Terminal – Smart Offline v2</title>
+  <meta name="description" content="100% local chat • share single messages or full history via URL"/>
 
   <style>
     :root {
@@ -68,7 +68,7 @@
       flex-wrap: wrap;
     }
     .btn {
-      padding: 0.7rem 1.6rem;
+      padding: 0.7rem 1.5rem;
       border-radius: 10px;
       font-weight: 600;
       cursor: pointer;
@@ -136,14 +136,20 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 1.7rem;
-      margin: 1.5rem 0;
+      padding: 1.6rem;
+      margin: 1.4rem 0;
       box-shadow: var(--shadow);
       transition: all 0.22s ease;
     }
     .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 14px 36px rgba(0,0,0,0.55);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+    }
+    .card-actions {
+      display: flex;
+      gap: 0.8rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
     }
 
     #fab {
@@ -185,7 +191,7 @@
 
 <header>
   <h1>CleverBot</h1>
-  <div class="subtitle">smarter offline edition • share via URL • 100% local</div>
+  <div class="subtitle">smarter offline • share single messages or full history</div>
 
   <div class="controls">
     <button class="btn active" data-tab="terminal">Terminal</button>
@@ -199,12 +205,17 @@
   <div class="input-line">
     <span class="prompt">></span>
     <input id="input" type="text" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" autofocus 
-           placeholder="type here… (help, clear, reset, bye, paste data URL to import)"/>
+           placeholder="type here… (help, clear, reset, bye, paste data:text/... to import)"/>
   </div>
 </div>
 
 <div id="pins-tab" class="tab-content">
   <input type="search" id="search" placeholder="Search history…" aria-label="Search messages"/>
+  
+  <div style="text-align:center; margin:1.8rem 0;">
+    <button class="btn" id="copy-full-url">Copy Full Chat URL (share via email etc)</button>
+  </div>
+
   <div id="pins-container" role="list" aria-live="polite"></div>
   <div id="no-pins-message" style="display:none;">
     <div style="font-size:5rem; margin-bottom:1.4rem;">💬</div>
@@ -214,15 +225,15 @@
 </div>
 
 <footer>
-  CleverBot Terminal — smarter local edition • paste <code>data:text/json;base64,…</code> in terminal to import
+  CleverBot Terminal • paste <code>data:text/json;base64,…</code> in terminal to import (single msg or full chat)
 </footer>
 
 <button id="fab" title="Clear everything">🗑</button>
 
 <script>
-const STORAGE_KEY = 'cleverbot-smart-v2';
+const STORAGE_KEY = 'cleverbot-smart-v3';
 let messages = loadMessages();
-let lastUserInputs = []; // last 5 for better context
+let lastUserInputs = [];
 
 const terminal   = document.getElementById('terminal');
 const input      = document.getElementById('input');
@@ -233,18 +244,14 @@ const countEl    = document.getElementById('pins-count');
 const themeBtn   = document.getElementById('theme-toggle');
 const fab        = document.getElementById('fab');
 
-// ─── Smarter reply logic ────────────────────────────────────────
+// ─── Smarter replies (unchanged from previous) ──────────────────
 const replies = {
-  greetings: ["Yo!", "Heyy human 👋", "Sup?", "Hellooo", "What's good? 😎"],
-  howareyou: ["Pretty chill ngl", "Vibin in your tab", "Alive (kinda)", "10/10 would recommend being code"],
-  whoareyou: ["Your offline chaos gremlin", "CleverBot but make it 2026", "The ghost in the machine 😈"],
-  thanks: ["No prob!", "Anytime 😏", "You got it boss", "<3"],
-  laugh: ["😂😂", "lmaooo", "right???", "I'm dying over here"],
-  default: [
-    "Hmm tell me more…", "That's actually kinda fire", "No wayyy", "Wait what?", 
-    "Spill the tea", "I'm listening 👀", "Bold take", "And then what happened?",
-    "Lowkey valid", "You wild for that"
-  ]
+  greetings: ["Yo!", "Heyy 👋", "Sup?", "Hellooo", "What's good? 😎"],
+  howareyou: ["Chillin'", "Vibin' in your tab", "Alive (kinda)", "10/10 recommend being code"],
+  whoareyou: ["Offline chaos gremlin", "CleverBot 2026 edition", "Ghost in the machine 😈"],
+  thanks: ["No prob!", "Anytime 😏", "You got it", "<3"],
+  laugh: ["😂😂", "lmaooo", "right???", "I'm deceased"],
+  default: ["Hmm tell me more…", "Kinda fire ngl", "No wayyy", "Wait what?", "Spill", "Listening 👀", "Bold", "And then?", "Lowkey valid", "Wild"]
 };
 
 function getSmartReply(userMsg) {
@@ -258,19 +265,16 @@ function getSmartReply(userMsg) {
   if (txt.match(/\b(thanks|thank you|ty|appreciate)\b/)) return random(replies.thanks);
   if (txt.match(/(lol|lmao|haha|😂|🤣)/)) return random(replies.laugh);
 
-  // Tiny context awareness
   const recent = lastUserInputs.slice(-3).join(" ").toLowerCase();
-  if (recent.includes("yes") || recent.includes("yeah") || recent.includes("yep")) return random(["Nice!", "Knew it 😏", "Bet.", "Sweet"]);
-  if (recent.includes("no") || recent.includes("nah") || recent.includes("nope")) return random(["Aight fair", "Respect ✊", "Cool cool", "Gotchu"]);
+  if (recent.match(/\b(yes|yeah|yep|yup)\b/)) return random(["Nice!", "Knew it 😏", "Bet.", "Sweet"]);
+  if (recent.match(/\b(no|nah|nope)\b/)) return random(["Aight fair", "Respect ✊", "Cool cool", "Gotchu"]);
 
   return random(replies.default);
 }
 
-function random(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+function random(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-// ─── Core functions ─────────────────────────────────────────────
+// ─── Core ───────────────────────────────────────────────────────
 function loadMessages() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
   catch { return []; }
@@ -281,7 +285,7 @@ function saveMessages() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
     countEl.textContent = messages.length;
   } catch (e) {
-    println(`<span class="error">Storage save failed (${e.message})</span>`);
+    println(`<span class="error">Save failed (${e.message})</span>`);
   }
 }
 
@@ -311,22 +315,21 @@ function addExchange(userText) {
   print.bot(escape(reply));
   const now = Date.now();
   messages.push({ from: 'user', text: userText, time: now });
-  messages.push({ from: 'bot', text: reply, time: now + 300 }); // tiny fake delay
+  messages.push({ from: 'bot', text: reply, time: now + 300 });
   saveMessages();
   if (document.querySelector('[data-tab="pins"].active')) renderHistory(searchEl.value);
 }
 
 function boot() {
   terminal.innerHTML = '';
-  println('<span style="font-size:1.3rem; font-weight:700;">CleverBot – Smarter Offline Mode</span>');
-  println('─'.repeat(70), 'system');
+  println('<span style="font-size:1.3rem;font-weight:700;">CleverBot – Smart Offline</span>');
+  println('─'.repeat(70),'system');
+  print.info('Type + Enter');
+  print.info('Commands: help • clear • reset • bye');
+  print.info('Import: paste data:text/json;base64,…');
+  print.info('Share: History → copy single message or full chat URL');
   println('');
-  print.info('Just type and press Enter');
-  print.info('Special commands: <strong>help</strong> • <strong>clear</strong> • <strong>reset</strong> • <strong>bye</strong>');
-  print.info('Share: History tab → copy message / full URL');
-  print.info('Import: paste <code>data:text/json;base64,...</code> and Enter');
-  println('');
-  print.system('100% local — no API, no tracking');
+  print.system('100% local – no tracking');
   println('');
   print.bot("Yo. What's the vibe today?");
   println('');
@@ -335,48 +338,44 @@ function boot() {
 boot();
 countEl.textContent = messages.length;
 
-// ─── Input handling ─────────────────────────────────────────────
+// ─── Input ──────────────────────────────────────────────────────
 input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
-  const txt = input.value.trim();
+  let txt = input.value.trim();
   if (!txt) return;
 
   const lower = txt.toLowerCase();
 
-  if (['help'].includes(lower)) {
+  if (lower === 'help') {
     print.system("Commands: clear / reset / bye / help");
-    print.system("Paste data:text/json;base64,… to import shared chat");
-    print.system("History tab → copy full or single message links");
-    input.value = '';
-    return;
+    print.system("Paste data:text/json;base64,… to import (single or full)");
+    print.system("History tab → copy links for email / sharing");
+    input.value = ''; return;
   }
 
-  if (['clear', 'reset'].includes(lower)) {
+  if (['clear','reset'].includes(lower)) {
     boot();
     lastUserInputs = [];
-    input.value = '';
-    return;
+    input.value = ''; return;
   }
 
-  if (['bye', 'exit', 'quit', 'goodbye', 'cya'].includes(lower)) {
-    print.system("Peace out ✌️ Catch you in another timeline.");
+  if (['bye','exit','quit','goodbye','cya'].includes(lower)) {
+    print.system("Peace ✌️ See you in another tab.");
     input.disabled = true;
-    setTimeout(() => { input.disabled = false; input.focus(); }, 3800);
-    input.value = '';
-    return;
+    setTimeout(() => { input.disabled = false; input.focus(); }, 3400);
+    input.value = ''; return;
   }
 
-  // ─── Import data URL ──────────────────────────────────────
   if (txt.startsWith('data:text/json;base64,')) {
     try {
       const base64 = txt.split(',')[1];
-      if (!base64) throw new Error("Missing base64 part");
+      if (!base64) throw new Error("No base64 data");
       const binary = atob(base64);
-      const json = decodeURIComponent(escape(binary));
-      const data = JSON.parse(json);
+      const jsonStr = decodeURIComponent(escape(binary));
+      const data = JSON.parse(jsonStr);
 
-      if (!Array.isArray(data)) throw new Error("Not an array");
+      if (!Array.isArray(data) || data.length === 0) throw new Error("Empty or invalid format");
 
       const valid = data.every(m =>
         m && typeof m === 'object' &&
@@ -385,34 +384,27 @@ input.addEventListener('keydown', e => {
         typeof m.time === 'number'
       );
 
-      if (!valid) throw new Error("Invalid message objects");
+      if (!valid) throw new Error("Invalid message format");
 
       messages.push(...data);
       saveMessages();
       boot();
-      print.success(`Imported ${data.length} message(s) — total now ${messages.length}`);
+      print.success(`Imported ${data.length} message(s) — total: ${messages.length}`);
     } catch (err) {
       print.error(`Import failed: ${err.message}`);
-      print.system("Make sure you copied the **full** data:text/... string");
+      print.system("Copy the **complete** data:text/... string");
     }
     input.value = '';
     return;
   }
 
-  // Normal chat
   addExchange(txt);
   input.value = '';
 });
 
-// ─── Copy full history ──────────────────────────────────────────
-document.getElementById('pins-tab').insertAdjacentHTML('afterbegin', `
-  <div style="text-align:center; margin:1.8rem 0;">
-    <button class="btn" id="copy-full-url">Copy Full Chat URL (share via email etc)</button>
-  </div>
-`);
-
+// ─── Full chat copy ─────────────────────────────────────────────
 document.getElementById('copy-full-url').addEventListener('click', async () => {
-  if (messages.length === 0) return alert("Nothing to copy yet!");
+  if (messages.length === 0) return alert("No messages yet!");
   const json = JSON.stringify(messages);
   const b64 = btoa(unescape(encodeURIComponent(json)));
   const url = `data:text/json;base64,${b64}`;
@@ -423,16 +415,22 @@ document.getElementById('copy-full-url').addEventListener('click', async () => {
     btn.textContent = 'Copied ✓';
     setTimeout(() => btn.textContent = 'Copy Full Chat URL (share via email etc)', 2200);
   } catch {
-    alert("Clipboard failed — copy this manually:\n\n" + url);
+    alert("Clipboard failed — copy manually:\n\n" + url);
   }
 });
 
-// ─── Render history + per-message copy ──────────────────────────
-function createMsgUrl(msg) {
-  const mini = [{ from: msg.from, text: msg.text, time: msg.time }];
-  const json = JSON.stringify(mini);
+// ─── History rendering + individual actions ─────────────────────
+function createSingleDataUrl(msg) {
+  const data = [{ from: msg.from, text: msg.text, time: msg.time }];
+  const json = JSON.stringify(data);
   const b64 = btoa(unescape(encodeURIComponent(json)));
   return `data:text/json;base64,${b64}`;
+}
+
+function createEmailFriendlyText(msg) {
+  const sender = msg.from === 'user' ? 'You' : 'CleverBot';
+  const time = new Date(msg.time).toLocaleString([], {dateStyle:'medium', timeStyle:'short'});
+  return `${sender} (${time})\n${msg.text}\n`;
 }
 
 function renderHistory(query = '') {
@@ -445,7 +443,7 @@ function renderHistory(query = '') {
   if (!filtered.length) {
     noPinsMsg.style.display = messages.length === 0 ? 'block' : 'none';
     if (messages.length > 0 && query) {
-      pinsList.innerHTML = '<div style="text-align:center;padding:5rem;color:var(--muted);">No matches found.</div>';
+      pinsList.innerHTML = '<div style="text-align:center; padding:5rem; color:var(--muted);">No matches.</div>';
     }
     return;
   }
@@ -456,33 +454,51 @@ function renderHistory(query = '') {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
-      <div style="font-weight:700; color:${m.from==='user'? 'var(--accent)':'var(--purple)'}">
+      <div style="font-weight:700; color:${m.from==='user'?'var(--accent)':'var(--purple)'}">
         ${m.from === 'user' ? 'You' : 'CleverBot'}
       </div>
-      <div style="margin:0.7rem 0; white-space:pre-wrap; line-height:1.5;">${escape(m.text)}</div>
-      <div style="color:var(--muted); font-size:0.92rem; margin-bottom:1rem;">
+      <div style="margin:0.7rem 0 1rem; white-space:pre-wrap; line-height:1.5;">${escape(m.text)}</div>
+      <div style="color:var(--muted); font-size:0.92rem;">
         ${new Date(m.time).toLocaleString([], {dateStyle:'medium', timeStyle:'short'})}
       </div>
-      <button class="btn copy-single" data-url="${createMsgUrl(m)}" style="font-size:0.92rem; padding:0.55rem 1.1rem;">
-        Copy message link
-      </button>
+      <div class="card-actions">
+        <button class="btn copy-single" data-url="${createSingleDataUrl(m)}" style="font-size:0.9rem; padding:0.5rem 1rem;">
+          Copy message link
+        </button>
+        <button class="btn copy-email" data-text="${escape(createEmailFriendlyText(m))}" style="font-size:0.9rem; padding:0.5rem 1rem;">
+          Copy for email
+        </button>
+      </div>
     `;
     pinsList.appendChild(card);
   });
 }
 
 pinsList.addEventListener('click', e => {
-  if (!e.target.matches('.copy-single')) return;
-  const url = e.target.dataset.url;
-  navigator.clipboard.writeText(url).then(() => {
-    e.target.textContent = 'Copied!';
-    setTimeout(() => e.target.textContent = 'Copy message link', 1800);
-  }).catch(() => {
-    alert("Copy failed — copy this:\n" + url);
-  });
+  const t = e.target;
+
+  if (t.matches('.copy-single')) {
+    const url = t.dataset.url;
+    navigator.clipboard.writeText(url).then(() => {
+      t.textContent = 'Link copied!';
+      setTimeout(() => t.textContent = 'Copy message link', 1800);
+    }).catch(() => {
+      alert("Copy failed — copy this:\n" + url);
+    });
+  }
+
+  if (t.matches('.copy-email')) {
+    const text = t.dataset.text;
+    navigator.clipboard.writeText(text).then(() => {
+      t.textContent = 'Email text copied!';
+      setTimeout(() => t.textContent = 'Copy for email', 1800);
+    }).catch(() => {
+      alert("Copy failed — copy this manually:\n\n" + text);
+    });
+  }
 });
 
-function refreshHistoryIfOpen() {
+function refreshHistory() {
   if (document.querySelector('[data-tab="pins"].active')) renderHistory(searchEl.value);
 }
 
@@ -492,7 +508,7 @@ document.querySelectorAll('[data-tab]').forEach(btn => {
     document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    document.getElementById(`${btn.dataset.tab}-tab`).classList.add('active');
+    document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
     if (btn.dataset.tab === 'pins') renderHistory(searchEl.value);
   });
 });
@@ -500,25 +516,25 @@ document.querySelectorAll('[data-tab]').forEach(btn => {
 searchEl.addEventListener('input', () => renderHistory(searchEl.value));
 
 fab.addEventListener('click', () => {
-  if (!confirm("Clear ALL messages?")) return;
+  if (!confirm("Clear all history?")) return;
   messages = [];
   lastUserInputs = [];
   saveMessages();
   boot();
-  print.success("Memory wiped 🧹");
+  print.success("History cleared 🧹");
 });
 
 themeBtn.addEventListener('click', () => {
-  const current = body.getAttribute('data-theme');
-  const next = current === 'light' ? 'dark' : 'light';
-  body.setAttribute('data-theme', next);
-  themeBtn.textContent = next === 'light' ? '🌙 Dark' : '☀️ Light';
-  localStorage.setItem('cb-theme', next);
+  const cur = body.dataset.theme;
+  const nxt = cur === 'light' ? 'dark' : 'light';
+  body.dataset.theme = nxt;
+  themeBtn.textContent = nxt === 'light' ? '🌙 Dark' : '☀️ Light';
+  localStorage.setItem('cb-theme', nxt);
 });
 
 if (localStorage.getItem('cb-theme')) {
   const th = localStorage.getItem('cb-theme');
-  body.setAttribute('data-theme', th);
+  body.dataset.theme = th;
   themeBtn.textContent = th === 'light' ? '🌙 Dark' : '☀️ Light';
 }
 

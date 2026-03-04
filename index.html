@@ -316,7 +316,7 @@ async function talk(msg) {
     if (conversationId) form.append('vText2', conversationId);
     if (cs) form.append('sessionid', cs);
 
-    const res = await fetch('https://www.cleverbot.com/webservicemin', {
+    const res = await fetch('https://www.cleverbot.io', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',

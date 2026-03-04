@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CleverBot Terminal – Offline + URL Import</title>
-  <meta name="description" content="Retro terminal chat — 100% local/offline • history export + URL import via terminal"/>
+  <title>CleverBot Terminal – Offline Edition</title>
+  <meta name="description" content="Retro terminal-style chat with local dummy Cleverbot — 100% browser-based, no server"/>
 
   <style>
     :root {
@@ -61,11 +61,11 @@
       text-align: center;
     }
 
-    .subtitle { 
-      color: var(--muted); 
-      text-align: center; 
-      font-size: 0.96rem; 
-      margin-top: 0.4rem; 
+    .subtitle {
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.96rem;
+      margin-top: 0.4rem;
     }
 
     .controls {
@@ -86,8 +86,8 @@
       color: var(--accent);
       transition: all 0.22s ease;
     }
-    .btn:hover    { background: color-mix(in srgb, var(--accent) 24%, transparent); }
-    .btn.active   { background: var(--accent); color: #000; }
+    .btn:hover { background: color-mix(in srgb, var(--accent) 24%, transparent); }
+    .btn.active { background: var(--accent); color: #000; }
 
     .monzo-btn {
       padding: 0.6rem 1.4rem;
@@ -177,18 +177,6 @@
       box-shadow: 0 12px 32px rgba(0,0,0,0.5);
     }
 
-    #history-controls {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      margin: 1rem 0 2rem;
-      flex-wrap: wrap;
-    }
-
-    .file-input {
-      display: none;
-    }
-
     #fab {
       position: fixed;
       bottom: 28px;
@@ -230,16 +218,14 @@
 
 <header>
   <h1>CleverBot</h1>
-  <div class="subtitle">talk to the legend • 100% offline • export + import via file or terminal URL</div>
+  <div class="subtitle">talk to the legend • 100% offline/local mode</div>
 
   <div class="controls">
     <button class="btn active" data-tab="terminal">Terminal</button>
     <button class="btn" data-tab="pins">Conversation History <span id="pins-count">0</span></button>
     <button class="btn" id="theme-toggle">☀️ Light</button>
     <a href="https://monzo.me/iandreman" target="_blank" rel="noopener noreferrer" 
-       class="monzo-btn">
-      ☕ Support
-    </a>
+       class="monzo-btn">☕ Support</a>
   </div>
 </header>
 
@@ -247,13 +233,13 @@
   <div id="terminal" role="log" aria-live="polite"></div>
   <div class="input-line">
     <span class="prompt">></span>
-    <input id="input" type="text" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" autofocus placeholder="say something... (clear / bye / import <url>)"/>
+    <input id="input" type="text" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" autofocus 
+           placeholder="say something... (clear / reset / bye)"/>
   </div>
 </div>
 
 <div id="pins-tab" class="tab-content">
   <input type="search" id="search" placeholder="Search conversation history…" aria-label="Search messages"/>
-
   <div id="pins-container" role="list" aria-live="polite"></div>
   <div id="no-pins-message" style="display:none;">
     <div style="font-size:4rem; margin-bottom:1.2rem;">💬</div>
@@ -263,7 +249,7 @@
 </div>
 
 <footer>
-  CleverBot Terminal — offline/local mode • type <strong>import https://...</strong> to auto-load from URL
+  CleverBot Terminal — unofficial offline edition • real Cleverbot still at cleverbot.com (no API)
 </footer>
 
 <button id="fab" title="Clear conversation">🗑</button>
@@ -271,7 +257,7 @@
 <script>
 const STORAGE_KEY = 'cleverbot-history-v1';
 let messages = loadMessages();
-let lastUserMsgs = [];
+let lastUserMsgs = []; // short context for replies
 
 const terminal   = document.getElementById('terminal');
 const input      = document.getElementById('input');
@@ -281,20 +267,18 @@ const searchEl   = document.getElementById('search');
 const count      = document.getElementById('pins-count');
 const themeBtn   = document.getElementById('theme-toggle');
 const fab        = document.getElementById('fab');
-const exportBtn  = document.getElementById('export-btn');
-const importFile = document.getElementById('import-file');
 const body       = document.body;
 
-// Local dummy replies (same as before)
+// Dummy local replies — feel free to expand
 const funnyReplies = {
-  "hi": ["Heyyy!", "Yo what's good?", "Hello human  👀"],
-  "how are you": ["I'm just chilling in your browser tbh", "Fantastic, how u?", "Alive and kicking (sorta)"],
-  "who are you": ["I'm the ghost of Cleverbot past 🪦", "Your new offline buddy", "The one that never needs internet lol"],
+  "hi": ["Heyyy!", "Yo what's good?", "Hello human 👀"],
+  "how are you": ["Chilling in your browser tbh", "Fantastic, how u?", "Alive and kicking (sorta)"],
+  "who are you": ["Ghost of Cleverbot past 🪦", "Your offline buddy", "The one that needs no internet lol"],
   "bye": ["Cya space cowboy 👋", "Don't miss me too much", "Later gator!"],
   "lol": ["😂 right?", "hehehe", "lmaooo"],
   default: [
-    "Hmm interesting...", "Tell me more!", "That's wild.", "You don't say...", 
-    "What makes you think that?", "Cool story bro", "I'm listening...", 
+    "Hmm interesting...", "Tell me more!", "That's wild.", "You don't say...",
+    "What makes you think that?", "Cool story bro", "I'm listening...",
     "Why tho?", "Lmao okay", "No wayyy"
   ]
 };
@@ -303,7 +287,8 @@ function getBotReply(msg) {
   const lower = msg.toLowerCase().trim();
   for (const key in funnyReplies) {
     if (lower.includes(key)) {
-      return funnyReplies[key][Math.floor(Math.random() * funnyReplies[key].length)];
+      const opts = funnyReplies[key];
+      return opts[Math.floor(Math.random() * opts.length)];
     }
   }
   if (lastUserMsgs.length > 0) {
@@ -322,13 +307,13 @@ function saveMessages() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
     count.textContent = messages.length;
-  } catch (e) {
-    println(`<span class="error">Save failed: ${e.message}</span>`);
+  } catch {
+    println('<span class="error">Save failed — storage may be full/blocked.</span>');
   }
 }
 
 function escape(s = '') {
-  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+  return s.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
 }
 
 function println(html, cls = 'line') {
@@ -352,39 +337,11 @@ function localTalk(msg) {
   const answer = getBotReply(msg);
   print.bot(escape(answer));
   messages.push({ from: 'user', text: msg, time: Date.now() });
-  messages.push({ from: 'bot',  text: answer, time: Date.now() });
+  messages.push({ from: 'bot', text: answer, time: Date.now() });
   saveMessages();
   refreshHistoryIfVisible();
   lastUserMsgs.push(msg);
   if (lastUserMsgs.length > 2) lastUserMsgs.shift();
-}
-
-async function importFromUrl(url) {
-  print.system(`Fetching history from ${escape(url)}...`);
-  try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const imported = await res.json();
-    if (!Array.isArray(imported)) throw new Error("Not a valid array");
-
-    const valid = imported.every(m => 
-      m && typeof m === 'object' && 
-      (m.from === 'user' || m.from === 'bot') && 
-      typeof m.text === 'string' && 
-      typeof m.time === 'number'
-    );
-    if (!valid) throw new Error("Invalid message format in JSON");
-
-    // Append (change to messages = imported; if you want replace)
-    messages = [...messages, ...imported];
-    saveMessages();
-    bootSequence(); // refresh view
-    print.success(`Imported ${imported.length} messages from URL! Total: ${messages.length}`);
-    if (document.querySelector('[data-tab="pins"].active')) renderHistory(searchEl.value);
-  } catch (err) {
-    print.error(`Import failed: ${err.message}`);
-    print.system("Check the URL, ensure it's public JSON + CORS allowed.");
-  }
 }
 
 function bootSequence() {
@@ -393,53 +350,18 @@ function bootSequence() {
   println('─'.repeat(60), 'system');
   println('');
   print.info('Type your message and press Enter');
-  print.info('Commands: <strong>clear</strong>, <strong>reset</strong>, <strong>bye</strong>, <strong>import &lt;url&gt;</strong>');
+  print.info('Special commands: <strong>clear</strong> / <strong>reset</strong> / <strong>bye</strong>');
   println('');
-  print.system('Fully local/offline — real Cleverbot gone long ago 💀');
+  print.system('Fully local/offline — real Cleverbot API long gone 💀');
   println('');
-  print.bot("Yo! What's good? (local script vibes)");
+  print.bot("Yo! What's up? (local dummy edition haha)");
   println('');
 }
 
 bootSequence();
 count.textContent = messages.length;
 
-// === Event listeners ===
-
-exportBtn.addEventListener('click', () => {
-  if (messages.length === 0) return alert("Nothing to export!");
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(messages, null, 2));
-  const a = document.createElement('a');
-  a.href = dataStr;
-  a.download = "cleverbot-history.json";
-  a.click();
-  print.success("History exported!");
-});
-
-importFile.addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const imported = JSON.parse(ev.target.result);
-      if (!Array.isArray(imported)) throw new Error("Not an array");
-      const valid = imported.every(m => m && (m.from === 'user' || m.from === 'bot') && typeof m.text === 'string' && typeof m.time === 'number');
-      if (!valid) throw new Error("Invalid format");
-      messages = [...messages, ...imported];
-      saveMessages();
-      bootSequence();
-      print.success(`Imported ${imported.length} messages! Total: ${messages.length}`);
-      refreshHistoryIfVisible();
-    } catch (err) {
-      print.error("File import failed: " + err.message);
-    }
-  };
-  reader.readAsText(file);
-  e.target.value = '';
-});
-
-input.addEventListener('keydown', async e => {
+input.addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     e.preventDefault();
     const txt = input.value.trim();
@@ -447,28 +369,17 @@ input.addEventListener('keydown', async e => {
 
     const lower = txt.toLowerCase();
 
-    if (['clear','reset'].includes(lower)) {
+    if (['clear', 'reset'].includes(lower)) {
       bootSequence();
       lastUserMsgs = [];
       input.value = '';
       return;
     }
 
-    if (['bye','exit','quit','goodbye'].includes(lower)) {
+    if (['bye', 'exit', 'quit', 'goodbye'].includes(lower)) {
       print.system("Catch ya later! 👋");
       input.disabled = true;
       setTimeout(() => input.disabled = false, 4000);
-      input.value = '';
-      return;
-    }
-
-    if (lower.startsWith('import ')) {
-      const url = txt.slice(7).trim();
-      if (url.startsWith('http')) {
-        await importFromUrl(url);
-      } else {
-        print.error("Usage: import https://example.com/file.json");
-      }
       input.value = '';
       return;
     }
@@ -479,12 +390,12 @@ input.addEventListener('keydown', async e => {
 });
 
 fab.addEventListener('click', () => {
-  if (confirm("Clear entire history?")) {
+  if (confirm("Clear entire conversation history?")) {
     messages = [];
     lastUserMsgs = [];
     saveMessages();
     bootSequence();
-    print.success("Cleared!");
+    print.success("Conversation cleared.");
   }
 });
 
@@ -501,13 +412,14 @@ document.querySelectorAll('[data-tab]').forEach(btn => {
 function renderHistory(q = '') {
   pinsList.innerHTML = '';
   q = q.toLowerCase().trim();
+
   const filtered = messages.filter(m => !q || m.text.toLowerCase().includes(q));
   count.textContent = messages.length;
 
   if (!filtered.length) {
     noPinsMsg.style.display = messages.length === 0 ? 'block' : 'none';
     if (messages.length > 0) {
-      pinsList.innerHTML = '<div style="text-align:center; padding:4rem; color:var(--muted);">No matches.</div>';
+      pinsList.innerHTML = '<div style="text-align:center; padding:4rem; color:var(--muted);">No matching messages.</div>';
     }
     return;
   }
@@ -518,12 +430,12 @@ function renderHistory(q = '') {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
-      <div style="font-weight:600; color: ${m.from==='user' ? 'var(--accent)' : 'var(--purple)'}">
+      <div style="font-weight:600; color: ${m.from === 'user' ? 'var(--accent)' : 'var(--purple)'}">
         ${m.from === 'user' ? 'You' : 'CleverBot'}
       </div>
       <div style="margin:0.6rem 0; white-space:pre-wrap;">${escape(m.text)}</div>
       <div style="color:var(--muted); font-size:0.9rem;">
-        ${new Date(m.time).toLocaleString([], {dateStyle:'medium', timeStyle:'short'})}
+        ${new Date(m.time).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
       </div>
     `;
     pinsList.appendChild(card);
@@ -531,7 +443,9 @@ function renderHistory(q = '') {
 }
 
 function refreshHistoryIfVisible() {
-  if (document.querySelector('[data-tab="pins"].active')) renderHistory(searchEl.value);
+  if (document.querySelector('[data-tab="pins"].active')) {
+    renderHistory(searchEl.value);
+  }
 }
 
 themeBtn.addEventListener('click', () => {

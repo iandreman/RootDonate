@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CleverBot Terminal – Smart Offline v2</title>
-  <meta name="description" content="100% local chat • share single messages or full history via URL"/>
+  <title>CleverBot Terminal – Smart Offline v2 GPS Pins</title>
+  <meta name="description" content="100% local chat • short GPS pins per message + full history share"/>
 
   <style>
     :root {
@@ -148,8 +148,12 @@
     .card-actions {
       display: flex;
       gap: 0.8rem;
-      margin-top: 1rem;
+      margin-top: 1.2rem;
       flex-wrap: wrap;
+    }
+    .btn-small {
+      font-size: 0.88rem;
+      padding: 0.5rem 1rem;
     }
 
     #fab {
@@ -191,7 +195,7 @@
 
 <header>
   <h1>CleverBot</h1>
-  <div class="subtitle">smarter offline • share single messages or full history</div>
+  <div class="subtitle">smarter offline • short GPS pins per message</div>
 
   <div class="controls">
     <button class="btn active" data-tab="terminal">Terminal</button>
@@ -205,7 +209,7 @@
   <div class="input-line">
     <span class="prompt">></span>
     <input id="input" type="text" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" autofocus 
-           placeholder="type here… (help, clear, reset, bye, paste data:text/... to import)"/>
+           placeholder="type here… (help, clear, reset, bye, paste GPS pin to import)"/>
   </div>
 </div>
 
@@ -213,7 +217,7 @@
   <input type="search" id="search" placeholder="Search history…" aria-label="Search messages"/>
   
   <div style="text-align:center; margin:1.8rem 0;">
-    <button class="btn" id="copy-full-url">Copy Full Chat URL (share via email etc)</button>
+    <button class="btn" id="copy-full-url">Copy Full Chat (long URL)</button>
   </div>
 
   <div id="pins-container" role="list" aria-live="polite"></div>
@@ -225,7 +229,7 @@
 </div>
 
 <footer>
-  CleverBot Terminal • paste <code>data:text/json;base64,…</code> in terminal to import (single msg or full chat)
+  CleverBot Terminal • paste <code>data:text/json;base64,…</code> (GPS pin or full chat) in terminal to import
 </footer>
 
 <button id="fab" title="Clear everything">🗑</button>
@@ -244,7 +248,7 @@ const countEl    = document.getElementById('pins-count');
 const themeBtn   = document.getElementById('theme-toggle');
 const fab        = document.getElementById('fab');
 
-// ─── Smarter replies (unchanged from previous) ──────────────────
+// ─── Smarter replies (unchanged) ────────────────────────────────
 const replies = {
   greetings: ["Yo!", "Heyy 👋", "Sup?", "Hellooo", "What's good? 😎"],
   howareyou: ["Chillin'", "Vibin' in your tab", "Alive (kinda)", "10/10 recommend being code"],
@@ -274,7 +278,7 @@ function getSmartReply(userMsg) {
 
 function random(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-// ─── Core ───────────────────────────────────────────────────────
+// ─── Core functions ─────────────────────────────────────────────
 function loadMessages() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
   catch { return []; }
@@ -322,23 +326,23 @@ function addExchange(userText) {
 
 function boot() {
   terminal.innerHTML = '';
-  println('<span style="font-size:1.3rem;font-weight:700;">CleverBot – Smart Offline</span>');
+  println('<span style="font-size:1.3rem;font-weight:700;">CleverBot – Smart Offline 2026</span>');
   println('─'.repeat(70),'system');
   print.info('Type + Enter');
   print.info('Commands: help • clear • reset • bye');
-  print.info('Import: paste data:text/json;base64,…');
-  print.info('Share: History → copy single message or full chat URL');
+  print.info('Import: paste GPS pin or full data:text/...');
+  print.info('Share: History → copy GPS pin (short) per message');
   println('');
   print.system('100% local – no tracking');
   println('');
-  print.bot("Yo. What's the vibe today?");
+  print.bot("Yo. Back with short GPS pins — what's good?");
   println('');
 }
 
 boot();
 countEl.textContent = messages.length;
 
-// ─── Input ──────────────────────────────────────────────────────
+// ─── Input handling ─────────────────────────────────────────────
 input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
@@ -349,8 +353,8 @@ input.addEventListener('keydown', e => {
 
   if (lower === 'help') {
     print.system("Commands: clear / reset / bye / help");
-    print.system("Paste data:text/json;base64,… to import (single or full)");
-    print.system("History tab → copy links for email / sharing");
+    print.system("Paste short GPS pin or full data:text/... to import");
+    print.system("History tab → GPS pins are short & email-friendly");
     input.value = ''; return;
   }
 
@@ -361,7 +365,7 @@ input.addEventListener('keydown', e => {
   }
 
   if (['bye','exit','quit','goodbye','cya'].includes(lower)) {
-    print.system("Peace ✌️ See you in another tab.");
+    print.system("Peace ✌️ Catch you in the next tab.");
     input.disabled = true;
     setTimeout(() => { input.disabled = false; input.focus(); }, 3400);
     input.value = ''; return;
@@ -389,10 +393,10 @@ input.addEventListener('keydown', e => {
       messages.push(...data);
       saveMessages();
       boot();
-      print.success(`Imported ${data.length} message(s) — total: ${messages.length}`);
+      print.success(`Imported ${data.length} message(s) — total now: ${messages.length}`);
     } catch (err) {
       print.error(`Import failed: ${err.message}`);
-      print.system("Copy the **complete** data:text/... string");
+      print.system("Make sure you copied the **complete** data:text/... string");
     }
     input.value = '';
     return;
@@ -402,7 +406,7 @@ input.addEventListener('keydown', e => {
   input.value = '';
 });
 
-// ─── Full chat copy ─────────────────────────────────────────────
+// ─── Full chat export (long version) ────────────────────────────
 document.getElementById('copy-full-url').addEventListener('click', async () => {
   if (messages.length === 0) return alert("No messages yet!");
   const json = JSON.stringify(messages);
@@ -412,25 +416,32 @@ document.getElementById('copy-full-url').addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(url);
     const btn = document.getElementById('copy-full-url');
-    btn.textContent = 'Copied ✓';
-    setTimeout(() => btn.textContent = 'Copy Full Chat URL (share via email etc)', 2200);
+    btn.textContent = 'Full chat URL copied ✓';
+    setTimeout(() => btn.textContent = 'Copy Full Chat (long URL)', 2200);
   } catch {
     alert("Clipboard failed — copy manually:\n\n" + url);
   }
 });
 
-// ─── History rendering + individual actions ─────────────────────
-function createSingleDataUrl(msg) {
-  const data = [{ from: msg.from, text: msg.text, time: msg.time }];
-  const json = JSON.stringify(data);
-  const b64 = btoa(unescape(encodeURIComponent(json)));
+// ─── GPS Pin (short per-message) ────────────────────────────────
+function createGpsPin(msg) {
+  const idx = messages.indexOf(msg);
+  let pair = [msg];
+  // Try to include the bot reply right after (most common case)
+  if (idx >= 0 && idx + 1 < messages.length && messages[idx + 1].from === 'bot') {
+    pair = [msg, messages[idx + 1]];
+  }
+  // Compact JSON
+  const json = JSON.stringify(pair);
+  const mini = json.replace(/\s+/g, '');
+  const b64 = btoa(unescape(encodeURIComponent(mini)));
   return `data:text/json;base64,${b64}`;
 }
 
-function createEmailFriendlyText(msg) {
+function createEmailText(msg) {
   const sender = msg.from === 'user' ? 'You' : 'CleverBot';
   const time = new Date(msg.time).toLocaleString([], {dateStyle:'medium', timeStyle:'short'});
-  return `${sender} (${time})\n${msg.text}\n`;
+  return `${sender}  ${time}\n${msg.text}\n`;
 }
 
 function renderHistory(query = '') {
@@ -443,7 +454,7 @@ function renderHistory(query = '') {
   if (!filtered.length) {
     noPinsMsg.style.display = messages.length === 0 ? 'block' : 'none';
     if (messages.length > 0 && query) {
-      pinsList.innerHTML = '<div style="text-align:center; padding:5rem; color:var(--muted);">No matches.</div>';
+      pinsList.innerHTML = '<div style="text-align:center; padding:5rem; color:var(--muted);">No matches found.</div>';
     }
     return;
   }
@@ -462,10 +473,10 @@ function renderHistory(query = '') {
         ${new Date(m.time).toLocaleString([], {dateStyle:'medium', timeStyle:'short'})}
       </div>
       <div class="card-actions">
-        <button class="btn copy-single" data-url="${createSingleDataUrl(m)}" style="font-size:0.9rem; padding:0.5rem 1rem;">
-          Copy message link
+        <button class="btn btn-small copy-gps" data-url="${createGpsPin(m)}">
+          Copy GPS Pin
         </button>
-        <button class="btn copy-email" data-text="${escape(createEmailFriendlyText(m))}" style="font-size:0.9rem; padding:0.5rem 1rem;">
+        <button class="btn btn-small copy-email" data-text="${escape(createEmailText(m))}">
           Copy for email
         </button>
       </div>
@@ -477,13 +488,13 @@ function renderHistory(query = '') {
 pinsList.addEventListener('click', e => {
   const t = e.target;
 
-  if (t.matches('.copy-single')) {
+  if (t.matches('.copy-gps')) {
     const url = t.dataset.url;
     navigator.clipboard.writeText(url).then(() => {
-      t.textContent = 'Link copied!';
-      setTimeout(() => t.textContent = 'Copy message link', 1800);
+      t.textContent = 'GPS Pin copied!';
+      setTimeout(() => t.textContent = 'Copy GPS Pin', 1800);
     }).catch(() => {
-      alert("Copy failed — copy this:\n" + url);
+      alert("Copy failed — copy manually:\n" + url);
     });
   }
 
@@ -493,7 +504,7 @@ pinsList.addEventListener('click', e => {
       t.textContent = 'Email text copied!';
       setTimeout(() => t.textContent = 'Copy for email', 1800);
     }).catch(() => {
-      alert("Copy failed — copy this manually:\n\n" + text);
+      alert("Copy failed — copy manually:\n\n" + text);
     });
   }
 });
@@ -502,7 +513,7 @@ function refreshHistory() {
   if (document.querySelector('[data-tab="pins"].active')) renderHistory(searchEl.value);
 }
 
-// ─── Event listeners ────────────────────────────────────────────
+// ─── Tab switching & events ─────────────────────────────────────
 document.querySelectorAll('[data-tab]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));

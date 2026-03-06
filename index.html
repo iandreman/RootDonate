@@ -18,6 +18,7 @@
     }
 
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       background: var(--bg);
@@ -39,9 +40,10 @@
       z-index: 9999;
       animation: flicker 0.15s infinite;
     }
+
     @keyframes flicker {
-      0%,19.9%,22%,62.9%,64%,64.9%,70%,100% { opacity: 0.1; }
-      20%,24%,63% { opacity: 0.3; }
+      0%, 19.9%, 22%, 62.9%, 64%, 64.9%, 70%, 100% { opacity: 0.1; }
+      20%, 24%, 63% { opacity: 0.3; }
     }
 
     header {
@@ -54,6 +56,7 @@
       z-index: 100;
       text-align: center;
     }
+
     h1 {
       margin: 0 0 0.6rem;
       font-size: 2.4rem;
@@ -63,18 +66,23 @@
 
     .actions {
       margin-top: 0.5rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
+
     .btn {
       background: transparent;
       border: 1px solid var(--accent);
       color: var(--accent);
       padding: 0.5rem 1rem;
-      margin: 0 0.5rem;
       font-family: inherit;
       cursor: pointer;
       border-radius: 3px;
-      transition: 0.2s;
+      transition: background 0.2s;
     }
+
     .btn:hover {
       background: rgba(0,240,255,0.12);
     }
@@ -98,11 +106,17 @@
       line-height: 1.55;
     }
 
-    .line { margin: 0.45rem 0; white-space: pre-wrap; word-break: break-word; }
+    .line {
+      margin: 0.45rem 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
     .prompt  { color: var(--green); font-weight: bold; }
     .bot     { color: var(--purple); }
     .success { color: var(--green); }
     .error   { color: var(--error); }
+    .muted   { color: var(--muted); }
 
     .typing {
       display: inline-block;
@@ -111,10 +125,12 @@
       border-right: 0.15em solid var(--green);
       animation: typing 2.8s steps(28, end) forwards, blink 0.7s step-end infinite;
     }
+
     @keyframes typing {
       from { width: 0 }
       to   { width: 22ch }
     }
+
     @keyframes blink {
       50% { border-color: transparent; }
     }
@@ -123,6 +139,7 @@
       position: relative;
       animation: glitch-skew 4s infinite linear alternate-reverse;
     }
+
     .glitch::before,
     .glitch::after {
       content: attr(data-text);
@@ -130,11 +147,13 @@
       inset: 0;
       opacity: 0.75;
     }
+
     .glitch::before {
       left: 2px;
       text-shadow: -2px 0 var(--accent);
       animation: glitch-anim 3s infinite steps(5);
     }
+
     .glitch::after {
       left: -2px;
       text-shadow: 2px 0 var(--error);
@@ -146,6 +165,7 @@
       10%, 40%, 70% { transform: skew(1.2deg); }
       20%, 50%, 80% { transform: skew(-1.2deg); }
     }
+
     @keyframes glitch-anim {
       0%    { clip: rect(30px, 9999px, 90px, 0); }
       20%   { clip: rect(85px, 9999px, 40px, 0); }
@@ -154,6 +174,7 @@
       80%   { clip: rect(45px, 9999px, 70px, 0); }
       100%  { clip: rect(20px, 9999px, 100px, 0); }
     }
+
     @keyframes glitch-anim2 {
       0%    { clip: rect(65px, 9999px, 100px, 0); }
       25%   { clip: rect(5px, 9999px, 130px, 0); }
@@ -170,6 +191,7 @@
       border-top: 1px solid var(--border);
       gap: 0.6rem;
     }
+
     #input {
       flex: 1;
       background: transparent;
@@ -187,10 +209,11 @@
 <header>
   <h1>SMART TERMINAL</h1>
   <div style="color:var(--muted); font-size:0.9rem; margin:0.3rem 0 0.8rem;">
-    CLEVERBOT OS • 04 MAR 2026 • NEURAL LINK v3.1.7
+    CLEVERBOT OS • 06 MAR 2026 • NEURAL LINK v3.1.7
   </div>
   <div class="actions">
     <button class="btn" id="exportBtn">Export Conversation</button>
+    <button class="btn" id="emailBtn">Email Conversation</button>
   </div>
 </header>
 
@@ -217,6 +240,7 @@
 const output = document.getElementById('output');
 const input  = document.getElementById('input');
 const exportBtn = document.getElementById('exportBtn');
+const emailBtn = document.getElementById('emailBtn');
 
 let messages = JSON.parse(localStorage.getItem('smartTerminalHistory') || '[]');
 
@@ -270,11 +294,41 @@ setTimeout(() => {
   }
 }, 3800);
 
+function handleExport(copyOnly = true) {
+  const url = createImportUrl();
+  if (!url) {
+    botReply("Nothing to export – conversation is empty.", true);
+    return;
+  }
+
+  if (copyOnly) {
+    navigator.clipboard.writeText(url).then(() => {
+      botReply("Export link copied to clipboard.", true);
+    }).catch(() => {
+      botReply("Copy failed – long press to select → copy", true);
+      println(`<span class="success">${url}</span>`);
+    });
+  } else {
+    // Email version
+    const subject = "SMART TERMINAL Conversation Export – 06 MAR 2026";
+    const body = `Here's my CLEVERBOT session:\n\n${url}\n\nPaste this link into the SMART TERMINAL (type "import" then paste) to restore the full conversation.`;
+    const mailto = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailto, '_blank');
+    botReply("Opening email client with shareable link ready to send...", true);
+  }
+}
+
+// Export button (clipboard)
+exportBtn.addEventListener('click', () => handleExport(true));
+
+// Email button (mailto)
+emailBtn.addEventListener('click', () => handleExport(false));
+
 input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
 
-  let txt = input.value.trim();
+  const txt = input.value.trim();
   if (!txt) return;
 
   println(`<span class="prompt">root@void:~#</span> ${txt.replace(/</g,'&lt;')}`);
@@ -286,14 +340,17 @@ input.addEventListener('keydown', e => {
     messages = [];
     save();
     println('<span class="success">Terminal buffer and history cleared.</span>');
-  } else if (txt.toLowerCase() === 'help') {
+  } 
+  else if (txt.toLowerCase() === 'help') {
     println('<span class="muted">Available: clear, help, exit, import, export</span>');
     println('<span class="muted">Paste data:text/json;base64,... to import history</span>');
-    println('<span class="muted">Type "export" or click button to get shareable link</span>');
-  } else if (['exit','quit','bye'].includes(txt.toLowerCase())) {
+    println('<span class="muted">Use "export" or buttons above to share</span>');
+  } 
+  else if (['exit','quit','bye'].includes(txt.toLowerCase())) {
     botReply("Session terminated. Refresh to reconnect.");
     input.disabled = true;
-  } else if (txt.startsWith('data:text/json;base64,')) {
+  } 
+  else if (txt.startsWith('data:text/json;base64,')) {
     try {
       const base64 = txt.split(',')[1];
       const json = decodeURIComponent(escape(atob(base64)));
@@ -304,7 +361,6 @@ input.addEventListener('keydown', e => {
         botReply("Import protocol complete.", true);
         setTimeout(() => {
           botReply(`Merged ${imported.length} messages. Welcome back.`, true);
-          // Re-render last few for visual feedback
           imported.slice(-4).forEach(m => {
             if (m.from === 'user') {
               println(`<span class="prompt">root@void:~#</span> ${m.text}`);
@@ -319,7 +375,8 @@ input.addEventListener('keydown', e => {
     } catch (err) {
       botReply("Corrupted packet. Import failed.", true);
     }
-  } else if (/(import|导入)/i.test(txt)) {
+  } 
+  else if (/(import|导入)/i.test(txt)) {
     const replies = [
       "import this → The Zen of CleverBot is loading...",
       "from chaos import random_reply",
@@ -330,18 +387,11 @@ input.addEventListener('keydown', e => {
       "Import cycle detected → reality.exe has stopped responding"
     ];
     setTimeout(() => botReply(replies[Math.floor(Math.random() * replies.length)], true), 600);
-  } else if (/(export|save|history|分享)/i.test(txt)) {
-    const url = createImportUrl();
-    if (url) {
-      botReply("Export link generated. Click button or copy:", true);
-      setTimeout(() => {
-        println(`<span class="success">${url.slice(0,80)}…</span>`);
-        navigator.clipboard.writeText(url).catch(()=>{});
-      }, 800);
-    } else {
-      botReply("Nothing to export yet.", true);
-    }
-  } else {
+  } 
+  else if (/(export|save|history|分享)/i.test(txt)) {
+    handleExport(true);
+  } 
+  else {
     const casual = ['ok', 'got it', 'fr', 'bet', 'same', '👀', 'no way', 'real', 'vibes', 'facts'];
     const reply = casual[Math.floor(Math.random() * casual.length)];
     setTimeout(() => botReply(reply), 400 + Math.random()*800);
@@ -349,21 +399,6 @@ input.addEventListener('keydown', e => {
 
   input.value = '';
   input.focus();
-});
-
-// Export button
-exportBtn.addEventListener('click', () => {
-  const url = createImportUrl();
-  if (url) {
-    navigator.clipboard.writeText(url).then(() => {
-      botReply("Export link copied to clipboard.", true);
-    }).catch(() => {
-      botReply("Copy failed – long press to select → copy", true);
-      println(`<span class="success">${url}</span>`);
-    });
-  } else {
-    botReply("Conversation is empty. Nothing to export.", true);
-  }
 });
 </script>
 

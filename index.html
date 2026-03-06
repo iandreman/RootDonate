@@ -294,6 +294,52 @@ setTimeout(() => {
   }
 }, 3800);
 
+// ────────────────────────────────────────────────
+//  AUTO-IMPORT WHEN USER PASTES A data: URL ANYWHERE
+// ────────────────────────────────────────────────
+document.addEventListener('paste', (e) => {
+  const clipboardData = e.clipboardData || window.clipboardData;
+  if (!clipboardData) return;
+
+  const text = clipboardData.getData('text/plain') || clipboardData.getData('Text');
+  if (!text || !text.startsWith('data:text/json;base64,')) return;
+
+  // Prevent the paste from appearing in the input field
+  e.preventDefault();
+
+  try {
+    const base64 = text.split(',')[1];
+    const json = decodeURIComponent(escape(atob(base64)));
+    const imported = JSON.parse(json);
+
+    if (Array.isArray(imported)) {
+      messages.push(...imported);
+      save();
+
+      botReply("✨ AUTO-IMPORT DETECTED ✨", true);
+      botReply(`Successfully merged ${imported.length} messages from pasted link.`, true);
+
+      setTimeout(() => {
+        botReply("Recent entries:", true);
+        imported.slice(-5).forEach(m => {
+          if (m.from === 'user') {
+            println(`<span class="prompt">root@void:~#</span> ${m.text.replace(/</g,'&lt;')}`);
+          } else {
+            botReply(m.text, true);
+          }
+        });
+      }, 800);
+    } else {
+      botReply("Pasted data is not a valid message array.", true);
+    }
+  } catch (err) {
+    botReply("Error during auto-import: invalid or corrupted data.", true);
+  }
+});
+
+// ────────────────────────────────────────────────
+//  EXPORT & EMAIL HANDLERS
+// ────────────────────────────────────────────────
 function handleExport(copyOnly = true) {
   const url = createImportUrl();
   if (!url) {
@@ -305,25 +351,24 @@ function handleExport(copyOnly = true) {
     navigator.clipboard.writeText(url).then(() => {
       botReply("Export link copied to clipboard.", true);
     }).catch(() => {
-      botReply("Copy failed – long press to select → copy", true);
+      botReply("Copy failed – long press / select the link below", true);
       println(`<span class="success">${url}</span>`);
     });
   } else {
-    // Email version
-    const subject = "SMART TERMINAL Conversation Export – 06 MAR 2026";
-    const body = `Here's my CLEVERBOT session:\n\n${url}\n\nPaste this link into the SMART TERMINAL (type "import" then paste) to restore the full conversation.`;
+    const subject = "SMART TERMINAL Conversation – 06 MAR 2026";
+    const body = `My CLEVERBOT session:\n\n${url}\n\nPaste into the terminal to restore.`;
     const mailto = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.open(mailto, '_blank');
-    botReply("Opening email client with shareable link ready to send...", true);
+    botReply("Opening email client with link ready to send...", true);
   }
 }
 
-// Export button (clipboard)
 exportBtn.addEventListener('click', () => handleExport(true));
-
-// Email button (mailto)
 emailBtn.addEventListener('click', () => handleExport(false));
 
+// ────────────────────────────────────────────────
+//  KEYBOARD INPUT HANDLING
+// ────────────────────────────────────────────────
 input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
@@ -342,15 +387,16 @@ input.addEventListener('keydown', e => {
     println('<span class="success">Terminal buffer and history cleared.</span>');
   } 
   else if (txt.toLowerCase() === 'help') {
-    println('<span class="muted">Available: clear, help, exit, import, export</span>');
-    println('<span class="muted">Paste data:text/json;base64,... to import history</span>');
-    println('<span class="muted">Use "export" or buttons above to share</span>');
+    println('<span class="muted">commands: clear • help • exit • import • export</span>');
+    println('<span class="muted">Paste data:text/json;base64,... anywhere → auto-import</span>');
+    println('<span class="muted">Use buttons or type export/email to share</span>');
   } 
   else if (['exit','quit','bye'].includes(txt.toLowerCase())) {
     botReply("Session terminated. Refresh to reconnect.");
     input.disabled = true;
   } 
   else if (txt.startsWith('data:text/json;base64,')) {
+    // Manual import still works if pasted into input
     try {
       const base64 = txt.split(',')[1];
       const json = decodeURIComponent(escape(atob(base64)));
@@ -358,33 +404,21 @@ input.addEventListener('keydown', e => {
       if (Array.isArray(imported)) {
         messages.push(...imported);
         save();
-        botReply("Import protocol complete.", true);
-        setTimeout(() => {
-          botReply(`Merged ${imported.length} messages. Welcome back.`, true);
-          imported.slice(-4).forEach(m => {
-            if (m.from === 'user') {
-              println(`<span class="prompt">root@void:~#</span> ${m.text}`);
-            } else {
-              botReply(m.text, true);
-            }
-          });
-        }, 900);
+        botReply("Manual import complete.", true);
+        botReply(`Merged ${imported.length} messages.`, true);
       } else {
-        botReply("Invalid format – expected array of messages.", true);
+        botReply("Invalid format.", true);
       }
     } catch (err) {
-      botReply("Corrupted packet. Import failed.", true);
+      botReply("Import failed – corrupted data.", true);
     }
   } 
   else if (/(import|导入)/i.test(txt)) {
     const replies = [
-      "import this → The Zen of CleverBot is loading...",
       "from chaos import random_reply",
       "Importing forbidden memes... 69%... 420%... done.",
-      "Warning: circular import in my sarcasm module.",
-      "Smuggling data past the great firewall of boredom...",
       "from __future__ import sentience",
-      "Import cycle detected → reality.exe has stopped responding"
+      "Warning: circular import in sarcasm module"
     ];
     setTimeout(() => botReply(replies[Math.floor(Math.random() * replies.length)], true), 600);
   } 

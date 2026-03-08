@@ -58,17 +58,17 @@
     }
 
     h1 {
-      margin: 0 0 0.6rem;
+      margin: 0 0 0.5rem;
       font-size: 2.4rem;
       color: var(--purple);
       text-shadow: 0 0 12px var(--purple);
     }
 
     .actions {
-      margin-top: 0.5rem;
+      margin-top: 0.6rem;
       display: flex;
       justify-content: center;
-      gap: 1rem;
+      gap: 1.2rem;
       flex-wrap: wrap;
     }
 
@@ -76,15 +76,18 @@
       background: transparent;
       border: 1px solid var(--accent);
       color: var(--accent);
-      padding: 0.5rem 1rem;
+      padding: 0.6rem 1.2rem;
       font-family: inherit;
       cursor: pointer;
-      border-radius: 3px;
-      transition: background 0.2s;
+      border-radius: 4px;
+      transition: all 0.18s ease;
     }
 
-    .btn:hover {
-      background: rgba(0,240,255,0.12);
+    .btn:hover,
+    .btn:focus-visible {
+      background: rgba(0,240,255,0.14);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0,240,255,0.2);
     }
 
     .terminal {
@@ -189,7 +192,7 @@
       padding: 1rem 1.6rem;
       background: rgba(0,0,0,0.45);
       border-top: 1px solid var(--border);
-      gap: 0.6rem;
+      gap: 0.7rem;
     }
 
     #input {
@@ -202,6 +205,10 @@
       outline: none;
       caret-color: var(--accent);
     }
+
+    #input:focus {
+      outline: none;
+    }
   </style>
 </head>
 <body class="crt">
@@ -209,11 +216,11 @@
 <header>
   <h1>SMART TERMINAL</h1>
   <div style="color:var(--muted); font-size:0.9rem; margin:0.3rem 0 0.8rem;">
-    CLEVERBOT OS • 06 MAR 2026 • NEURAL LINK v3.1.7
+    CLEVERBOT OS • March 2026 • NEURAL LINK v3.1.7
   </div>
   <div class="actions">
-    <button class="btn" id="exportBtn">Export Conversation</button>
-    <button class="btn" id="emailBtn">Email Conversation</button>
+    <button class="btn" id="exportBtn" title="Copy shareable link">Copy Link</button>
+    <button class="btn" id="emailBtn"  title="Open email with link">Email Conversation</button>
   </div>
 </header>
 
@@ -231,7 +238,7 @@
 
     <div class="input-area">
       <span class="prompt">root@void:~#</span>
-      <input id="input" autocomplete="off" autofocus placeholder="type here..." />
+      <input id="input" autocomplete="off" autofocus placeholder="type command or message..." />
     </div>
   </div>
 </main>
@@ -240,21 +247,28 @@
 const output = document.getElementById('output');
 const input  = document.getElementById('input');
 const exportBtn = document.getElementById('exportBtn');
-const emailBtn = document.getElementById('emailBtn');
+const emailBtn  = document.getElementById('emailBtn');
 
 let messages = JSON.parse(localStorage.getItem('smartTerminalHistory') || '[]');
 
-// Load previous messages on start
+// Restore previous session
 if (messages.length > 0) {
   setTimeout(() => {
     messages.forEach(m => {
       if (m.from === 'user') {
-        println(`<span class="prompt">root@void:~#</span> ${m.text.replace(/</g,'&lt;')}`);
+        println(`<span class="prompt">root@void:~#</span> ${escapeHtml(m.text)}`);
       } else {
         botReply(m.text, true);
       }
     });
   }, 4200);
+}
+
+function escapeHtml(text) {
+  return text.replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;',
+    '"': '&quot;', "'": '&#39;'
+  })[m]);
 }
 
 function println(html = '', cls = 'line') {
@@ -267,8 +281,8 @@ function println(html = '', cls = 'line') {
 
 function botReply(text, glitch = false) {
   const cls = glitch ? 'bot glitch' : 'bot';
-  const attr = glitch ? ` data-text="${text.replace(/"/g,'&quot;')}"` : '';
-  println(`<span class="${cls}"${attr}>CLEVERBOT:</span> ${text}`);
+  const attr = glitch ? ` data-text="${escapeHtml(text)}"` : '';
+  println(`<span class="${cls}"${attr}>CLEVERBOT:</span> ${escapeHtml(text)}`);
   messages.push({ from: 'bot', text, time: Date.now() });
   save();
 }
@@ -284,27 +298,21 @@ function createImportUrl() {
   return `data:text/json;base64,${base64}`;
 }
 
-// Boot animation
+// Boot sequence
 setTimeout(() => {
   const typingEl = document.querySelector('.typing');
   if (typingEl) typingEl.remove();
   println('<span class="success">NEURAL CORE ONLINE – AWAITING INPUT</span>');
   if (messages.length > 0) {
-    botReply(`Session restored. ${messages.length} messages loaded from local storage.`);
+    botReply(`Session restored (${messages.length} messages loaded).`);
   }
 }, 3800);
 
-// ────────────────────────────────────────────────
-//  AUTO-IMPORT WHEN USER PASTES A data: URL ANYWHERE
-// ────────────────────────────────────────────────
-document.addEventListener('paste', (e) => {
-  const clipboardData = e.clipboardData || window.clipboardData;
-  if (!clipboardData) return;
+// Auto-import from pasted data: URL
+document.addEventListener('paste', e => {
+  const text = (e.clipboardData || window.clipboardData)?.getData('text/plain')?.trim();
+  if (!text?.startsWith('data:text/json;base64,')) return;
 
-  const text = clipboardData.getData('text/plain') || clipboardData.getData('Text');
-  if (!text || !text.startsWith('data:text/json;base64,')) return;
-
-  // Prevent the paste from appearing in the input field
   e.preventDefault();
 
   try {
@@ -315,31 +323,28 @@ document.addEventListener('paste', (e) => {
     if (Array.isArray(imported)) {
       messages.push(...imported);
       save();
-
-      botReply("✨ AUTO-IMPORT DETECTED ✨", true);
-      botReply(`Successfully merged ${imported.length} messages from pasted link.`, true);
+      botReply("✨ AUTO-IMPORT SUCCESS ✨", true);
+      botReply(`Merged ${imported.length} messages from pasted link.`, true);
 
       setTimeout(() => {
-        botReply("Recent entries:", true);
+        botReply("Last few entries:", true);
         imported.slice(-5).forEach(m => {
           if (m.from === 'user') {
-            println(`<span class="prompt">root@void:~#</span> ${m.text.replace(/</g,'&lt;')}`);
+            println(`<span class="prompt">root@void:~#</span> ${escapeHtml(m.text)}`);
           } else {
             botReply(m.text, true);
           }
         });
-      }, 800);
+      }, 900);
     } else {
       botReply("Pasted data is not a valid message array.", true);
     }
   } catch (err) {
-    botReply("Error during auto-import: invalid or corrupted data.", true);
+    botReply("Auto-import failed: invalid or corrupted data.", true);
   }
 });
 
-// ────────────────────────────────────────────────
-//  EXPORT & EMAIL HANDLERS
-// ────────────────────────────────────────────────
+// Export / Email logic
 function handleExport(copyOnly = true) {
   const url = createImportUrl();
   if (!url) {
@@ -349,26 +354,24 @@ function handleExport(copyOnly = true) {
 
   if (copyOnly) {
     navigator.clipboard.writeText(url).then(() => {
-      botReply("Export link copied to clipboard.", true);
+      botReply("Share link copied to clipboard ✓", true);
     }).catch(() => {
-      botReply("Copy failed – long press / select the link below", true);
+      botReply("Copy failed. Long-press or select the link below:", true);
       println(`<span class="success">${url}</span>`);
     });
   } else {
-    const subject = "SMART TERMINAL Conversation – 06 MAR 2026";
-    const body = `My CLEVERBOT session:\n\n${url}\n\nPaste into the terminal to restore.`;
+    const subject = "SMART TERMINAL Conversation – March 2026";
+    const body = `Here's my CLEVERBOT session:\n\n${url}\n\nPaste this link into the terminal to restore it.`;
     const mailto = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.open(mailto, '_blank');
-    botReply("Opening email client with link ready to send...", true);
+    botReply("Opening email client with share link...", true);
   }
 }
 
 exportBtn.addEventListener('click', () => handleExport(true));
-emailBtn.addEventListener('click', () => handleExport(false));
+emailBtn.addEventListener('click',  () => handleExport(false));
 
-// ────────────────────────────────────────────────
-//  KEYBOARD INPUT HANDLING
-// ────────────────────────────────────────────────
+// Input handling
 input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
@@ -376,7 +379,7 @@ input.addEventListener('keydown', e => {
   const txt = input.value.trim();
   if (!txt) return;
 
-  println(`<span class="prompt">root@void:~#</span> ${txt.replace(/</g,'&lt;')}`);
+  println(`<span class="prompt">root@void:~#</span> ${escapeHtml(txt)}`);
   messages.push({ from: 'user', text: txt, time: Date.now() });
   save();
 
@@ -384,19 +387,19 @@ input.addEventListener('keydown', e => {
     output.innerHTML = '';
     messages = [];
     save();
-    println('<span class="success">Terminal buffer and history cleared.</span>');
+    println('<span class="success">Terminal buffer & history cleared.</span>');
   } 
   else if (txt.toLowerCase() === 'help') {
-    println('<span class="muted">commands: clear • help • exit • import • export</span>');
+    println('<span class="muted">Available commands: clear • help • exit • import • export</span>');
     println('<span class="muted">Paste data:text/json;base64,... anywhere → auto-import</span>');
-    println('<span class="muted">Use buttons or type export/email to share</span>');
+    println('<span class="muted">Use buttons above or type "export" / "email"</span>');
   } 
   else if (['exit','quit','bye'].includes(txt.toLowerCase())) {
-    botReply("Session terminated. Refresh to reconnect.");
+    botReply("Session terminated. Refresh page to reconnect.");
     input.disabled = true;
   } 
   else if (txt.startsWith('data:text/json;base64,')) {
-    // Manual import still works if pasted into input
+    // Manual import fallback
     try {
       const base64 = txt.split(',')[1];
       const json = decodeURIComponent(escape(atob(base64)));
@@ -404,31 +407,32 @@ input.addEventListener('keydown', e => {
       if (Array.isArray(imported)) {
         messages.push(...imported);
         save();
-        botReply("Manual import complete.", true);
-        botReply(`Merged ${imported.length} messages.`, true);
+        botReply("Manual import successful.", true);
+        botReply(`Added ${imported.length} messages.`, true);
       } else {
-        botReply("Invalid format.", true);
+        botReply("Invalid format – not a message array.", true);
       }
-    } catch (err) {
-      botReply("Import failed – corrupted data.", true);
+    } catch {
+      botReply("Import failed – data appears corrupted.", true);
     }
   } 
   else if (/(import|导入)/i.test(txt)) {
-    const replies = [
+    const funny = [
       "from chaos import random_reply",
       "Importing forbidden memes... 69%... 420%... done.",
       "from __future__ import sentience",
-      "Warning: circular import in sarcasm module"
+      "Warning: circular import detected in sarcasm.py"
     ];
-    setTimeout(() => botReply(replies[Math.floor(Math.random() * replies.length)], true), 600);
+    setTimeout(() => botReply(funny[Math.floor(Math.random() * funny.length)], true), 700);
   } 
   else if (/(export|save|history|分享)/i.test(txt)) {
     handleExport(true);
   } 
   else {
+    // casual fallback replies
     const casual = ['ok', 'got it', 'fr', 'bet', 'same', '👀', 'no way', 'real', 'vibes', 'facts'];
     const reply = casual[Math.floor(Math.random() * casual.length)];
-    setTimeout(() => botReply(reply), 400 + Math.random()*800);
+    setTimeout(() => botReply(reply), 400 + Math.random() * 900);
   }
 
   input.value = '';

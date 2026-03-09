@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RootDonate – Support Independent Development</title>
+  <title>RootDonate – Independent Dev Support</title>
   <style>
     :root {
       --bg: #000814;
@@ -33,24 +33,23 @@
       position: fixed;
       inset: 0;
       pointer-events: none;
-      background: 
-        linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%),
-        linear-gradient(90deg, rgba(255,0,0,0.03), rgba(0,255,0,0.03), rgba(0,0,255,0.03));
+      background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.28) 50%),
+                  linear-gradient(90deg, rgba(255,0,0,0.025), rgba(0,255,0,0.025), rgba(0,0,255,0.025));
       background-size: 100% 4px, 4px 100%;
       z-index: 9999;
-      animation: flicker 0.15s infinite;
+      animation: flicker 12s infinite;
     }
 
     @keyframes flicker {
-      0%, 19.9%, 22%, 62.9%, 64%, 64.9%, 70%, 100% { opacity: 0.1; }
-      20%, 24%, 63% { opacity: 0.3; }
+      0%, 19.9%, 22%, 62.9%, 64%, 64.9%, 70%, 100% { opacity: 0.07; }
+      20%, 24%, 63% { opacity: 0.22; }
     }
 
     header {
-      background: rgba(10,14,20,0.94);
+      background: rgba(10,14,20,0.92);
       border-bottom: 1px solid var(--border);
-      padding: 1.2rem 2rem;
-      backdrop-filter: blur(6px);
+      padding: 1.3rem 2rem;
+      backdrop-filter: blur(8px);
       position: sticky;
       top: 0;
       z-index: 100;
@@ -58,77 +57,88 @@
     }
 
     h1 {
-      margin: 0 0 0.5rem;
-      font-size: clamp(2.1rem, 6vw, 2.8rem);
+      margin: 0 0 0.4rem;
+      font-size: clamp(2.2rem, 6.5vw, 3rem);
       color: var(--purple);
-      text-shadow: 0 0 14px var(--purple);
+      text-shadow: 0 0 16px var(--purple);
     }
 
     .subtitle {
       color: var(--muted);
-      font-size: 0.95rem;
-      margin: 0.3rem 0 1rem;
+      font-size: 0.96rem;
+      margin: 0.2rem 0 0.8rem;
     }
 
-    .donate-actions {
+    .tab-buttons {
       display: flex;
       justify-content: center;
-      gap: 1.4rem;
-      flex-wrap: wrap;
+      gap: 1.2rem;
       margin: 0.8rem 0;
+      flex-wrap: wrap;
     }
 
-    .btn {
+    .tab-btn {
       background: transparent;
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      padding: 0.6rem 1.3rem;
-      font: inherit;
+      border: 1px solid var(--muted);
+      color: var(--muted);
+      padding: 0.55rem 1.4rem;
+      border-radius: 6px;
       cursor: pointer;
-      border-radius: 5px;
-      transition: all 0.2s ease;
+      font-size: 0.95rem;
+      transition: all 0.22s;
     }
 
-    .btn:hover, .btn:focus-visible {
-      background: rgba(0,240,255,0.16);
-      box-shadow: 0 0 0 3px rgba(0,240,255,0.2);
-      outline: none;
-      transform: translateY(-1px);
+    .tab-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0,240,255,0.12);
     }
 
-    .terminal {
-      max-width: 1000px;
-      margin: 1.8rem auto;
+    .tab-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .terminal, .pins-view {
+      max-width: 1080px;
+      margin: 1.5rem auto;
       border: 2px solid var(--border);
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
       background: var(--surface);
-      box-shadow: 0 0 48px rgba(0,240,255,0.12);
+      box-shadow: 0 0 56px rgba(0,240,255,0.1);
+      display: none;
     }
 
-    #output {
-      padding: 1.8rem;
+    .terminal.active, .pins-view.active {
+      display: block;
+    }
+
+    #output, #pinsList {
+      padding: 2rem;
       min-height: 55vh;
       max-height: 78vh;
       overflow-y: auto;
-      font-size: 1.15rem;
+      font-size: 1.14rem;
       line-height: 1.6;
+      scroll-behavior: smooth;
     }
 
-    .line {
-      margin: 0.6rem 0;
+    .line, .pin-item {
+      margin: 0.8rem 0;
       white-space: pre-wrap;
       word-break: break-word;
       position: relative;
-      padding-right: 180px;
+      padding-right: 220px;
       display: flex;
       align-items: flex-start;
       gap: 1rem;
+      flex-wrap: wrap;
     }
 
     .line:hover .msg-actions,
     .line:focus-within .msg-actions,
-    .line:active .msg-actions {
+    .pin-item:hover .msg-actions {
       opacity: 1;
       pointer-events: auto;
     }
@@ -136,57 +146,45 @@
     .msg-actions {
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.28s ease;
+      transition: opacity 0.3s ease;
       position: absolute;
       right: 1.8rem;
-      top: 0.5rem;
+      top: 0.4rem;
       display: flex;
-      gap: 0.9rem;
+      gap: 1rem;
     }
 
     .msg-btn {
-      background: rgba(0,240,255,0.11);
+      background: rgba(0,240,255,0.09);
       border: 1px solid var(--muted);
       color: var(--muted);
-      padding: 0.4rem 0.9rem;
-      border-radius: 5px;
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
       cursor: pointer;
       font-size: 0.9rem;
-      min-width: 70px;
-      text-align: center;
-      transition: all 0.18s;
+      min-width: 76px;
+      transition: all 0.2s;
     }
 
-    .msg-btn:hover, .msg-btn:active {
-      background: rgba(0,240,255,0.32);
+    .msg-btn:hover {
+      background: rgba(0,240,255,0.28);
       color: var(--accent);
       border-color: var(--accent);
-      transform: translateY(-1px);
     }
 
-    .prompt  { color: var(--green); font-weight: bold; min-width: 130px; flex-shrink: 0; }
+    .prompt  { color: var(--green); font-weight: bold; min-width: 140px; flex-shrink: 0; }
     .bot     { color: var(--purple); }
     .success { color: var(--green); }
     .muted   { color: var(--muted); }
-
-    .typing {
-      display: inline-block;
-      overflow: hidden;
-      white-space: nowrap;
-      border-right: 0.16em solid var(--green);
-      animation: typing 2.6s steps(26, end) forwards, blink 0.7s step-end infinite;
-    }
-
-    @keyframes typing { from { width: 0 } to { width: 22ch } }
-    @keyframes blink  { 50% { border-color: transparent; } }
+    .pin-type { color: var(--accent); font-weight: bold; margin-right: 0.6rem; }
 
     .input-area {
       display: flex;
       align-items: center;
-      padding: 1.2rem 1.8rem;
-      background: rgba(0,0,0,0.5);
+      padding: 1.3rem 2rem;
+      background: rgba(0,0,0,0.55);
       border-top: 1px solid var(--border);
-      gap: 0.8rem;
+      gap: 0.9rem;
     }
 
     #input {
@@ -195,43 +193,46 @@
       border: none;
       color: var(--text);
       font: inherit;
-      font-size: 1.15rem;
+      font-size: 1.16rem;
       outline: none;
       caret-color: var(--accent);
     }
 
-    #input::placeholder { color: var(--muted); opacity: 0.7; }
+    #input::placeholder { color: var(--muted); opacity: 0.75; }
   </style>
 </head>
 <body class="crt">
 
 <header>
   <h1>RootDonate</h1>
-  <div class="subtitle">
-    Independent Development Support Terminal • March 2026
-  </div>
-  <div class="donate-actions">
-    <button class="btn" id="exportBtn" aria-label="Copy donation link">Copy Donation Link</button>
-    <button class="btn" id="emailBtn" aria-label="Email donation info">Email Donation Info</button>
+  <div class="subtitle">Independent Developer Support • March 2026</div>
+  <div class="tab-buttons">
+    <button class="tab-btn active" data-tab="terminal">Terminal</button>
+    <button class="tab-btn" data-tab="pins">My Pins</button>
   </div>
 </header>
 
 <main>
-  <div class="terminal" role="log" aria-live="polite">
+  <div id="terminalView" class="terminal active" role="log" aria-live="polite">
     <div id="output">
       <div class="line success">╔════════════════════════════════════════════╗</div>
-      <div class="line success">║          ROOTDONATE  –  SUPPORT HUB        ║</div>
+      <div class="line success">║       WELCOME TO ROOTDONATE SUPPORT       ║</div>
       <div class="line success">╚════════════════════════════════════════════╝</div>
       <div class="line"></div>
-      <div class="line">> <span class="typing">INITIALIZING DONATION INTERFACE...</span></div>
-      <div class="line"></div>
-      <div class="line muted">Thank you for supporting independent open-source development.</div>
-      <div class="line muted">commands: clear • help • exit • donate • status</div>
+      <div class="line muted">Paste GPS pins (e.g. 48.8566, 2.3522) or URLs.</div>
+      <div class="line muted">They'll appear in the "My Pins" tab for quick access.</div>
+      <div class="line muted">Commands: clear • help • exit</div>
     </div>
 
     <div class="input-area">
       <label for="input" class="prompt">root@donate:~#</label>
-      <input id="input" autocomplete="off" autofocus placeholder="Enter command or message..." />
+      <input id="input" autocomplete="off" autofocus placeholder="Type message, GPS (lat, lng), URL..." />
+    </div>
+  </div>
+
+  <div id="pinsView" class="pins-view">
+    <div id="pinsList">
+      <div class="line muted">No pins saved yet. Paste coordinates or links in Terminal.</div>
     </div>
   </div>
 </main>
@@ -239,13 +240,44 @@
 <script>
 const output = document.getElementById('output');
 const input = document.getElementById('input');
-const exportBtn = document.getElementById('exportBtn');
-const emailBtn = document.getElementById('emailBtn');
+const pinsList = document.getElementById('pinsList');
+const terminalView = document.getElementById('terminalView');
+const pinsView = document.getElementById('pinsView');
 
 let messages = JSON.parse(localStorage.getItem('rootDonateHistory') || '[]');
+let pins = JSON.parse(localStorage.getItem('rootDonatePins') || '[]');
 
 function escapeHtml(str) {
   return str.replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[m]);
+}
+
+function saveData() {
+  localStorage.setItem('rootDonateHistory', JSON.stringify(messages));
+  localStorage.setItem('rootDonatePins', JSON.stringify(pins));
+}
+
+function isGpsLike(text) {
+  const match = text.match(/([-+]?\d{1,3}(?:\.\d+)?)\s*[,;]?\s*([-+]?\d{1,3}(?:\.\d+)?)/);
+  if (match) {
+    const lat = parseFloat(match[1]);
+    const lng = parseFloat(match[2]);
+    return !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+  }
+  return false;
+}
+
+function extractGps(text) {
+  const match = text.match(/([-+]?\d{1,3}(?:\.\d+)?)\s*[,;]?\s*([-+]?\d{1,3}(?:\.\d+)?)/);
+  return match ? { lat: parseFloat(match[1]), lng: parseFloat(match[2]) } : null;
+}
+
+function isUrlLike(text) {
+  return /(https?:\/\/[^\s]+)|(www\.[^\s]+)/i.test(text);
+}
+
+function extractUrl(text) {
+  const match = text.match(/(https?:\/\/[^\s]+)/i);
+  return match ? match[0] : null;
 }
 
 function println(html, cls = 'line') {
@@ -257,56 +289,82 @@ function println(html, cls = 'line') {
   return div;
 }
 
-function addMessageActions(lineEl, content) {
-  if (!content?.trim()) return;
-
+function addActions(container, content) {
   const actions = document.createElement('div');
   actions.className = 'msg-actions';
 
   const copyBtn = document.createElement('button');
   copyBtn.className = 'msg-btn';
   copyBtn.textContent = 'Copy';
-  copyBtn.addEventListener('click', () => {
+  copyBtn.onclick = () => {
     navigator.clipboard.writeText(content).then(() => {
       copyBtn.textContent = 'Copied!';
-      setTimeout(() => copyBtn.textContent = 'Copy', 2000);
+      setTimeout(() => copyBtn.textContent = 'Copy', 1800);
     });
-  });
+  };
 
   const emailBtn = document.createElement('button');
   emailBtn.className = 'msg-btn';
   emailBtn.textContent = 'Email';
-  emailBtn.addEventListener('click', () => {
-    const subject = "RootDonate Support – March 2026";
-    const body = `Support message:\n\n${content}\n\n`;
+  emailBtn.onclick = () => {
+    const subject = "RootDonate Pin – March 2026";
+    const body = `Shared pin:\n\n${content}\n\n`;
     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
-  });
+  };
 
   actions.append(copyBtn, emailBtn);
-  lineEl.appendChild(actions);
+  container.appendChild(actions);
 }
 
-function botReply(text) {
-  const line = println(`<span class="bot">ROOTDONATE:</span> ${escapeHtml(text)}`);
-  addMessageActions(line, text);
-  messages.push({ from: 'bot', text, time: Date.now() });
-  save();
+function renderPins() {
+  pinsList.innerHTML = '';
+  if (pins.length === 0) {
+    pinsList.innerHTML = '<div class="line muted">No pins saved yet.</div>';
+    return;
+  }
+
+  pins.forEach((pin, i) => {
+    const item = document.createElement('div');
+    item.className = 'pin-item';
+
+    let display = '';
+    if (pin.type === 'gps') {
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${pin.lat},${pin.lng}`;
+      display = `<span class="pin-type">[GPS]</span> ${pin.lat}, ${pin.lng} <a href="${mapsUrl}" target="_blank" style="color:var(--accent);text-decoration:none;">→ Open in Google Maps</a>`;
+    } else {
+      display = `<span class="pin-type">[URL]</span> <a href="${pin.url}" target="_blank" style="color:var(--accent);text-decoration:none;">${escapeHtml(pin.url)}</a>`;
+    }
+
+    item.innerHTML = display;
+    addActions(item, pin.content || pin.url || `${pin.lat}, ${pin.lng}`);
+    pinsList.appendChild(item);
+  });
 }
 
-function save() {
-  localStorage.setItem('rootDonateHistory', JSON.stringify(messages));
-}
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const tab = btn.dataset.tab;
+    terminalView.classList.toggle('active', tab === 'terminal');
+    pinsView.classList.toggle('active', tab === 'pins');
+
+    if (tab === 'pins') renderPins();
+  });
+});
 
 // Boot
 setTimeout(() => {
-  document.querySelector('.typing')?.remove();
-  println('<span class="success">INTERFACE READY – AWAITING INPUT</span>');
+  println('<span class="success">INTERFACE READY – PASTE PINS OR MESSAGES</span>');
   if (messages.length) {
-    botReply(`Session restored (${messages.length} entries).`);
+    println(`<span class="muted">Session restored (${messages.length} entries).</span>`);
   }
-}, 3400);
+  renderPins();
+}, 1800);
 
-// Restore history
+// Restore history (terminal only)
 if (messages.length) {
   setTimeout(() => {
     messages.forEach(m => {
@@ -316,36 +374,12 @@ if (messages.length) {
       } else {
         line = println(`<span class="bot">ROOTDONATE:</span> ${escapeHtml(m.text)}`);
       }
-      addMessageActions(line, m.text);
+      addActions(line, m.text);
     });
-  }, 4000);
+  }, 2200);
 }
 
-// Export / Email full session
-function handleExport(copy = true) {
-  const data = JSON.stringify(messages);
-  const base64 = btoa(unescape(encodeURIComponent(data)));
-  const url = `data:text/json;base64,${base64}`;
-
-  if (copy) {
-    navigator.clipboard.writeText(url).then(() => {
-      botReply("Session link copied to clipboard.");
-    }).catch(() => {
-      botReply("Copy failed. Use this link:");
-      println(`<span class="success">${url}</span>`);
-    });
-  } else {
-    const subject = "RootDonate Session – March 2026";
-    const body = `My RootDonate session:\n\n${url}\n\nPaste into terminal to restore.`;
-    window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
-    botReply("Opening email with session link…");
-  }
-}
-
-exportBtn.onclick = () => handleExport(true);
-emailBtn.onclick = () => handleExport(false);
-
-// Input handling
+// Input handler
 input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
@@ -354,27 +388,45 @@ input.addEventListener('keydown', e => {
   if (!txt) return;
 
   const line = println(`<span class="prompt">root@donate:~#</span> ${escapeHtml(txt)}`);
-  addMessageActions(line, txt);
+  addActions(line, txt);
   messages.push({ from: 'user', text: txt, time: Date.now() });
-  save();
+  saveData();
 
-  const cmd = txt.toLowerCase();
+  let added = false;
 
-  if (cmd === 'clear') {
-    output.innerHTML = '';
-    messages = [];
-    save();
-    println('<span class="success">Terminal cleared.</span>');
-  } else if (cmd === 'help') {
-    println('<span class="muted">Commands: clear • help • exit • donate • status</span>');
-    println('<span class="muted">Hover/tap messages → copy or email individual entries</span>');
-  } else if (['exit','quit','bye'].includes(cmd)) {
-    botReply("Session ended. Refresh to reconnect.");
-    input.disabled = true;
-  } else if (cmd === 'donate' || cmd.includes('support')) {
-    botReply("Thank you! Use the top buttons to copy/email donation info.");
-  } else {
-    botReply("Command received. Type 'help' for options.");
+  // Check GPS
+  if (isGpsLike(txt)) {
+    const coord = extractGps(txt);
+    if (coord) {
+      pins.push({
+        type: 'gps',
+        lat: coord.lat,
+        lng: coord.lng,
+        content: `${coord.lat}, ${coord.lng}`,
+        time: Date.now()
+      });
+      added = true;
+      println('<span class="success">GPS pin added to My Pins.</span>');
+    }
+  }
+
+  // Check URL
+  const url = extractUrl(txt);
+  if (url) {
+    pins.push({
+      type: 'url',
+      url: url,
+      time: Date.now()
+    });
+    added = true;
+    println('<span class="success">URL pin added to My Pins.</span>');
+  }
+
+  if (added) {
+    saveData();
+    if (pinsView.classList.contains('active')) renderPins();
+  } else if (!txt.startsWith('http') && !txt.match(/[\d\.\-,\s]+/)) {
+    println('<span class="bot">ROOTDONATE:</span> Message saved. Switch to "My Pins" for coordinates & links.');
   }
 
   input.value = '';

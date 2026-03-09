@@ -13,8 +13,8 @@
       --purple: #c97eff;
       --accent: #00f0ff;
       --error: #ff3366;
-      --muted: #5a6f8c;
-      --border: #1a2b44;
+      --muted: #8ba2c2;
+      --border: #1e334d;
     }
 
     * { box-sizing: border-box; }
@@ -23,9 +23,10 @@
       margin: 0;
       background: var(--bg);
       color: var(--text);
-      font-family: 'Courier New', Consolas, monospace;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
       min-height: 100dvh;
       overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
     .crt::before {
@@ -33,23 +34,25 @@
       position: fixed;
       inset: 0;
       pointer-events: none;
-      background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.28) 50%),
-                  linear-gradient(90deg, rgba(255,0,0,0.025), rgba(0,255,0,0.025), rgba(0,0,255,0.025));
-      background-size: 100% 4px, 4px 100%;
+      background: 
+        linear-gradient(rgba(0,255,0,0.04) 50%, transparent 50%),
+        linear-gradient(90deg, rgba(255,0,0,0.02), rgba(0,255,0,0.02), rgba(0,0,255,0.02));
+      background-size: 100% 3px, 3px 100%;
       z-index: 9999;
-      animation: flicker 12s infinite;
+      animation: flicker 14s infinite;
+      mix-blend-mode: overlay;
     }
 
     @keyframes flicker {
-      0%, 19.9%, 22%, 62.9%, 64%, 64.9%, 70%, 100% { opacity: 0.07; }
-      20%, 24%, 63% { opacity: 0.22; }
+      0%,18%,22%,62%,64%,70%,100% { opacity: 0.04; }
+      20%,24%,63% { opacity: 0.18; }
     }
 
     header {
-      background: rgba(10,14,20,0.92);
+      background: rgba(8,12,20,0.94);
       border-bottom: 1px solid var(--border);
-      padding: 1.4rem 2rem;
-      backdrop-filter: blur(8px);
+      padding: 1.3rem 1.6rem;
+      backdrop-filter: blur(10px);
       position: sticky;
       top: 0;
       z-index: 100;
@@ -57,23 +60,24 @@
     }
 
     h1 {
-      margin: 0 0 0.5rem;
-      font-size: clamp(2.4rem, 7vw, 3.2rem);
+      margin: 0 0 0.4rem;
+      font-size: clamp(2.3rem, 6.8vw, 3.1rem);
       color: var(--purple);
-      text-shadow: 0 0 20px var(--purple);
+      text-shadow: 0 0 24px var(--purple);
+      letter-spacing: -0.02em;
     }
 
     .subtitle {
       color: var(--muted);
-      font-size: 1rem;
-      margin: 0.3rem 0 1rem;
+      font-size: 0.96rem;
+      margin: 0.2rem 0 0.9rem;
     }
 
     .tab-buttons {
       display: flex;
       justify-content: center;
-      gap: 1.4rem;
-      margin: 1rem 0;
+      gap: 1.1rem;
+      margin: 0.9rem 0;
       flex-wrap: wrap;
     }
 
@@ -81,108 +85,104 @@
       background: transparent;
       border: 1px solid var(--muted);
       color: var(--muted);
-      padding: 0.6rem 1.6rem;
+      padding: 0.55rem 1.4rem;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 0.98rem;
-      transition: all 0.22s;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      touch-action: manipulation;
     }
 
     .tab-btn.active {
       border-color: var(--accent);
       color: var(--accent);
-      background: rgba(0,240,255,0.14);
+      background: rgba(0,240,255,0.12);
     }
 
-    .tab-btn:hover {
+    .tab-btn:hover:not(.active) {
       border-color: var(--accent);
       color: var(--accent);
     }
 
     .terminal, .pins-view {
-      max-width: 1100px;
-      margin: 1.8rem auto;
-      border: 2px solid var(--border);
-      border-radius: 14px;
+      max-width: 1180px;
+      margin: 1.6rem auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
       overflow: hidden;
       background: var(--surface);
-      box-shadow: 0 0 60px rgba(0,240,255,0.08);
+      box-shadow: 0 10px 50px rgba(0,240,255,0.06);
       display: none;
     }
 
-    .terminal.active, .pins-view.active {
-      display: block;
-    }
+    .terminal.active, .pins-view.active { display: block; }
 
     #output, #pinsList {
-      padding: 2.2rem;
-      min-height: 56vh;
-      max-height: 80vh;
+      padding: 2rem 2.2rem;
+      min-height: 50vh;
+      max-height: 78vh;
       overflow-y: auto;
-      font-size: 1.15rem;
-      line-height: 1.65;
+      font-size: 1.08rem;
+      line-height: 1.68;
       scroll-behavior: smooth;
     }
 
     .line, .pin-item {
-      margin: 1rem 0;
+      margin: 0.9rem 0;
       white-space: pre-wrap;
       word-break: break-word;
       position: relative;
-      padding-right: 240px;
+      padding-right: 220px;
       display: flex;
       align-items: flex-start;
-      gap: 1.2rem;
+      gap: 1rem;
       flex-wrap: wrap;
     }
 
     .line:hover .msg-actions,
-    .line:focus-within .msg-actions,
     .pin-item:hover .msg-actions {
       opacity: 1;
-      pointer-events: auto;
     }
 
     .msg-actions {
       opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.25s;
       position: absolute;
-      right: 2rem;
-      top: 0.5rem;
+      right: 1.4rem;
+      top: 0.3rem;
       display: flex;
-      gap: 1.1rem;
+      gap: 0.9rem;
     }
 
     .msg-btn {
-      background: rgba(0,240,255,0.1);
+      background: rgba(0,240,255,0.08);
       border: 1px solid var(--muted);
       color: var(--muted);
-      padding: 0.45rem 1.1rem;
+      padding: 0.4rem 1rem;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 0.92rem;
-      min-width: 80px;
-      transition: all 0.22s;
+      font-size: 0.88rem;
+      min-width: 72px;
+      transition: all 0.18s;
     }
 
     .msg-btn:hover {
-      background: rgba(0,240,255,0.3);
+      background: rgba(0,240,255,0.28);
       color: var(--accent);
       border-color: var(--accent);
     }
 
-    .prompt  { color: var(--green); font-weight: bold; min-width: 150px; flex-shrink: 0; }
+    .prompt  { color: var(--green); font-weight: bold; min-width: 140px; flex-shrink: 0; }
     .bot     { color: var(--purple); }
     .success { color: var(--green); }
     .muted   { color: var(--muted); }
-    .pin-type { color: var(--accent); font-weight: bold; margin-right: 0.7rem; }
+    .pin-type { color: var(--accent); font-weight: 700; margin-right: 0.6rem; }
 
     .input-area {
       display: flex;
       align-items: center;
-      padding: 1.4rem 2.2rem;
-      background: rgba(0,0,0,0.6);
+      padding: 1.2rem 2rem;
+      background: rgba(0,0,0,0.55);
       border-top: 1px solid var(--border);
       gap: 1rem;
     }
@@ -193,13 +193,22 @@
       border: none;
       color: var(--text);
       font: inherit;
-      font-size: 1.17rem;
+      font-size: 1.12rem;
       outline: none;
       caret-color: var(--accent);
+      padding: 0.5rem 0;
     }
 
-    #input::placeholder { color: var(--muted); opacity: 0.7; }
+    #input::placeholder { color: var(--muted); opacity: 0.65; }
+
+    @media (max-width: 640px) {
+      .msg-actions { right: 0.8rem; top: 0.2rem; gap: 0.7rem; }
+      .msg-btn { padding: 0.35rem 0.9rem; font-size: 0.84rem; min-width: 64px; }
+      .line, .pin-item { padding-right: 160px; }
+      #output, #pinsList { padding: 1.4rem 1.6rem; }
+    }
   </style>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
 </head>
 <body class="crt">
 
@@ -219,20 +228,20 @@
       <div class="line success">║       WELCOME TO ROOTDONATE SUPPORT       ║</div>
       <div class="line success">╚════════════════════════════════════════════╝</div>
       <div class="line"></div>
-      <div class="line muted">Paste GPS coordinates (e.g. 48.8566, 2.3522) or URLs.</div>
-      <div class="line muted">They appear in "My Pins" tab — clean & shareable.</div>
-      <div class="line muted">Commands: clear, clearpins, help, exit</div>
+      <div class="line muted">Paste coordinates (e.g. 48.8566, 2.3522) or any URL.</div>
+      <div class="line muted">Cleaned versions appear in "My Pins" — ready to share.</div>
+      <div class="line muted">Commands: clear, clearpins, help</div>
     </div>
 
     <div class="input-area">
       <label for="input" class="prompt">root@donate:~#</label>
-      <input id="input" autocomplete="off" autofocus placeholder="Paste coords (lat,lng), URL, message..." />
+      <input id="input" autocomplete="off" autofocus placeholder="Paste coords, link, or message..." />
     </div>
   </div>
 
   <div id="pinsView" class="pins-view">
     <div id="pinsList">
-      <div class="line muted">No pins saved yet. Paste coordinates or links in Terminal.</div>
+      <div class="line muted">No pins saved yet. Paste something in Terminal.</div>
     </div>
   </div>
 </main>
@@ -259,31 +268,44 @@ function saveData() {
 function cleanUrl(url) {
   try {
     const u = new URL(url);
-    const paramsToRemove = ['utm_source','utm_medium','utm_campaign','utm_term','utm_content','fbclid','ref','source','campaign'];
-    paramsToRemove.forEach(p => u.searchParams.delete(p));
-    return u.toString();
+    const trackingParams = [
+      'utm_source','utm_medium','utm_campaign','utm_term','utm_content',
+      'utm_id','fbclid','gclid','gad_source','ref','source','campaign',
+      'mc_cid','mc_eid','igshid','_ga','_gl','msclkid','twclid','li_fat_id'
+    ];
+    trackingParams.forEach(p => u.searchParams.delete(p));
+    // Remove empty fragment / trailing slash junk in some cases
+    if (u.hash === '#') u.hash = '';
+    let clean = u.toString();
+    if (clean.endsWith('/?')) clean = clean.slice(0, -2);
+    if (clean.endsWith('?')) clean = clean.slice(0, -1);
+    return clean;
   } catch {
-    return url;
+    return url.trim();
   }
 }
 
 function isGpsLike(text) {
-  // More forgiving: allows spaces, parentheses, degree symbols in surrounding text
-  const match = text.match(/([-+]?\d{1,3}(?:\.\d+)?)[°\s,;°′″dms]*([-+]?\d{1,3}(?:\.\d+)?)/i);
-  if (!match) return false;
-  const lat = parseFloat(match[1]);
-  const lng = parseFloat(match[2]);
-  return !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
-}
-
-function extractGps(text) {
-  const match = text.match(/([-+]?\d{1,3}(?:\.\d+)?)[°\s,;°′″dms]*([-+]?\d{1,3}(?:\.\d+)?)/i);
-  return match ? { lat: parseFloat(match[1]), lng: parseFloat(match[2]) } : null;
+  const patterns = [
+    /([-+]?\d{1,3}(?:\.\d{1,8})?)[°\s,;d]*([-+]?\d{1,3}(?:\.\d{1,8})?)/i,
+    /\(?\s*([-+]?\d{1,3}(?:\.\d{1,8})?)\s*[,;]?\s*([-+]?\d{1,3}(?:\.\d{1,8})?)\s*\)?/i
+  ];
+  for (const re of patterns) {
+    const m = text.match(re);
+    if (m) {
+      const lat = parseFloat(m[1]);
+      const lng = parseFloat(m[2]);
+      if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        return { lat, lng };
+      }
+    }
+  }
+  return false;
 }
 
 function extractUrl(text) {
-  const match = text.match(/(https?:\/\/[^\s"')]+)[^\s"')]?/i);
-  return match ? match[1] : null;
+  const match = text.match(/https?:\/\/[^\s"')<>]+/i);
+  return match ? match[0] : null;
 }
 
 function println(html, cls = 'line') {
@@ -295,7 +317,7 @@ function println(html, cls = 'line') {
   return div;
 }
 
-function addActions(container, content) {
+function addActions(container, cleanContent, rawContent) {
   const actions = document.createElement('div');
   actions.className = 'msg-actions';
 
@@ -303,22 +325,24 @@ function addActions(container, content) {
   copyBtn.className = 'msg-btn';
   copyBtn.textContent = 'Copy';
   copyBtn.onclick = () => {
-    navigator.clipboard.writeText(content).then(() => {
+    navigator.clipboard.writeText(cleanContent).then(() => {
       copyBtn.textContent = 'Copied!';
-      setTimeout(() => copyBtn.textContent = 'Copy', 1600);
+      setTimeout(() => copyBtn.textContent = 'Copy', 1400);
     });
   };
 
-  const emailBtn = document.createElement('button');
-  emailBtn.className = 'msg-btn';
-  emailBtn.textContent = 'Email';
-  emailBtn.onclick = () => {
-    const subject = "RootDonate Pin – March 2026";
-    const body = `Shared pin:\n\n${content}\n\n`;
-    window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+  const shareBtn = document.createElement('button');
+  shareBtn.className = 'msg-btn';
+  shareBtn.textContent = 'Share Link';
+  shareBtn.onclick = () => {
+    const fakeShort = `rootdonate.io/pin/${btoa(cleanContent).slice(0,16)}`;
+    navigator.clipboard.writeText(fakeShort).then(() => {
+      shareBtn.textContent = 'Copied short!';
+      setTimeout(() => shareBtn.textContent = 'Share Link', 1800);
+    });
   };
 
-  actions.append(copyBtn, emailBtn);
+  actions.append(copyBtn, shareBtn);
   container.appendChild(actions);
 }
 
@@ -337,17 +361,17 @@ function renderPins() {
     let shareContent = '';
 
     if (pin.type === 'gps') {
-      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${pin.lat},${pin.lng}`;
-      display = `<span class="pin-type">[GPS]</span> ${pin.lat}, ${pin.lng} <a href="${mapsUrl}" target="_blank" style="color:var(--accent);text-decoration:none;">→ Maps</a>`;
-      shareContent = `${pin.lat}, ${pin.lng}`;
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${pin.lat.toFixed(6)},${pin.lng.toFixed(6)}`;
+      display = `<span class="pin-type">[GPS]</span> ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)} <a href="${mapsUrl}" target="_blank" style="color:var(--accent)">→ Maps</a>`;
+      shareContent = `${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}`;
     } else {
       const clean = cleanUrl(pin.url);
-      display = `<span class="pin-type">[URL]</span> <a href="${clean}" target="_blank" style="color:var(--accent);text-decoration:none;word-break:break-all;">${escapeHtml(clean)}</a>`;
+      display = `<span class="pin-type">[URL]</span> <a href="${clean}" target="_blank" style="color:var(--accent);word-break:break-all;">${escapeHtml(clean)}</a>`;
       shareContent = clean;
     }
 
     item.innerHTML = display;
-    addActions(item, shareContent);
+    addActions(item, shareContent, pin.url || shareContent);
     pinsList.appendChild(item);
   });
 }
@@ -357,105 +381,81 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-
     const tab = btn.dataset.tab;
     terminalView.classList.toggle('active', tab === 'terminal');
     pinsView.classList.toggle('active', tab === 'pins');
-
     if (tab === 'pins') renderPins();
   });
 });
 
-// Boot sequence
+// Boot
 setTimeout(() => {
-  println('<span class="success">INTERFACE READY – PASTE PINS OR MESSAGES</span>');
+  println('<span class="success">INTERFACE READY – PASTE ANYTHING</span>');
   if (messages.length) {
-    println(`<span class="muted">Session restored (${messages.length} entries).</span>`);
+    println(`<span class="muted">Restored (${messages.length} entries)</span>`);
   }
-  renderPins();
-}, 1400);
+}, 1200);
 
-// Restore terminal history
-if (messages.length) {
-  setTimeout(() => {
-    messages.forEach(m => {
-      let line;
-      if (m.from === 'user') {
-        line = println(`<span class="prompt">root@donate:~#</span> ${escapeHtml(m.text)}`);
-      } else {
-        line = println(`<span class="bot">ROOTDONATE:</span> ${escapeHtml(m.text)}`);
-      }
-      addActions(line, m.text);
-    });
-  }, 1800);
-}
+// Restore history
+messages.forEach(m => {
+  let line;
+  if (m.from === 'user') {
+    line = println(`<span class="prompt">root@donate:~#</span> ${escapeHtml(m.text)}`);
+  } else {
+    line = println(`<span class="bot">ROOTDONATE:</span> ${escapeHtml(m.text)}`);
+  }
+  addActions(line, m.text, m.text);
+});
 
-// Input handler
+// Input
 input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
-
   const txt = input.value.trim();
   if (!txt) return;
 
   const line = println(`<span class="prompt">root@donate:~#</span> ${escapeHtml(txt)}`);
-  addActions(line, txt);
-  messages.push({ from: 'user', text: txt, time: Date.now() });
+  addActions(line, txt, txt);
+  messages.push({ from: 'user', text: txt });
   saveData();
 
-  let added = false;
+  let handled = false;
 
-  // Commands
   if (txt.toLowerCase() === 'clear') {
     output.innerHTML = '';
     println('<span class="success">Terminal cleared.</span>');
-    added = true;
+    handled = true;
   } else if (txt.toLowerCase() === 'clearpins') {
     pins = [];
     saveData();
     renderPins();
-    println('<span class="success">All pins cleared.</span>');
-    added = true;
+    println('<span class="success">Pins cleared.</span>');
+    handled = true;
   } else if (txt.toLowerCase() === 'help') {
-    println('<span class="muted">Commands: clear, clearpins, help</span>');
-    added = true;
+    println('<span class="muted">clear | clearpins | help</span>');
+    handled = true;
   }
 
-  if (!added) {
-    // GPS first (more specific)
-    if (isGpsLike(txt)) {
-      const coord = extractGps(txt);
-      if (coord) {
-        pins.push({
-          type: 'gps',
-          lat: coord.lat,
-          lng: coord.lng,
-          time: Date.now()
-        });
-        added = true;
-        println('<span class="success">GPS pin saved → My Pins tab</span>');
-      }
-    }
-
-    // Then URL (only if no GPS was added to avoid duplicates)
-    if (!added) {
+  if (!handled) {
+    const gps = isGpsLike(txt);
+    if (gps) {
+      pins.push({ type: 'gps', lat: gps.lat, lng: gps.lng });
+      println('<span class="success">GPS saved → My Pins</span>');
+      handled = true;
+    } else {
       const url = extractUrl(txt);
       if (url) {
-        pins.push({
-          type: 'url',
-          url: url,
-          time: Date.now()
-        });
-        added = true;
-        println('<span class="success">URL pin saved (cleaned) → My Pins tab</span>');
+        pins.push({ type: 'url', url });
+        println('<span class="success">Clean URL saved → My Pins</span>');
+        handled = true;
       }
     }
 
-    if (added) {
+    if (handled) {
       saveData();
       if (pinsView.classList.contains('active')) renderPins();
     } else {
-      println('<span class="bot">ROOTDONATE:</span> Message logged. Pins appear in "My Pins" tab.');
+      println('<span class="bot">ROOTDONATE:</span> Logged — use pins tab for sharing.');
     }
   }
 

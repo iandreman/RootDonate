@@ -205,8 +205,8 @@
 
     @media (max-width: 680px) {
       .msg-actions { right: 0.9rem; gap: 0.7rem; }
-      .msg-btn { padding: 0.35rem 0.9rem; font-size: 0.84rem; min-width: 68px; }
-      .line, .pin-item { padding-right: 200px; }
+      .msg-btn { padding: 0.35rem 0.9rem; font-size: 0.84rem; min-width: 78px; }
+      .line, .pin-item { padding-right: 220px; }
       #output, #pinsList { padding: 1.4rem 1.6rem; }
     }
   </style>
@@ -366,17 +366,17 @@ function addActions(container, content) {
   const actions = document.createElement('div');
   actions.className = 'msg-actions';
 
-  const copyBtn = document.createElement('button');
-  copyBtn.className = 'msg-btn';
-  copyBtn.textContent = 'Copy';
-  copyBtn.onclick = () => {
-    navigator.clipboard.writeText(content).then(() => {
-      copyBtn.textContent = 'Copied!';
-      setTimeout(() => copyBtn.textContent = 'Copy', 1400);
-    }).catch(() => {
-      copyBtn.textContent = 'Failed';
-      setTimeout(() => copyBtn.textContent = 'Copy', 1800);
-    });
+  const emailBtn = document.createElement('button');
+  emailBtn.className = 'msg-btn';
+  emailBtn.textContent = 'Email';
+  emailBtn.onclick = () => {
+    const subject = encodeURIComponent('RootDonate – Shared Pin/Link');
+    const body = encodeURIComponent(content.trim());
+    const mailto = `mailto:?subject=${subject}&body=${body}`;
+    window.location.href = mailto;
+    
+    emailBtn.textContent = 'Opened!';
+    setTimeout(() => emailBtn.textContent = 'Email', 1800);
   };
 
   const shortBtn = document.createElement('button');
@@ -398,7 +398,7 @@ function addActions(container, content) {
     }
   };
 
-  actions.append(copyBtn, shortBtn);
+  actions.append(emailBtn, shortBtn);
   container.appendChild(actions);
 }
 

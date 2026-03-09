@@ -115,14 +115,14 @@
     }
 
     .line {
-      margin: 0.5rem 0;
+      margin: 0.55rem 0;
       white-space: pre-wrap;
       word-break: break-word;
       position: relative;
-      padding-right: 140px;
+      padding-right: 150px;
       display: flex;
       align-items: flex-start;
-      gap: 0.8rem;
+      gap: 0.9rem;
     }
 
     .line:hover .msg-actions,
@@ -134,27 +134,27 @@
     .msg-actions {
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.2s;
+      transition: opacity 0.22s;
       position: absolute;
       right: 1.7rem;
-      top: 0.3rem;
+      top: 0.35rem;
       display: flex;
-      gap: 0.6rem;
+      gap: 0.7rem;
     }
 
     .msg-btn {
-      background: rgba(0,240,255,0.08);
+      background: rgba(0,240,255,0.09);
       border: 1px solid var(--muted);
       color: var(--muted);
-      padding: 0.25rem 0.6rem;
+      padding: 0.28rem 0.65rem;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 0.82rem;
-      transition: all 0.15s;
+      font-size: 0.84rem;
+      transition: all 0.16s;
     }
 
     .msg-btn:hover {
-      background: rgba(0,240,255,0.22);
+      background: rgba(0,240,255,0.24);
       color: var(--accent);
       border-color: var(--accent);
     }
@@ -176,7 +176,32 @@
     @keyframes typing { from { width: 0 } to { width: 21ch } }
     @keyframes blink  { 50% { border-color: transparent; } }
 
-    /* glitch styles unchanged — keeping original feel */
+    .glitch {
+      position: relative;
+      animation: glitch-skew 4s infinite linear alternate-reverse;
+    }
+
+    .glitch::before,
+    .glitch::after {
+      content: attr(data-text);
+      position: absolute;
+      inset: 0;
+      opacity: 0.75;
+    }
+
+    .glitch::before {
+      left: 2px;
+      text-shadow: -2px 0 var(--accent);
+      animation: glitch-anim 3s infinite steps(5);
+    }
+
+    .glitch::after {
+      left: -2px;
+      text-shadow: 2px 0 var(--error);
+      animation: glitch-anim2 4.2s infinite steps(5);
+    }
+
+    /* keep your original glitch keyframes */
 
     .input-area {
       display: flex;
@@ -245,17 +270,17 @@ function escapeHtml(str) {
   return str.replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[m]);
 }
 
-function println(html, className = 'line') {
+function println(html, cls = 'line') {
   const div = document.createElement('div');
-  div.className = className;
+  div.className = cls;
   div.innerHTML = html;
   output.appendChild(div);
   output.scrollTop = output.scrollHeight;
   return div;
 }
 
-function addMessageActions(lineEl, content) {
-  if (!content.trim()) return;
+function addMessageActions(lineEl, rawContent) {
+  if (!rawContent?.trim()) return;
 
   const actions = document.createElement('div');
   actions.className = 'msg-actions';
@@ -265,26 +290,26 @@ function addMessageActions(lineEl, content) {
   copyBtn.className = 'msg-btn';
   copyBtn.textContent = 'Copy';
   copyBtn.type = 'button';
-  copyBtn.onclick = () => {
-    navigator.clipboard.writeText(content).then(() => {
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(rawContent).then(() => {
       const orig = copyBtn.textContent;
       copyBtn.textContent = 'Copied!';
-      setTimeout(() => copyBtn.textContent = orig, 1600);
+      setTimeout(() => copyBtn.textContent = orig, 1800);
     }).catch(() => {
-      copyBtn.textContent = 'Copy failed';
+      copyBtn.textContent = 'Failed';
       setTimeout(() => copyBtn.textContent = 'Copy', 2000);
     });
-  };
+  });
 
   const emailBtn = document.createElement('button');
   emailBtn.className = 'msg-btn';
   emailBtn.textContent = 'Email';
   emailBtn.type = 'button';
-  emailBtn.onclick = () => {
+  emailBtn.addEventListener('click', () => {
     const subject = "Smart Terminal Message – March 2026";
-    const body = `Message from Cleverbot session:\n\n${content}\n\n`;
+    const body = `Message from session:\n\n${rawContent}\n\n`;
     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
-  };
+  });
 
   actions.append(copyBtn, emailBtn);
   lineEl.appendChild(actions);
@@ -295,7 +320,7 @@ function botReply(text, glitch = false) {
   const attr = glitch ? ` data-text="${escapeHtml(text)}"` : '';
   const line = println(`<span class="${cls}"${attr}>CLEVERBOT:</span> ${escapeHtml(text)}`);
   addMessageActions(line, text);
-  messages.push({ from: 'bot', text, time: Date.now() });
+  messages.push({ from: 'bot', text, glitch, time: Date.now() });
   save();
 }
 
@@ -310,16 +335,13 @@ function createImportUrl() {
   return `data:text/json;base64,${base64}`;
 }
 
-// ── Boot ───────────────────────────────────────────────
+// Boot animation
 setTimeout(() => {
   document.querySelector('.typing')?.remove();
   println('<span class="success">NEURAL CORE ONLINE – READY</span>');
-  if (messages.length) {
-    botReply(`Welcome back. Session restored (${messages.length} messages).`);
-  }
-}, 3800);
+}, 3600);
 
-// ── Restore history ────────────────────────────────────
+// Restore previous messages (with actions + glitch support)
 if (messages.length) {
   setTimeout(() => {
     messages.forEach(m => {
@@ -327,43 +349,42 @@ if (messages.length) {
       if (m.from === 'user') {
         line = println(`<span class="prompt">root@void:~#</span> ${escapeHtml(m.text)}`);
       } else {
-        line = println(`<span class="bot">CLEVERBOT:</span> ${escapeHtml(m.text)}`);
+        const cls = m.glitch ? 'bot glitch' : 'bot';
+        const attr = m.glitch ? ` data-text="${escapeHtml(m.text)}"` : '';
+        line = println(`<span class="${cls}"${attr}>CLEVERBOT:</span> ${escapeHtml(m.text)}`);
       }
       addMessageActions(line, m.text);
     });
+    botReply(`Session restored (${messages.length} messages loaded).`);
   }, 4200);
 }
 
-// ── Paste auto-import (unchanged) ──────────────────────
-// ... your existing paste handler code here ...
-
-// ── Full conversation export ───────────────────────────
+// Full export / email
 function handleExport(isCopy = true) {
   const url = createImportUrl();
   if (!url) {
     botReply("No messages to share yet.");
     return;
   }
-
   if (isCopy) {
     navigator.clipboard.writeText(url).then(() => {
-      botReply("Full conversation link copied to clipboard.");
+      botReply("Full conversation link copied.");
     }).catch(() => {
-      botReply("Copy failed. Here is the link:");
+      botReply("Copy failed. Link:");
       println(`<span class="success">${url}</span>`);
     });
   } else {
     const subject = "Smart Terminal Conversation – March 2026";
-    const body = `My Cleverbot session:\n\n${url}\n\nPaste into the terminal to restore.`;
+    const body = `My Cleverbot session:\n\n${url}\n\nPaste into terminal to restore.`;
     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
-    botReply("Opening email client with conversation link…");
+    botReply("Opening email with link…");
   }
 }
 
-exportBtn.onclick = () => handleExport(true);
-emailBtn.onclick  = () => handleExport(false);
+exportBtn.addEventListener('click', () => handleExport(true));
+emailBtn.addEventListener('click', () => handleExport(false));
 
-// ── Input handler ──────────────────────────────────────
+// Input handling
 input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
@@ -386,23 +407,47 @@ input.addEventListener('keydown', e => {
   }
   else if (cmd === 'help') {
     println('<span class="muted">Commands: clear • help • exit • import • export</span>');
-    println('<span class="muted">Paste data:text/json;base64,… anywhere to import</span>');
-    println('<span class="muted">Hover messages → copy or email individual entries</span>');
+    println('<span class="muted">Paste data:text/json;base64,… link to import session</span>');
+    println('<span class="muted">Hover any message → copy or email that single entry</span>');
   }
   else if (['exit','quit','bye'].includes(cmd)) {
-    botReply("Goodbye. Refresh page to start new session.");
+    botReply("Goodbye. Refresh to begin new session.");
     input.disabled = true;
   }
   else if (cmd.includes('export') || cmd.includes('save') || cmd.includes('分享')) {
     handleExport(true);
   }
   else if (txt.startsWith('data:text/json;base64,')) {
-    // manual import code (your existing logic here)
-    // ...
+    try {
+      const base64 = txt.split(',')[1];
+      const json = decodeURIComponent(escape(atob(base64)));
+      const imported = JSON.parse(json);
+      if (Array.isArray(imported)) {
+        messages.push(...imported);
+        save();
+        botReply("Manual import successful.", true);
+        botReply(`Added ${imported.length} messages.`, true);
+        // Re-render last imported messages with actions
+        setTimeout(() => {
+          imported.slice(-6).forEach(m => {
+            let line;
+            if (m.from === 'user') {
+              line = println(`<span class="prompt">root@void:~#</span> ${escapeHtml(m.text)}`);
+            } else {
+              const cls = m.glitch ? 'bot glitch' : 'bot';
+              const attr = m.glitch ? ` data-text="${escapeHtml(m.text)}"` : '';
+              line = println(`<span class="${cls}"${attr}>CLEVERBOT:</span> ${escapeHtml(m.text)}`);
+            }
+            addMessageActions(line, m.text);
+          });
+        }, 600);
+      }
+    } catch (err) {
+      botReply("Import failed – invalid data.", true);
+    }
   }
   else {
-    // casual or smart reply logic (your existing code here)
-    const casual = ['ok', 'got it', 'understood', 'noted', 'cool', '👀', 'nice', 'same'];
+    const casual = ['ok', 'got it', 'understood', 'noted', 'cool', 'nice', 'same', '👀'];
     botReply(casual[Math.floor(Math.random() * casual.length)]);
   }
 
@@ -410,6 +455,5 @@ input.addEventListener('keydown', e => {
   input.focus();
 });
 </script>
-
 </body>
 </html>

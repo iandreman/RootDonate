@@ -335,7 +335,7 @@ function addActions(container, cleanContent, rawContent) {
   shareBtn.className = 'msg-btn';
   shareBtn.textContent = 'Share Link';
   shareBtn.onclick = () => {
-    const fakeShort = `rootdonate.io/pin/${btoa(cleanContent).slice(0,16)}`;
+    const fakeShort = `rootdonate.co.uk/pin/${btoa(cleanContent).slice(0,16)}`;
     navigator.clipboard.writeText(fakeShort).then(() => {
       shareBtn.textContent = 'Copied short!';
       setTimeout(() => shareBtn.textContent = 'Share Link', 1800);

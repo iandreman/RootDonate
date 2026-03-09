@@ -223,17 +223,17 @@
       <div class="line success">          WELCOME TO ROOTDONATE           </div>
       <div class="line success">══════════════════════════════════════════════</div>
       <div class="line"></div>
-      <div class="line muted">Paste coordinates (e.g. 51.5074, -0.1278) or URLs</div>
+      <div class="line muted">Paste coordinates, URLs or short links (rootdonate.co.uk/#...)</div>
       <div class="line muted">Pins saved to "My Pins" tab — ready to share</div>
       <div class="line muted">Commands: clear • clearpins • help</div>
       <div class="line muted" style="margin-top:1.5rem;" id="shortLinkNote">
-        Short links (<code>https://rootdonate.co.uk/#...</code>) now work automatically!
+        Short links now auto-import on load <strong>and when pasted in terminal</strong>!
       </div>
     </div>
 
     <div class="input-area">
       <label for="input" class="prompt">root@donate:~#</label>
-      <input id="input" autocomplete="off" autofocus placeholder="Paste coordinates, URL, or message..." />
+      <input id="input" autocomplete="off" autofocus placeholder="Paste coordinates, URL, short link..." />
     </div>
   </div>
 
@@ -303,40 +303,53 @@ function extractUrl(text) {
 }
 
 function generateShortLink(content) {
-  const data = btoa(content); // full base64 – no truncation
+  const data = btoa(content);
   return `${window.location.origin}${window.location.pathname}#${data}`;
+}
+
+function isOurShortLink(txt) {
+  const prefix = `${window.location.origin}${window.location.pathname}#`;
+  return txt.startsWith(prefix) && txt.length > prefix.length;
+}
+
+function importContent(content, source = 'short link') {
+  let added = false;
+  const gps = isGpsLike(content);
+  if (gps) {
+    const exists = pins.some(p => p.type === 'gps' && 
+      Math.abs(p.lat - gps.lat) < 1e-7 && Math.abs(p.lng - gps.lng) < 1e-7);
+    if (!exists) {
+      pins.push({ type: 'gps', lat: gps.lat, lng: gps.lng });
+      added = true;
+    }
+    println(`<span class="success">Imported GPS from ${source}: ${gps.lat.toFixed(6)}, ${gps.lng.toFixed(6)}</span>`);
+  } else {
+    const url = extractUrl(content);
+    if (url) {
+      const clean = cleanUrl(url);
+      const exists = pins.some(p => p.type === 'url' && cleanUrl(p.url) === clean);
+      if (!exists) {
+        pins.push({ type: 'url', url });
+        added = true;
+      }
+      println(`<span class="success">Imported clean URL from ${source}</span>`);
+    } else {
+      println(`<span class="success">Imported text from ${source}</span>`);
+    }
+  }
+  if (added) {
+    saveData();
+    if (pinsView.classList.contains('active')) renderPins();
+  }
+  return added;
 }
 
 function importFromHash() {
   const hash = location.hash.slice(1);
   if (!hash) return;
-
   try {
     const content = atob(hash);
-    let added = false;
-
-    const gps = isGpsLike(content);
-    if (gps) {
-      if (!pins.some(p => p.type === 'gps' && p.lat === gps.lat && p.lng === gps.lng)) {
-        pins.push({ type: 'gps', lat: gps.lat, lng: gps.lng });
-        added = true;
-      }
-      println(`<span class="success">Imported GPS from short link: ${gps.lat.toFixed(6)}, ${gps.lng.toFixed(6)}</span>`);
-    } else if (extractUrl(content)) {
-      const clean = cleanUrl(content);
-      if (!pins.some(p => p.type === 'url' && cleanUrl(p.url) === clean)) {
-        pins.push({ type: 'url', url: content });
-        added = true;
-      }
-      println(`<span class="success">Imported clean URL from short link</span>`);
-    } else {
-      println(`<span class="success">Imported text from short link</span>`);
-    }
-
-    if (added) saveData();
-    if (pinsView.classList.contains('active')) renderPins();
-
-    // Show welcome message for link visitors
+    importContent(content, 'short link');
     shortLinkNote.innerHTML = '<span class="success">Short link loaded! See My Pins tab.</span>';
   } catch (e) {
     println(`<span class="muted">Invalid short link format.</span>`);
@@ -436,10 +449,8 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // Boot sequence
 setTimeout(() => {
-  println('<span class="success">Ready. Paste coordinates or URLs below.</span>');
+  println('<span class="success">Ready. Paste coordinates, URLs or short links below.</span>');
   if (messages.length) println(`<span class="muted">Session restored (${messages.length} lines)</span>`);
-  
-  // Check for short link on load
   importFromHash();
 }, 800);
 
@@ -454,33 +465,50 @@ messages.forEach(m => {
   addActions(line, m.text);
 });
 
-// Input handling
+// Input handling with short-link paste support
 input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
   const txt = input.value.trim();
   if (!txt) return;
 
-  const line = println(`<span class="prompt">root@donate:~#</span> ${escapeHtml(txt)}`);
-  addActions(line, txt);
-  messages.push({ from: 'user', text: txt });
-  saveData();
-
   let handled = false;
 
-  if (txt.toLowerCase() === 'clear') {
-    output.innerHTML = '';
-    println('<span class="success">Terminal cleared.</span>');
-    handled = true;
-  } else if (txt.toLowerCase() === 'clearpins') {
-    pins = [];
+  // Special case: pasted our short link
+  if (isOurShortLink(txt)) {
+    try {
+      const hash = txt.split('#')[1];
+      const content = atob(hash);
+      importContent(content, 'pasted short link');
+      println(`<span class="prompt">root@donate:~#</span> ${escapeHtml(txt)}`);
+      println('<span class="muted">(imported successfully)</span>');
+      handled = true;
+    } catch (err) {
+      println(`<span class="muted">Failed to decode pasted short link.</span>`);
+      handled = true;
+    }
+  }
+
+  if (!handled) {
+    const line = println(`<span class="prompt">root@donate:~#</span> ${escapeHtml(txt)}`);
+    addActions(line, txt);
+    messages.push({ from: 'user', text: txt });
     saveData();
-    renderPins();
-    println('<span class="success">Pins cleared.</span>');
-    handled = true;
-  } else if (txt.toLowerCase() === 'help') {
-    println('<span class="muted">clear • clearpins • help</span>');
-    handled = true;
+
+    if (txt.toLowerCase() === 'clear') {
+      output.innerHTML = '';
+      println('<span class="success">Terminal cleared.</span>');
+      handled = true;
+    } else if (txt.toLowerCase() === 'clearpins') {
+      pins = [];
+      saveData();
+      renderPins();
+      println('<span class="success">Pins cleared.</span>');
+      handled = true;
+    } else if (txt.toLowerCase() === 'help') {
+      println('<span class="muted">clear • clearpins • help</span>');
+      handled = true;
+    }
   }
 
   if (!handled) {

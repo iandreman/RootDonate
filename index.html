@@ -224,9 +224,11 @@
       <div class="line success">══════════════════════════════════════════════</div>
       <div class="line"></div>
       <div class="line muted">Paste coordinates (e.g. 51.5074, -0.1278) or URLs</div>
-      <div class="line muted">Cleaned pins saved to "My Pins" tab — ready to share</div>
+      <div class="line muted">Pins saved to "My Pins" tab — ready to share</div>
       <div class="line muted">Commands: clear • clearpins • help</div>
-      <div class="line muted" style="margin-top:1.5rem;">Short links (rootdonate.co.uk/pin/...) now resolve automatically.</div>
+      <div class="line muted" style="margin-top:1.5rem;" id="shortLinkNote">
+        Short links (<code>https://rootdonate.co.uk/#...</code>) now work automatically!
+      </div>
     </div>
 
     <div class="input-area">
@@ -248,6 +250,7 @@ const input = document.getElementById('input');
 const pinsList = document.getElementById('pinsList');
 const terminalView = document.getElementById('terminalView');
 const pinsView = document.getElementById('pinsView');
+const shortLinkNote = document.getElementById('shortLinkNote');
 
 let messages = JSON.parse(localStorage.getItem('rootDonateHistory') || '[]');
 let pins = JSON.parse(localStorage.getItem('rootDonatePins') || '[]');
@@ -300,8 +303,44 @@ function extractUrl(text) {
 }
 
 function generateShortLink(content) {
-  let b64 = btoa(content).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-  return `https://rootdonate.co.uk/pin/${b64.slice(0,22)}`;  // longer for safety (~16-20 chars usually enough)
+  const data = btoa(content); // full base64 – no truncation
+  return `${window.location.origin}${window.location.pathname}#${data}`;
+}
+
+function importFromHash() {
+  const hash = location.hash.slice(1);
+  if (!hash) return;
+
+  try {
+    const content = atob(hash);
+    let added = false;
+
+    const gps = isGpsLike(content);
+    if (gps) {
+      if (!pins.some(p => p.type === 'gps' && p.lat === gps.lat && p.lng === gps.lng)) {
+        pins.push({ type: 'gps', lat: gps.lat, lng: gps.lng });
+        added = true;
+      }
+      println(`<span class="success">Imported GPS from short link: ${gps.lat.toFixed(6)}, ${gps.lng.toFixed(6)}</span>`);
+    } else if (extractUrl(content)) {
+      const clean = cleanUrl(content);
+      if (!pins.some(p => p.type === 'url' && cleanUrl(p.url) === clean)) {
+        pins.push({ type: 'url', url: content });
+        added = true;
+      }
+      println(`<span class="success">Imported clean URL from short link</span>`);
+    } else {
+      println(`<span class="success">Imported text from short link</span>`);
+    }
+
+    if (added) saveData();
+    if (pinsView.classList.contains('active')) renderPins();
+
+    // Show welcome message for link visitors
+    shortLinkNote.innerHTML = '<span class="success">Short link loaded! See My Pins tab.</span>';
+  } catch (e) {
+    println(`<span class="muted">Invalid short link format.</span>`);
+  }
 }
 
 function println(html, cls = 'line') {
@@ -341,7 +380,7 @@ function addActions(container, cleanContent) {
     navigator.clipboard.writeText(link).then(() => {
       shareBtn.textContent = 'Copied!';
       setTimeout(() => shareBtn.textContent = 'Short Link', 1600);
-      println(`<span class="muted">Short link copied: ${escapeHtml(link)}</span>`);
+      println(`<span class="muted">Short link copied: <a href="${link}" style="color:var(--accent)">${escapeHtml(link)}</a></span>`);
     }).catch(() => {
       shareBtn.textContent = 'Failed';
       setTimeout(() => shareBtn.textContent = 'Short Link', 2000);
@@ -395,10 +434,13 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// Boot
+// Boot sequence
 setTimeout(() => {
   println('<span class="success">Ready. Paste coordinates or URLs below.</span>');
   if (messages.length) println(`<span class="muted">Session restored (${messages.length} lines)</span>`);
+  
+  // Check for short link on load
+  importFromHash();
 }, 800);
 
 // Restore history

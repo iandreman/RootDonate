@@ -48,7 +48,7 @@
     header {
       background: rgba(10,14,20,0.92);
       border-bottom: 1px solid var(--border);
-      padding: 1.3rem 2rem;
+      padding: 1.4rem 2rem;
       backdrop-filter: blur(8px);
       position: sticky;
       top: 0;
@@ -57,23 +57,23 @@
     }
 
     h1 {
-      margin: 0 0 0.4rem;
-      font-size: clamp(2.2rem, 6.5vw, 3rem);
+      margin: 0 0 0.5rem;
+      font-size: clamp(2.4rem, 7vw, 3.2rem);
       color: var(--purple);
-      text-shadow: 0 0 16px var(--purple);
+      text-shadow: 0 0 20px var(--purple);
     }
 
     .subtitle {
       color: var(--muted);
-      font-size: 0.96rem;
-      margin: 0.2rem 0 0.8rem;
+      font-size: 1rem;
+      margin: 0.3rem 0 1rem;
     }
 
     .tab-buttons {
       display: flex;
       justify-content: center;
-      gap: 1.2rem;
-      margin: 0.8rem 0;
+      gap: 1.4rem;
+      margin: 1rem 0;
       flex-wrap: wrap;
     }
 
@@ -81,17 +81,17 @@
       background: transparent;
       border: 1px solid var(--muted);
       color: var(--muted);
-      padding: 0.55rem 1.4rem;
+      padding: 0.6rem 1.6rem;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 0.95rem;
+      font-size: 0.98rem;
       transition: all 0.22s;
     }
 
     .tab-btn.active {
       border-color: var(--accent);
       color: var(--accent);
-      background: rgba(0,240,255,0.12);
+      background: rgba(0,240,255,0.14);
     }
 
     .tab-btn:hover {
@@ -100,13 +100,13 @@
     }
 
     .terminal, .pins-view {
-      max-width: 1080px;
-      margin: 1.5rem auto;
+      max-width: 1100px;
+      margin: 1.8rem auto;
       border: 2px solid var(--border);
-      border-radius: 12px;
+      border-radius: 14px;
       overflow: hidden;
       background: var(--surface);
-      box-shadow: 0 0 56px rgba(0,240,255,0.1);
+      box-shadow: 0 0 60px rgba(0,240,255,0.08);
       display: none;
     }
 
@@ -115,24 +115,24 @@
     }
 
     #output, #pinsList {
-      padding: 2rem;
-      min-height: 55vh;
-      max-height: 78vh;
+      padding: 2.2rem;
+      min-height: 56vh;
+      max-height: 80vh;
       overflow-y: auto;
-      font-size: 1.14rem;
-      line-height: 1.6;
+      font-size: 1.15rem;
+      line-height: 1.65;
       scroll-behavior: smooth;
     }
 
     .line, .pin-item {
-      margin: 0.8rem 0;
+      margin: 1rem 0;
       white-space: pre-wrap;
       word-break: break-word;
       position: relative;
-      padding-right: 220px;
+      padding-right: 240px;
       display: flex;
       align-items: flex-start;
-      gap: 1rem;
+      gap: 1.2rem;
       flex-wrap: wrap;
     }
 
@@ -148,43 +148,43 @@
       pointer-events: none;
       transition: opacity 0.3s ease;
       position: absolute;
-      right: 1.8rem;
-      top: 0.4rem;
+      right: 2rem;
+      top: 0.5rem;
       display: flex;
-      gap: 1rem;
+      gap: 1.1rem;
     }
 
     .msg-btn {
-      background: rgba(0,240,255,0.09);
+      background: rgba(0,240,255,0.1);
       border: 1px solid var(--muted);
       color: var(--muted);
-      padding: 0.4rem 1rem;
+      padding: 0.45rem 1.1rem;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 0.9rem;
-      min-width: 76px;
-      transition: all 0.2s;
+      font-size: 0.92rem;
+      min-width: 80px;
+      transition: all 0.22s;
     }
 
     .msg-btn:hover {
-      background: rgba(0,240,255,0.28);
+      background: rgba(0,240,255,0.3);
       color: var(--accent);
       border-color: var(--accent);
     }
 
-    .prompt  { color: var(--green); font-weight: bold; min-width: 140px; flex-shrink: 0; }
+    .prompt  { color: var(--green); font-weight: bold; min-width: 150px; flex-shrink: 0; }
     .bot     { color: var(--purple); }
     .success { color: var(--green); }
     .muted   { color: var(--muted); }
-    .pin-type { color: var(--accent); font-weight: bold; margin-right: 0.6rem; }
+    .pin-type { color: var(--accent); font-weight: bold; margin-right: 0.7rem; }
 
     .input-area {
       display: flex;
       align-items: center;
-      padding: 1.3rem 2rem;
-      background: rgba(0,0,0,0.55);
+      padding: 1.4rem 2.2rem;
+      background: rgba(0,0,0,0.6);
       border-top: 1px solid var(--border);
-      gap: 0.9rem;
+      gap: 1rem;
     }
 
     #input {
@@ -193,12 +193,12 @@
       border: none;
       color: var(--text);
       font: inherit;
-      font-size: 1.16rem;
+      font-size: 1.17rem;
       outline: none;
       caret-color: var(--accent);
     }
 
-    #input::placeholder { color: var(--muted); opacity: 0.75; }
+    #input::placeholder { color: var(--muted); opacity: 0.7; }
   </style>
 </head>
 <body class="crt">
@@ -219,14 +219,14 @@
       <div class="line success">║       WELCOME TO ROOTDONATE SUPPORT       ║</div>
       <div class="line success">╚════════════════════════════════════════════╝</div>
       <div class="line"></div>
-      <div class="line muted">Paste GPS pins (e.g. 48.8566, 2.3522) or URLs.</div>
-      <div class="line muted">They'll appear in the "My Pins" tab for quick access.</div>
-      <div class="line muted">Commands: clear • help • exit</div>
+      <div class="line muted">Paste GPS coordinates (e.g. 48.8566, 2.3522) or URLs.</div>
+      <div class="line muted">They appear in "My Pins" tab — clean & shareable.</div>
+      <div class="line muted">Commands: clear, clearpins, help, exit</div>
     </div>
 
     <div class="input-area">
       <label for="input" class="prompt">root@donate:~#</label>
-      <input id="input" autocomplete="off" autofocus placeholder="Type message, GPS (lat, lng), URL..." />
+      <input id="input" autocomplete="off" autofocus placeholder="Paste coords (lat,lng), URL, message..." />
     </div>
   </div>
 
@@ -256,28 +256,34 @@ function saveData() {
   localStorage.setItem('rootDonatePins', JSON.stringify(pins));
 }
 
-function isGpsLike(text) {
-  const match = text.match(/([-+]?\d{1,3}(?:\.\d+)?)\s*[,;]?\s*([-+]?\d{1,3}(?:\.\d+)?)/);
-  if (match) {
-    const lat = parseFloat(match[1]);
-    const lng = parseFloat(match[2]);
-    return !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+function cleanUrl(url) {
+  try {
+    const u = new URL(url);
+    const paramsToRemove = ['utm_source','utm_medium','utm_campaign','utm_term','utm_content','fbclid','ref','source','campaign'];
+    paramsToRemove.forEach(p => u.searchParams.delete(p));
+    return u.toString();
+  } catch {
+    return url;
   }
-  return false;
+}
+
+function isGpsLike(text) {
+  // More forgiving: allows spaces, parentheses, degree symbols in surrounding text
+  const match = text.match(/([-+]?\d{1,3}(?:\.\d+)?)[°\s,;°′″dms]*([-+]?\d{1,3}(?:\.\d+)?)/i);
+  if (!match) return false;
+  const lat = parseFloat(match[1]);
+  const lng = parseFloat(match[2]);
+  return !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
 }
 
 function extractGps(text) {
-  const match = text.match(/([-+]?\d{1,3}(?:\.\d+)?)\s*[,;]?\s*([-+]?\d{1,3}(?:\.\d+)?)/);
+  const match = text.match(/([-+]?\d{1,3}(?:\.\d+)?)[°\s,;°′″dms]*([-+]?\d{1,3}(?:\.\d+)?)/i);
   return match ? { lat: parseFloat(match[1]), lng: parseFloat(match[2]) } : null;
 }
 
-function isUrlLike(text) {
-  return /(https?:\/\/[^\s]+)|(www\.[^\s]+)/i.test(text);
-}
-
 function extractUrl(text) {
-  const match = text.match(/(https?:\/\/[^\s]+)/i);
-  return match ? match[0] : null;
+  const match = text.match(/(https?:\/\/[^\s"')]+)[^\s"')]?/i);
+  return match ? match[1] : null;
 }
 
 function println(html, cls = 'line') {
@@ -299,7 +305,7 @@ function addActions(container, content) {
   copyBtn.onclick = () => {
     navigator.clipboard.writeText(content).then(() => {
       copyBtn.textContent = 'Copied!';
-      setTimeout(() => copyBtn.textContent = 'Copy', 1800);
+      setTimeout(() => copyBtn.textContent = 'Copy', 1600);
     });
   };
 
@@ -323,20 +329,25 @@ function renderPins() {
     return;
   }
 
-  pins.forEach((pin, i) => {
+  pins.forEach((pin) => {
     const item = document.createElement('div');
     item.className = 'pin-item';
 
     let display = '';
+    let shareContent = '';
+
     if (pin.type === 'gps') {
       const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${pin.lat},${pin.lng}`;
-      display = `<span class="pin-type">[GPS]</span> ${pin.lat}, ${pin.lng} <a href="${mapsUrl}" target="_blank" style="color:var(--accent);text-decoration:none;">→ Open in Google Maps</a>`;
+      display = `<span class="pin-type">[GPS]</span> ${pin.lat}, ${pin.lng} <a href="${mapsUrl}" target="_blank" style="color:var(--accent);text-decoration:none;">→ Maps</a>`;
+      shareContent = `${pin.lat}, ${pin.lng}`;
     } else {
-      display = `<span class="pin-type">[URL]</span> <a href="${pin.url}" target="_blank" style="color:var(--accent);text-decoration:none;">${escapeHtml(pin.url)}</a>`;
+      const clean = cleanUrl(pin.url);
+      display = `<span class="pin-type">[URL]</span> <a href="${clean}" target="_blank" style="color:var(--accent);text-decoration:none;word-break:break-all;">${escapeHtml(clean)}</a>`;
+      shareContent = clean;
     }
 
     item.innerHTML = display;
-    addActions(item, pin.content || pin.url || `${pin.lat}, ${pin.lng}`);
+    addActions(item, shareContent);
     pinsList.appendChild(item);
   });
 }
@@ -355,16 +366,16 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// Boot
+// Boot sequence
 setTimeout(() => {
   println('<span class="success">INTERFACE READY – PASTE PINS OR MESSAGES</span>');
   if (messages.length) {
     println(`<span class="muted">Session restored (${messages.length} entries).</span>`);
   }
   renderPins();
-}, 1800);
+}, 1400);
 
-// Restore history (terminal only)
+// Restore terminal history
 if (messages.length) {
   setTimeout(() => {
     messages.forEach(m => {
@@ -376,7 +387,7 @@ if (messages.length) {
       }
       addActions(line, m.text);
     });
-  }, 2200);
+  }, 1800);
 }
 
 // Input handler
@@ -394,39 +405,58 @@ input.addEventListener('keydown', e => {
 
   let added = false;
 
-  // Check GPS
-  if (isGpsLike(txt)) {
-    const coord = extractGps(txt);
-    if (coord) {
-      pins.push({
-        type: 'gps',
-        lat: coord.lat,
-        lng: coord.lng,
-        content: `${coord.lat}, ${coord.lng}`,
-        time: Date.now()
-      });
-      added = true;
-      println('<span class="success">GPS pin added to My Pins.</span>');
-    }
-  }
-
-  // Check URL
-  const url = extractUrl(txt);
-  if (url) {
-    pins.push({
-      type: 'url',
-      url: url,
-      time: Date.now()
-    });
+  // Commands
+  if (txt.toLowerCase() === 'clear') {
+    output.innerHTML = '';
+    println('<span class="success">Terminal cleared.</span>');
     added = true;
-    println('<span class="success">URL pin added to My Pins.</span>');
+  } else if (txt.toLowerCase() === 'clearpins') {
+    pins = [];
+    saveData();
+    renderPins();
+    println('<span class="success">All pins cleared.</span>');
+    added = true;
+  } else if (txt.toLowerCase() === 'help') {
+    println('<span class="muted">Commands: clear, clearpins, help</span>');
+    added = true;
   }
 
-  if (added) {
-    saveData();
-    if (pinsView.classList.contains('active')) renderPins();
-  } else if (!txt.startsWith('http') && !txt.match(/[\d\.\-,\s]+/)) {
-    println('<span class="bot">ROOTDONATE:</span> Message saved. Switch to "My Pins" for coordinates & links.');
+  if (!added) {
+    // GPS first (more specific)
+    if (isGpsLike(txt)) {
+      const coord = extractGps(txt);
+      if (coord) {
+        pins.push({
+          type: 'gps',
+          lat: coord.lat,
+          lng: coord.lng,
+          time: Date.now()
+        });
+        added = true;
+        println('<span class="success">GPS pin saved → My Pins tab</span>');
+      }
+    }
+
+    // Then URL (only if no GPS was added to avoid duplicates)
+    if (!added) {
+      const url = extractUrl(txt);
+      if (url) {
+        pins.push({
+          type: 'url',
+          url: url,
+          time: Date.now()
+        });
+        added = true;
+        println('<span class="success">URL pin saved (cleaned) → My Pins tab</span>');
+      }
+    }
+
+    if (added) {
+      saveData();
+      if (pinsView.classList.contains('active')) renderPins();
+    } else {
+      println('<span class="bot">ROOTDONATE:</span> Message logged. Pins appear in "My Pins" tab.');
+    }
   }
 
   input.value = '';

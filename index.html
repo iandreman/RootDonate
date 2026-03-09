@@ -196,7 +196,6 @@
       opacity: 0.6;
     }
 
-    /* ── New: Search bar in My Pins ── */
     #pinsSearch {
       display: none;
       padding: 1rem 2.4rem;
@@ -255,7 +254,7 @@
       <div class="line success">          WELCOME TO ROOTDONATE           </div>
       <div class="line success">══════════════════════════════════════════════</div>
       <div class="line"></div>
-      <div class="line muted">Paste coordinates (e.g. 51.5074, -0.1278) or URLs</div>
+      <div class="line muted">Paste coordinates (e.g. 51.50741123, -0.12775890) or URLs</div>
       <div class="line muted">Pins saved to "My Pins" tab — ready to share</div>
       <div class="line muted">Commands: clear • clearpins • help</div>
       <div class="line muted" style="margin-top:1.5rem;">Short links (<code>https://rootdonate.co.uk/#...</code>) now work automatically.</div>
@@ -263,7 +262,7 @@
 
     <div class="input-area">
       <label for="input" class="prompt">root@donate:~#</label>
-      <input id="input" autocomplete="off" autofocus placeholder="Paste coordinates, URL, or message..." />
+      <input id="input" autocomplete="off" autofocus placeholder="Paste coordinates, URL, short link..." />
     </div>
   </div>
 
@@ -313,18 +312,21 @@ function cleanUrl(url) {
   }
 }
 
+// Improved: returns strings + allows higher precision
 function isGpsLike(text) {
   const patterns = [
-    /([-+]?\d{1,3}(?:\.\d{1,8})?)[°\s,;d]*([-+]?\d{1,3}(?:\.\d{1,8})?)/i,
-    /\(?\s*([-+]?\d{1,3}(?:\.\d{1,8})?)\s*[,;]?\s*([-+]?\d{1,3}(?:\.\d{1,8})?)\s*\)?/i
+    /([-+]?\d{1,3}(?:\.\d{1,10})?)[°\s,;d]*([-+]?\d{1,3}(?:\.\d{1,10})?)/i,
+    /\(?\s*([-+]?\d{1,3}(?:\.\d{1,10})?)\s*[,;]?\s*([-+]?\d{1,3}(?:\.\d{1,10})?)\s*\)?/i
   ];
   for (const re of patterns) {
     const m = text.match(re);
     if (m) {
-      const lat = parseFloat(m[1]);
-      const lng = parseFloat(m[2]);
+      const latStr = m[1].trim();
+      const lngStr = m[2].trim();
+      const lat = parseFloat(latStr);
+      const lng = parseFloat(lngStr);
       if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-        return { lat, lng };
+        return { lat: latStr, lng: lngStr };
       }
     }
   }
@@ -347,32 +349,40 @@ function importFromHash() {
 
   try {
     const content = atob(hash);
-    let added = false;
-
-    const gps = isGpsLike(content);
-    if (gps) {
-      if (!pins.some(p => p.type === 'gps' && p.lat === gps.lat && p.lng === gps.lng)) {
-        pins.push({ type: 'gps', lat: gps.lat, lng: gps.lng });
-        added = true;
-      }
-      println(`<span class="success">Imported GPS from short link: ${gps.lat.toFixed(6)}, ${gps.lng.toFixed(6)}</span>`);
-    } else if (extractUrl(content)) {
-      const clean = cleanUrl(content);
-      if (!pins.some(p => p.type === 'url' && cleanUrl(p.url) === clean)) {
-        pins.push({ type: 'url', url: content });
-        added = true;
-      }
-      println(`<span class="success">Imported clean URL from short link</span>`);
-    } else {
-      println(`<span class="success">Imported text from short link</span>`);
-    }
-
-    if (added) saveData();
-    if (pinsView.classList.contains('active')) renderPins();
-
+    importContent(content, 'short link');
     shortLinkNote.innerHTML = '<span class="success">Short link loaded! See My Pins tab.</span>';
   } catch (e) {
     println(`<span class="muted">Invalid short link format.</span>`);
+  }
+}
+
+function importContent(content, source = 'short link') {
+  let added = false;
+  const gps = isGpsLike(content);
+  if (gps) {
+    const exists = pins.some(p => p.type === 'gps' && p.lat === gps.lat && p.lng === gps.lng);
+    if (!exists) {
+      pins.push({ type: 'gps', lat: gps.lat, lng: gps.lng });
+      added = true;
+    }
+    println(`<span class="success">Imported GPS from ${source}: ${parseFloat(gps.lat).toFixed(7)}, ${parseFloat(gps.lng).toFixed(7)}</span>`);
+  } else {
+    const url = extractUrl(content);
+    if (url) {
+      const clean = cleanUrl(url);
+      const exists = pins.some(p => p.type === 'url' && cleanUrl(p.url) === clean);
+      if (!exists) {
+        pins.push({ type: 'url', url });
+        added = true;
+      }
+      println(`<span class="success">Imported clean URL from ${source}</span>`);
+    } else {
+      println(`<span class="success">Imported text from ${source}</span>`);
+    }
+  }
+  if (added) {
+    saveData();
+    if (pinsView.classList.contains('active')) renderPins();
   }
 }
 
@@ -394,14 +404,7 @@ function addActions(container, cleanContent) {
   emailBtn.textContent = 'Email';
   emailBtn.onclick = () => {
     const subject = encodeURIComponent("RootDonate Pin – March 2026");
-    let bodyText = cleanContent;
-    if (cleanContent.includes(',')) {
-      const [lat, lng] = cleanContent.split(',').map(s => s.trim());
-      if (!isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))) {
-        bodyText = `GPS:\n  Latitude:  ${lat}\n  Longitude: ${lng}\n\nMaps: https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-      }
-    }
-    const body = encodeURIComponent(`From RootDonate:\n\n${bodyText}\n\n(clean – no tracking)`);
+    const body = encodeURIComponent(`From RootDonate:\n\n${cleanContent}\n\n(clean – no tracking)`);
     window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
   };
 
@@ -438,11 +441,13 @@ function renderPins() {
     let shareContent = '';
 
     if (pin.type === 'gps') {
-      const lat = pin.lat.toFixed(7);
-      const lng = pin.lng.toFixed(7);
-      const maps = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-      display = `<span class="pin-type">[GPS]</span> ${lat}, ${lng} <a href="${maps}" target="_blank" style="color:var(--accent)">→ Maps</a>`;
-      shareContent = `${lat}, ${lng}`;
+      const latNum = parseFloat(pin.lat);
+      const lngNum = parseFloat(pin.lng);
+      const latDisplay = latNum.toFixed(7);
+      const lngDisplay = lngNum.toFixed(7);
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${latNum.toFixed(10)},${lngNum.toFixed(10)}`;
+      display = `<span class="pin-type">[GPS]</span> ${latDisplay}, ${lngDisplay} <a href="${mapsUrl}" target="_blank" style="color:var(--accent)">→ Maps</a>`;
+      shareContent = `${pin.lat}, ${pin.lng}`;  // ← full original precision!
     } else {
       const clean = cleanUrl(pin.url);
       display = `<span class="pin-type">[URL]</span> <a href="${clean}" target="_blank" style="color:var(--accent);word-break:break-all;">${escapeHtml(clean)}</a>`;
@@ -455,7 +460,7 @@ function renderPins() {
   });
 }
 
-// Tab switching with search visibility
+// Tab switching with search
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -469,33 +474,25 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
       pinsSearch.style.display = 'block';
       pinsSearchInput.value = '';
       pinsSearchInput.focus();
-      // Reset filter
-      Array.from(pinsList.querySelectorAll('.pin-item')).forEach(item => {
-        item.style.display = '';
-      });
+      Array.from(pinsList.querySelectorAll('.pin-item')).forEach(i => i.style.display = '');
     } else {
       pinsSearch.style.display = 'none';
     }
   });
 });
 
-// Live search filtering
+// Live search
 pinsSearchInput.addEventListener('input', e => {
-  const query = e.target.value.trim().toLowerCase();
-  const items = pinsList.querySelectorAll('.pin-item');
-
-  items.forEach(item => {
-    const text = item.textContent.toLowerCase();
-    item.style.display = query === '' || text.includes(query) ? '' : 'none';
+  const q = e.target.value.trim().toLowerCase();
+  Array.from(pinsList.querySelectorAll('.pin-item')).forEach(item => {
+    item.style.display = !q || item.textContent.toLowerCase().includes(q) ? '' : 'none';
   });
 });
 
-// Boot sequence
+// Boot
 setTimeout(() => {
   println('<span class="success">Ready. Paste coordinates or URLs below.</span>');
   if (messages.length) println(`<span class="muted">Session restored (${messages.length} lines)</span>`);
-  
-  // Check for short link on load
   importFromHash();
 }, 800);
 
@@ -510,7 +507,7 @@ messages.forEach(m => {
   addActions(line, m.text);
 });
 
-// Input handling (your original code here - unchanged)
+// Input handling
 input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
@@ -542,8 +539,13 @@ input.addEventListener('keydown', e => {
   if (!handled) {
     const gps = isGpsLike(txt);
     if (gps) {
-      pins.push({ type: 'gps', lat: gps.lat, lng: gps.lng });
-      println('<span class="success">GPS pin saved → My Pins</span>');
+      const exists = pins.some(p => p.type === 'gps' && p.lat === gps.lat && p.lng === gps.lng);
+      if (!exists) {
+        pins.push({ type: 'gps', lat: gps.lat, lng: gps.lng });
+        println('<span class="success">GPS pin saved → My Pins (full precision)</span>');
+      } else {
+        println('<span class="muted">This exact GPS already exists.</span>');
+      }
       handled = true;
     } else {
       const url = extractUrl(txt);

@@ -8,14 +8,14 @@
   <style>
     :root {
       --bg:       #050a12;
-      --surface:  #0c1525;
+      --surface:  #0b1422;
       --text:     #e0ffe0;
       --green:    #44ff66;
       --purple:   #d28aff;
       --accent:   #00eaff;
-      --muted:    #a0b0c8;
+      --muted:    #92a2c0;
       --border:   #1e334d;
-      --shadow:   rgba(0, 240, 255, 0.09);
+      --shadow:   rgba(0, 240, 255, 0.08);
     }
 
     * { box-sizing: border-box; }
@@ -34,12 +34,12 @@
       position: fixed;
       inset: 0;
       pointer-events: none;
-      background: linear-gradient(transparent 50%, rgba(0,0,0,0.07) 50%);
+      background: linear-gradient(transparent 50%, rgba(0,0,0,0.06) 50%);
       background-size: 100% 4px;
       z-index: 9999;
-      animation: scan 10s linear infinite;
+      animation: scan 12s linear infinite;
       mix-blend-mode: multiply;
-      opacity: 0.4;
+      opacity: 0.35;
     }
 
     @keyframes scan {
@@ -48,10 +48,10 @@
     }
 
     header {
-      background: rgba(12, 21, 37, 0.94);
+      background: rgba(10, 18, 32, 0.96);
       border-bottom: 1px solid var(--border);
-      padding: 1.3rem 2rem;
-      backdrop-filter: blur(10px);
+      padding: 1.4rem 1.8rem;
+      backdrop-filter: blur(12px);
       position: sticky;
       top: 0;
       z-index: 100;
@@ -59,23 +59,23 @@
     }
 
     h1 {
-      margin: 0 0 0.4rem;
-      font-size: clamp(2.3rem, 7vw, 3.3rem);
+      margin: 0 0 0.5rem;
+      font-size: clamp(2.4rem, 8vw, 3.6rem);
       color: var(--purple);
-      text-shadow: 0 0 14px rgba(210, 138, 255, 0.35);
+      text-shadow: 0 0 16px rgba(210, 138, 255, 0.4);
     }
 
     .subtitle {
       color: var(--muted);
-      font-size: 0.98rem;
+      font-size: 1rem;
       opacity: 0.9;
     }
 
     .tab-buttons {
       display: flex;
       justify-content: center;
-      gap: 1rem;
-      margin: 1.1rem 0 0.7rem;
+      gap: 1.2rem;
+      margin: 1.3rem 0 0.8rem;
       flex-wrap: wrap;
     }
 
@@ -83,29 +83,30 @@
       background: transparent;
       border: 1px solid var(--muted);
       color: var(--muted);
-      padding: 0.55rem 1.4rem;
+      padding: 0.7rem 1.6rem;
       border-radius: 8px;
       cursor: pointer;
-      font-size: 0.95rem;
+      font-size: 0.98rem;
       transition: all 0.2s ease;
+      min-width: 110px;
     }
 
     .tab-btn.active,
     .tab-btn:hover {
       border-color: var(--accent);
       color: var(--accent);
-      background: rgba(0, 234, 255, 0.07);
+      background: rgba(0, 234, 255, 0.08);
     }
 
     .terminal,
     .pins-view {
-      max-width: 1180px;
+      max-width: 1200px;
       margin: 1.8rem auto;
       border: 1px solid var(--border);
       border-radius: 10px;
       overflow: hidden;
       background: var(--surface);
-      box-shadow: 0 6px 36px var(--shadow);
+      box-shadow: 0 8px 40px var(--shadow);
       display: none;
     }
 
@@ -114,24 +115,24 @@
 
     #output,
     #pinsList {
-      padding: 2rem 2.2rem;
+      padding: 2rem 2.4rem;
       min-height: 50vh;
-      max-height: 78vh;
+      max-height: 76vh;
       overflow-y: auto;
-      font-size: 1.08rem;
-      line-height: 1.65;
+      font-size: 1.1rem;
+      line-height: 1.7;
     }
 
     .line,
     .pin-item {
-      margin: 1.1rem 0;
+      margin: 1.2rem 0;
       white-space: pre-wrap;
       word-break: break-word;
       position: relative;
-      padding-right: 300px;
+      padding-right: 320px;
       display: flex;
       align-items: flex-start;
-      gap: 1rem;
+      gap: 1.2rem;
       flex-wrap: wrap;
     }
 
@@ -140,64 +141,66 @@
 
     .msg-actions {
       opacity: 0;
-      transition: opacity 0.25s;
+      transition: opacity 0.22s;
       position: absolute;
-      right: 1.4rem;
-      top: 0.3rem;
+      right: 1.6rem;
+      top: 0.4rem;
       display: flex;
-      gap: 0.9rem;
+      gap: 1rem;
     }
 
     .msg-btn {
-      background: rgba(0, 234, 255, 0.05);
+      background: rgba(0, 234, 255, 0.06);
       border: 1px solid var(--muted);
       color: var(--muted);
-      padding: 0.4rem 1rem;
+      padding: 0.5rem 1.2rem;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 0.88rem;
-      min-width: 74px;
+      font-size: 0.9rem;
+      min-width: 90px;
       transition: all 0.18s;
     }
 
-    .msg-btn:hover {
-      background: rgba(0, 234, 255, 0.2);
+    .msg-btn:hover,
+    .msg-btn:focus-visible {
+      background: rgba(0, 234, 255, 0.22);
       color: var(--accent);
       border-color: var(--accent);
+      outline: none;
     }
 
     .prompt {
       color: var(--green);
       font-weight: 600;
-      min-width: 140px;
+      min-width: 150px;
       flex-shrink: 0;
     }
 
     .bot     { color: var(--purple); }
     .success { color: var(--green); }
-    .muted   { color: var(--muted); opacity: 0.82; }
+    .muted   { color: var(--muted); opacity: 0.85; }
 
     .pin-type {
       color: var(--accent);
       font-weight: 700;
-      margin-right: 0.7rem;
+      margin-right: 0.8rem;
     }
 
     .input-area {
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      padding: 1.3rem 2.2rem;
-      background: rgba(0,0,0,0.38);
+      padding: 1.4rem 2.4rem;
+      background: rgba(0,0,0,0.4);
       border-top: 1px solid var(--border);
-      gap: 1.2rem;
+      gap: 1.3rem;
     }
 
     .input-row {
       display: flex;
       align-items: center;
       width: 100%;
-      gap: 1rem;
+      gap: 1.2rem;
     }
 
     #input {
@@ -206,23 +209,22 @@
       border: none;
       color: var(--text);
       font: inherit;
-      font-size: 1.12rem;
+      font-size: 1.14rem;
       outline: none;
       caret-color: var(--accent);
     }
 
     #input::placeholder {
       color: var(--muted);
-      opacity: 0.58;
+      opacity: 0.6;
     }
 
     #google-search-container {
       width: 100%;
-      max-width: 900px;
-      padding: 0 0 1.5rem;
+      max-width: 960px;
+      padding: 0 0 1.6rem;
     }
 
-    /* Google Programmable Search styling */
     .gsc-control-cse,
     .gsc-control-cse.gsc-control-cse-en {
       background: transparent !important;
@@ -231,12 +233,10 @@
       color: var(--text) !important;
     }
 
-    .gsc-search-box,
-    .gsc-search-box-tools {
-      background: rgba(0,0,0,0.3) !important;
+    .gsc-search-box {
+      background: rgba(0,0,0,0.35) !important;
       border: 1px solid var(--border) !important;
-      border-radius: 6px;
-      padding: 0.4rem !important;
+      border-radius: 8px !important;
     }
 
     .gsc-input-box input {
@@ -246,7 +246,6 @@
     .gsc-search-button {
       background: var(--accent) !important;
       color: #000 !important;
-      border: none !important;
     }
 
     .gsc-webResult .gs-title a,
@@ -254,53 +253,55 @@
       color: var(--accent) !important;
     }
 
-    .gsc-webResult .gs-snippet,
     .gs-snippet {
       color: var(--muted) !important;
     }
 
-    .gsc-cursor-page,
-    .gsc-cursor-current-page {
-      color: var(--accent) !important;
-    }
-
     #pinsSearch {
-      padding: 0.9rem 2.2rem;
-      background: rgba(0,234,255,0.04);
+      padding: 1rem 2.4rem;
+      background: rgba(0,234,255,0.05);
       border-bottom: 1px solid var(--border);
     }
 
     #pinsSearchInput {
       width: 100%;
-      padding: 0.65rem 1rem;
-      background: rgba(0,0,0,0.28);
+      padding: 0.7rem 1.2rem;
+      background: rgba(0,0,0,0.3);
       border: 1px solid var(--muted);
       border-radius: 6px;
       color: var(--text);
       font: inherit;
-      font-size: 0.98rem;
+      font-size: 1rem;
       outline: none;
     }
 
     #pinsSearchInput:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 10px rgba(0,234,255,0.14);
+      box-shadow: 0 0 12px rgba(0,234,255,0.16);
     }
 
     #google-search-header {
-      padding: 1.3rem 2.2rem 0.5rem;
-      font-size: 1.05rem;
+      padding: 1.4rem 2.4rem 0.6rem;
+      font-size: 1.08rem;
       color: var(--muted);
       border-bottom: 1px dashed var(--border);
-      background: rgba(0,0,0,0.18);
+      background: rgba(0,0,0,0.2);
     }
 
-    @media (max-width: 680px) {
-      .msg-actions { right: 0.9rem; gap: 0.7rem; flex-wrap: wrap; }
-      .msg-btn { padding: 0.35rem 0.9rem; font-size: 0.84rem; min-width: 78px; }
-      .line, .pin-item { padding-right: 220px; }
-      #output, #pinsList { padding: 1.4rem 1.6rem; }
-      .input-area { padding: 1rem 1.4rem; }
+    @media (max-width: 720px) {
+      .msg-actions { right: 1rem; gap: 0.8rem; flex-wrap: wrap; }
+      .msg-btn { padding: 0.45rem 1rem; font-size: 0.86rem; min-width: 82px; }
+      .line, .pin-item { padding-right: 240px; }
+      #output, #pinsList { padding: 1.5rem 1.8rem; }
+      .input-area { padding: 1.2rem 1.6rem; }
+      header { padding: 1.2rem 1.4rem; }
+    }
+
+    @media (max-width: 480px) {
+      .tab-buttons { gap: 0.8rem; }
+      .tab-btn { padding: 0.6rem 1.2rem; font-size: 0.92rem; min-width: 100px; }
+      .line, .pin-item { padding-right: 0; flex-direction: column; gap: 0.8rem; }
+      .msg-actions { position: static; opacity: 1; margin-top: 0.6rem; }
     }
   </style>
 </head>
@@ -318,14 +319,14 @@
 <main>
   <div id="terminalView" class="terminal active" role="log" aria-live="polite">
     <div id="output">
-      <div class="line success">══════════════════════════════════════════════</div>
-      <div class="line success">          ROOTDONATE – PIN & SHARE           </div>
-      <div class="line success">══════════════════════════════════════════════</div>
+      <div class="line success">═══════════════════════════════════════════════════</div>
+      <div class="line success">            ROOTDONATE – PIN & SHARE              </div>
+      <div class="line success">═══════════════════════════════════════════════════</div>
       <div class="line"></div>
       <div class="line muted">Paste GPS coordinates, any URL, or type commands (clear, clearpins, help)</div>
-      <div class="line muted">• URLs   → cleaned short links</div>
+      <div class="line muted">• URLs   → cleaned short links (trackers removed)</div>
       <div class="line muted">• GPS    → dedicated short GPS links</div>
-      <div class="line muted">• Other → noted (not pinned)</div>
+      <div class="line muted">• Other text → noted (not pinned)</div>
     </div>
 
     <div class="input-area">
@@ -341,7 +342,7 @@
       <input id="pinsSearchInput" placeholder="Filter your pins…" autocomplete="off" />
     </div>
 
-    <div id="google-search-header">Web search (Google):</div>
+    <div id="google-search-header">Web / Google search:</div>
     <div id="google-search-container">
       <script async src="https://cse.google.com/cse.js?cx=025fe0f2c9acb4389"></script>
       <div class="gcse-searchresults-only"></div>
@@ -354,6 +355,8 @@
 </main>
 
 <script>
+// ── Core logic (your original code + minor robustness fixes) ──
+
 const output         = document.getElementById('output');
 const input          = document.getElementById('input');
 const pinsList       = document.getElementById('pinsList');
@@ -505,7 +508,7 @@ function addActions(container, content) {
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
     const orig = emailBtn.textContent;
     emailBtn.textContent = 'Opened!';
-    setTimeout(() => emailBtn.textContent = orig, 1800);
+    setTimeout(() => emailBtn.textContent = orig, 1600);
   };
 
   const shortBtn = document.createElement('button');
@@ -516,15 +519,15 @@ function addActions(container, content) {
     if (link) {
       navigator.clipboard.writeText(link).then(() => {
         shortBtn.textContent = isGps ? 'GPS link copied' : 'Copied';
-        setTimeout(() => shortBtn.textContent = 'Short Link', 1600);
-        println(`<span class="muted">${isGps ? 'GPS ' : ''}short link: <a href="${link}" style="color:var(--accent)">${escapeHtml(link)}</a></span>`);
+        setTimeout(() => shortBtn.textContent = 'Short Link', 1400);
+        println(`<span class="muted">${isGps ? 'GPS ' : ''}short link: <a href="${link}" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">${escapeHtml(link)}</a></span>`);
       }).catch(() => {
         shortBtn.textContent = 'Copy failed';
-        setTimeout(() => shortBtn.textContent = 'Short Link', 2000);
+        setTimeout(() => shortBtn.textContent = 'Short Link', 1800);
       });
     } else {
       shortBtn.textContent = 'Error';
-      setTimeout(() => shortBtn.textContent = 'Short Link', 2000);
+      setTimeout(() => shortBtn.textContent = 'Short Link', 1800);
     }
   };
 
@@ -547,10 +550,10 @@ function renderPins() {
       const lat = parseFloat(pin.lat);
       const lng = parseFloat(pin.lng);
       const maps = `https://www.google.com/maps/search/?api=1&query=${lat.toFixed(11)},${lng.toFixed(11)}`;
-      html = `<span class="pin-type">[GPS]</span> ${pin.lat}, ${pin.lng} <a href="${maps}" target="_blank" style="color:var(--accent)">→ Maps</a>`;
+      html = `<span class="pin-type">[GPS]</span> ${pin.lat}, ${pin.lng} <a href="${maps}" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">→ Maps</a>`;
       shareText = pin.raw || `${pin.lat}, ${pin.lng}`;
     } else {
-      html = `<span class="pin-type">[URL]</span> <a href="${pin.url}" target="_blank" style="color:var(--accent); word-break:break-all;">${escapeHtml(pin.url)}</a>`;
+      html = `<span class="pin-type">[URL]</span> <a href="${pin.url}" target="_blank" rel="noopener noreferrer" style="color:var(--accent); word-break:break-all;">${escapeHtml(pin.url)}</a>`;
       shareText = pin.url;
     }
     item.innerHTML = html;
@@ -559,7 +562,8 @@ function renderPins() {
   });
 }
 
-// ── Tab switching ─────────────────────────────────────────────
+// ── Event listeners ─────────────────────────────────────────────
+
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -581,7 +585,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// ── Pins filter ───────────────────────────────────────────────
 pinsSearchInput.addEventListener('input', e => {
   const q = e.target.value.trim().toLowerCase();
   Array.from(pinsList.querySelectorAll('.pin-item')).forEach(el => {
@@ -589,7 +592,6 @@ pinsSearchInput.addEventListener('input', e => {
   });
 });
 
-// ── Restore history ───────────────────────────────────────────
 messages.forEach(m => {
   const isUser = m.from === 'user';
   const line = println(
@@ -600,7 +602,6 @@ messages.forEach(m => {
   addActions(line, m.text);
 });
 
-// ── Main input handler ────────────────────────────────────────
 input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();

@@ -28,7 +28,6 @@
       line-height: 1.6;
     }
 
-    /* CRT scanline effect */
     .crt::before {
       content: "";
       position: fixed;
@@ -295,9 +294,7 @@
 </main>
 
 <script>
-// ────────────────────────────────────────────────
-//  RootDonate – Clean 2026 edition
-// ────────────────────────────────────────────────
+// RootDonate – Clean 2026 edition
 
 const els = {
   output:         document.getElementById('output'),
@@ -322,9 +319,14 @@ function cleanUrl(url) {
   try {
     const u = new URL(url);
     const trash = ['utm_','fbclid','gclid','gad_','mc_cid','mc_eid','igshid','_ga','twclid','li_fat_id','ref','source'];
-    trash.forEach(k => { if (k.endsWith('_')) u.searchParams.forEach((v,p) => p.startsWith(k) && u.searchParams.delete(p)); else u.searchParams.delete(k); });
-    let s = u.toString().replace(/[#?]$/, '');
-    return s;
+    trash.forEach(k => {
+      if (k.endsWith('_')) {
+        u.searchParams.forEach((v,p) => p.startsWith(k) && u.searchParams.delete(p));
+      } else {
+        u.searchParams.delete(k);
+      }
+    });
+    return u.toString().replace(/[#?]$/, '');
   } catch {
     return url.trim();
   }
@@ -355,7 +357,6 @@ function makeShortLink(content, isGps = false) {
   }
 }
 
-// ── Import from #hash ─────────────────────────────────────
 function importFromHash() {
   const hash = location.hash.slice(1);
   if (!hash) return;
@@ -373,12 +374,11 @@ function importFromHash() {
       importContent(raw, 'short-link');
       println('<span class="success">Imported from short link</span>');
     }
-  } catch {
+  } catch (err) {
     println('<span class="muted">Short link decode failed</span>');
   }
 }
 
-// ── Process any content ───────────────────────────────────
 function importContent(text, source = 'input') {
   let added = false;
   const gps = parseGps(text);
@@ -411,7 +411,6 @@ function importContent(text, source = 'input') {
   }
 }
 
-// ── UI helpers ────────────────────────────────────────────
 function println(html) {
   const div = document.createElement('div');
   div.className = 'line';
@@ -428,7 +427,6 @@ function addActions(container, content) {
   const actions = document.createElement('div');
   actions.className = 'msg-actions';
 
-  // Email button
   const emailBtn = document.createElement('button');
   emailBtn.className = 'msg-btn';
   emailBtn.textContent = 'Email';
@@ -443,7 +441,6 @@ function addActions(container, content) {
     setTimeout(() => emailBtn.textContent = orig, 1400);
   };
 
-  // Short link button
   const shortBtn = document.createElement('button');
   shortBtn.className = 'msg-btn';
   shortBtn.textContent = 'Short Link';
@@ -552,7 +549,6 @@ setTimeout(() => {
   println('<span class="success">Ready. Paste coords, URL or command…</span>');
   if (messages.length) println(`<span class="muted">History loaded (${messages.length} entries)</span>`);
 
-  // Restore history
   messages.forEach(m => {
     const isUser = m.from === 'user';
     const line = println(

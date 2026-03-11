@@ -233,6 +233,10 @@
       background: rgba(0,0,0,0.18);
     }
 
+    #search-container {
+      padding: 0 2.2rem 1.6rem;
+    }
+
     #duckduckgo-frame {
       width: 100%;
       height: 520px;
@@ -285,16 +289,13 @@
     </div>
   </div>
 
-<script async src="https://cse.google.com/cse.js?cx=025fe0f2c9acb4389"></script>
-<div class="gcse-searchresults-only"></div>
-
   <div id="pinsView" class="view">
     <div id="pinsSearch">
       <input id="pinsSearchInput" placeholder="Filter pins…" autocomplete="off" />
     </div>
 
     <div id="search-header">Quick web search (DuckDuckGo):</div>
-    <div id="google-search-container" style="padding:0 2.2rem 1.6rem;">
+    <div id="search-container">
       <iframe id="duckduckgo-frame"
         src="https://duckduckgo.com/?kae=t&ko=-1&k7=050a12&k8=e0ffe0&k9=00eaff&kaa=44ff66&kn=1&kp=-2&kd=1"></iframe>
     </div>
@@ -306,7 +307,9 @@
 </main>
 
 <script>
-// RootDonate – Clean 2026 edition (with DuckDuckGo search fallback)
+// ────────────────────────────────────────────────
+// RootDonate – Clean 2026 edition
+// ────────────────────────────────────────────────
 
 const els = {
   output:         document.getElementById('output'),
@@ -386,7 +389,7 @@ function importFromHash() {
       importContent(raw, 'short-link');
       println('<span class="success">Imported from short link</span>');
     }
-  } catch (err) {
+  } catch {
     println('<span class="muted">Short link decode failed</span>');
   }
 }

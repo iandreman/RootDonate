@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RootDonate – Pin & Share Coordinates Privately</title>
+  <title>RootDonate – Private Pin & Share Coordinates</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
   <style>
     :root {
@@ -15,43 +15,43 @@
       --accent:   #00eaff;
       --muted:    #92a2c0;
       --border:   #1e334d;
-      --shadow:   rgba(0, 240, 255, 0.08);
+      --shadow:   rgba(0, 240, 255, 0.09);
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin:0; padding:0; }
 
     body {
-      margin: 0;
       background: var(--bg);
       color: var(--text);
-      font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', monospace;
+      font-family: 'JetBrains Mono', monospace;
       min-height: 100dvh;
       line-height: 1.6;
     }
 
+    /* CRT scanline effect */
     .crt::before {
       content: "";
       position: fixed;
       inset: 0;
       pointer-events: none;
-      background: linear-gradient(transparent 50%, rgba(0,0,0,0.06) 50%);
+      background: linear-gradient(transparent 50%, rgba(0,0,0,0.07) 50%);
       background-size: 100% 4px;
       z-index: 9999;
-      animation: scan 12s linear infinite;
+      animation: scan 14s linear infinite;
       mix-blend-mode: multiply;
-      opacity: 0.35;
+      opacity: 0.4;
     }
 
     @keyframes scan {
-      0%, 100% { transform: translateY(-100%); }
-      100%     { transform: translateY(100%); }
+      0%   { transform: translateY(-100%); }
+      100% { transform: translateY(100%);  }
     }
 
     header {
-      background: rgba(10, 18, 32, 0.96);
+      background: rgba(8, 16, 30, 0.94);
       border-bottom: 1px solid var(--border);
-      padding: 1.4rem 1.8rem;
-      backdrop-filter: blur(12px);
+      padding: 1.3rem 1.6rem;
+      backdrop-filter: blur(10px);
       position: sticky;
       top: 0;
       z-index: 100;
@@ -59,23 +59,23 @@
     }
 
     h1 {
-      margin: 0 0 0.5rem;
-      font-size: clamp(2.4rem, 8vw, 3.6rem);
+      margin: 0 0 0.4rem;
+      font-size: clamp(2.5rem, 9vw, 3.8rem);
       color: var(--purple);
-      text-shadow: 0 0 16px rgba(210, 138, 255, 0.4);
+      text-shadow: 0 0 20px rgba(210,140,255,0.45);
     }
 
     .subtitle {
       color: var(--muted);
-      font-size: 1rem;
-      opacity: 0.9;
+      font-size: 0.96rem;
+      opacity: 0.88;
     }
 
     .tab-buttons {
       display: flex;
       justify-content: center;
-      gap: 1.2rem;
-      margin: 1.3rem 0 0.8rem;
+      gap: 1rem;
+      margin: 1.2rem 0 0.6rem;
       flex-wrap: wrap;
     }
 
@@ -83,56 +83,52 @@
       background: transparent;
       border: 1px solid var(--muted);
       color: var(--muted);
-      padding: 0.7rem 1.6rem;
-      border-radius: 8px;
+      padding: 0.65rem 1.5rem;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 0.98rem;
+      font-size: 0.97rem;
       transition: all 0.2s ease;
-      min-width: 110px;
+      min-width: 108px;
     }
 
     .tab-btn.active,
     .tab-btn:hover {
       border-color: var(--accent);
       color: var(--accent);
-      background: rgba(0, 234, 255, 0.08);
+      background: rgba(0,234,255,0.07);
     }
 
-    .terminal,
-    .pins-view {
-      max-width: 1200px;
-      margin: 1.8rem auto;
+    .view {
+      max-width: 1180px;
+      margin: 1.6rem auto;
       border: 1px solid var(--border);
       border-radius: 10px;
       overflow: hidden;
       background: var(--surface);
-      box-shadow: 0 8px 40px var(--shadow);
+      box-shadow: 0 8px 44px var(--shadow);
       display: none;
     }
 
-    .terminal.active,
-    .pins-view.active { display: block; }
+    .view.active { display: block; }
 
-    #output,
-    #pinsList {
-      padding: 2rem 2.4rem;
-      min-height: 50vh;
-      max-height: 76vh;
+    #output, #pinsList {
+      padding: 1.8rem 2.2rem;
+      min-height: 48vh;
+      max-height: 74vh;
       overflow-y: auto;
-      font-size: 1.1rem;
-      line-height: 1.7;
+      font-size: 1.08rem;
+      line-height: 1.65;
     }
 
-    .line,
-    .pin-item {
-      margin: 1.2rem 0;
+    .line, .pin-item {
+      margin: 1.1rem 0;
       white-space: pre-wrap;
       word-break: break-word;
       position: relative;
-      padding-right: 320px;
+      padding-right: 300px;
       display: flex;
       align-items: flex-start;
-      gap: 1.2rem;
+      gap: 1rem;
       flex-wrap: wrap;
     }
 
@@ -141,66 +137,57 @@
 
     .msg-actions {
       opacity: 0;
-      transition: opacity 0.22s;
+      transition: opacity 0.2s;
       position: absolute;
-      right: 1.6rem;
-      top: 0.4rem;
+      right: 1.4rem;
+      top: 0.3rem;
       display: flex;
-      gap: 1rem;
+      gap: 0.9rem;
     }
 
     .msg-btn {
-      background: rgba(0, 234, 255, 0.06);
+      background: rgba(0,234,255,0.05);
       border: 1px solid var(--muted);
       color: var(--muted);
-      padding: 0.5rem 1.2rem;
-      border-radius: 6px;
+      padding: 0.45rem 1.1rem;
+      border-radius: 5px;
       cursor: pointer;
-      font-size: 0.9rem;
-      min-width: 90px;
-      transition: all 0.18s;
+      font-size: 0.88rem;
+      min-width: 88px;
+      transition: all 0.16s;
     }
 
-    .msg-btn:hover,
-    .msg-btn:focus-visible {
-      background: rgba(0, 234, 255, 0.22);
+    .msg-btn:hover {
+      background: rgba(0,234,255,0.2);
       color: var(--accent);
       border-color: var(--accent);
-      outline: none;
     }
 
-    .prompt {
-      color: var(--green);
-      font-weight: 600;
-      min-width: 150px;
-      flex-shrink: 0;
-    }
-
+    .prompt  { color: var(--green); font-weight: 600; min-width: 148px; flex-shrink: 0; }
     .bot     { color: var(--purple); }
     .success { color: var(--green); }
-    .muted   { color: var(--muted); opacity: 0.85; }
+    .muted   { color: var(--muted); opacity: 0.82; }
 
     .pin-type {
       color: var(--accent);
       font-weight: 700;
-      margin-right: 0.8rem;
+      margin-right: 0.7rem;
     }
 
     .input-area {
+      padding: 1.3rem 2.2rem;
+      background: rgba(0,0,0,0.38);
+      border-top: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      padding: 1.4rem 2.4rem;
-      background: rgba(0,0,0,0.4);
-      border-top: 1px solid var(--border);
-      gap: 1.3rem;
+      gap: 1.1rem;
     }
 
     .input-row {
       display: flex;
       align-items: center;
       width: 100%;
-      gap: 1.2rem;
+      gap: 1rem;
     }
 
     #input {
@@ -209,99 +196,55 @@
       border: none;
       color: var(--text);
       font: inherit;
-      font-size: 1.14rem;
+      font-size: 1.12rem;
       outline: none;
       caret-color: var(--accent);
     }
 
-    #input::placeholder {
-      color: var(--muted);
-      opacity: 0.6;
-    }
-
-    #google-search-container {
-      width: 100%;
-      max-width: 960px;
-      padding: 0 0 1.6rem;
-    }
-
-    .gsc-control-cse,
-    .gsc-control-cse.gsc-control-cse-en {
-      background: transparent !important;
-      border: none !important;
-      padding: 0 !important;
-      color: var(--text) !important;
-    }
-
-    .gsc-search-box {
-      background: rgba(0,0,0,0.35) !important;
-      border: 1px solid var(--border) !important;
-      border-radius: 8px !important;
-    }
-
-    .gsc-input-box input {
-      color: var(--text) !important;
-    }
-
-    .gsc-search-button {
-      background: var(--accent) !important;
-      color: #000 !important;
-    }
-
-    .gsc-webResult .gs-title a,
-    .gs-title a {
-      color: var(--accent) !important;
-    }
-
-    .gs-snippet {
-      color: var(--muted) !important;
-    }
+    #input::placeholder { color: var(--muted); opacity: 0.58; }
 
     #pinsSearch {
-      padding: 1rem 2.4rem;
-      background: rgba(0,234,255,0.05);
+      padding: 0.9rem 2.2rem;
+      background: rgba(0,234,255,0.04);
       border-bottom: 1px solid var(--border);
     }
 
     #pinsSearchInput {
       width: 100%;
-      padding: 0.7rem 1.2rem;
-      background: rgba(0,0,0,0.3);
+      padding: 0.65rem 1.3rem;
+      background: rgba(0,0,0,0.32);
       border: 1px solid var(--muted);
       border-radius: 6px;
       color: var(--text);
       font: inherit;
-      font-size: 1rem;
+      font-size: 0.98rem;
       outline: none;
     }
 
     #pinsSearchInput:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 12px rgba(0,234,255,0.16);
+      box-shadow: 0 0 10px rgba(0,234,255,0.14);
     }
 
     #google-search-header {
-      padding: 1.4rem 2.4rem 0.6rem;
-      font-size: 1.08rem;
+      padding: 1.2rem 2.2rem 0.5rem;
+      font-size: 1.05rem;
       color: var(--muted);
       border-bottom: 1px dashed var(--border);
-      background: rgba(0,0,0,0.2);
+      background: rgba(0,0,0,0.18);
     }
 
     @media (max-width: 720px) {
-      .msg-actions { right: 1rem; gap: 0.8rem; flex-wrap: wrap; }
-      .msg-btn { padding: 0.45rem 1rem; font-size: 0.86rem; min-width: 82px; }
-      .line, .pin-item { padding-right: 240px; }
-      #output, #pinsList { padding: 1.5rem 1.8rem; }
-      .input-area { padding: 1.2rem 1.6rem; }
-      header { padding: 1.2rem 1.4rem; }
+      .line, .pin-item { padding-right: 220px; }
+      .msg-actions { right: 1rem; gap: 0.7rem; }
+      #output, #pinsList { padding: 1.4rem 1.7rem; }
     }
 
     @media (max-width: 480px) {
-      .tab-buttons { gap: 0.8rem; }
-      .tab-btn { padding: 0.6rem 1.2rem; font-size: 0.92rem; min-width: 100px; }
-      .line, .pin-item { padding-right: 0; flex-direction: column; gap: 0.8rem; }
-      .msg-actions { position: static; opacity: 1; margin-top: 0.6rem; }
+      .line, .pin-item { padding-right: 0; flex-direction: column; gap: 0.7rem; }
+      .msg-actions { position: static; opacity: 1; margin-top: 0.5rem; flex-wrap: wrap; }
+      .tab-buttons { gap: 0.7rem; }
+      .tab-btn { min-width: 96px; padding: 0.55rem 1.1rem; }
     }
   </style>
 </head>
@@ -317,33 +260,30 @@
 </header>
 
 <main>
-  <div id="terminalView" class="terminal active" role="log" aria-live="polite">
+  <div id="terminalView" class="view active" role="log" aria-live="polite">
     <div id="output">
-      <div class="line success">═══════════════════════════════════════════════════</div>
-      <div class="line success">            ROOTDONATE – PIN & SHARE              </div>
-      <div class="line success">═══════════════════════════════════════════════════</div>
+      <div class="line success">══════════════════════════════════════════════</div>
+      <div class="line success">          ROOTDONATE – PIN & SHARE           </div>
+      <div class="line success">══════════════════════════════════════════════</div>
       <div class="line"></div>
-      <div class="line muted">Paste GPS coordinates, any URL, or type commands (clear, clearpins, help)</div>
-      <div class="line muted">• URLs   → cleaned short links (trackers removed)</div>
-      <div class="line muted">• GPS    → dedicated short GPS links</div>
-      <div class="line muted">• Other text → noted (not pinned)</div>
+      <div class="line muted">Paste GPS • clean URL • or command (clear, clearpins, help)</div>
     </div>
 
     <div class="input-area">
       <div class="input-row">
         <label for="input" class="prompt">root@donate:~#</label>
-        <input id="input" type="text" autocomplete="off" autofocus placeholder="Paste coords / URL or type command…" />
+        <input id="input" type="text" autocomplete="off" autofocus placeholder="Paste coords / URL / command…" />
       </div>
     </div>
   </div>
 
-  <div id="pinsView" class="pins-view">
+  <div id="pinsView" class="view">
     <div id="pinsSearch">
-      <input id="pinsSearchInput" placeholder="Filter your pins…" autocomplete="off" />
+      <input id="pinsSearchInput" placeholder="Filter pins…" autocomplete="off" />
     </div>
 
-    <div id="google-search-header">Web / Google search:</div>
-    <div id="google-search-container">
+    <div id="google-search-header">Quick web search:</div>
+    <div id="google-search-container" style="padding:0 2.2rem 1.6rem;">
       <script async src="https://cse.google.com/cse.js?cx=025fe0f2c9acb4389"></script>
       <div class="gcse-searchresults-only"></div>
     </div>
@@ -355,24 +295,25 @@
 </main>
 
 <script>
-// ── Core logic (your original code + minor robustness fixes) ──
+// ────────────────────────────────────────────────
+//  RootDonate – Clean 2026 edition
+// ────────────────────────────────────────────────
 
-const output         = document.getElementById('output');
-const input          = document.getElementById('input');
-const pinsList       = document.getElementById('pinsList');
-const terminalView   = document.getElementById('terminalView');
-const pinsView       = document.getElementById('pinsView');
-const pinsSearch     = document.getElementById('pinsSearch');
-const pinsSearchInput = document.getElementById('pinsSearchInput');
+const els = {
+  output:         document.getElementById('output'),
+  input:          document.getElementById('input'),
+  pinsList:       document.getElementById('pinsList'),
+  terminalView:   document.getElementById('terminalView'),
+  pinsView:       document.getElementById('pinsView'),
+  pinsSearchInput: document.getElementById('pinsSearchInput'),
+};
 
 let messages = JSON.parse(localStorage.getItem('rootDonateHistory') || '[]');
 let pins     = JSON.parse(localStorage.getItem('rootDonatePins')     || '[]');
 
-function escapeHtml(str) {
-  return str.replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[m]);
-}
+const escapeHtml = str => str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
 
-function saveData() {
+function save() {
   localStorage.setItem('rootDonateHistory', JSON.stringify(messages));
   localStorage.setItem('rootDonatePins',     JSON.stringify(pins));
 }
@@ -380,28 +321,21 @@ function saveData() {
 function cleanUrl(url) {
   try {
     const u = new URL(url);
-    const paramsToRemove = [
-      'utm_source','utm_medium','utm_campaign','utm_term','utm_content','utm_id',
-      'fbclid','gclid','gad_source','ref','source','campaign',
-      'mc_cid','mc_eid','igshid','_ga','_gl','msclkid','twclid','li_fat_id'
-    ];
-    paramsToRemove.forEach(p => u.searchParams.delete(p));
-    if (u.hash === '#') u.hash = '';
-    let s = u.toString();
-    if (s.endsWith('/?') || s.endsWith('?')) s = s.replace(/[\/?]+$/, '');
+    const trash = ['utm_','fbclid','gclid','gad_','mc_cid','mc_eid','igshid','_ga','twclid','li_fat_id','ref','source'];
+    trash.forEach(k => { if (k.endsWith('_')) u.searchParams.forEach((v,p) => p.startsWith(k) && u.searchParams.delete(p)); else u.searchParams.delete(k); });
+    let s = u.toString().replace(/[#?]$/, '');
     return s;
   } catch {
     return url.trim();
   }
 }
 
-function isGpsLike(text) {
+function parseGps(text) {
   const re = /([-+]?\d{1,3}(?:\.\d{1,12})?)[°\s,;d]*([-+]?\d{1,3}(?:\.\d{1,12})?)/i;
   const m = text.match(re);
-  if (!m) return false;
-  const lat = parseFloat(m[1]);
-  const lng = parseFloat(m[2]);
-  if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return false;
+  if (!m) return null;
+  const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+  if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
   return { lat: m[1].trim(), lng: m[2].trim(), raw: `${m[1].trim()}, ${m[2].trim()}` };
 }
 
@@ -410,10 +344,10 @@ function extractUrl(text) {
   return m ? m[0] : null;
 }
 
-function generateShortLink(content, forceGps = false) {
+function makeShortLink(content, isGps = false) {
   try {
     let data = content.trim();
-    if (forceGps) data = 'gps:' + data;
+    if (isGps) data = 'gps:' + data;
     const encoded = btoa(unescape(encodeURIComponent(data)));
     return `${location.origin}${location.pathname}#${encoded}`;
   } catch {
@@ -421,114 +355,113 @@ function generateShortLink(content, forceGps = false) {
   }
 }
 
+// ── Import from #hash ─────────────────────────────────────
 function importFromHash() {
   const hash = location.hash.slice(1);
   if (!hash) return;
+
   try {
-    let raw = decodeURIComponent(escape(atob(hash)));
+    const raw = decodeURIComponent(escape(atob(hash)));
     if (raw.startsWith('gps:')) {
-      const content = raw.slice(4);
-      const gps = isGpsLike(content);
-      if (gps) {
-        const exists = pins.some(p => p.type === 'gps' && p.lat === gps.lat && p.lng === gps.lng);
-        if (!exists) {
-          pins.push({ type: 'gps', lat: gps.lat, lng: gps.lng, raw: gps.raw });
-          saveData();
-        }
+      const gps = parseGps(raw.slice(4));
+      if (gps && !pins.some(p => p.type==='gps' && p.lat===gps.lat && p.lng===gps.lng)) {
+        pins.push({ type:'gps', ...gps });
+        save();
         println(`<span class="success">Imported GPS: ${gps.raw}</span>`);
-        if (pinsView.classList.contains('active')) renderPins();
-        return;
       }
+    } else {
+      importContent(raw, 'short-link');
+      println('<span class="success">Imported from short link</span>');
     }
-    importContent(raw, 'short link');
-    println(`<span class="success">Imported from short link.</span>`);
   } catch {
-    println(`<span class="muted">Short link decode failed.</span>`);
+    println('<span class="muted">Short link decode failed</span>');
   }
 }
 
-function importContent(content, source = 'input') {
+// ── Process any content ───────────────────────────────────
+function importContent(text, source = 'input') {
   let added = false;
-  const gps = isGpsLike(content);
+  const gps = parseGps(text);
+
   if (gps) {
-    const exists = pins.some(p => p.type === 'gps' && p.lat === gps.lat && p.lng === gps.lng);
-    if (!exists) {
-      pins.push({ type: 'gps', lat: gps.lat, lng: gps.lng, raw: gps.raw });
+    if (!pins.some(p => p.type==='gps' && p.lat===gps.lat && p.lng===gps.lng)) {
+      pins.push({ type:'gps', ...gps });
       added = true;
     }
-    println(`<span class="success">GPS added from ${source}: ${gps.raw}</span>`);
-  } else {
-    const url = extractUrl(content);
+    println(`<span class="success">GPS pinned from ${source}: ${gps.raw}</span>`);
+  }
+  else {
+    const url = extractUrl(text);
     if (url) {
       const cleaned = cleanUrl(url);
-      const exists = pins.some(p => p.type === 'url' && cleanUrl(p.url) === cleaned);
-      if (!exists) {
-        pins.push({ type: 'url', url: cleaned });
+      if (!pins.some(p => p.type==='url' && cleanUrl(p.url)===cleaned)) {
+        pins.push({ type:'url', url:cleaned });
         added = true;
       }
-      println(`<span class="success">URL added from ${source}</span>`);
-    } else if (content.trim()) {
-      println(`<span class="muted">Text noted (not pinned): ${escapeHtml(content.slice(0,60))}${content.length > 60 ? '…' : ''}</span>`);
+      println(`<span class="success">Clean URL pinned from ${source}</span>`);
+    }
+    else if (text.trim()) {
+      println(`<span class="muted">Text noted (not pinned): ${escapeHtml(text.slice(0,70))}${text.length>70?'…':''}</span>`);
     }
   }
-  if (added && pinsView.classList.contains('active')) renderPins();
-  if (added) saveData();
+
+  if (added) {
+    save();
+    if (els.pinsView.classList.contains('active')) renderPins();
+  }
 }
 
-function println(html, cls = 'line') {
+// ── UI helpers ────────────────────────────────────────────
+function println(html) {
   const div = document.createElement('div');
-  div.className = cls;
+  div.className = 'line';
   div.innerHTML = html;
-  output.appendChild(div);
-  output.scrollTop = output.scrollHeight;
+  els.output.appendChild(div);
+  els.output.scrollTop = els.output.scrollHeight;
   return div;
 }
 
 function addActions(container, content) {
+  const gps = parseGps(content);
+  const isGps = !!gps;
+
   const actions = document.createElement('div');
   actions.className = 'msg-actions';
 
-  const gps = isGpsLike(content);
-  const isGps = !!gps;
-
+  // Email button
   const emailBtn = document.createElement('button');
   emailBtn.className = 'msg-btn';
   emailBtn.textContent = 'Email';
   emailBtn.onclick = () => {
-    const link = generateShortLink(content, isGps) || '(failed)';
-    let maps = '';
-    if (isGps) {
-      const lat = parseFloat(gps.lat).toFixed(8);
-      const lng = parseFloat(gps.lng).toFixed(8);
-      maps = `Google Maps:\nhttps://www.google.com/maps/search/?api=1&query=${lat},${lng}\n\n`;
-    }
-    const subject = encodeURIComponent(isGps ? 'RootDonate GPS Pin' : 'RootDonate Link');
-    const note = isGps ? 'GPS coordinate pin – opens in Maps.' : 'Regular link pin.';
-    const body = encodeURIComponent(`From RootDonate:\n\n${content.trim()}\n\n${maps}${link}\n\n${note}\n\n-- March 2026`);
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    const link = makeShortLink(content, isGps) || '(error)';
+    let maps = isGps ? `Google Maps:\nhttps://www.google.com/maps/search/?api=1&query=${parseFloat(gps.lat).toFixed(8)},${parseFloat(gps.lng).toFixed(8)}\n\n` : '';
+    const subject = encodeURIComponent(isGps ? 'RootDonate GPS' : 'RootDonate Link');
+    const body = encodeURIComponent(`RootDonate ${isGps?'pin':'link'}:\n\n${content.trim()}\n\n${maps}${link}\n\n-- March 2026`);
+    location.href = `mailto:?subject=${subject}&body=${body}`;
     const orig = emailBtn.textContent;
     emailBtn.textContent = 'Opened!';
-    setTimeout(() => emailBtn.textContent = orig, 1600);
+    setTimeout(() => emailBtn.textContent = orig, 1400);
   };
 
+  // Short link button
   const shortBtn = document.createElement('button');
   shortBtn.className = 'msg-btn';
   shortBtn.textContent = 'Short Link';
   shortBtn.onclick = () => {
-    const link = generateShortLink(content, isGps);
-    if (link) {
-      navigator.clipboard.writeText(link).then(() => {
-        shortBtn.textContent = isGps ? 'GPS link copied' : 'Copied';
-        setTimeout(() => shortBtn.textContent = 'Short Link', 1400);
-        println(`<span class="muted">${isGps ? 'GPS ' : ''}short link: <a href="${link}" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">${escapeHtml(link)}</a></span>`);
-      }).catch(() => {
-        shortBtn.textContent = 'Copy failed';
-        setTimeout(() => shortBtn.textContent = 'Short Link', 1800);
-      });
-    } else {
+    const link = makeShortLink(content, isGps);
+    if (!link) {
       shortBtn.textContent = 'Error';
-      setTimeout(() => shortBtn.textContent = 'Short Link', 1800);
+      setTimeout(() => shortBtn.textContent = 'Short Link', 1600);
+      return;
     }
+    navigator.clipboard.writeText(link).then(() => {
+      shortBtn.textContent = isGps ? 'GPS link copied' : 'Copied';
+      setTimeout(() => shortBtn.textContent = 'Short Link', 1400);
+      println(`<span class="muted">${isGps?'GPS ':''}short link: <a href="${link}" target="_blank" style="color:var(--accent)">${link}</a></span>`);
+    }).catch(() => {
+      shortBtn.textContent = 'Copy failed';
+      setTimeout(() => shortBtn.textContent = 'Short Link', 1800);
+    });
   };
 
   actions.append(emailBtn, shortBtn);
@@ -536,107 +469,102 @@ function addActions(container, content) {
 }
 
 function renderPins() {
-  pinsList.innerHTML = '';
-  if (pins.length === 0) {
-    pinsList.innerHTML = '<div class="line muted">No pins saved yet.</div>';
-    return;
-  }
+  els.pinsList.innerHTML = pins.length ? '' : '<div class="line muted">No pins saved yet.</div>';
+
   pins.forEach(pin => {
     const item = document.createElement('div');
     item.className = 'pin-item';
+
     let html = '';
-    let shareText = '';
+    let shareContent = '';
+
     if (pin.type === 'gps') {
-      const lat = parseFloat(pin.lat);
-      const lng = parseFloat(pin.lng);
-      const maps = `https://www.google.com/maps/search/?api=1&query=${lat.toFixed(11)},${lng.toFixed(11)}`;
-      html = `<span class="pin-type">[GPS]</span> ${pin.lat}, ${pin.lng} <a href="${maps}" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">→ Maps</a>`;
-      shareText = pin.raw || `${pin.lat}, ${pin.lng}`;
+      const maps = `https://www.google.com/maps/search/?api=1&query=${parseFloat(pin.lat).toFixed(11)},${parseFloat(pin.lng).toFixed(11)}`;
+      html = `<span class="pin-type">[GPS]</span> ${pin.lat}, ${pin.lng} <a href="${maps}" target="_blank" style="color:var(--accent)">→ Maps</a>`;
+      shareContent = pin.raw;
     } else {
-      html = `<span class="pin-type">[URL]</span> <a href="${pin.url}" target="_blank" rel="noopener noreferrer" style="color:var(--accent); word-break:break-all;">${escapeHtml(pin.url)}</a>`;
-      shareText = pin.url;
+      html = `<span class="pin-type">[URL]</span> <a href="${pin.url}" target="_blank" style="color:var(--accent); word-break:break-all;">${escapeHtml(pin.url)}</a>`;
+      shareContent = pin.url;
     }
+
     item.innerHTML = html;
-    addActions(item, shareText);
-    pinsList.appendChild(item);
+    addActions(item, shareContent);
+    els.pinsList.appendChild(item);
   });
 }
 
-// ── Event listeners ─────────────────────────────────────────────
-
+// ── Event listeners ───────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const tab = btn.dataset.tab;
 
-    terminalView.classList.toggle('active', tab === 'terminal');
-    pinsView.classList.toggle('active', tab === 'pins');
+    const isPins = btn.dataset.tab === 'pins';
+    els.terminalView.classList.toggle('active', !isPins);
+    els.pinsView.classList.toggle('active', isPins);
 
-    if (tab === 'pins') {
+    if (isPins) {
       renderPins();
-      pinsSearch.style.display = 'block';
-      pinsSearchInput.focus();
-      pinsList.scrollTop = 0;
+      els.pinsSearchInput.focus();
     } else {
-      pinsSearch.style.display = 'none';
-      input.focus();
+      els.input.focus();
     }
   });
 });
 
-pinsSearchInput.addEventListener('input', e => {
+els.pinsSearchInput.addEventListener('input', e => {
   const q = e.target.value.trim().toLowerCase();
-  Array.from(pinsList.querySelectorAll('.pin-item')).forEach(el => {
-    el.style.display = !q || el.textContent.toLowerCase().includes(q) ? '' : 'none';
-  });
-});
-
-messages.forEach(m => {
-  const isUser = m.from === 'user';
-  const line = println(
-    isUser
-      ? `<span class="prompt">root@donate:~#</span> ${escapeHtml(m.text)}`
-      : `<span class="bot">rootdonate:</span> ${escapeHtml(m.text)}`
+  Array.from(els.pinsList.querySelectorAll('.pin-item')).forEach(el =>
+    el.style.display = !q || el.textContent.toLowerCase().includes(q) ? '' : 'none'
   );
-  addActions(line, m.text);
 });
 
-input.addEventListener('keydown', e => {
+els.input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
-  const txt = input.value.trim();
+  const txt = els.input.value.trim();
   if (!txt) return;
 
   const line = println(`<span class="prompt">root@donate:~#</span> ${escapeHtml(txt)}`);
   addActions(line, txt);
-  messages.push({ from: 'user', text: txt });
-  saveData();
+  messages.push({ from:'user', text:txt });
+  save();
 
   if (txt.toLowerCase() === 'clear') {
-    output.innerHTML = '';
+    els.output.innerHTML = '';
     println('<span class="success">Terminal cleared.</span>');
   } else if (txt.toLowerCase() === 'clearpins') {
     pins = [];
-    saveData();
-    if (pinsView.classList.contains('active')) renderPins();
-    println('<span class="success">Pins cleared.</span>');
+    save();
+    if (els.pinsView.classList.contains('active')) renderPins();
+    println('<span class="success">All pins cleared.</span>');
   } else if (txt.toLowerCase() === 'help') {
     println('<span class="muted">Commands: clear | clearpins | help</span>');
   } else {
-    importContent(txt, 'input');
+    importContent(txt);
   }
 
-  input.value = '';
-  input.focus();
+  els.input.value = '';
 });
 
-// ── Init ──────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────
 setTimeout(() => {
-  println('<span class="success">Ready. Paste coordinates/URL or use commands.</span>');
-  if (messages.length) println(`<span class="muted">History restored (${messages.length} entries)</span>`);
+  println('<span class="success">Ready. Paste coords, URL or command…</span>');
+  if (messages.length) println(`<span class="muted">History loaded (${messages.length} entries)</span>`);
+
+  // Restore history
+  messages.forEach(m => {
+    const isUser = m.from === 'user';
+    const line = println(
+      isUser
+        ? `<span class="prompt">root@donate:~#</span> ${escapeHtml(m.text)}`
+        : `<span class="bot">rootdonate:</span> ${escapeHtml(m.text)}`
+    );
+    addActions(line, m.text);
+  });
+
   importFromHash();
-}, 400);
+}, 300);
 </script>
 </body>
 </html>

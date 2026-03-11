@@ -3,427 +3,328 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RootDonate – Private Pin & Share Coordinates</title>
+  <title>VoidEcho – Wander & Share Fragments</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
   <style>
     :root {
-      --bg:       #050a12;
-      --surface:  #0b1422;
-      --text:     #e0ffe0;
-      --green:    #44ff66;
-      --purple:   #d28aff;
+      --bg:       #05050a;
+      --surface:  #0a0e14;
+      --text:     #d8ffd8;
+      --green:    #33ff77;
+      --purple:   #c58aff;
       --accent:   #00eaff;
-      --muted:    #92a2c0;
-      --border:   #1e334d;
-      --shadow:   rgba(0, 240, 255, 0.09);
+      --muted:    #8899aa;
+      --border:   #1a2a3f;
+      --shadow:   rgba(0, 220, 255, 0.07);
     }
-
     * { box-sizing: border-box; margin:0; padding:0; }
-
     body {
       background: var(--bg);
       color: var(--text);
       font-family: 'JetBrains Mono', monospace;
       min-height: 100dvh;
-      line-height: 1.6;
+      line-height: 1.55;
     }
-
     .crt::before {
       content: "";
       position: fixed;
       inset: 0;
       pointer-events: none;
-      background: linear-gradient(transparent 50%, rgba(0,0,0,0.07) 50%);
+      background: linear-gradient(transparent 50%, rgba(0,0,0,0.08) 50%);
       background-size: 100% 4px;
       z-index: 9999;
-      animation: scan 14s linear infinite;
+      animation: scan 16s linear infinite;
       mix-blend-mode: multiply;
-      opacity: 0.4;
+      opacity: 0.35;
     }
-
-    @keyframes scan {
-      0%   { transform: translateY(-100%); }
-      100% { transform: translateY(100%);  }
-    }
-
+    @keyframes scan { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
     header {
-      background: rgba(8, 16, 30, 0.94);
+      background: rgba(5,8,15,0.96);
       border-bottom: 1px solid var(--border);
-      padding: 1.3rem 1.6rem;
+      padding: 1.2rem 1.6rem;
       backdrop-filter: blur(10px);
       position: sticky;
       top: 0;
       z-index: 100;
       text-align: center;
     }
-
     h1 {
-      margin: 0 0 0.4rem;
-      font-size: clamp(2.5rem, 9vw, 3.8rem);
+      margin: 0 0 0.3rem;
+      font-size: clamp(2.4rem, 8.5vw, 3.6rem);
       color: var(--purple);
-      text-shadow: 0 0 20px rgba(210,140,255,0.45);
+      text-shadow: 0 0 18px rgba(197,138,255,0.4);
     }
-
-    .subtitle {
-      color: var(--muted);
-      font-size: 0.96rem;
-      opacity: 0.88;
-    }
-
-    .tab-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      margin: 1.2rem 0 0.6rem;
-      flex-wrap: wrap;
-    }
-
+    .subtitle { color: var(--muted); font-size: 0.94rem; opacity: 0.85; letter-spacing: 0.5px; }
+    .tab-buttons { display: flex; justify-content: center; gap: 1rem; margin: 1.1rem 0 0.5rem; flex-wrap: wrap; }
     .tab-btn {
       background: transparent;
       border: 1px solid var(--muted);
       color: var(--muted);
-      padding: 0.65rem 1.5rem;
-      border-radius: 6px;
+      padding: 0.6rem 1.4rem;
+      border-radius: 5px;
       cursor: pointer;
-      font-size: 0.97rem;
-      transition: all 0.2s ease;
-      min-width: 108px;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+      min-width: 100px;
     }
-
-    .tab-btn.active,
-    .tab-btn:hover {
+    .tab-btn.active, .tab-btn:hover {
       border-color: var(--accent);
       color: var(--accent);
-      background: rgba(0,234,255,0.07);
+      background: rgba(0,234,255,0.06);
     }
-
     .view {
-      max-width: 1180px;
-      margin: 1.6rem auto;
+      max-width: 1160px;
+      margin: 1.5rem auto;
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 9px;
       overflow: hidden;
       background: var(--surface);
-      box-shadow: 0 8px 44px var(--shadow);
+      box-shadow: 0 7px 40px var(--shadow);
       display: none;
     }
-
     .view.active { display: block; }
-
-    #output, #pinsList {
-      padding: 1.8rem 2.2rem;
-      min-height: 48vh;
-      max-height: 74vh;
-      overflow-y: auto;
-      font-size: 1.08rem;
-      line-height: 1.65;
-    }
-
-    .line, .pin-item {
-      margin: 1.1rem 0;
+    #output, #fragments { padding: 1.7rem 2rem; min-height: 46vh; max-height: 72vh; overflow-y: auto; font-size: 1.06rem; line-height: 1.7; }
+    .line, .frag-item {
+      margin: 1rem 0;
       white-space: pre-wrap;
       word-break: break-word;
       position: relative;
-      padding-right: 300px;
+      padding-right: 280px;
       display: flex;
       align-items: flex-start;
       gap: 1rem;
       flex-wrap: wrap;
     }
-
-    .line:hover .msg-actions,
-    .pin-item:hover .msg-actions { opacity: 1; }
-
-    .msg-actions {
+    .line:hover .actions, .frag-item:hover .actions { opacity: 1; }
+    .actions {
       opacity: 0;
       transition: opacity 0.2s;
       position: absolute;
-      right: 1.4rem;
-      top: 0.3rem;
+      right: 1.3rem;
+      top: 0.2rem;
       display: flex;
-      gap: 0.9rem;
+      gap: 0.8rem;
     }
-
-    .msg-btn {
-      background: rgba(0,234,255,0.05);
+    .act-btn {
+      background: rgba(0,234,255,0.04);
       border: 1px solid var(--muted);
       color: var(--muted);
-      padding: 0.45rem 1.1rem;
-      border-radius: 5px;
+      padding: 0.4rem 1rem;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 0.88rem;
-      min-width: 88px;
-      transition: all 0.16s;
+      font-size: 0.86rem;
+      min-width: 82px;
+      transition: all 0.15s;
     }
-
-    .msg-btn:hover {
-      background: rgba(0,234,255,0.2);
+    .act-btn:hover {
+      background: rgba(0,234,255,0.18);
       color: var(--accent);
       border-color: var(--accent);
     }
-
-    .prompt  { color: var(--green); font-weight: 600; min-width: 148px; flex-shrink: 0; }
-    .bot     { color: var(--purple); }
+    .prompt  { color: var(--green); font-weight: 600; min-width: 160px; flex-shrink: 0; }
+    .echo    { color: var(--purple); }
     .success { color: var(--green); }
-    .muted   { color: var(--muted); opacity: 0.82; }
-
-    .pin-type {
-      color: var(--accent);
-      font-weight: 700;
-      margin-right: 0.7rem;
-    }
-
+    .muted   { color: var(--muted); opacity: 0.8; }
+    .frag-type { color: var(--accent); font-weight: 700; margin-right: 0.6rem; }
     .input-area {
-      padding: 1.3rem 2.2rem;
-      background: rgba(0,0,0,0.38);
+      padding: 1.2rem 2rem;
+      background: rgba(0,0,0,0.4);
       border-top: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      gap: 1.1rem;
-    }
-
-    .input-row {
-      display: flex;
-      align-items: center;
-      width: 100%;
       gap: 1rem;
     }
-
+    .input-row { display: flex; align-items: center; width: 100%; gap: 0.9rem; }
     #input {
       flex: 1;
       background: transparent;
       border: none;
       color: var(--text);
       font: inherit;
-      font-size: 1.12rem;
+      font-size: 1.1rem;
       outline: none;
       caret-color: var(--accent);
     }
-
-    #input::placeholder { color: var(--muted); opacity: 0.58; }
-
-    #pinsSearch {
-      padding: 0.9rem 2.2rem;
-      background: rgba(0,234,255,0.04);
-      border-bottom: 1px solid var(--border);
-    }
-
-    #pinsSearchInput {
+    #input::placeholder { color: var(--muted); opacity: 0.55; }
+    #fragmentsSearch { padding: 0.8rem 2rem; background: rgba(0,234,255,0.03); border-bottom: 1px solid var(--border); }
+    #fragmentsSearchInput {
       width: 100%;
-      padding: 0.65rem 1.3rem;
-      background: rgba(0,0,0,0.32);
+      padding: 0.6rem 1.2rem;
+      background: rgba(0,0,0,0.35);
       border: 1px solid var(--muted);
-      border-radius: 6px;
+      border-radius: 5px;
       color: var(--text);
       font: inherit;
-      font-size: 0.98rem;
+      font-size: 0.96rem;
       outline: none;
     }
-
-    #pinsSearchInput:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 10px rgba(0,234,255,0.14);
-    }
-
-    #search-header {
-      padding: 1.2rem 2.2rem 0.5rem;
-      font-size: 1.05rem;
-      color: var(--muted);
-      border-bottom: 1px dashed var(--border);
-      background: rgba(0,0,0,0.18);
-    }
-
-    #search-container {
-      padding: 0 2.2rem 1.6rem;
-    }
-
-    #duckduckgo-frame {
-      width: 100%;
-      height: 520px;
-      border: none;
-      background: transparent;
-    }
-
-    @media (max-width: 720px) {
-      .line, .pin-item { padding-right: 220px; }
-      .msg-actions { right: 1rem; gap: 0.7rem; }
-      #output, #pinsList { padding: 1.4rem 1.7rem; }
-      #duckduckgo-frame { height: 420px; }
-    }
-
-    @media (max-width: 480px) {
-      .line, .pin-item { padding-right: 0; flex-direction: column; gap: 0.7rem; }
-      .msg-actions { position: static; opacity: 1; margin-top: 0.5rem; flex-wrap: wrap; }
-      .tab-buttons { gap: 0.7rem; }
-      .tab-btn { min-width: 96px; padding: 0.55rem 1.1rem; }
-      #duckduckgo-frame { height: 380px; }
-    }
+    #fragmentsSearchInput:focus { border-color: var(--accent); box-shadow: 0 0 9px rgba(0,234,255,0.12); }
   </style>
 </head>
 <body class="crt">
 
 <header>
-  <h1>RootDonate</h1>
-  <div class="subtitle">Private coordinate & link sharing • March 2026</div>
+  <h1>VOID ECHO</h1>
+  <div class="subtitle">Fragments of a broken world • Share via link • March 2026</div>
   <div class="tab-buttons">
     <button class="tab-btn active" data-tab="terminal">Terminal</button>
-    <button class="tab-btn" data-tab="pins">My Pins</button>
+    <button class="tab-btn" data-tab="fragments">Fragments</button>
   </div>
 </header>
 
 <main>
   <div id="terminalView" class="view active" role="log" aria-live="polite">
     <div id="output">
-      <div class="line success">══════════════════════════════════════════════</div>
-      <div class="line success">          ROOTDONATE – PIN & SHARE           </div>
-      <div class="line success">══════════════════════════════════════════════</div>
+      <div class="line success">═══════════════════════════════════════════</div>
+      <div class="line success">       VOID ECHO – Wanderer Terminal      </div>
+      <div class="line success">═══════════════════════════════════════════</div>
       <div class="line"></div>
-      <div class="line muted">Paste GPS • clean URL • or command (clear, clearpins, help)</div>
+      <div class="line muted">Paste fragment (coords, link, text) or command: look, who, clear, help</div>
     </div>
 
     <div class="input-area">
       <div class="input-row">
-        <label for="input" class="prompt">root@donate:~#</label>
-        <input id="input" type="text" autocomplete="off" autofocus placeholder="Paste coords / URL / command…" />
+        <label for="input" class="prompt">wanderer@void:~$</label>
+        <input id="input" type="text" autocomplete="off" autofocus placeholder="go north / paste shard / look…" />
       </div>
     </div>
   </div>
 
-  <div id="pinsView" class="view">
-    <div id="pinsSearch">
-      <input id="pinsSearchInput" placeholder="Filter pins…" autocomplete="off" />
+  <div id="fragmentsView" class="view">
+    <div id="fragmentsSearch">
+      <input id="fragmentsSearchInput" placeholder="Filter fragments…" autocomplete="off" />
     </div>
-
-    <div id="search-header">Quick web search (DuckDuckGo):</div>
-    <div id="search-container">
-      <iframe id="duckduckgo-frame"
-        src="https://duckduckgo.com/?kae=t&ko=-1&k7=050a12&k8=e0ffe0&k9=00eaff&kaa=44ff66&kn=1&kp=-2&kd=1"></iframe>
-    </div>
-
-    <div id="pinsList">
-      <div class="line muted">No pins saved yet.</div>
+    <div id="fragments">
+      <div class="line muted">No fragments collected yet.</div>
     </div>
   </div>
 </main>
 
 <script>
 // ────────────────────────────────────────────────
-// RootDonate – Clean 2026 edition
+// VoidEcho – minimalist shared-world fragment MMO
 // ────────────────────────────────────────────────
 
 const els = {
-  output:         document.getElementById('output'),
-  input:          document.getElementById('input'),
-  pinsList:       document.getElementById('pinsList'),
-  terminalView:   document.getElementById('terminalView'),
-  pinsView:       document.getElementById('pinsView'),
-  pinsSearchInput: document.getElementById('pinsSearchInput'),
+  output: document.getElementById('output'),
+  input: document.getElementById('input'),
+  fragments: document.getElementById('fragments'),
+  terminalView: document.getElementById('terminalView'),
+  fragmentsView: document.getElementById('fragmentsView'),
+  fragSearch: document.getElementById('fragmentsSearchInput'),
 };
 
-let messages = JSON.parse(localStorage.getItem('rootDonateHistory') || '[]');
-let pins     = JSON.parse(localStorage.getItem('rootDonatePins')     || '[]');
+let history = JSON.parse(localStorage.getItem('voidEchoHistory') || '[]');
+let fragments = JSON.parse(localStorage.getItem('voidEchoFragments') || '[]');
+let lastGps = null;
 
-const escapeHtml = str => str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+const escape = str => str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
 
 function save() {
-  localStorage.setItem('rootDonateHistory', JSON.stringify(messages));
-  localStorage.setItem('rootDonatePins',     JSON.stringify(pins));
+  localStorage.setItem('voidEchoHistory', JSON.stringify(history));
+  localStorage.setItem('voidEchoFragments', JSON.stringify(fragments));
 }
 
-function cleanUrl(url) {
+function cleanUrl(u) {
   try {
-    const u = new URL(url);
-    const trash = ['utm_','fbclid','gclid','gad_','mc_cid','mc_eid','igshid','_ga','twclid','li_fat_id','ref','source'];
-    trash.forEach(k => {
-      if (k.endsWith('_')) {
-        u.searchParams.forEach((v,p) => p.startsWith(k) && u.searchParams.delete(p));
-      } else {
-        u.searchParams.delete(k);
-      }
+    const url = new URL(u);
+    ['utm_','fbclid','gclid','gad_','mc_cid','mc_eid','igshid','_ga','twclid','li_fat_id','ref','source'].forEach(k => {
+      if (k.endsWith('_')) url.searchParams.forEach((_,p) => p.startsWith(k) && url.searchParams.delete(p));
+      else url.searchParams.delete(k);
     });
-    return u.toString().replace(/[#?]$/, '');
-  } catch {
-    return url.trim();
-  }
+    return url.toString().replace(/[#?]$/, '');
+  } catch { return u.trim(); }
 }
 
-function parseGps(text) {
-  const re = /([-+]?\d{1,3}(?:\.\d{1,12})?)[°\s,;d]*([-+]?\d{1,3}(?:\.\d{1,12})?)/i;
-  const m = text.match(re);
+function parseGps(txt) {
+  const m = txt.match(/([-+]?\d{1,3}(?:\.\d{1,12})?)[°\s,;d]*([-+]?\d{1,3}(?:\.\d{1,12})?)/i);
   if (!m) return null;
   const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
   if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
   return { lat: m[1].trim(), lng: m[2].trim(), raw: `${m[1].trim()}, ${m[2].trim()}` };
 }
 
-function extractUrl(text) {
-  const m = text.match(/https?:\/\/[^\s"')<>]+/i);
+function extractUrl(txt) {
+  const m = txt.match(/https?:\/\/[^\s"')<>]+/i);
   return m ? m[0] : null;
 }
 
-function makeShortLink(content, isGps = false) {
+function makeShard(content, isGps = false) {
   try {
     let data = content.trim();
     if (isGps) data = 'gps:' + data;
-    const encoded = btoa(unescape(encodeURIComponent(data)));
-    return `${location.origin}${location.pathname}#${encoded}`;
-  } catch {
-    return null;
+    else if (!data.includes(':')) data = 'text:' + data;
+    const b64 = btoa(unescape(encodeURIComponent(data)));
+    return `${location.origin}${location.pathname}#${b64}`;
+  } catch { return null; }
+}
+
+function flavorOnImport(type, content) {
+  const flavors = [
+    "A faint signal ripples through the static…",
+    "The void remembers this fragment.",
+    "Something ancient stirs in the distance.",
+    "Echo recorded. The silence grows heavier.",
+    "A shard of another wanderer reaches you.",
+    "The coordinates hum with forgotten intent."
+  ];
+  const f = flavors[Math.floor(Math.random()*flavors.length)];
+  println(`<span class="muted">${f}</span>`);
+  if (type === 'gps') {
+    const poetic = [
+      "You stand beneath fractured sky.",
+      "Ash drifts across cracked stone.",
+      "Neon ghosts flicker in the fog.",
+      "A dead satellite watches from above.",
+      "Rust and moss claim what was once built."
+    ];
+    println(`<span class="muted">${poetic[Math.floor(Math.random()*poetic.length)]}</span>`);
   }
 }
 
-function importFromHash() {
-  const hash = location.hash.slice(1);
-  if (!hash) return;
-
-  try {
-    const raw = decodeURIComponent(escape(atob(hash)));
-    if (raw.startsWith('gps:')) {
-      const gps = parseGps(raw.slice(4));
-      if (gps && !pins.some(p => p.type==='gps' && p.lat===gps.lat && p.lng===gps.lng)) {
-        pins.push({ type:'gps', ...gps });
-        save();
-        println(`<span class="success">Imported GPS: ${gps.raw}</span>`);
-      }
-    } else {
-      importContent(raw, 'short-link');
-      println('<span class="success">Imported from short link</span>');
-    }
-  } catch {
-    println('<span class="muted">Short link decode failed</span>');
-  }
-}
-
-function importContent(text, source = 'input') {
+function importFragment(txt, src = 'input') {
   let added = false;
-  const gps = parseGps(text);
+  txt = txt.trim();
 
+  // Auto-prefix plain text actions/commands
+  if (txt && !txt.includes(':') && !parseGps(txt) && !extractUrl(txt)) {
+    txt = 'text:' + txt;
+  }
+
+  const gps = parseGps(txt.replace(/^gps:/,''));
   if (gps) {
-    if (!pins.some(p => p.type==='gps' && p.lat===gps.lat && p.lng===gps.lng)) {
-      pins.push({ type:'gps', ...gps });
+    if (!fragments.some(p => p.type==='gps' && p.lat===gps.lat && p.lng===gps.lng)) {
+      fragments.push({ type:'gps', ...gps });
+      lastGps = gps;
       added = true;
     }
-    println(`<span class="success">GPS pinned from ${source}: ${gps.raw}</span>`);
+    println(`<span class="success">Location fragment acquired: ${gps.raw}</span>`);
+    flavorOnImport('gps', gps.raw);
   }
   else {
-    const url = extractUrl(text);
+    const url = extractUrl(txt);
     if (url) {
       const cleaned = cleanUrl(url);
-      if (!pins.some(p => p.type==='url' && cleanUrl(p.url)===cleaned)) {
-        pins.push({ type:'url', url:cleaned });
+      if (!fragments.some(p => p.type==='url' && cleanUrl(p.url)===cleaned)) {
+        fragments.push({ type:'url', url:cleaned });
         added = true;
       }
-      println(`<span class="success">Clean URL pinned from ${source}</span>`);
+      println(`<span class="success">External echo pinned from ${src}</span>`);
+      flavorOnImport('url', cleaned);
     }
-    else if (text.trim()) {
-      println(`<span class="muted">Text noted (not pinned): ${escapeHtml(text.slice(0,70))}${text.length>70?'…':''}</span>`);
+    else if (txt.startsWith('text:')) {
+      const msg = txt.slice(5).trim();
+      if (msg) {
+        fragments.push({ type:'text', content: msg });
+        added = true;
+        println(`<span class="echo">You said:</span> ${escape(msg)}`);
+        flavorOnImport('text', msg);
+      }
     }
   }
 
-  if (added) {
-    save();
-    if (els.pinsView.classList.contains('active')) renderPins();
-  }
+  if (added) save();
+  if (els.fragmentsView.classList.contains('active')) renderFragments();
 }
 
 function println(html) {
@@ -435,98 +336,114 @@ function println(html) {
   return div;
 }
 
-function addActions(container, content) {
-  const gps = parseGps(content);
-  const isGps = !!gps;
-
+function addActions(el, content, isGps = false) {
   const actions = document.createElement('div');
-  actions.className = 'msg-actions';
+  actions.className = 'actions';
 
-  const emailBtn = document.createElement('button');
-  emailBtn.className = 'msg-btn';
-  emailBtn.textContent = 'Email';
-  emailBtn.onclick = () => {
-    const link = makeShortLink(content, isGps) || '(error)';
-    let maps = isGps ? `Google Maps:\nhttps://www.google.com/maps/search/?api=1&query=${parseFloat(gps.lat).toFixed(8)},${parseFloat(gps.lng).toFixed(8)}\n\n` : '';
-    const subject = encodeURIComponent(isGps ? 'RootDonate GPS' : 'RootDonate Link');
-    const body = encodeURIComponent(`RootDonate ${isGps?'pin':'link'}:\n\n${content.trim()}\n\n${maps}${link}\n\n-- March 2026`);
+  const email = document.createElement('button');
+  email.className = 'act-btn';
+  email.textContent = 'Echo';
+  email.onclick = () => {
+    const link = makeShard(content, isGps) || '(corrupted)';
+    const subject = encodeURIComponent(isGps ? 'Void Location Shard' : 'Void Fragment');
+    const body = encodeURIComponent(`Another wanderer left this:\n\n${content.trim()}\n\n${link}\n\n-- VoidEcho 2026`);
     location.href = `mailto:?subject=${subject}&body=${body}`;
-    const orig = emailBtn.textContent;
-    emailBtn.textContent = 'Opened!';
-    setTimeout(() => emailBtn.textContent = orig, 1400);
+    email.textContent = 'Sent';
+    setTimeout(() => email.textContent = 'Echo', 1200);
   };
 
-  const shortBtn = document.createElement('button');
-  shortBtn.className = 'msg-btn';
-  shortBtn.textContent = 'Short Link';
-  shortBtn.onclick = () => {
-    const link = makeShortLink(content, isGps);
-    if (!link) {
-      shortBtn.textContent = 'Error';
-      setTimeout(() => shortBtn.textContent = 'Short Link', 1600);
-      return;
-    }
+  const copy = document.createElement('button');
+  copy.className = 'act-btn';
+  copy.textContent = 'Shard';
+  copy.onclick = () => {
+    const link = makeShard(content, isGps);
+    if (!link) return void (copy.textContent = 'Error');
     navigator.clipboard.writeText(link).then(() => {
-      shortBtn.textContent = isGps ? 'GPS link copied' : 'Copied';
-      setTimeout(() => shortBtn.textContent = 'Short Link', 1400);
-      println(`<span class="muted">${isGps?'GPS ':''}short link: <a href="${link}" target="_blank" style="color:var(--accent)">${link}</a></span>`);
+      copy.textContent = 'Copied';
+      setTimeout(() => copy.textContent = 'Shard', 1300);
+      println(`<span class="muted">Void shard ready: <a href="${link}" style="color:var(--accent)">${link}</a></span>`);
     }).catch(() => {
-      shortBtn.textContent = 'Copy failed';
-      setTimeout(() => shortBtn.textContent = 'Short Link', 1800);
+      copy.textContent = 'Failed';
+      setTimeout(() => copy.textContent = 'Shard', 1600);
     });
   };
 
-  actions.append(emailBtn, shortBtn);
-  container.appendChild(actions);
+  actions.append(email, copy);
+  el.appendChild(actions);
 }
 
-function renderPins() {
-  els.pinsList.innerHTML = pins.length ? '' : '<div class="line muted">No pins saved yet.</div>';
-
-  pins.forEach(pin => {
+function renderFragments() {
+  els.fragments.innerHTML = fragments.length ? '' : '<div class="line muted">No fragments collected yet.</div>';
+  fragments.forEach(f => {
     const item = document.createElement('div');
-    item.className = 'pin-item';
-
+    item.className = 'frag-item';
     let html = '';
-    let shareContent = '';
 
-    if (pin.type === 'gps') {
-      const maps = `https://www.google.com/maps/search/?api=1&query=${parseFloat(pin.lat).toFixed(11)},${parseFloat(pin.lng).toFixed(11)}`;
-      html = `<span class="pin-type">[GPS]</span> ${pin.lat}, ${pin.lng} <a href="${maps}" target="_blank" style="color:var(--accent)">→ Maps</a>`;
-      shareContent = pin.raw;
-    } else {
-      html = `<span class="pin-type">[URL]</span> <a href="${pin.url}" target="_blank" style="color:var(--accent); word-break:break-all;">${escapeHtml(pin.url)}</a>`;
-      shareContent = pin.url;
+    if (f.type === 'gps') {
+      const m = `https://www.google.com/maps/search/?api=1&query=${parseFloat(f.lat).toFixed(8)},${parseFloat(f.lng).toFixed(8)}`;
+      html = `<span class="frag-type">[LOC]</span> ${f.lat}, ${f.lng} <a href="${m}" target="_blank" style="color:var(--accent)">→ Map</a>`;
+    } else if (f.type === 'url') {
+      html = `<span class="frag-type">[ECHO]</span> <a href="${f.url}" target="_blank" style="color:var(--accent);word-break:break-all;">${escape(f.url)}</a>`;
+    } else if (f.type === 'text') {
+      html = `<span class="frag-type">[SAY]</span> ${escape(f.content)}`;
     }
 
     item.innerHTML = html;
-    addActions(item, shareContent);
-    els.pinsList.appendChild(item);
+    addActions(item, f.type==='gps'?f.raw : (f.url||f.content), f.type==='gps');
+    els.fragments.appendChild(item);
   });
 }
 
-// ── Event listeners ───────────────────────────────────────
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+// ── Commands ────────────────────────────────────────────
+function handleCommand(cmd) {
+  cmd = cmd.toLowerCase().trim();
+  if (cmd === 'clear') {
+    els.output.innerHTML = '';
+    println('<span class="success">Terminal wiped.</span>');
+  } else if (cmd === 'clearfragments') {
+    fragments = [];
+    lastGps = null;
+    save();
+    if (els.fragmentsView.classList.contains('active')) renderFragments();
+    println('<span class="success">All fragments dissolved.</span>');
+  } else if (cmd === 'help') {
+    println('<span class="muted">Commands: look, who, clear, clearfragments, help</span>');
+    println('<span class="muted">Paste coords, URLs, or just type actions (go north, take key…)</span>');
+  } else if (cmd === 'look') {
+    if (lastGps) {
+      println(`<span class="muted">You are at ${lastGps.raw}…</span>`);
+      println(`<span class="muted">Wind carries static. Something watches from far away.</span>`);
+    } else {
+      println(`<span class="muted">You wander in formless dark. No landmark holds.</span>`);
+    }
+  } else if (cmd === 'who') {
+    const n = Math.floor(Math.random() * 6) + 2;
+    println(`<span class="muted">The void senses ${n} other wanderer${n>1?'s':''} nearby…</span>`);
+  } else {
+    println(`<span class="muted">Unknown command. Try: look, who, help</span>`);
+  }
+}
 
-    const isPins = btn.dataset.tab === 'pins';
-    els.terminalView.classList.toggle('active', !isPins);
-    els.pinsView.classList.toggle('active', isPins);
-
-    if (isPins) {
-      renderPins();
-      els.pinsSearchInput.focus();
+// ── Events ──────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    const isFrag = b.dataset.tab === 'fragments';
+    els.terminalView.classList.toggle('active', !isFrag);
+    els.fragmentsView.classList.toggle('active', isFrag);
+    if (isFrag) {
+      renderFragments();
+      els.fragSearch.focus();
     } else {
       els.input.focus();
     }
   });
 });
 
-els.pinsSearchInput.addEventListener('input', e => {
+els.fragSearch.addEventListener('input', e => {
   const q = e.target.value.trim().toLowerCase();
-  Array.from(els.pinsList.querySelectorAll('.pin-item')).forEach(el =>
+  Array.from(els.fragments.querySelectorAll('.frag-item')).forEach(el =>
     el.style.display = !q || el.textContent.toLowerCase().includes(q) ? '' : 'none'
   );
 });
@@ -534,48 +451,50 @@ els.pinsSearchInput.addEventListener('input', e => {
 els.input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
-  const txt = els.input.value.trim();
+  let txt = els.input.value.trim();
   if (!txt) return;
 
-  const line = println(`<span class="prompt">root@donate:~#</span> ${escapeHtml(txt)}`);
-  addActions(line, txt);
-  messages.push({ from:'user', text:txt });
+  const line = println(`<span class="prompt">wanderer@void:~$</span> ${escape(txt)}`);
+  addActions(line, txt, !!parseGps(txt));
+  history.push({ from:'user', text:txt });
   save();
 
-  if (txt.toLowerCase() === 'clear') {
-    els.output.innerHTML = '';
-    println('<span class="success">Terminal cleared.</span>');
-  } else if (txt.toLowerCase() === 'clearpins') {
-    pins = [];
-    save();
-    if (els.pinsView.classList.contains('active')) renderPins();
-    println('<span class="success">All pins cleared.</span>');
-  } else if (txt.toLowerCase() === 'help') {
-    println('<span class="muted">Commands: clear | clearpins | help</span>');
+  if (txt.toLowerCase().startsWith('clear') || txt.toLowerCase().startsWith('help') || ['look','who','clearfragments'].includes(txt.toLowerCase().trim())) {
+    handleCommand(txt);
   } else {
-    importContent(txt);
+    importFragment(txt);
   }
 
   els.input.value = '';
 });
 
-// ── Init ──────────────────────────────────────────────────
+// ── Init ────────────────────────────────────────────────
 setTimeout(() => {
-  println('<span class="success">Ready. Paste coords, URL or command…</span>');
-  if (messages.length) println(`<span class="muted">History loaded (${messages.length} entries)</span>`);
+  println('<span class="success">Connection established. The void is listening…</span>');
+  if (history.length) println(`<span class="muted">Echoes of past wanderings (${history.length})</span>`);
 
-  messages.forEach(m => {
+  history.forEach(m => {
     const isUser = m.from === 'user';
     const line = println(
       isUser
-        ? `<span class="prompt">root@donate:~#</span> ${escapeHtml(m.text)}`
-        : `<span class="bot">rootdonate:</span> ${escapeHtml(m.text)}`
+        ? `<span class="prompt">wanderer@void:~$</span> ${escape(m.text)}`
+        : `<span class="echo">void:</span> ${escape(m.text)}`
     );
-    addActions(line, m.text);
+    addActions(line, m.text, !!parseGps(m.text));
   });
 
-  importFromHash();
-}, 300);
+  // Try to load from URL hash
+  const hash = location.hash.slice(1);
+  if (hash) {
+    try {
+      const raw = decodeURIComponent(escape(atob(hash)));
+      importFragment(raw, 'shard');
+      println('<span class="success">Shard integrated.</span>');
+    } catch {
+      println('<span class="muted">Corrupted shard — could not read.</span>');
+    }
+  }
+}, 400);
 </script>
 </body>
 </html>

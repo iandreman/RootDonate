@@ -159,6 +159,26 @@
       outline: none;
     }
     #fragmentsSearchInput:focus { border-color: var(--accent); box-shadow: 0 0 9px rgba(0,234,255,0.12); }
+
+    /* Google PSE style overrides – dark theme */
+    .gsc-control-cse, .gsc-results, .gsc-webResult, .gs-title, .gs-snippet, .gs-visibleUrl {
+      background: var(--surface) !important;
+      color: var(--text) !important;
+      border: none !important;
+    }
+    .gsc-results .gs-title a {
+      color: var(--accent) !important;
+    }
+    .gsc-results .gs-snippet {
+      color: var(--muted) !important;
+    }
+    .gsc-table-result, .gsc-thumbnail-inside, .gs-result {
+      border-bottom: 1px solid var(--border) !important;
+      padding: 0.8rem 0 !important;
+    }
+    .gsc-search-box-tools, .gsc-branding {
+      display: none !important; /* hide Google branding if possible */
+    }
   </style>
 </head>
 <body class="crt">
@@ -192,8 +212,15 @@
 
   <div id="fragmentsView" class="view">
     <div id="fragmentsSearch">
-      <input id="fragmentsSearchInput" placeholder="Filter fragments…" autocomplete="off" />
+      <input id="fragmentsSearchInput" placeholder="Filter local fragments or probe external echoes…" autocomplete="off" />
     </div>
+
+    <!-- Google results container -->
+    <div id="googleResults" style="display: none; padding: 1rem 2rem; border-top: 1px solid var(--border);">
+      <div class="line muted">External echoes from the wider net…</div>
+      <div class="gcse-searchresults-only"></div>
+    </div>
+
     <div id="fragments">
       <div class="line muted">No fragments collected yet.</div>
     </div>
@@ -212,6 +239,7 @@ const els = {
   terminalView: document.getElementById('terminalView'),
   fragmentsView: document.getElementById('fragmentsView'),
   fragSearch: document.getElementById('fragmentsSearchInput'),
+  googleResults: document.getElementById('googleResults'),
 };
 
 let history = JSON.parse(localStorage.getItem('voidEchoHistory') || '[]');
@@ -286,7 +314,6 @@ function importFragment(txt, src = 'input') {
   let added = false;
   txt = txt.trim();
 
-  // Auto-prefix plain text actions/commands
   if (txt && !txt.includes(':') && !parseGps(txt) && !extractUrl(txt)) {
     txt = 'text:' + txt;
   }
@@ -300,7 +327,6 @@ function importFragment(txt, src = 'input') {
     }
     println(`<span class="success">Location fragment acquired: ${gps.raw}</span>`);
     
-    // Show Apple Maps link right in terminal
     const appleLink = `https://maps.apple.com/?ll=${gps.lat},${gps.lng}&span=0.015,0.015`;
     println(`<span class="muted">Open in Apple Maps:</span> <a href="${appleLink}" target="_blank" style="color:var(--accent)">${appleLink}</a>`);
     
@@ -385,13 +411,8 @@ function renderFragments() {
     let html = '';
 
     if (f.type === 'gps') {
-      // Apple Maps link (centered + light zoom)
       const m = `https://maps.apple.com/?ll=${f.lat},${f.lng}&span=0.015,0.015`;
       html = `<span class="frag-type">[LOC]</span> ${f.lat}, ${f.lng} <a href="${m}" target="_blank" style="color:var(--accent)">→ Apple Maps</a>`;
-      
-      // Optional: uncomment for dual Google fallback
-      // const g = `https://www.google.com/maps/search/?api=1&query=${f.lat},${f.lng}`;
-      // html += ` <a href="${g}" target="_blank" style="color:var(--muted)">→ Google</a>`;
     } else if (f.type === 'url') {
       html = `<span class="frag-type">[ECHO]</span> <a href="${f.url}" target="_blank" style="color:var(--accent);word-break:break-all;">${escape(f.url)}</a>`;
     } else if (f.type === 'text') {
@@ -434,7 +455,52 @@ function handleCommand(cmd) {
   }
 }
 
-// ── Events ──────────────────────────────────────────────
+// ── Google Programmable Search Integration ───────────────────────────────
+let googleSearchReady = false;
+const CX = '025fe0f2c9acb4389';  // ← REPLACE THIS with your real CX code (e.g. 025fe0f2c9acb4389:xyz or just 025fe0f2c9acb4389)
+
+function initGoogleSearch() {
+  if (typeof google !== 'undefined' && google.search && google.search.cse && google.search.cse.element) {
+    googleSearchReady = true;
+    google.search.cse.element.render({
+      div: 'googleResults',
+      tag: 'searchresults-only',
+      gname: 'voidEchoExternal'
+    });
+  }
+}
+
+// Load cse.js dynamically
+if (!document.querySelector(`script[src*="cse.google.com/cse.js?cx=${CX}"]`)) {
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = `https://cse.google.com/cse.js?cx=${CX}`;
+  script.onload = initGoogleSearch;
+  document.head.appendChild(script);
+} else {
+  setTimeout(initGoogleSearch, 1000);
+}
+
+// Local + Google search on input
+els.fragSearch.addEventListener('input', e => {
+  const q = e.target.value.trim().toLowerCase();
+
+  // Local filter
+  Array.from(els.fragments.querySelectorAll('.frag-item')).forEach(el =>
+    el.style.display = !q || el.textContent.toLowerCase().includes(q) ? '' : 'none'
+  );
+
+  // Google external search
+  if (q.length >= 3 && googleSearchReady) {
+    els.googleResults.style.display = 'block';
+    const element = google.search.cse.element.getElement('voidEchoExternal');
+    if (element) element.execute(q);
+  } else {
+    els.googleResults.style.display = 'none';
+  }
+});
+
+// ── Tab switching ──────────────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(b => {
   b.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
@@ -449,13 +515,6 @@ document.querySelectorAll('.tab-btn').forEach(b => {
       els.input.focus();
     }
   });
-});
-
-els.fragSearch.addEventListener('input', e => {
-  const q = e.target.value.trim().toLowerCase();
-  Array.from(els.fragments.querySelectorAll('.frag-item')).forEach(el =>
-    el.style.display = !q || el.textContent.toLowerCase().includes(q) ? '' : 'none'
-  );
 });
 
 els.input.addEventListener('keydown', e => {
@@ -493,7 +552,6 @@ setTimeout(() => {
     addActions(line, m.text, !!parseGps(m.text));
   });
 
-  // Try to load from URL hash
   const hash = location.hash.slice(1);
   if (hash) {
     try {

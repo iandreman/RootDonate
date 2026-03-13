@@ -299,6 +299,11 @@ function importFragment(txt, src = 'input') {
       added = true;
     }
     println(`<span class="success">Location fragment acquired: ${gps.raw}</span>`);
+    
+    // Show Apple Maps link right in terminal
+    const appleLink = `https://maps.apple.com/?ll=${gps.lat},${gps.lng}&span=0.015,0.015`;
+    println(`<span class="muted">Open in Apple Maps:</span> <a href="${appleLink}" target="_blank" style="color:var(--accent)">${appleLink}</a>`);
+    
     flavorOnImport('gps', gps.raw);
   }
   else {
@@ -380,8 +385,13 @@ function renderFragments() {
     let html = '';
 
     if (f.type === 'gps') {
-      const m = `https://www.google.com/maps/search/?api=1&query=${parseFloat(f.lat).toFixed(8)},${parseFloat(f.lng).toFixed(8)}`;
-      html = `<span class="frag-type">[LOC]</span> ${f.lat}, ${f.lng} <a href="${m}" target="_blank" style="color:var(--accent)">→ Map</a>`;
+      // Apple Maps link (centered + light zoom)
+      const m = `https://maps.apple.com/?ll=${f.lat},${f.lng}&span=0.015,0.015`;
+      html = `<span class="frag-type">[LOC]</span> ${f.lat}, ${f.lng} <a href="${m}" target="_blank" style="color:var(--accent)">→ Apple Maps</a>`;
+      
+      // Optional: uncomment for dual Google fallback
+      // const g = `https://www.google.com/maps/search/?api=1&query=${f.lat},${f.lng}`;
+      // html += ` <a href="${g}" target="_blank" style="color:var(--muted)">→ Google</a>`;
     } else if (f.type === 'url') {
       html = `<span class="frag-type">[ECHO]</span> <a href="${f.url}" target="_blank" style="color:var(--accent);word-break:break-all;">${escape(f.url)}</a>`;
     } else if (f.type === 'text') {

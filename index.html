@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VoidEcho – Wander & Share Fragments</title>
+  <title>VOID HAVEN – Terminal Settlement</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
   <style>
     :root {
@@ -25,47 +25,25 @@
       min-height: 100dvh;
       line-height: 1.55;
     }
-    .crt::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background: linear-gradient(transparent 50%, rgba(0,0,0,0.08) 50%);
-      background-size: 100% 4px;
-      z-index: 9999;
-      animation: scan 16s linear infinite;
-      mix-blend-mode: multiply;
-      opacity: 0.35;
-    }
-    @keyframes scan { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
     header {
       background: rgba(5,8,15,0.96);
       border-bottom: 1px solid var(--border);
       padding: 1.2rem 1.6rem;
-      backdrop-filter: blur(10px);
       position: sticky;
       top: 0;
       z-index: 100;
       text-align: center;
     }
-    h1 {
-      margin: 0 0 0.3rem;
-      font-size: clamp(2.4rem, 8.5vw, 3.6rem);
-      color: var(--purple);
-      text-shadow: 0 0 18px rgba(197,138,255,0.4);
-    }
-    .subtitle { color: var(--muted); font-size: 0.94rem; opacity: 0.85; letter-spacing: 0.5px; }
-    .tab-buttons { display: flex; justify-content: center; gap: 1rem; margin: 1.1rem 0 0.5rem; flex-wrap: wrap; }
+    h1 { margin:0; font-size: clamp(2.2rem, 7vw, 3.2rem); color: var(--purple); }
+    .subtitle { color: var(--muted); font-size: 0.9rem; }
+    .tab-buttons { display: flex; justify-content: center; gap: 1rem; margin: 1rem 0; flex-wrap: wrap; }
     .tab-btn {
       background: transparent;
       border: 1px solid var(--muted);
       color: var(--muted);
-      padding: 0.6rem 1.4rem;
-      border-radius: 5px;
+      padding: 0.5rem 1.2rem;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 0.95rem;
-      transition: all 0.2s;
-      min-width: 100px;
     }
     .tab-btn.active, .tab-btn:hover {
       border-color: var(--accent);
@@ -73,289 +51,128 @@
       background: rgba(0,234,255,0.06);
     }
     .view {
-      max-width: 1160px;
+      max-width: 1100px;
       margin: 1.5rem auto;
       border: 1px solid var(--border);
-      border-radius: 9px;
-      overflow: hidden;
+      border-radius: 8px;
       background: var(--surface);
-      box-shadow: 0 7px 40px var(--shadow);
+      box-shadow: 0 6px 35px var(--shadow);
       display: none;
+      overflow: hidden;
     }
     .view.active { display: block; }
-    #output, #fragments { padding: 1.7rem 2rem; min-height: 46vh; max-height: 72vh; overflow-y: auto; font-size: 1.06rem; line-height: 1.7; }
-    .line, .frag-item {
-      margin: 1rem 0;
+    #output, #inventory { padding: 1.6rem 2rem; min-height: 45vh; max-height: 70vh; overflow-y: auto; font-size: 1.05rem; }
+    .line {
+      margin: 0.9rem 0;
       white-space: pre-wrap;
       word-break: break-word;
       position: relative;
-      padding-right: 280px;
-      display: flex;
-      align-items: flex-start;
-      gap: 1rem;
-      flex-wrap: wrap;
+      padding-right: 240px;
     }
-    .line:hover .actions, .frag-item:hover .actions { opacity: 1; }
+    .line:hover .actions { opacity: 1; }
     .actions {
       opacity: 0;
       transition: opacity 0.2s;
       position: absolute;
-      right: 1.3rem;
-      top: 0.2rem;
+      right: 1rem;
+      top: 0.1rem;
       display: flex;
-      gap: 0.8rem;
+      gap: 0.7rem;
     }
     .act-btn {
       background: rgba(0,234,255,0.04);
       border: 1px solid var(--muted);
       color: var(--muted);
-      padding: 0.4rem 1rem;
+      padding: 0.35rem 0.9rem;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 0.86rem;
-      min-width: 82px;
-      transition: all 0.15s;
+      font-size: 0.84rem;
     }
     .act-btn:hover {
-      background: rgba(0,234,255,0.18);
+      background: rgba(0,234,255,0.16);
       color: var(--accent);
       border-color: var(--accent);
     }
-    .prompt  { color: var(--green); font-weight: 600; min-width: 160px; flex-shrink: 0; }
-    .echo    { color: var(--purple); }
+    .prompt { color: var(--green); font-weight: 600; min-width: 150px; flex-shrink: 0; }
     .success { color: var(--green); }
     .muted   { color: var(--muted); opacity: 0.8; }
-    .frag-type { color: var(--accent); font-weight: 700; margin-right: 0.6rem; }
     .input-area {
-      padding: 1.2rem 2rem;
+      padding: 1.1rem 2rem;
       background: rgba(0,0,0,0.4);
       border-top: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
     }
-    .input-row { display: flex; align-items: center; width: 100%; gap: 0.9rem; }
+    .input-row { display: flex; align-items: center; gap: 0.8rem; }
     #input {
       flex: 1;
       background: transparent;
       border: none;
       color: var(--text);
       font: inherit;
-      font-size: 1.1rem;
-      outline: none;
-      caret-color: var(--accent);
-    }
-    #input::placeholder { color: var(--muted); opacity: 0.55; }
-    #fragmentsSearch { padding: 0.8rem 2rem; background: rgba(0,234,255,0.03); border-bottom: 1px solid var(--border); }
-    #fragmentsSearchInput {
-      width: 100%;
-      padding: 0.6rem 1.2rem;
-      background: rgba(0,0,0,0.35);
-      border: 1px solid var(--muted);
-      border-radius: 5px;
-      color: var(--text);
-      font: inherit;
-      font-size: 0.96rem;
+      font-size: 1.05rem;
       outline: none;
     }
-    #fragmentsSearchInput:focus { border-color: var(--accent); box-shadow: 0 0 9px rgba(0,234,255,0.12); }
-
-    /* Google PSE style overrides – dark theme */
-    .gsc-control-cse, .gsc-results, .gsc-webResult, .gs-title, .gs-snippet, .gs-visibleUrl {
-      background: var(--surface) !important;
-      color: var(--text) !important;
-      border: none !important;
-    }
-    .gsc-results .gs-title a {
-      color: var(--accent) !important;
-    }
-    .gsc-results .gs-snippet {
-      color: var(--muted) !important;
-    }
-    .gsc-table-result, .gsc-thumbnail-inside, .gs-result {
-      border-bottom: 1px solid var(--border) !important;
-      padding: 0.8rem 0 !important;
-    }
-    .gsc-search-box-tools, .gsc-branding {
-      display: none !important; /* hide Google branding if possible */
-    }
+    #input::placeholder { color: var(--muted); opacity: 0.6; }
   </style>
 </head>
-<body class="crt">
+<body>
 
 <header>
-  <h1>VOID ECHO</h1>
-  <div class="subtitle">Fragments of a broken world • Share via link • March 2026</div>
+  <h1>VOID HAVEN</h1>
+  <div class="subtitle">Terminal settlement builder • March 2026</div>
   <div class="tab-buttons">
     <button class="tab-btn active" data-tab="terminal">Terminal</button>
-    <button class="tab-btn" data-tab="fragments">Fragments</button>
+    <button class="tab-btn" data-tab="inventory">Inventory</button>
   </div>
 </header>
 
 <main>
-  <div id="terminalView" class="view active" role="log" aria-live="polite">
+  <div id="terminalView" class="view active">
     <div id="output">
-      <div class="line success">═══════════════════════════════════════════</div>
-      <div class="line success">       VOID ECHO – Wanderer Terminal      </div>
-      <div class="line success">═══════════════════════════════════════════</div>
+      <div class="line success">═══════════════════════════════════════</div>
+      <div class="line success">     VOID HAVEN – Settlement Terminal    </div>
+      <div class="line success">═══════════════════════════════════════</div>
       <div class="line"></div>
-      <div class="line muted">Paste fragment (coords, link, text) or command: look, who, clear, help</div>
+      <div class="line muted">Commands: status, build &lt;name&gt;, next, help, clear</div>
+      <div class="line muted">Paste coords, text or links to log fragments</div>
     </div>
 
     <div class="input-area">
       <div class="input-row">
-        <label for="input" class="prompt">wanderer@void:~$</label>
-        <input id="input" type="text" autocomplete="off" autofocus placeholder="go north / paste shard / look…" />
+        <label for="input" class="prompt">settler@haven:~$</label>
+        <input id="input" type="text" autocomplete="off" autofocus placeholder="status / build hab-dome / next…" />
       </div>
     </div>
   </div>
 
-  <div id="fragmentsView" class="view">
-    <div id="fragmentsSearch">
-      <input id="fragmentsSearchInput" placeholder="Filter local fragments or probe external echoes…" autocomplete="off" />
-    </div>
-
-    <!-- Google results container -->
-    <div id="googleResults" style="display: none; padding: 1rem 2rem; border-top: 1px solid var(--border);">
-      <div class="line muted">External echoes from the wider net…</div>
-      <div class="gcse-searchresults-only"></div>
-    </div>
-
-    <div id="fragments">
-      <div class="line muted">No fragments collected yet.</div>
+  <div id="inventoryView" class="view">
+    <div id="inventory">
+      <div class="line muted">No items / buildings recorded yet.</div>
     </div>
   </div>
 </main>
 
 <script>
-// ────────────────────────────────────────────────
-// VoidEcho – minimalist shared-world fragment MMO
-// ────────────────────────────────────────────────
-
 const els = {
-  output: document.getElementById('output'),
-  input: document.getElementById('input'),
-  fragments: document.getElementById('fragments'),
+  output:    document.getElementById('output'),
+  input:     document.getElementById('input'),
+  inventory: document.getElementById('inventory'),
   terminalView: document.getElementById('terminalView'),
-  fragmentsView: document.getElementById('fragmentsView'),
-  fragSearch: document.getElementById('fragmentsSearchInput'),
-  googleResults: document.getElementById('googleResults'),
+  inventoryView: document.getElementById('inventoryView'),
 };
 
-let history = JSON.parse(localStorage.getItem('voidEchoHistory') || '[]');
-let fragments = JSON.parse(localStorage.getItem('voidEchoFragments') || '[]');
-let lastGps = null;
+let state = JSON.parse(localStorage.getItem('voidHavenState') || '{}');
 
-const escape = str => str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+if (!state.resources) {
+  state = {
+    day: 1,
+    resources: { scrap: 12, water: 6, power: 4, population: 5 },
+    buildings: { outpost: 1 },
+    fragments: []
+  };
+}
 
 function save() {
-  localStorage.setItem('voidEchoHistory', JSON.stringify(history));
-  localStorage.setItem('voidEchoFragments', JSON.stringify(fragments));
-}
-
-function cleanUrl(u) {
-  try {
-    const url = new URL(u);
-    ['utm_','fbclid','gclid','gad_','mc_cid','mc_eid','igshid','_ga','twclid','li_fat_id','ref','source'].forEach(k => {
-      if (k.endsWith('_')) url.searchParams.forEach((_,p) => p.startsWith(k) && url.searchParams.delete(p));
-      else url.searchParams.delete(k);
-    });
-    return url.toString().replace(/[#?]$/, '');
-  } catch { return u.trim(); }
-}
-
-function parseGps(txt) {
-  const m = txt.match(/([-+]?\d{1,3}(?:\.\d{1,12})?)[°\s,;d]*([-+]?\d{1,3}(?:\.\d{1,12})?)/i);
-  if (!m) return null;
-  const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
-  if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
-  return { lat: m[1].trim(), lng: m[2].trim(), raw: `${m[1].trim()}, ${m[2].trim()}` };
-}
-
-function extractUrl(txt) {
-  const m = txt.match(/https?:\/\/[^\s"')<>]+/i);
-  return m ? m[0] : null;
-}
-
-function makeShard(content, isGps = false) {
-  try {
-    let data = content.trim();
-    if (isGps) data = 'gps:' + data;
-    else if (!data.includes(':')) data = 'text:' + data;
-    const b64 = btoa(unescape(encodeURIComponent(data)));
-    return `${location.origin}${location.pathname}#${b64}`;
-  } catch { return null; }
-}
-
-function flavorOnImport(type, content) {
-  const flavors = [
-    "A faint signal ripples through the static…",
-    "The void remembers this fragment.",
-    "Something ancient stirs in the distance.",
-    "Echo recorded. The silence grows heavier.",
-    "A shard of another wanderer reaches you.",
-    "The coordinates hum with forgotten intent."
-  ];
-  const f = flavors[Math.floor(Math.random()*flavors.length)];
-  println(`<span class="muted">${f}</span>`);
-  if (type === 'gps') {
-    const poetic = [
-      "You stand beneath fractured sky.",
-      "Ash drifts across cracked stone.",
-      "Neon ghosts flicker in the fog.",
-      "A dead satellite watches from above.",
-      "Rust and moss claim what was once built."
-    ];
-    println(`<span class="muted">${poetic[Math.floor(Math.random()*poetic.length)]}</span>`);
-  }
-}
-
-function importFragment(txt, src = 'input') {
-  let added = false;
-  txt = txt.trim();
-
-  if (txt && !txt.includes(':') && !parseGps(txt) && !extractUrl(txt)) {
-    txt = 'text:' + txt;
-  }
-
-  const gps = parseGps(txt.replace(/^gps:/,''));
-  if (gps) {
-    if (!fragments.some(p => p.type==='gps' && p.lat===gps.lat && p.lng===gps.lng)) {
-      fragments.push({ type:'gps', ...gps });
-      lastGps = gps;
-      added = true;
-    }
-    println(`<span class="success">Location fragment acquired: ${gps.raw}</span>`);
-    
-    const appleLink = `https://maps.apple.com/?ll=${gps.lat},${gps.lng}&span=0.015,0.015`;
-    println(`<span class="muted">Open in Apple Maps:</span> <a href="${appleLink}" target="_blank" style="color:var(--accent)">${appleLink}</a>`);
-    
-    flavorOnImport('gps', gps.raw);
-  }
-  else {
-    const url = extractUrl(txt);
-    if (url) {
-      const cleaned = cleanUrl(url);
-      if (!fragments.some(p => p.type==='url' && cleanUrl(p.url)===cleaned)) {
-        fragments.push({ type:'url', url:cleaned });
-        added = true;
-      }
-      println(`<span class="success">External echo pinned from ${src}</span>`);
-      flavorOnImport('url', cleaned);
-    }
-    else if (txt.startsWith('text:')) {
-      const msg = txt.slice(5).trim();
-      if (msg) {
-        fragments.push({ type:'text', content: msg });
-        added = true;
-        println(`<span class="echo">You said:</span> ${escape(msg)}`);
-        flavorOnImport('text', msg);
-      }
-    }
-  }
-
-  if (added) save();
-  if (els.fragmentsView.classList.contains('active')) renderFragments();
+  localStorage.setItem('voidHavenState', JSON.stringify(state));
 }
 
 function println(html) {
@@ -364,205 +181,162 @@ function println(html) {
   div.innerHTML = html;
   els.output.appendChild(div);
   els.output.scrollTop = els.output.scrollHeight;
-  return div;
 }
 
-function addActions(el, content, isGps = false) {
-  const actions = document.createElement('div');
-  actions.className = 'actions';
-
-  const email = document.createElement('button');
-  email.className = 'act-btn';
-  email.textContent = 'Echo';
-  email.onclick = () => {
-    const link = makeShard(content, isGps) || '(corrupted)';
-    const subject = encodeURIComponent(isGps ? 'Void Location Shard' : 'Void Fragment');
-    const body = encodeURIComponent(`Another wanderer left this:\n\n${content.trim()}\n\n${link}\n\n-- VoidEcho 2026`);
-    location.href = `mailto:?subject=${subject}&body=${body}`;
-    email.textContent = 'Sent';
-    setTimeout(() => email.textContent = 'Echo', 1200);
-  };
-
-  const copy = document.createElement('button');
-  copy.className = 'act-btn';
-  copy.textContent = 'Shard';
-  copy.onclick = () => {
-    const link = makeShard(content, isGps);
-    if (!link) return void (copy.textContent = 'Error');
-    navigator.clipboard.writeText(link).then(() => {
-      copy.textContent = 'Copied';
-      setTimeout(() => copy.textContent = 'Shard', 1300);
-      println(`<span class="muted">Void shard ready: <a href="${link}" style="color:var(--accent)">${link}</a></span>`);
-    }).catch(() => {
-      copy.textContent = 'Failed';
-      setTimeout(() => copy.textContent = 'Shard', 1600);
-    });
-  };
-
-  actions.append(email, copy);
-  el.appendChild(actions);
+function updateInventory() {
+  let html = `<div class="line success">Day ${state.day} – Settlement Status</div>`;
+  html += `<div class="line">Population: ${state.resources.population}</div>`;
+  html += `<div class="line">Resources:</div>`;
+  for (let [k,v] of Object.entries(state.resources)) {
+    if (k !== 'population') html += `<div class="line muted">  ${k.padEnd(10)} ${v}</div>`;
+  }
+  html += `<div class="line"></div><div class="line">Buildings:</div>`;
+  for (let [b,c] of Object.entries(state.buildings)) {
+    html += `<div class="line muted">  ${b.padEnd(12)} ×${c}</div>`;
+  }
+  html += `<div class="line"></div><div class="line muted">Fragments / logs: ${state.fragments.length}</div>`;
+  els.inventory.innerHTML = html;
 }
 
-function renderFragments() {
-  els.fragments.innerHTML = fragments.length ? '' : '<div class="line muted">No fragments collected yet.</div>';
-  fragments.forEach(f => {
-    const item = document.createElement('div');
-    item.className = 'frag-item';
-    let html = '';
+function produceResources() {
+  // Very simple production
+  state.resources.scrap += (state.buildings.scrapyard || 0) * 3;
+  state.resources.water += (state.buildings['water-sieve'] || 0) * 2;
+  state.resources.power += (state.buildings.generator || 0) * 2;
 
-    if (f.type === 'gps') {
-      const m = `https://maps.apple.com/?ll=${f.lat},${f.lng}&span=0.015,0.015`;
-      html = `<span class="frag-type">[LOC]</span> ${f.lat}, ${f.lng} <a href="${m}" target="_blank" style="color:var(--accent)">→ Apple Maps</a>`;
-    } else if (f.type === 'url') {
-      html = `<span class="frag-type">[ECHO]</span> <a href="${f.url}" target="_blank" style="color:var(--accent);word-break:break-all;">${escape(f.url)}</a>`;
-    } else if (f.type === 'text') {
-      html = `<span class="frag-type">[SAY]</span> ${escape(f.content)}`;
+  // Population consumes
+  const consumed = Math.floor(state.resources.population / 3);
+  state.resources.water = Math.max(0, state.resources.water - consumed);
+  state.resources.scrap  = Math.max(0, state.resources.scrap  - Math.floor(consumed/2));
+
+  state.day++;
+}
+
+function tryBuild(name) {
+  const costs = {
+    'water-sieve': { scrap: 18, power: 5 },
+    'scrapyard':   { scrap: 28, power: 8 },
+    'generator':   { scrap: 35, water: 10 },
+    'hab-dome':    { scrap: 40, water: 15, power: 12 }
+  };
+
+  if (!(name in costs)) {
+    println(`<span class="muted">Unknown building: ${name}</span>`);
+    return;
+  }
+
+  const cost = costs[name];
+  let canBuild = true;
+  let msg = [];
+
+  for (let [res, amt] of Object.entries(cost)) {
+    if ((state.resources[res] || 0) < amt) {
+      canBuild = false;
+      msg.push(`need ${amt} ${res} (have ${state.resources[res]||0})`);
     }
+  }
 
-    item.innerHTML = html;
-    addActions(item, f.type==='gps'?f.raw : (f.url||f.content), f.type==='gps');
-    els.fragments.appendChild(item);
-  });
+  if (!canBuild) {
+    println(`<span class="muted">Cannot build ${name}: ${msg.join(', ')}</span>`);
+    return;
+  }
+
+  // deduct
+  for (let [res, amt] of Object.entries(cost)) {
+    state.resources[res] -= amt;
+  }
+  state.buildings[name] = (state.buildings[name] || 0) + 1;
+  println(`<span class="success">Constructed: ${name}</span>`);
+  save();
+  updateInventory();
 }
 
-// ── Commands ────────────────────────────────────────────
 function handleCommand(cmd) {
   cmd = cmd.toLowerCase().trim();
+
   if (cmd === 'clear') {
     els.output.innerHTML = '';
-    println('<span class="success">Terminal wiped.</span>');
-  } else if (cmd === 'clearfragments') {
-    fragments = [];
-    lastGps = null;
+    println('<span class="success">Terminal cleared.</span>');
+  }
+  else if (cmd === 'help') {
+    println('<span class="muted">Commands: status, next, build &lt;name&gt;, clear, help</span>');
+    println('<span class="muted">Buildings: water-sieve, scrapyard, generator, hab-dome</span>');
+  }
+  else if (cmd === 'status') {
+    println(`<span class="success">Day ${state.day}</span>`);
+    for (let [k,v] of Object.entries(state.resources)) {
+      println(`<span class="muted">${k.padEnd(12)} ${v}</span>`);
+    }
+    println('<span class="muted">Buildings:</span>');
+    for (let [b,c] of Object.entries(state.buildings)) {
+      println(`<span class="muted">  ${b.padEnd(12)} ×${c}</span>`);
+    }
+  }
+  else if (cmd === 'next') {
+    produceResources();
+    println(`<span class="success">Advanced to day ${state.day}</span>`);
+    println(`<span class="muted">Water left: ${state.resources.water}</span>`);
     save();
-    if (els.fragmentsView.classList.contains('active')) renderFragments();
-    println('<span class="success">All fragments dissolved.</span>');
-  } else if (cmd === 'help') {
-    println('<span class="muted">Commands: look, who, clear, clearfragments, help</span>');
-    println('<span class="muted">Paste coords, URLs, or just type actions (go north, take key…)</span>');
-  } else if (cmd === 'look') {
-    if (lastGps) {
-      println(`<span class="muted">You are at ${lastGps.raw}…</span>`);
-      println(`<span class="muted">Wind carries static. Something watches from far away.</span>`);
-    } else {
-      println(`<span class="muted">You wander in formless dark. No landmark holds.</span>`);
-    }
-  } else if (cmd === 'who') {
-    const n = Math.floor(Math.random() * 6) + 2;
-    println(`<span class="muted">The void senses ${n} other wanderer${n>1?'s':''} nearby…</span>`);
-  } else {
-    println(`<span class="muted">Unknown command. Try: look, who, help</span>`);
+    updateInventory();
+  }
+  else if (cmd.startsWith('build ')) {
+    const name = cmd.slice(6).trim();
+    tryBuild(name);
+  }
+  else {
+    println(`<span class="muted">→ ${cmd}</span>`);
   }
 }
 
-// ── Google Programmable Search Integration ───────────────────────────────
-let googleSearchReady = false;
-const CX = '025fe0f2c9acb4389';  // ← REPLACE THIS with your real CX code (e.g. 025fe0f2c9acb4389:xyz or just 025fe0f2c9acb4389)
-
-function initGoogleSearch() {
-  if (typeof google !== 'undefined' && google.search && google.search.cse && google.search.cse.element) {
-    googleSearchReady = true;
-    google.search.cse.element.render({
-      div: 'googleResults',
-      tag: 'searchresults-only',
-      gname: 'voidEchoExternal'
-    });
-  }
+function logFragment(txt) {
+  txt = txt.trim();
+  if (!txt) return;
+  state.fragments.push(txt);
+  println(`<span class="muted">Logged: ${txt.slice(0,60)}${txt.length>60?'…':''}</span>`);
+  save();
+  updateInventory();
 }
 
-// Load cse.js dynamically
-if (!document.querySelector(`script[src*="cse.google.com/cse.js?cx=${CX}"]`)) {
-  const script = document.createElement('script');
-  script.async = true;
-  script.src = `https://cse.google.com/cse.js?cx=${CX}`;
-  script.onload = initGoogleSearch;
-  document.head.appendChild(script);
-} else {
-  setTimeout(initGoogleSearch, 1000);
-}
-
-// Local + Google search on input
-els.fragSearch.addEventListener('input', e => {
-  const q = e.target.value.trim().toLowerCase();
-
-  // Local filter
-  Array.from(els.fragments.querySelectorAll('.frag-item')).forEach(el =>
-    el.style.display = !q || el.textContent.toLowerCase().includes(q) ? '' : 'none'
-  );
-
-  // Google external search
-  if (q.length >= 3 && googleSearchReady) {
-    els.googleResults.style.display = 'block';
-    const element = google.search.cse.element.getElement('voidEchoExternal');
-    if (element) element.execute(q);
-  } else {
-    els.googleResults.style.display = 'none';
-  }
-});
-
-// ── Tab switching ──────────────────────────────────────────────
-document.querySelectorAll('.tab-btn').forEach(b => {
-  b.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
-    b.classList.add('active');
-    const isFrag = b.dataset.tab === 'fragments';
-    els.terminalView.classList.toggle('active', !isFrag);
-    els.fragmentsView.classList.toggle('active', isFrag);
-    if (isFrag) {
-      renderFragments();
-      els.fragSearch.focus();
-    } else {
-      els.input.focus();
-    }
-  });
-});
-
+// ── Input handler ────────────────────────────────────────
 els.input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
   let txt = els.input.value.trim();
   if (!txt) return;
 
-  const line = println(`<span class="prompt">wanderer@void:~$</span> ${escape(txt)}`);
-  addActions(line, txt, !!parseGps(txt));
-  history.push({ from:'user', text:txt });
-  save();
+  const line = document.createElement('div');
+  line.className = 'line';
+  line.innerHTML = `<span class="prompt">settler@haven:~$</span> ${txt.replace(/&/g,'&amp;').replace(/</g,'&lt;')}`;
+  els.output.appendChild(line);
+  els.output.scrollTop = els.output.scrollHeight;
 
-  if (txt.toLowerCase().startsWith('clear') || txt.toLowerCase().startsWith('help') || ['look','who','clearfragments'].includes(txt.toLowerCase().trim())) {
+  if (['status','next','clear','help'].includes(txt.toLowerCase().trim()) || txt.toLowerCase().startsWith('build ')) {
     handleCommand(txt);
   } else {
-    importFragment(txt);
+    logFragment(txt);
   }
 
   els.input.value = '';
 });
 
-// ── Init ────────────────────────────────────────────────
-setTimeout(() => {
-  println('<span class="success">Connection established. The void is listening…</span>');
-  if (history.length) println(`<span class="muted">Echoes of past wanderings (${history.length})</span>`);
-
-  history.forEach(m => {
-    const isUser = m.from === 'user';
-    const line = println(
-      isUser
-        ? `<span class="prompt">wanderer@void:~$</span> ${escape(m.text)}`
-        : `<span class="echo">void:</span> ${escape(m.text)}`
-    );
-    addActions(line, m.text, !!parseGps(m.text));
+// ── Tab switching ────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const isInv = btn.dataset.tab === 'inventory';
+    els.terminalView.classList.toggle('active', !isInv);
+    els.inventoryView.classList.toggle('active', isInv);
+    if (isInv) updateInventory();
+    else els.input.focus();
   });
+});
 
-  const hash = location.hash.slice(1);
-  if (hash) {
-    try {
-      const raw = decodeURIComponent(escape(atob(hash)));
-      importFragment(raw, 'shard');
-      println('<span class="success">Shard integrated.</span>');
-    } catch {
-      println('<span class="muted">Corrupted shard — could not read.</span>');
-    }
-  }
-}, 400);
+// ── Init ─────────────────────────────────────────────────
+setTimeout(() => {
+  println('<span class="success">Settlement online. Awaiting orders.</span>');
+  updateInventory();
+}, 300);
 </script>
 </body>
 </html>

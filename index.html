@@ -508,8 +508,23 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     els.terminalView.classList.toggle('active', !isInv);
     els.inventoryView.classList.toggle('active', isInv);
     if (isInv) updateInventory();
-    else els.input.focus();
+    else setTimeout(() => els.input.focus(), 50);
   });
+});
+
+// ── TERMINAL INPUT HANDLER (this was the missing piece!) ─────────────
+els.input.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    const cmd = this.value.trim();
+    if (!cmd) return;
+
+    // Echo command (real terminal feel)
+    println(`<span class="prompt">settler@haven:~$</span> ${cmd.replace(/</g, '&lt;').replace(/>/g, '&gt;')}`);
+
+    handleCommand(cmd);
+    this.value = '';
+    els.output.scrollTop = els.output.scrollHeight;
+  }
 });
 
 setTimeout(() => {

@@ -136,14 +136,14 @@
       <div class="line success">══════════════════════════════════════════</div>
       <div class="line"></div>
       <div class="line muted">Resources auto-collect once per UTC day on load</div>
-      <div class="line muted">Commands: status, build &lt;name&gt;, gps, export, help, clear</div>
+      <div class="line muted">Commands: status, build &lt;name&gt;, gps, share, import &lt;link&gt;, help, clear</div>
       <div class="line muted">Paste logs, coords or text → timestamped + map links</div>
     </div>
 
     <div class="input-area">
       <div class="input-row">
         <label for="input" class="prompt">settler@haven:~$</label>
-        <input id="input" type="text" autocomplete="off" autofocus placeholder="status / build hab-dome / gps / export…" />
+        <input id="input" type="text" autocomplete="off" autofocus placeholder="status / build hab-dome / gps / share / import …" />
       </div>
     </div>
   </div>
@@ -226,7 +226,6 @@ function collectDailyResources() {
   return true;
 }
 
-// ── Print helpers ──────────────────────────────────────
 function println(html) {
   const div = document.createElement('div');
   div.className = 'line';
@@ -257,7 +256,6 @@ function updateInventory() {
   els.inventory.innerHTML = html;
 }
 
-// ── Build ──────────────────────────────────────────────
 function tryBuild(name) {
   const costs = {
     'water-sieve': { scrap: 18, power: 5 },
@@ -296,7 +294,6 @@ function tryBuild(name) {
   updateInventory();
 }
 
-// ── GPS ────────────────────────────────────────────────
 async function getGPS() {
   if (!navigator.geolocation) {
     println('<span class="muted">GPS not supported.</span>');
@@ -317,7 +314,6 @@ async function getGPS() {
   }
 }
 
-// ── Generic log with coord detection ──────────────────
 function logFragment(txt) {
   txt = txt.trim();
   if (!txt) return;
@@ -337,20 +333,23 @@ function logFragment(txt) {
   updateInventory();
 }
 
-// ── Command handler ───────────────────────────────────
 function handleCommand(cmd) {
   cmd = cmd.toLowerCase().trim();
 
   if (cmd === 'clear') {
     els.output.innerHTML = '';
     println('<span class="success">Terminal cleared.</span>');
+    return;
   }
-  else if (cmd === 'help') {
-    println('<span class="muted">Commands: status, build &lt;name&gt;, gps, export, clear, help</span>');
+
+  if (cmd === 'help') {
+    println('<span class="muted">Commands: status, build &lt;name&gt;, gps, share, import &lt;link&gt;, clear, help</span>');
     println('<span class="muted">Buildings: water-sieve, scrapyard, generator, hab-dome</span>');
-    println('<span class="muted">Resources update automatically once per UTC day</span>');
+    println('<span class="muted">share → includes all logs / GPS entries</span>');
+    return;
   }
-  else if (cmd === 'status') {
+
+  if (cmd === 'status') {
     println(`<span class="success">Day ${state.day}</span>`);
     for (let [k,v] of Object.entries(state.resources)) {
       println(`<span class="muted">${k.padEnd(12)} ${v}</span>`);
@@ -359,26 +358,73 @@ function handleCommand(cmd) {
     for (let [b,c] of Object.entries(state.buildings)) {
       println(`<span class="muted">  ${b.padEnd(12)} ×${c}</span>`);
     }
+    println(`<span class="muted">Logs: ${state.fragments.length} entries</span>`);
+    return;
   }
-  else if (cmd.startsWith('build ')) {
+
+  if (cmd.startsWith('build ')) {
     const name = cmd.slice(6).trim();
     tryBuild(name);
+    return;
   }
-  else if (cmd === 'gps') {
+
+  if (cmd === 'gps') {
     getGPS();
+    return;
   }
-  else if (cmd === 'export') {
-    const json = JSON.stringify(state, null, 2);
-    println('<span class="success">Exported colony state:</span>');
-    println(`<pre style="background:rgba(0,0,0,0.3); padding:1rem; border:1px solid var(--border); border-radius:4px; overflow-x:auto; white-space:pre; font-size:0.95rem;">${json.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</pre>`);
-    println('<span class="muted">(select text to copy if needed)</span>');
+
+  if (cmd === 'share') {
+    try {
+      const json = JSON.stringify(state);
+      const base64 = btoa(unescape(encodeURIComponent(json)));
+      const shareLink = `data:text/json;base64,${base64}`;
+
+      println('<span class="success">Share link ready (includes all logs / GPS entries):</span>');
+      println(`<div style="word-break:break-all; background:rgba(0,0,0,0.4); padding:0.9rem; border-radius:4px; border:1px solid var(--border); font-size:0.92rem; line-height:1.4; margin:0.5rem 0;">${shareLink}</div>`);
+      println('<span class="muted">→ long-press / select → copy</span>');
+      println('<span class="muted">→ send via email, chat, notes, etc.</span>');
+    } catch (err) {
+      println('<span class="muted">Failed to generate share link.</span>');
+    }
+    return;
   }
-  else {
-    println(`<span class="muted">→ ${cmd}</span>`);
+
+  if (cmd.startsWith('import ')) {
+    const link = cmd.slice(7).trim();
+    if (!link.startsWith('data:text/json;base64,')) {
+      println('<span class="muted">Invalid link — must start with data:text/json;base64,...</span>');
+      return;
+    }
+
+    try {
+      const base64 = link.split(',')[1];
+      const jsonStr = decodeURIComponent(escape(atob(base64)));
+      const imported = JSON.parse(jsonStr);
+
+      // Basic validation
+      if (!imported || typeof imported !== 'object' ||
+          !('day' in imported) || !('resources' in imported) ||
+          !('buildings' in imported) || !Array.isArray(imported.fragments)) {
+        println('<span class="muted">Imported data looks invalid or incomplete.</span>');
+        return;
+      }
+
+      state = imported;
+      state.lastCollectedUTC = ''; // force collection check on next load
+      save();
+      updateInventory();
+      println('<span class="success">Colony imported — including all logs and GPS entries.</span>');
+      println(`<span class="muted">${state.fragments.length} log entries loaded.</span>`);
+    } catch (err) {
+      println(`<span class="muted">Import failed: ${err.message || 'invalid format'}</span>`);
+    }
+    return;
   }
+
+  // everything else → log it
+  logFragment(cmd);
 }
 
-// ── Input ──────────────────────────────────────────────
 els.input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
@@ -391,17 +437,11 @@ els.input.addEventListener('keydown', e => {
   els.output.appendChild(line);
   els.output.scrollTop = els.output.scrollHeight;
 
-  const lower = txt.toLowerCase().trim();
-  if (['status','clear','help','export','gps'].includes(lower) || lower.startsWith('build ')) {
-    handleCommand(txt);
-  } else {
-    logFragment(txt);
-  }
+  handleCommand(txt);
 
   els.input.value = '';
 });
 
-// ── Tabs ───────────────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -414,7 +454,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// ── Start ──────────────────────────────────────────────
 setTimeout(() => {
   collectDailyResources();
   println('<span class="success">VOID HAVEN online. Colony status nominal. Awaiting directives.</span>');

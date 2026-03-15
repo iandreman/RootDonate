@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🌍 Global Clocks + Weather</title>
+  <title>🌍 Time Cities – MMO-lite Builder</title>
   <style>
     body {
       font-family: system-ui, -apple-system, sans-serif;
@@ -12,191 +12,330 @@
       margin: 0;
       padding: 20px;
       min-height: 100vh;
-      display: grid;
-      place-items: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     .container {
-      max-width: 1200px;
+      max-width: 1400px;
       width: 100%;
+      display: flex;
+      gap: 2rem;
     }
     h1 {
       text-align: center;
-      font-size: 2.8rem;
+      font-size: 2.6rem;
       margin: 0.4em 0 1em;
       color: #a5b4fc;
       text-shadow: 0 0 20px rgba(165,180,252,0.4);
     }
+    .stats {
+      text-align: center;
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+    }
+    .stats span {
+      margin: 0 1.2rem;
+      padding: 0.4rem 1rem;
+      background: rgba(60,60,100,0.4);
+      border-radius: 12px;
+    }
+    #world-container {
+      flex: 3;
+      position: relative;
+    }
+    #world {
+      width: 100%;
+      height: 700px;
+      background: #1a1a38;
+      border: 2px solid #4050aa;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px #000c;
+    }
+    #sidebar {
+      flex: 1;
+      min-width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
     .clock-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 1.6rem;
+      gap: 1.2rem;
     }
     .clock-card {
       background: rgba(30, 30, 60, 0.65);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(100, 120, 255, 0.2);
-      border-radius: 16px;
-      padding: 1.5rem 1.9rem;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.55);
-      transition: transform 0.25s, box-shadow 0.35s;
+      border-radius: 14px;
+      padding: 1.3rem;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.5);
     }
-    .clock-card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.65);
-    }
-    .city {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin: 0 0 0.5rem;
-      color: #c7d2fe;
-    }
-    .time {
-      font-size: 3rem;
-      font-weight: 300;
-      letter-spacing: 3px;
-      color: #e0e0ff;
-      margin: 0.1em 0;
-    }
-    .date {
-      font-size: 1rem;
-      opacity: 0.85;
-      color: #a0a0ff;
-      margin-bottom: 0.8rem;
-    }
-    .weather {
-      font-size: 1.1rem;
-      margin-top: 0.6rem;
-      padding-top: 0.8rem;
-      border-top: 1px solid rgba(160,180,255,0.2);
-    }
-    .temp {
-      font-size: 1.6rem;
-      font-weight: 500;
-      color: #ffe066;
-    }
-    .condition {
-      color: #d0d0ff;
-    }
-    .feels-like {
-      font-size: 0.95rem;
-      opacity: 0.9;
-      color: #b0b0ff;
-    }
+    .clock-card:hover { transform: translateY(-4px); }
+    .city { font-size: 1.3rem; font-weight: 600; color: #c7d2fe; margin-bottom: 0.3rem; }
+    .time { font-size: 2.4rem; letter-spacing: 2px; color: #e0e0ff; }
+    .date  { font-size: 0.95rem; opacity: 0.8; color: #a0a0ff; }
+    .weather { padding-top: 0.6rem; border-top: 1px solid rgba(160,180,255,0.15); font-size: 1rem; }
+    .temp     { font-size: 1.4rem; color: #ffe066; }
+    .condition { color: #d0d0ff; }
+    .feels    { font-size: 0.9rem; opacity: 0.9; color: #b0b0ff; }
+
     footer {
+      margin-top: 2rem;
+      opacity: 0.6;
+      font-size: 0.9rem;
       text-align: center;
-      margin-top: 3.5rem;
-      opacity: 0.65;
-      font-size: 0.95rem;
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h1>🌍 Global Clocks + Weather</h1>
+<h1>🌍 Time Cities – MMO-lite Builder</h1>
 
-  <div class="clock-grid" id="clocks"></div>
-
-  <footer>
-    Clocks via Intl.DateTimeFormat • Weather from Open-Meteo (free, no key) • Auto-refreshes
-  </footer>
+<div class="stats">
+  <span>Population: <b id="pop">120</b></span>
+  <span>Buildings: <b id="builds">0</b></span>
+  <span>Happiness: <b id="happy">72</b>%</span>
 </div>
 
+<div class="container">
+  <div id="world-container">
+    <canvas id="world"></canvas>
+  </div>
+
+  <div id="sidebar">
+    <div class="clock-grid" id="clocks"></div>
+  </div>
+</div>
+
+<footer>
+  Simulated multiplayer • Real global clocks + weather • Click to build / move • Arrow keys or WASD to walk
+</footer>
+
 <script>
-// List of locations (timezone + display name + search name for geocoding)
+// ── Game World ───────────────────────────────────────────────────────
+
+const canvas = document.getElementById('world');
+const ctx = canvas.getContext('2d');
+canvas.width = 1000;
+canvas.height = 700;
+
+const TILE = 40;
+const COLS = Math.floor(canvas.width / TILE);
+const ROWS = Math.floor(canvas.height / TILE);
+
+// Shared buildings (everyone sees them)
+let buildings = [];
+
+// Player (you)
+let player = { x: COLS/2 * TILE, y: ROWS/2 * TILE, color: '#00aaff', name: 'You' };
+
+// Fake other players (MMO simulation)
+let npcs = [
+  { x: 200, y: 300, color: '#ff6b6b', name: 'Alex', targetX: 0, targetY: 0, buildingTimer: 0 },
+  { x: 600, y: 400, color: '#ffaa00', name: 'Sara', targetX: 0, targetY: 0, buildingTimer: 0 },
+  { x: 800, y: 150, color: '#aa00ff', name: 'Kai',  targetX: 0, targetY: 0, buildingTimer: 0 }
+];
+
+// Stats
+let population = 120;
+let happiness = 72;
+
+function randomBuildingType() {
+  const types = ['house', 'factory', 'park'];
+  return types[Math.floor(Math.random()*types.length)];
+}
+
+function addBuilding(x, y, type = null) {
+  const gridX = Math.floor(x / TILE);
+  const gridY = Math.floor(y / TILE);
+  if (gridX < 0 || gridX >= COLS || gridY < 0 || gridY >= ROWS) return;
+  const exists = buildings.some(b => b.gx === gridX && b.gy === gridY);
+  if (!exists) {
+    buildings.push({
+      gx: gridX, gy: gridY,
+      type: type || randomBuildingType(),
+      age: 0
+    });
+    updateStats();
+  }
+}
+
+// Click = build or move
+canvas.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  player.targetX = Math.floor(mx / TILE) * TILE + TILE/2;
+  player.targetY = Math.floor(my / TILE) * TILE + TILE/2;
+  // also build if shift pressed
+  if (e.shiftKey) addBuilding(mx, my);
+});
+
+// Keyboard movement
+const keys = {};
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup',   e => keys[e.key.toLowerCase()] = false);
+
+function updatePlayer() {
+  let speed = 3;
+  if (keys['arrowup']    || keys['w']) player.y -= speed;
+  if (keys['arrowdown']  || keys['s']) player.y += speed;
+  if (keys['arrowleft']  || keys['a']) player.x -= speed;
+  if (keys['arrowright'] || keys['d']) player.x += speed;
+
+  // keep in bounds
+  player.x = Math.max(20, Math.min(canvas.width-20, player.x));
+  player.y = Math.max(20, Math.min(canvas.height-20, player.y));
+}
+
+function updateNPCs() {
+  npcs.forEach(npc => {
+    // random wander
+    if (Math.random() < 0.01) {
+      npc.targetX = Math.random() * canvas.width;
+      npc.targetY = Math.random() * canvas.height;
+    }
+    // move toward target
+    if (npc.targetX || npc.targetY) {
+      const dx = npc.targetX - npc.x;
+      const dy = npc.targetY - npc.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > 5) {
+        npc.x += (dx / dist) * 1.8;
+        npc.y += (dy / dist) * 1.8;
+      }
+    }
+    // occasionally build
+    npc.buildingTimer++;
+    if (npc.buildingTimer > 300 + Math.random()*400) {
+      addBuilding(npc.x, npc.y);
+      npc.buildingTimer = 0;
+    }
+  });
+}
+
+function draw() {
+  ctx.fillStyle = '#1a1a38';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // grid lines (subtle)
+  ctx.strokeStyle = '#30408033';
+  for (let i = 0; i <= COLS; i++) {
+    ctx.beginPath(); ctx.moveTo(i*TILE, 0); ctx.lineTo(i*TILE, canvas.height); ctx.stroke();
+  }
+  for (let i = 0; i <= ROWS; i++) {
+    ctx.beginPath(); ctx.moveTo(0, i*TILE); ctx.lineTo(canvas.width, i*TILE); ctx.stroke();
+  }
+
+  // buildings
+  buildings.forEach(b => {
+    const x = b.gx * TILE;
+    const y = b.gy * TILE;
+    ctx.fillStyle = b.type === 'house' ? '#5a4a8a' : b.type === 'factory' ? '#8a4a3a' : '#3a7a4a';
+    ctx.fillRect(x+2, y+2, TILE-4, TILE-4);
+    ctx.fillStyle = 'white';
+    ctx.font = '24px Arial';
+    ctx.fillText({house:'🏠', factory:'🏭', park:'🌳'}[b.type] || '?', x+8, y+30);
+  });
+
+  // player & npcs
+  [player, ...npcs].forEach(p => {
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 16, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = 'white';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(p.name, p.x, p.y - 24);
+  });
+
+  requestAnimationFrame(draw);
+}
+
+function updateStats() {
+  const houses   = buildings.filter(b => b.type === 'house').length;
+  const factories = buildings.filter(b => b.type === 'factory').length;
+  const parks    = buildings.filter(b => b.type === 'park').length;
+
+  population = houses * 5 + Math.floor(factories * 2) + 50;
+  happiness  = Math.min(100, 50 + parks * 10 - factories * 4 + houses * 2);
+
+  document.getElementById('pop').textContent   = Math.round(population);
+  document.getElementById('builds').textContent = buildings.length;
+  document.getElementById('happy').textContent = Math.round(happiness);
+}
+
+setInterval(updatePlayer, 1000/60);
+setInterval(updateNPCs, 1000/30);
+setInterval(updateStats, 4000);
+draw();
+updateStats();
+
+// ── Global Clocks + Weather (your original code, slimmed) ─────────────
+
 const locations = [
   { tz: "UTC",               name: "UTC",               search: "UTC" },
   { tz: "America/New_York",  name: "New York",         search: "New York" },
   { tz: "Europe/London",     name: "London",           search: "London" },
-  { tz: "Europe/Berlin",     name: "Berlin / Paris",   search: "Berlin" },
-  { tz: "Asia/Dubai",        name: "Dubai",            search: "Dubai" },
-  { tz: "Asia/Kolkata",      name: "India (IST)",      search: "Delhi" },
-  { tz: "Asia/Singapore",    name: "Singapore / Beijing", search: "Singapore" },
+  { tz: "Europe/Berlin",     name: "Berlin",           search: "Berlin" },
   { tz: "Asia/Tokyo",        name: "Tokyo",            search: "Tokyo" },
   { tz: "Australia/Sydney",  name: "Sydney",           search: "Sydney" }
 ];
 
-let coordsCache = {}; // timezone → {lat, lon}
+let coordsCache = {};
 
-async function getCoords(searchName) {
-  if (coordsCache[searchName]) return coordsCache[searchName];
+async function getCoords(name) {
+  if (coordsCache[name]) return coordsCache[name];
   try {
-    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchName)}&count=1&language=en&format=json`);
+    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1`);
     const data = await res.json();
     if (data.results?.[0]) {
-      const { latitude, longitude } = data.results[0];
-      coordsCache[searchName] = { lat: latitude, lon: longitude };
-      return coordsCache[searchName];
+      coordsCache[name] = { lat: data.results[0].latitude, lon: data.results[0].longitude };
+      return coordsCache[name];
     }
-  } catch (e) {}
-  return null; // fallback if geocoding fails
+  } catch {}
+  return null;
 }
 
 async function fetchWeather(lat, lon) {
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code&timezone=auto`;
-    const res = await fetch(url);
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`);
     const data = await res.json();
     if (data.current) {
-      const w = data.current;
-      const code = w.weather_code;
-      let condition = getWeatherCondition(code);
-      return {
-        temp: w.temperature_2m.toFixed(1),
-        feels: w.apparent_temperature.toFixed(1),
-        condition
-      };
+      const code = data.current.weather_code;
+      const temp = data.current.temperature_2m.toFixed(1);
+      let cond = {0:"Clear",1:"Mainly clear",2:"Partly cloudy",3:"Overcast",45:"Fog",61:"Rain",71:"Snow",95:"Thunder"}[code] || "—";
+      return { temp, cond };
     }
-  } catch (e) {}
-  return { temp: "—", feels: "—", condition: "—" };
+  } catch {}
+  return { temp: "—", cond: "—" };
 }
 
-function getWeatherCondition(code) {
-  // WMO weather interpretation codes (simplified)
-  const map = {
-    0:   "Clear sky",
-    1:   "Mainly clear",
-    2:   "Partly cloudy",
-    3:   "Overcast",
-    45:  "Fog",
-    48:  "Depositing rime fog",
-    51: "Light drizzle", 53: "Moderate drizzle", 55: "Dense drizzle",
-    61: "Light rain", 63: "Moderate rain", 65: "Heavy rain",
-    71: "Light snow", 73: "Moderate snow", 75: "Heavy snow",
-    80: "Light showers", 81: "Moderate showers", 82: "Violent showers",
-    95: "Thunderstorm", 96: "Thunderstorm with hail", 99: "Severe thunderstorm with hail"
-  };
-  return map[code] || "Unknown";
-}
-
-function createCard(loc) {
-  const card = document.createElement("div");
-  card.className = "clock-card";
-  card.innerHTML = `
-    <div class="city">${loc.name}</div>
-    <div class="time" id="time-${loc.tz}"></div>
-    <div class="date" id="date-${loc.tz}"></div>
-    <div class="weather">
-      <span class="temp" id="temp-${loc.tz}">— °C</span><br>
-      <span class="condition" id="cond-${loc.tz}">Loading...</span><br>
-      <span class="feels-like" id="feels-${loc.tz}">Feels like — °C</span>
-    </div>
-  `;
-  document.getElementById("clocks").appendChild(card);
-  return card;
-}
-
-async function init() {
+async function initClocks() {
+  const clocksDiv = document.getElementById('clocks');
   for (const loc of locations) {
-    createCard(loc);
+    const card = document.createElement('div');
+    card.className = 'clock-card';
+    card.innerHTML = `
+      <div class="city">${loc.name}</div>
+      <div class="time" id="t-${loc.tz}">-</div>
+      <div class="date" id="d-${loc.tz}">-</div>
+      <div class="weather">
+        <span class="temp" id="tmp-${loc.tz}">— °C</span><br>
+        <span class="condition" id="c-${loc.tz}">Loading...</span>
+      </div>
+    `;
+    clocksDiv.appendChild(card);
+
     const coords = await getCoords(loc.search);
     if (coords) {
-      const weather = await fetchWeather(coords.lat, coords.lon);
-      document.getElementById(`temp-${loc.tz}`).textContent = `${weather.temp} °C`;
-      document.getElementById(`cond-${loc.tz}`).textContent = weather.condition;
-      document.getElementById(`feels-${loc.tz}`).textContent = `Feels like ${weather.feels} °C`;
+      const w = await fetchWeather(coords.lat, coords.lon);
+      document.getElementById(`tmp-${loc.tz}`).textContent = `${w.temp} °C`;
+      document.getElementById(`c-${loc.tz}`).textContent = w.cond;
     } else {
-      document.getElementById(`cond-${loc.tz}`).textContent = "Weather unavailable";
+      document.getElementById(`c-${loc.tz}`).textContent = "n/a";
     }
   }
 }
@@ -204,28 +343,23 @@ async function init() {
 function updateTimes() {
   const now = new Date();
   locations.forEach(loc => {
-    const timeFormatter = new Intl.DateTimeFormat('en-US', {
+    const time = new Intl.DateTimeFormat('en-US', {
       timeZone: loc.tz === "UTC" ? "UTC" : loc.tz,
       hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-    });
-    const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+    }).format(now);
+    const date = new Intl.DateTimeFormat('en-GB', {
       timeZone: loc.tz === "UTC" ? "UTC" : loc.tz,
-      weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
-    });
-
-    document.getElementById(`time-${loc.tz}`).textContent = timeFormatter.format(now);
-    document.getElementById(`date-${loc.tz}`).textContent = dateFormatter.format(now);
+      weekday: 'short', month: 'short', day: 'numeric'
+    }).format(now);
+    document.getElementById(`t-${loc.tz}`).textContent = time;
+    document.getElementById(`d-${loc.tz}`).textContent = date;
   });
 }
 
-// Start everything
-init();
-setInterval(updateTimes, 1000);           // time every second
-setInterval(init, 5 * 60 * 1000);         // weather refresh every 5 min (Open-Meteo allows it)
+initClocks();
+setInterval(updateTimes, 1000);
+setInterval(initClocks, 10*60*1000); // refresh weather rarely
 
-// First time update immediately
-updateTimes();
 </script>
-
 </body>
 </html>

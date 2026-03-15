@@ -191,7 +191,7 @@ function updateClock() {
 setInterval(updateClock, 10000);
 updateClock();
 
-// ── Daily resource collection (runs on load) ───────────
+// ── Daily resource collection ──────────────────────────
 function collectDailyResources() {
   const todayUTC = new Date().toISOString().slice(0,10);
 
@@ -200,7 +200,6 @@ function collectDailyResources() {
     return false;
   }
 
-  // Produce
   const scrapProd = (state.buildings.scrapyard || 0) * 3;
   const waterProd = (state.buildings['water-sieve'] || 0) * 2;
   const powerProd = (state.buildings.generator || 0) * 2;
@@ -209,12 +208,10 @@ function collectDailyResources() {
   state.resources.water += waterProd;
   state.resources.power += powerProd;
 
-  // Consume
   const consumed = Math.floor(state.resources.population / 3);
   state.resources.water = Math.max(0, state.resources.water - consumed);
   state.resources.scrap  = Math.max(0, state.resources.scrap  - Math.floor(consumed / 2));
 
-  // Advance fictional day
   state.day++;
   state.lastCollectedUTC = todayUTC;
 
@@ -229,7 +226,7 @@ function collectDailyResources() {
   return true;
 }
 
-// ── Print & helpers ───────────────────────────────────
+// ── Print helpers ──────────────────────────────────────
 function println(html) {
   const div = document.createElement('div');
   div.className = 'line';
@@ -260,7 +257,7 @@ function updateInventory() {
   els.inventory.innerHTML = html;
 }
 
-// ── Build function (unchanged) ────────────────────────
+// ── Build ──────────────────────────────────────────────
 function tryBuild(name) {
   const costs = {
     'water-sieve': { scrap: 18, power: 5 },
@@ -299,7 +296,7 @@ function tryBuild(name) {
   updateInventory();
 }
 
-// ── GPS (unchanged) ───────────────────────────────────
+// ── GPS ────────────────────────────────────────────────
 async function getGPS() {
   if (!navigator.geolocation) {
     println('<span class="muted">GPS not supported.</span>');
@@ -320,7 +317,7 @@ async function getGPS() {
   }
 }
 
-// ── Log with timestamp + coord detection (unchanged) ──
+// ── Generic log with coord detection ──────────────────
 function logFragment(txt) {
   txt = txt.trim();
   if (!txt) return;
@@ -340,7 +337,7 @@ function logFragment(txt) {
   updateInventory();
 }
 
-// ── Command handler (removed next) ────────────────────
+// ── Command handler ───────────────────────────────────
 function handleCommand(cmd) {
   cmd = cmd.toLowerCase().trim();
 
@@ -372,19 +369,16 @@ function handleCommand(cmd) {
   }
   else if (cmd === 'export') {
     const json = JSON.stringify(state, null, 2);
-    navigator.clipboard.writeText(json).then(() => {
-      println('<span class="success">Settlement data copied! (paste to pastebin/email)</span>');
-    }).catch(() => {
-      println('<span class="muted">Copy failed — select manually:</span>');
-      println(`<span class="muted"><pre>${JSON.stringify(state, null, 2)}</pre></span>`);
-    });
+    println('<span class="success">Exported colony state:</span>');
+    println(`<pre style="background:rgba(0,0,0,0.3); padding:1rem; border:1px solid var(--border); border-radius:4px; overflow-x:auto; white-space:pre; font-size:0.95rem;">${json.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</pre>`);
+    println('<span class="muted">(select text to copy if needed)</span>');
   }
   else {
     println(`<span class="muted">→ ${cmd}</span>`);
   }
 }
 
-// ── Input handler ─────────────────────────────────────
+// ── Input ──────────────────────────────────────────────
 els.input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
@@ -407,7 +401,7 @@ els.input.addEventListener('keydown', e => {
   els.input.value = '';
 });
 
-// ── Tab switching ─────────────────────────────────────
+// ── Tabs ───────────────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -420,9 +414,9 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// ── Init ──────────────────────────────────────────────
+// ── Start ──────────────────────────────────────────────
 setTimeout(() => {
-  collectDailyResources(); // Try to collect on load
+  collectDailyResources();
   println('<span class="success">VOID HAVEN online. Colony status nominal. Awaiting directives.</span>');
   updateInventory();
 }, 400);

@@ -38,21 +38,35 @@
     h1 { margin:0; font-size: clamp(2.2rem, 7vw, 3.2rem); color: var(--purple); }
     .subtitle { color: var(--muted); font-size: 0.9rem; }
     #clock { font-size: 0.85rem; margin-top: 0.3rem; color: var(--accent); }
-    .tab-buttons { display: flex; justify-content: center; gap: 1rem; margin: 1.2rem 0; flex-wrap: wrap; }
+
+    .tab-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin: 1.4rem 0 1rem;
+      flex-wrap: wrap;
+    }
     .tab-btn {
       background: transparent;
       border: 1px solid var(--muted);
       color: var(--muted);
-      padding: 0.55rem 1.3rem;
+      padding: 0.75rem 1.5rem;           /* bigger tap target */
       border-radius: 6px;
       cursor: pointer;
-      font-size: 0.95rem;
+      font-size: 1rem;
+      min-width: 120px;                   /* prevents tiny tabs on narrow screens */
+      touch-action: manipulation;
+      transition: all 0.2s;
     }
-    .tab-btn.active, .tab-btn:hover {
+    .tab-btn.active,
+    .tab-btn:hover,
+    .tab-btn:focus-visible {
       border-color: var(--accent);
       color: var(--accent);
-      background: rgba(0,234,255,0.08);
+      background: rgba(0,234,255,0.12);
+      outline: none;
     }
+
     .view {
       max-width: 1100px;
       margin: 1.5rem auto;
@@ -111,6 +125,7 @@
     .success { color: var(--green); }
     .muted   { color: var(--muted); opacity: 0.82; }
     .gps-link { color: var(--accent); text-decoration: underline; cursor: pointer; }
+
     .input-area {
       padding: 1.2rem 2rem;
       background: rgba(0,0,0,0.45);
@@ -137,12 +152,10 @@
     }
     #input::placeholder { color: var(--muted); opacity: 0.65; }
 
-    /* Extra iOS hardening */
+    /* Aggressive iOS/Safari hardening */
     input[type="search"] {
       -webkit-appearance: none;
     }
-
-    /* Disable zoom on iOS when focusing input */
     @supports (-webkit-overflow-scrolling: touch) {
       #input { font-size: 1.1rem !important; }
     }
@@ -198,8 +211,6 @@
 </main>
 
 <script>
-// ── placeholder for your original JavaScript ──
-
 const els = {
   output:    document.getElementById('output'),
   input:     document.getElementById('input'),
@@ -211,40 +222,48 @@ const els = {
 
 let state = JSON.parse(localStorage.getItem('voidHavenState') || '{}');
 
-// ... your existing functions: collectDailyResources, println, updateInventory, etc. ...
+// ── Your original functions here (collectDailyResources, println, etc.) ──
 
-// Strong input cleanup (recommended for iOS stubbornness)
-els.input.addEventListener('input', function() {
-  // Remove zero-width characters iOS sometimes inserts
-  let val = this.value.replace(/[\u200B\u200C\u200D\uFEFF]/g, '');
-  // Optional: force lowercase (uncomment if you want strict terminal style)
+// Aggressive cleanup — runs on every keystroke & paste
+function cleanInput() {
+  let val = els.input.value
+    .replace(/[\u200B\u200C\u200D\uFEFF]/g, '')   // zero-width junk
+    .replace(/\s{2,}/g, ' ');                     // collapse weird spaces
+
+  // Uncomment next line if you want **strict** lowercase terminal feel
   // val = val.toLowerCase();
 
-  if (val !== this.value) {
-    const pos = this.selectionStart;
-    this.value = val;
-    this.setSelectionRange(pos, pos);
+  if (val !== els.input.value) {
+    const pos = els.input.selectionStart;
+    els.input.value = val;
+    els.input.setSelectionRange(pos, pos);
   }
-});
+}
 
-els.input.addEventListener('paste', function() {
-  setTimeout(() => {
-    let val = this.value.replace(/[\u200B\u200C\u200D\uFEFF]/g, '');
-    // val = val.toLowerCase(); // ← uncomment if desired
-    if (val !== this.value) {
-      const pos = this.selectionStart;
-      this.value = val;
-      this.setSelectionRange(pos, pos);
+els.input.addEventListener('input', cleanInput);
+els.input.addEventListener('paste', () => setTimeout(cleanInput, 0));
+
+// Tab switching (assuming you have this already — just making sure it's clean)
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(btn.dataset.tab + 'View').classList.add('active');
+
+    // Refocus input when switching back to terminal
+    if (btn.dataset.tab === 'terminal') {
+      setTimeout(() => els.input.focus(), 100);
     }
-  }, 0);
+  });
 });
 
+// Your init
 setTimeout(() => {
-  // collectDailyResources();
-  // autoLoadFromURL();
+  // collectDailyResources(); autoLoadFromURL(); etc.
   // println('<span class="success">VOID HAVEN online. Awaiting directives.</span>');
   // updateInventory();
-  // For testing you can temporarily uncomment lines above
 }, 400);
 </script>
 </body>

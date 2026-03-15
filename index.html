@@ -114,6 +114,7 @@
       outline: none;
     }
     #input::placeholder { color: var(--muted); opacity: 0.6; }
+    pre { margin: 0; font-family: inherit; }
   </style>
 </head>
 <body>
@@ -138,6 +139,7 @@
       <div class="line muted">Resources auto-collect once per UTC day on load</div>
       <div class="line muted">Commands: status, build &lt;name&gt;, gps, share, import &lt;link&gt;, help, clear</div>
       <div class="line muted">Paste logs, coords or text → timestamped + map links</div>
+      <div class="line muted">Each log now has a "share" button (hover/tap line)</div>
     </div>
 
     <div class="input-area">
@@ -174,7 +176,7 @@ if (!state.resources) {
     buildings: { outpost: 1 },
     fragments: []
   };
-  save();
+  localStorage.setItem('voidHavenState', JSON.stringify(state));
 }
 
 function save() {
@@ -223,10 +225,22 @@ function collectDailyResources() {
   return true;
 }
 
-function println(html) {
+function println(html, rawShareText = null) {
   const div = document.createElement('div');
   div.className = 'line';
   div.innerHTML = html;
+
+  if (rawShareText) {
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    actions.innerHTML = `
+      <button class="act-btn share-single-btn" 
+              data-text="${encodeURIComponent(rawShareText)}"
+              title="Share this single log">share</button>
+    `;
+    div.appendChild(actions);
+  }
+
   els.output.appendChild(div);
   els.output.scrollTop = els.output.scrollHeight;
 }
@@ -247,7 +261,7 @@ function updateInventory() {
   if (state.fragments.length) {
     html += `<div class="line"></div><div class="line">Latest GPS Logs:</div>`;
     state.fragments.slice(-5).reverse().forEach(f => {
-      html += `<div class="line muted">${f}</div>`;
+      html += `<div class="line muted">${f.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
     });
   }
   els.inventory.innerHTML = html;
@@ -301,9 +315,14 @@ async function getGPS() {
     const lat = pos.coords.latitude.toFixed(6);
     const lon = pos.coords.longitude.toFixed(6);
     const time = new Date().toISOString().slice(0,16).replace('T',' ');
-    const entry = `[${time}] GPS FIX: <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" class="gps-link">${lat}, ${lon}</a>`;
-    state.fragments.push(entry);
-    println(`<span class="success">GPS logged → <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" class="gps-link">${lat}, ${lon}</a></span>`);
+    const entry = `[${time}] GPS FIX: ${lat}, ${lon} → https://www.google.com/maps?q=${lat},${lon}`;
+
+    state.fragments.push(`[${time}] GPS FIX: <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" class="gps-link">${lat}, ${lon}</a>`);
+    
+    println(
+      `<span class="success">GPS logged → <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" class="gps-link">${lat}, ${lon}</a></span>`,
+      entry
+    );
     save();
     updateInventory();
   } catch (e) {
@@ -325,14 +344,16 @@ function logFragment(txt) {
   }
 
   state.fragments.push(entry);
-  println(`<span class="muted">Logged: ${entry.slice(0,80)}${entry.length>80?'…':''}</span>`);
+  println(
+    `<span class="muted">Logged: ${entry.slice(0,80).replace(/</g,'&lt;')}${entry.length>80?'…':''}</span>`,
+    entry
+  );
   save();
   updateInventory();
 }
 
 function handleCommand(cmd) {
   cmd = cmd.trim();
-
   const lowerCmd = cmd.toLowerCase();
 
   if (lowerCmd === 'clear') {
@@ -344,8 +365,8 @@ function handleCommand(cmd) {
   if (lowerCmd === 'help') {
     println('<span class="muted">Commands: status, build &lt;name&gt;, gps, share, import &lt;link&gt;, clear, help</span>');
     println('<span class="muted">Buildings: water-sieve, scrapyard, generator, hab-dome</span>');
-    println('<span class="muted">share → full colony + all logs/GPS</span>');
-    println('<span class="muted">import tip: paste full link, no extra spaces, try different app if fails</span>');
+    println('<span class="muted">→ tap "share" on any log line to get link + email option</span>');
+    println('<span class="muted">import works with full colony or single logs</span>');
     return;
   }
 
@@ -379,10 +400,9 @@ function handleCommand(cmd) {
       const base64 = btoa(unescape(encodeURIComponent(json)));
       const shareLink = `data:text/json;base64,${base64}`;
 
-      println('<span class="success">Share link (includes everything):</span>');
+      println('<span class="success">Full colony share link:</span>');
       println(`<div style="word-break:break-all; background:rgba(0,0,0,0.4); padding:0.9rem; border-radius:4px; border:1px solid var(--border); font-size:0.92rem; line-height:1.4; margin:0.5rem 0;">${shareLink}</div>`);
-      println('<span class="muted">→ long-press or triple-tap to select full link</span>');
-      println('<span class="muted">→ copy → send via email/chat/notes</span>');
+      println('<span class="muted">→ long-press / triple-tap to copy</span>');
     } catch (err) {
       println('<span class="muted">Share failed: ' + err.message + '</span>');
     }
@@ -390,35 +410,36 @@ function handleCommand(cmd) {
   }
 
   if (lowerCmd.startsWith('import ')) {
-    let link = cmd.slice(7).trim();
-    link = link.replace(/\s+/g, ''); // remove all whitespace
-
+    let link = cmd.slice(7).trim().replace(/\s+/g, '');
     if (!link.startsWith('data:text/json;base64,')) {
-      println('<span class="muted">Link must start with: data:text/json;base64,…</span>');
-      println('<span class="muted">(check start and end — very long links are easy to cut off)</span>');
+      println('<span class="muted">Link must start with: data:text/json;base64,...</span>');
       return;
     }
 
     try {
       const base64Part = link.split(',')[1];
-      if (!base64Part || base64Part.length < 10) {
-        println('<span class="muted">Base64 part missing or too short — link truncated?</span>');
-        return;
-      }
+      if (!base64Part) throw new Error("Missing base64 content");
 
       let jsonStr;
-      try {
-        jsonStr = decodeURIComponent(escape(atob(base64Part)));
-      } catch {
-        jsonStr = atob(base64Part); // fallback
-      }
+      try { jsonStr = decodeURIComponent(escape(atob(base64Part))); }
+      catch { jsonStr = atob(base64Part); }
 
       const imported = JSON.parse(jsonStr);
 
-      if (!imported || typeof imported !== 'object' ||
-          !('day' in imported) || !('resources' in imported) ||
-          !('buildings' in imported) || !Array.isArray(imported.fragments)) {
-        println('<span class="muted">Data missing required fields (day / resources / buildings / fragments)</span>');
+      // Single log append
+      if (imported.type === "single-log" && imported.log) {
+        const entry = `[Imported ${imported.exported}] ${imported.log}`;
+        state.fragments.push(entry);
+        println('<span class="success">Single log imported and appended.</span>');
+        println(`<span class="muted">${entry.slice(0,70)}${entry.length>70?'…':''}</span>`);
+        save();
+        updateInventory();
+        return;
+      }
+
+      // Full colony
+      if (!imported.day || !imported.resources || !imported.buildings || !Array.isArray(imported.fragments)) {
+        println('<span class="muted">Invalid data structure</span>');
         return;
       }
 
@@ -426,42 +447,57 @@ function handleCommand(cmd) {
       state.lastCollectedUTC = '';
       save();
       updateInventory();
-
-      println('<span class="success">Import successful!</span>');
-      println(`<span class="muted">Loaded day ${state.day} • ${state.fragments.length} logs</span>`);
-
-      // Show snippet for debugging
-      const preview = (link.length > 60)
-        ? link.substring(0, 35) + '…' + link.substring(link.length - 25)
-        : link;
-      println(`<span class="muted" style="font-size:0.9rem; opacity:0.7;">Parsed link snippet: ${preview}</span>`);
+      println('<span class="success">Full colony imported!</span>');
+      println(`<span class="muted">Day ${state.day} • ${state.fragments.length} logs</span>`);
 
     } catch (err) {
-      println(`<span class="muted">Import error: ${err.message || 'decode/parse failed'}</span>`);
-      println('<span class="muted">Try: copy again, different messaging app, or shorter link test</span>');
+      println(`<span class="muted">Import error: ${err.message}</span>`);
     }
     return;
   }
 
-  // default: treat as log entry
+  // Default: log as fragment
   logFragment(cmd);
 }
 
-els.input.addEventListener('keydown', e => {
-  if (e.key !== 'Enter') return;
-  e.preventDefault();
-  const txt = els.input.value;
-  if (!txt.trim()) return;
+// ── Single log share handler ───────────────────────────────────────
+document.addEventListener('click', e => {
+  if (!e.target.classList.contains('share-single-btn')) return;
 
-  const line = document.createElement('div');
-  line.className = 'line';
-  line.innerHTML = `<span class="prompt">settler@haven:~$</span> ${txt.replace(/&/g,'&amp;').replace(/</g,'&lt;')}`;
-  els.output.appendChild(line);
-  els.output.scrollTop = els.output.scrollHeight;
+  const rawText = decodeURIComponent(e.target.dataset.text);
+  const now = new Date();
+  const exportTime = now.toISOString().slice(0,16).replace('T', ' ');
 
-  handleCommand(txt);
+  const singleLogData = {
+    type: "single-log",
+    day: state.day,
+    exported: exportTime,
+    log: rawText
+  };
 
-  els.input.value = '';
+  const json = JSON.stringify(singleLogData);
+  const base64 = btoa(unescape(encodeURIComponent(json)));
+  const shareLink = `data:text/json;base64,${base64}`;
+
+  const readable = 
+`VOID HAVEN – Single Log
+Day ${state.day} • ${exportTime}
+
+${rawText}
+
+To import:
+1. Open VOID HAVEN
+2. Type: import ${shareLink}
+
+(full colony share: use "share" command)
+`;
+
+  println('<span class="success">Single log share ready:</span>');
+  println(`<div style="word-break:break-all; background:rgba(0,0,0,0.45); padding:0.9rem; border:1px solid var(--border); font-size:0.92rem; margin:0.5rem 0;">${shareLink}</div>`);
+  println(`<pre style="background:rgba(0,0,0,0.4); padding:1rem; border:1px solid var(--border); white-space:pre-wrap; font-size:0.9rem; line-height:1.45;">${readable}</pre>`);
+
+  const mailto = `mailto:?subject=${encodeURIComponent(`VOID HAVEN Log – ${exportTime}`)}&body=${encodeURIComponent(readable + `\n\nLink:\n${shareLink}`)}`;
+  println(`<a href="${mailto}" class="gps-link" style="display:inline-block; margin:0.6rem 0 0 0.5rem;">→ Open in email</a>`);
 });
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -478,7 +514,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 setTimeout(() => {
   collectDailyResources();
-  println('<span class="success">VOID HAVEN online. Colony status nominal. Awaiting directives.</span>');
+  println('<span class="success">VOID HAVEN online. Awaiting directives.</span>');
   updateInventory();
 }, 400);
 </script>

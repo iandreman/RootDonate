@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🌍 Global Clocks</title>
+  <title>🌍 Global Clocks + Weather</title>
   <style>
     body {
       font-family: system-ui, -apple-system, sans-serif;
@@ -16,7 +16,7 @@
       place-items: center;
     }
     .container {
-      max-width: 1100px;
+      max-width: 1200px;
       width: 100%;
     }
     h1 {
@@ -28,156 +28,203 @@
     }
     .clock-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.6rem;
     }
     .clock-card {
-      background: rgba(30, 30, 60, 0.6);
+      background: rgba(30, 30, 60, 0.65);
       backdrop-filter: blur(10px);
-      border: 1px solid rgba(100, 120, 255, 0.18);
+      border: 1px solid rgba(100, 120, 255, 0.2);
       border-radius: 16px;
-      padding: 1.4rem 1.8rem;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-      transition: transform 0.2s, box-shadow 0.3s;
+      padding: 1.5rem 1.9rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.55);
+      transition: transform 0.25s, box-shadow 0.35s;
     }
     .clock-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+      transform: translateY(-8px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.65);
     }
     .city {
-      font-size: 1.4rem;
+      font-size: 1.5rem;
       font-weight: 600;
-      margin: 0 0 0.6rem;
+      margin: 0 0 0.5rem;
       color: #c7d2fe;
     }
     .time {
-      font-size: 2.8rem;
+      font-size: 3rem;
       font-weight: 300;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       color: #e0e0ff;
-      margin: 0.2em 0;
+      margin: 0.1em 0;
     }
     .date {
-      font-size: 0.95rem;
-      opacity: 0.8;
+      font-size: 1rem;
+      opacity: 0.85;
       color: #a0a0ff;
+      margin-bottom: 0.8rem;
+    }
+    .weather {
+      font-size: 1.1rem;
+      margin-top: 0.6rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid rgba(160,180,255,0.2);
+    }
+    .temp {
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: #ffe066;
+    }
+    .condition {
+      color: #d0d0ff;
+    }
+    .feels-like {
+      font-size: 0.95rem;
+      opacity: 0.9;
+      color: #b0b0ff;
     }
     footer {
       text-align: center;
-      margin-top: 3rem;
-      opacity: 0.6;
-      font-size: 0.9rem;
+      margin-top: 3.5rem;
+      opacity: 0.65;
+      font-size: 0.95rem;
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>🌍 Global Clocks</h1>
+  <h1>🌍 Global Clocks + Weather</h1>
 
-  <div class="clock-grid">
-    <div class="clock-card">
-      <div class="city">UTC / GMT</div>
-      <div class="time" id="UTC"></div>
-      <div class="date" id="date-UTC"></div>
-    </div>
+  <div class="clock-grid" id="clocks"></div>
 
-    <div class="clock-card">
-      <div class="city">New York</div>
-      <div class="time" id="America/New_York"></div>
-      <div class="date" id="date-America/New_York"></div>
-    </div>
-
-    <div class="clock-card">
-      <div class="city">London</div>
-      <div class="time" id="Europe/London"></div>
-      <div class="date" id="date-Europe/London"></div>
-    </div>
-
-    <div class="clock-card">
-      <div class="city">Berlin / Paris</div>
-      <div class="time" id="Europe/Berlin"></div>
-      <div class="date" id="date-Europe/Berlin"></div>
-    </div>
-
-    <div class="clock-card">
-      <div class="city">Dubai</div>
-      <div class="time" id="Asia/Dubai"></div>
-      <div class="date" id="date-Asia/Dubai"></div>
-    </div>
-
-    <div class="clock-card">
-      <div class="city">India (IST)</div>
-      <div class="time" id="Asia/Kolkata"></div>
-      <div class="date" id="date-Asia/Kolkata"></div>
-    </div>
-
-    <div class="clock-card">
-      <div class="city">Singapore / Beijing</div>
-      <div class="time" id="Asia/Singapore"></div>
-      <div class="date" id="date-Asia/Singapore"></div>
-    </div>
-
-    <div class="clock-card">
-      <div class="city">Tokyo</div>
-      <div class="time" id="Asia/Tokyo"></div>
-      <div class="date" id="date-Asia/Tokyo"></div>
-    </div>
-
-    <div class="clock-card">
-      <div class="city">Sydney</div>
-      <div class="time" id="Australia/Sydney"></div>
-      <div class="date" id="date-Australia/Sydney"></div>
-    </div>
-  </div>
-
-  <footer>Made with JS • Intl.DateTimeFormat • works offline after load</footer>
+  <footer>
+    Clocks via Intl.DateTimeFormat • Weather from Open-Meteo (free, no key) • Auto-refreshes
+  </footer>
 </div>
 
 <script>
-  const timeZones = [
-    "UTC",
-    "America/New_York",
-    "Europe/London",
-    "Europe/Berlin",
-    "Asia/Dubai",
-    "Asia/Kolkata",
-    "Asia/Singapore",
-    "Asia/Tokyo",
-    "Australia/Sydney"
-  ];
+// List of locations (timezone + display name + search name for geocoding)
+const locations = [
+  { tz: "UTC",               name: "UTC",               search: "UTC" },
+  { tz: "America/New_York",  name: "New York",         search: "New York" },
+  { tz: "Europe/London",     name: "London",           search: "London" },
+  { tz: "Europe/Berlin",     name: "Berlin / Paris",   search: "Berlin" },
+  { tz: "Asia/Dubai",        name: "Dubai",            search: "Dubai" },
+  { tz: "Asia/Kolkata",      name: "India (IST)",      search: "Delhi" },
+  { tz: "Asia/Singapore",    name: "Singapore / Beijing", search: "Singapore" },
+  { tz: "Asia/Tokyo",        name: "Tokyo",            search: "Tokyo" },
+  { tz: "Australia/Sydney",  name: "Sydney",           search: "Sydney" }
+];
 
-  function updateClocks() {
-    const now = new Date();
+let coordsCache = {}; // timezone → {lat, lon}
 
-    timeZones.forEach(tz => {
-      const formatterTime = new Intl.DateTimeFormat('en-US', {
-        timeZone: tz === "UTC" ? "UTC" : tz,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      });
+async function getCoords(searchName) {
+  if (coordsCache[searchName]) return coordsCache[searchName];
+  try {
+    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchName)}&count=1&language=en&format=json`);
+    const data = await res.json();
+    if (data.results?.[0]) {
+      const { latitude, longitude } = data.results[0];
+      coordsCache[searchName] = { lat: latitude, lon: longitude };
+      return coordsCache[searchName];
+    }
+  } catch (e) {}
+  return null; // fallback if geocoding fails
+}
 
-      const formatterDate = new Intl.DateTimeFormat('en-GB', {
-        timeZone: tz === "UTC" ? "UTC" : tz,
-        weekday: 'short',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
+async function fetchWeather(lat, lon) {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code&timezone=auto`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.current) {
+      const w = data.current;
+      const code = w.weather_code;
+      let condition = getWeatherCondition(code);
+      return {
+        temp: w.temperature_2m.toFixed(1),
+        feels: w.apparent_temperature.toFixed(1),
+        condition
+      };
+    }
+  } catch (e) {}
+  return { temp: "—", feels: "—", condition: "—" };
+}
 
-      const timeEl = document.getElementById(tz);
-      const dateEl = document.getElementById(`date-${tz}`);
+function getWeatherCondition(code) {
+  // WMO weather interpretation codes (simplified)
+  const map = {
+    0:   "Clear sky",
+    1:   "Mainly clear",
+    2:   "Partly cloudy",
+    3:   "Overcast",
+    45:  "Fog",
+    48:  "Depositing rime fog",
+    51: "Light drizzle", 53: "Moderate drizzle", 55: "Dense drizzle",
+    61: "Light rain", 63: "Moderate rain", 65: "Heavy rain",
+    71: "Light snow", 73: "Moderate snow", 75: "Heavy snow",
+    80: "Light showers", 81: "Moderate showers", 82: "Violent showers",
+    95: "Thunderstorm", 96: "Thunderstorm with hail", 99: "Severe thunderstorm with hail"
+  };
+  return map[code] || "Unknown";
+}
 
-      if (timeEl) timeEl.textContent = formatterTime.format(now);
-      if (dateEl) dateEl.textContent = formatterDate.format(now);
-    });
+function createCard(loc) {
+  const card = document.createElement("div");
+  card.className = "clock-card";
+  card.innerHTML = `
+    <div class="city">${loc.name}</div>
+    <div class="time" id="time-${loc.tz}"></div>
+    <div class="date" id="date-${loc.tz}"></div>
+    <div class="weather">
+      <span class="temp" id="temp-${loc.tz}">— °C</span><br>
+      <span class="condition" id="cond-${loc.tz}">Loading...</span><br>
+      <span class="feels-like" id="feels-${loc.tz}">Feels like — °C</span>
+    </div>
+  `;
+  document.getElementById("clocks").appendChild(card);
+  return card;
+}
+
+async function init() {
+  for (const loc of locations) {
+    createCard(loc);
+    const coords = await getCoords(loc.search);
+    if (coords) {
+      const weather = await fetchWeather(coords.lat, coords.lon);
+      document.getElementById(`temp-${loc.tz}`).textContent = `${weather.temp} °C`;
+      document.getElementById(`cond-${loc.tz}`).textContent = weather.condition;
+      document.getElementById(`feels-${loc.tz}`).textContent = `Feels like ${weather.feels} °C`;
+    } else {
+      document.getElementById(`cond-${loc.tz}`).textContent = "Weather unavailable";
+    }
   }
+}
 
-  // Initial update + every second
-  updateClocks();
-  setInterval(updateClocks, 1000);
+function updateTimes() {
+  const now = new Date();
+  locations.forEach(loc => {
+    const timeFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: loc.tz === "UTC" ? "UTC" : loc.tz,
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+    });
+    const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+      timeZone: loc.tz === "UTC" ? "UTC" : loc.tz,
+      weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+    });
+
+    document.getElementById(`time-${loc.tz}`).textContent = timeFormatter.format(now);
+    document.getElementById(`date-${loc.tz}`).textContent = dateFormatter.format(now);
+  });
+}
+
+// Start everything
+init();
+setInterval(updateTimes, 1000);           // time every second
+setInterval(init, 5 * 60 * 1000);         // weather refresh every 5 min (Open-Meteo allows it)
+
+// First time update immediately
+updateTimes();
 </script>
 
 </body>

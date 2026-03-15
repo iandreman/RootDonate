@@ -121,7 +121,7 @@
 <header>
   <h1>VOID HAVEN</h1>
   <div class="subtitle">GPS City Builder • March 2026</div>
-  <div id="clock" class="subtitle">— live UTC time —</div>
+  <div id="clock" class="subtitle">— live UTC —</div>
   <div class="tab-buttons">
     <button class="tab-btn active" data-tab="terminal">Terminal</button>
     <button class="tab-btn" data-tab="inventory">Inventory</button>
@@ -131,18 +131,19 @@
 <main>
   <div id="terminalView" class="view active">
     <div id="output">
-      <div class="line success">═══════════════════════════════════════</div>
-      <div class="line success">     VOID HAVEN – GPS CITY BUILDER    </div>
-      <div class="line success">═══════════════════════════════════════</div>
+      <div class="line success">══════════════════════════════════════════</div>
+      <div class="line success">      VOID HAVEN – COLONY SIMULATION      </div>
+      <div class="line success">══════════════════════════════════════════</div>
       <div class="line"></div>
-      <div class="line muted">Commands: status, build &lt;name&gt;, next, gps, export, help, clear</div>
-      <div class="line muted">Paste coords, text or links → they get timestamped + Google Maps links</div>
+      <div class="line muted">Resources auto-collect once per UTC day on load</div>
+      <div class="line muted">Commands: status, build &lt;name&gt;, gps, export, help, clear</div>
+      <div class="line muted">Paste logs, coords or text → timestamped + map links</div>
     </div>
 
     <div class="input-area">
       <div class="input-row">
         <label for="input" class="prompt">settler@haven:~$</label>
-        <input id="input" type="text" autocomplete="off" autofocus placeholder="status / build hab-dome / gps / next / export…" />
+        <input id="input" type="text" autocomplete="off" autofocus placeholder="status / build hab-dome / gps / export…" />
       </div>
     </div>
   </div>
@@ -164,8 +165,11 @@ const els = {
 
 let state = JSON.parse(localStorage.getItem('voidHavenState') || '{}');
 
+// Default starting state
 if (!state.resources) {
   state = {
+    firstOpen: new Date().toISOString(),
+    lastCollectedUTC: '',
     day: 1,
     resources: { scrap: 12, water: 6, power: 4, population: 5 },
     buildings: { outpost: 1 },
@@ -186,6 +190,44 @@ function updateClock() {
 }
 setInterval(updateClock, 10000);
 updateClock();
+
+// ── Daily resource collection (runs on load) ───────────
+function collectDailyResources() {
+  const todayUTC = new Date().toISOString().slice(0,10);
+
+  if (state.lastCollectedUTC === todayUTC) {
+    println('<span class="muted">Daily cycle already completed today.</span>');
+    return false;
+  }
+
+  // Produce
+  const scrapProd = (state.buildings.scrapyard || 0) * 3;
+  const waterProd = (state.buildings['water-sieve'] || 0) * 2;
+  const powerProd = (state.buildings.generator || 0) * 2;
+
+  state.resources.scrap += scrapProd;
+  state.resources.water += waterProd;
+  state.resources.power += powerProd;
+
+  // Consume
+  const consumed = Math.floor(state.resources.population / 3);
+  state.resources.water = Math.max(0, state.resources.water - consumed);
+  state.resources.scrap  = Math.max(0, state.resources.scrap  - Math.floor(consumed / 2));
+
+  // Advance fictional day
+  state.day++;
+  state.lastCollectedUTC = todayUTC;
+
+  println('<span class="success">Daily cycle completed ── Day ' + state.day + '</span>');
+  if (scrapProd || waterProd || powerProd) {
+    println(`<span class="muted">Gained: ${scrapProd} scrap, ${waterProd} water, ${powerProd} power</span>`);
+  }
+  println(`<span class="muted">Consumed: ${consumed} water, ${Math.floor(consumed/2)} scrap</span>`);
+
+  save();
+  updateInventory();
+  return true;
+}
 
 // ── Print & helpers ───────────────────────────────────
 function println(html) {
@@ -218,18 +260,7 @@ function updateInventory() {
   els.inventory.innerHTML = html;
 }
 
-// ── Resource production ───────────────────────────────
-function produceResources() {
-  state.resources.scrap += (state.buildings.scrapyard || 0) * 3;
-  state.resources.water += (state.buildings['water-sieve'] || 0) * 2;
-  state.resources.power += (state.buildings.generator || 0) * 2;
-  const consumed = Math.floor(state.resources.population / 3);
-  state.resources.water = Math.max(0, state.resources.water - consumed);
-  state.resources.scrap  = Math.max(0, state.resources.scrap  - Math.floor(consumed/2));
-  state.day++;
-}
-
-// ── Build function ────────────────────────────────────
+// ── Build function (unchanged) ────────────────────────
 function tryBuild(name) {
   const costs = {
     'water-sieve': { scrap: 18, power: 5 },
@@ -268,10 +299,10 @@ function tryBuild(name) {
   updateInventory();
 }
 
-// ── GPS Command ───────────────────────────────────────
+// ── GPS (unchanged) ───────────────────────────────────
 async function getGPS() {
   if (!navigator.geolocation) {
-    println('<span class="muted">GPS not supported in this browser.</span>');
+    println('<span class="muted">GPS not supported.</span>');
     return;
   }
   try {
@@ -285,18 +316,17 @@ async function getGPS() {
     save();
     updateInventory();
   } catch (e) {
-    println('<span class="muted">GPS denied or unavailable.</span>');
+    println('<span class="muted">GPS access denied or unavailable.</span>');
   }
 }
 
-// ── Log fragment with timestamp + auto GPS link ───────
+// ── Log with timestamp + coord detection (unchanged) ──
 function logFragment(txt) {
   txt = txt.trim();
   if (!txt) return;
   const time = new Date().toISOString().slice(0,16).replace('T',' ');
   let entry = `[${time}] ${txt}`;
 
-  // Auto-detect coordinates and make clickable
   const coordMatch = txt.match(/(-?\d{1,3}\.\d+),\s*(-?\d{1,3}\.\d+)/);
   if (coordMatch) {
     const lat = coordMatch[1];
@@ -310,7 +340,7 @@ function logFragment(txt) {
   updateInventory();
 }
 
-// ── Command handler ───────────────────────────────────
+// ── Command handler (removed next) ────────────────────
 function handleCommand(cmd) {
   cmd = cmd.toLowerCase().trim();
 
@@ -319,8 +349,9 @@ function handleCommand(cmd) {
     println('<span class="success">Terminal cleared.</span>');
   }
   else if (cmd === 'help') {
-    println('<span class="muted">Commands: status, next, build &lt;name&gt;, gps, export, clear, help</span>');
+    println('<span class="muted">Commands: status, build &lt;name&gt;, gps, export, clear, help</span>');
     println('<span class="muted">Buildings: water-sieve, scrapyard, generator, hab-dome</span>');
+    println('<span class="muted">Resources update automatically once per UTC day</span>');
   }
   else if (cmd === 'status') {
     println(`<span class="success">Day ${state.day}</span>`);
@@ -332,13 +363,6 @@ function handleCommand(cmd) {
       println(`<span class="muted">  ${b.padEnd(12)} ×${c}</span>`);
     }
   }
-  else if (cmd === 'next') {
-    produceResources();
-    println(`<span class="success">Advanced to day ${state.day}</span>`);
-    println(`<span class="muted">Water left: ${state.resources.water}</span>`);
-    save();
-    updateInventory();
-  }
   else if (cmd.startsWith('build ')) {
     const name = cmd.slice(6).trim();
     tryBuild(name);
@@ -349,10 +373,10 @@ function handleCommand(cmd) {
   else if (cmd === 'export') {
     const json = JSON.stringify(state, null, 2);
     navigator.clipboard.writeText(json).then(() => {
-      println('<span class="success">Full settlement copied to clipboard! Paste into pastebin.com or email.</span>');
+      println('<span class="success">Settlement data copied! (paste to pastebin/email)</span>');
     }).catch(() => {
-      println('<span class="muted">Could not copy automatically. Select and copy the JSON below:</span>');
-      println(`<span class="muted">${JSON.stringify(state, null, 2)}</span>`);
+      println('<span class="muted">Copy failed — select manually:</span>');
+      println(`<span class="muted"><pre>${JSON.stringify(state, null, 2)}</pre></span>`);
     });
   }
   else {
@@ -374,7 +398,7 @@ els.input.addEventListener('keydown', e => {
   els.output.scrollTop = els.output.scrollHeight;
 
   const lower = txt.toLowerCase().trim();
-  if (['status','next','clear','help','export','gps'].includes(lower) || lower.startsWith('build ')) {
+  if (['status','clear','help','export','gps'].includes(lower) || lower.startsWith('build ')) {
     handleCommand(txt);
   } else {
     logFragment(txt);
@@ -398,9 +422,10 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // ── Init ──────────────────────────────────────────────
 setTimeout(() => {
-  println('<span class="success">Settlement online. GPS enabled. Awaiting orders.</span>');
+  collectDailyResources(); // Try to collect on load
+  println('<span class="success">VOID HAVEN online. Colony status nominal. Awaiting directives.</span>');
   updateInventory();
-}, 300);
+}, 400);
 </script>
 </body>
 </html>

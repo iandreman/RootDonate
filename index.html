@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🌍 Global Clocks</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f0f1a;
+      color: #e0e0ff;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+    }
+    .container {
+      max-width: 1100px;
+      width: 100%;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.8rem;
+      margin: 0.4em 0 1em;
+      color: #a5b4fc;
+      text-shadow: 0 0 20px rgba(165,180,252,0.4);
+    }
+    .clock-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .clock-card {
+      background: rgba(30, 30, 60, 0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(100, 120, 255, 0.18);
+      border-radius: 16px;
+      padding: 1.4rem 1.8rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+    .clock-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+    }
+    .city {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin: 0 0 0.6rem;
+      color: #c7d2fe;
+    }
+    .time {
+      font-size: 2.8rem;
+      font-weight: 300;
+      letter-spacing: 2px;
+      color: #e0e0ff;
+      margin: 0.2em 0;
+    }
+    .date {
+      font-size: 0.95rem;
+      opacity: 0.8;
+      color: #a0a0ff;
+    }
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      opacity: 0.6;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🌍 Global Clocks</h1>
+
+  <div class="clock-grid">
+    <div class="clock-card">
+      <div class="city">UTC / GMT</div>
+      <div class="time" id="UTC"></div>
+      <div class="date" id="date-UTC"></div>
+    </div>
+
+    <div class="clock-card">
+      <div class="city">New York</div>
+      <div class="time" id="America/New_York"></div>
+      <div class="date" id="date-America/New_York"></div>
+    </div>
+
+    <div class="clock-card">
+      <div class="city">London</div>
+      <div class="time" id="Europe/London"></div>
+      <div class="date" id="date-Europe/London"></div>
+    </div>
+
+    <div class="clock-card">
+      <div class="city">Berlin / Paris</div>
+      <div class="time" id="Europe/Berlin"></div>
+      <div class="date" id="date-Europe/Berlin"></div>
+    </div>
+
+    <div class="clock-card">
+      <div class="city">Dubai</div>
+      <div class="time" id="Asia/Dubai"></div>
+      <div class="date" id="date-Asia/Dubai"></div>
+    </div>
+
+    <div class="clock-card">
+      <div class="city">India (IST)</div>
+      <div class="time" id="Asia/Kolkata"></div>
+      <div class="date" id="date-Asia/Kolkata"></div>
+    </div>
+
+    <div class="clock-card">
+      <div class="city">Singapore / Beijing</div>
+      <div class="time" id="Asia/Singapore"></div>
+      <div class="date" id="date-Asia/Singapore"></div>
+    </div>
+
+    <div class="clock-card">
+      <div class="city">Tokyo</div>
+      <div class="time" id="Asia/Tokyo"></div>
+      <div class="date" id="date-Asia/Tokyo"></div>
+    </div>
+
+    <div class="clock-card">
+      <div class="city">Sydney</div>
+      <div class="time" id="Australia/Sydney"></div>
+      <div class="date" id="date-Australia/Sydney"></div>
+    </div>
+  </div>
+
+  <footer>Made with JS • Intl.DateTimeFormat • works offline after load</footer>
+</div>
+
+<script>
+  const timeZones = [
+    "UTC",
+    "America/New_York",
+    "Europe/London",
+    "Europe/Berlin",
+    "Asia/Dubai",
+    "Asia/Kolkata",
+    "Asia/Singapore",
+    "Asia/Tokyo",
+    "Australia/Sydney"
+  ];
+
+  function updateClocks() {
+    const now = new Date();
+
+    timeZones.forEach(tz => {
+      const formatterTime = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz === "UTC" ? "UTC" : tz,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+
+      const formatterDate = new Intl.DateTimeFormat('en-GB', {
+        timeZone: tz === "UTC" ? "UTC" : tz,
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+
+      const timeEl = document.getElementById(tz);
+      const dateEl = document.getElementById(`date-${tz}`);
+
+      if (timeEl) timeEl.textContent = formatterTime.format(now);
+      if (dateEl) dateEl.textContent = formatterDate.format(now);
+    });
+  }
+
+  // Initial update + every second
+  updateClocks();
+  setInterval(updateClocks, 1000);
+</script>
+
+</body>
+</html>

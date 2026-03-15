@@ -128,12 +128,19 @@
       border: none;
       color: var(--text);
       font: inherit;
-      font-size: 1.1rem;                /* ← helps mobile keyboards */
+      font-size: 1.1rem;
       outline: none;
       -webkit-tap-highlight-color: transparent;
       padding: 0.4rem 0;
+      font-variant-ligatures: none;
+      -webkit-appearance: none;
     }
     #input::placeholder { color: var(--muted); opacity: 0.65; }
+
+    /* Extra iOS hardening */
+    input[type="search"] {
+      -webkit-appearance: none;
+    }
 
     /* Disable zoom on iOS when focusing input */
     @supports (-webkit-overflow-scrolling: touch) {
@@ -171,13 +178,15 @@
         <label for="input" class="prompt">settler@haven:~$</label>
         <input 
           id="input" 
-          type="text" 
-          autocomplete="off" 
-          autocorrect="off" 
-          autocapitalize="off" 
-          spellcheck="false" 
-          autofocus 
-          placeholder="status / build hab-dome / gps / share / import …" 
+          type="search"
+          inputmode="none"
+          autocorrect="off"
+          autocapitalize="none"
+          spellcheck="false"
+          autocomplete="off"
+          enterkeyhint="go"
+          autofocus
+          placeholder="status / build hab-dome / gps / share / import …"
         />
       </div>
     </div>
@@ -189,8 +198,7 @@
 </main>
 
 <script>
-// ── (your original JavaScript code goes here unchanged) ──
-// Just make sure to keep everything below exactly as it was
+// ── placeholder for your original JavaScript ──
 
 const els = {
   output:    document.getElementById('output'),
@@ -203,21 +211,40 @@ const els = {
 
 let state = JSON.parse(localStorage.getItem('voidHavenState') || '{}');
 
-// ... rest of your script remains identical ...
-// (collectDailyResources, println, updateInventory, tryBuild, getGPS, logFragment, handleCommand, event listeners, etc.)
+// ... your existing functions: collectDailyResources, println, updateInventory, etc. ...
 
-// Optional: gentle focus recovery on mobile (uncomment if still needed)
-// els.input.addEventListener('blur', () => {
-//   if (document.activeElement !== els.input && els.terminalView.classList.contains('active')) {
-//     setTimeout(() => els.input.focus(), 80);
-//   }
-// });
+// Strong input cleanup (recommended for iOS stubbornness)
+els.input.addEventListener('input', function() {
+  // Remove zero-width characters iOS sometimes inserts
+  let val = this.value.replace(/[\u200B\u200C\u200D\uFEFF]/g, '');
+  // Optional: force lowercase (uncomment if you want strict terminal style)
+  // val = val.toLowerCase();
+
+  if (val !== this.value) {
+    const pos = this.selectionStart;
+    this.value = val;
+    this.setSelectionRange(pos, pos);
+  }
+});
+
+els.input.addEventListener('paste', function() {
+  setTimeout(() => {
+    let val = this.value.replace(/[\u200B\u200C\u200D\uFEFF]/g, '');
+    // val = val.toLowerCase(); // ← uncomment if desired
+    if (val !== this.value) {
+      const pos = this.selectionStart;
+      this.value = val;
+      this.setSelectionRange(pos, pos);
+    }
+  }, 0);
+});
 
 setTimeout(() => {
-  collectDailyResources();
-  autoLoadFromURL();
-  println('<span class="success">VOID HAVEN online. Awaiting directives.</span>');
-  updateInventory();
+  // collectDailyResources();
+  // autoLoadFromURL();
+  // println('<span class="success">VOID HAVEN online. Awaiting directives.</span>');
+  // updateInventory();
+  // For testing you can temporarily uncomment lines above
 }, 400);
 </script>
 </body>

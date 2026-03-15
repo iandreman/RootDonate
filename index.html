@@ -165,7 +165,6 @@ const els = {
 
 let state = JSON.parse(localStorage.getItem('voidHavenState') || '{}');
 
-// Default starting state
 if (!state.resources) {
   state = {
     firstOpen: new Date().toISOString(),
@@ -175,13 +174,13 @@ if (!state.resources) {
     buildings: { outpost: 1 },
     fragments: []
   };
+  save();
 }
 
 function save() {
   localStorage.setItem('voidHavenState', JSON.stringify(state));
 }
 
-// ── Live UTC Clock ─────────────────────────────────────
 function updateClock() {
   const now = new Date();
   const date = now.toISOString().slice(0,10);
@@ -191,26 +190,24 @@ function updateClock() {
 setInterval(updateClock, 10000);
 updateClock();
 
-// ── Daily resource collection ──────────────────────────
 function collectDailyResources() {
   const todayUTC = new Date().toISOString().slice(0,10);
-
   if (state.lastCollectedUTC === todayUTC) {
     println('<span class="muted">Daily cycle already completed today.</span>');
     return false;
   }
 
-  const scrapProd = (state.buildings.scrapyard || 0) * 3;
-  const waterProd = (state.buildings['water-sieve'] || 0) * 2;
-  const powerProd = (state.buildings.generator || 0) * 2;
+  const scrapProd  = (state.buildings.scrapyard   || 0) * 3;
+  const waterProd  = (state.buildings['water-sieve'] || 0) * 2;
+  const powerProd  = (state.buildings.generator   || 0) * 2;
 
-  state.resources.scrap += scrapProd;
-  state.resources.water += waterProd;
-  state.resources.power += powerProd;
+  state.resources.scrap  += scrapProd;
+  state.resources.water  += waterProd;
+  state.resources.power  += powerProd;
 
   const consumed = Math.floor(state.resources.population / 3);
   state.resources.water = Math.max(0, state.resources.water - consumed);
-  state.resources.scrap  = Math.max(0, state.resources.scrap  - Math.floor(consumed / 2));
+  state.resources.scrap = Math.max(0, state.resources.scrap - Math.floor(consumed / 2));
 
   state.day++;
   state.lastCollectedUTC = todayUTC;
@@ -300,7 +297,7 @@ async function getGPS() {
     return;
   }
   try {
-    const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
+    const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {enableHighAccuracy: true}));
     const lat = pos.coords.latitude.toFixed(6);
     const lon = pos.coords.longitude.toFixed(6);
     const time = new Date().toISOString().slice(0,16).replace('T',' ');
@@ -310,7 +307,7 @@ async function getGPS() {
     save();
     updateInventory();
   } catch (e) {
-    println('<span class="muted">GPS access denied or unavailable.</span>');
+    println('<span class="muted">GPS access denied or failed (' + e.message + ').</span>');
   }
 }
 
@@ -324,7 +321,7 @@ function logFragment(txt) {
   if (coordMatch) {
     const lat = coordMatch[1];
     const lon = coordMatch[2];
-    entry = `[${time}] GPS: <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" class="gps-link">${lat}, ${lon}</a> ${txt.replace(coordMatch[0],'')}`;
+    entry = `[${time}] GPS: <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" class="gps-link">${lat}, ${lon}</a> ${txt.replace(coordMatch[0],'').trim()}`;
   }
 
   state.fragments.push(entry);
@@ -334,22 +331,25 @@ function logFragment(txt) {
 }
 
 function handleCommand(cmd) {
-  cmd = cmd.toLowerCase().trim();
+  cmd = cmd.trim();
 
-  if (cmd === 'clear') {
+  const lowerCmd = cmd.toLowerCase();
+
+  if (lowerCmd === 'clear') {
     els.output.innerHTML = '';
     println('<span class="success">Terminal cleared.</span>');
     return;
   }
 
-  if (cmd === 'help') {
+  if (lowerCmd === 'help') {
     println('<span class="muted">Commands: status, build &lt;name&gt;, gps, share, import &lt;link&gt;, clear, help</span>');
     println('<span class="muted">Buildings: water-sieve, scrapyard, generator, hab-dome</span>');
-    println('<span class="muted">share → includes all logs / GPS entries</span>');
+    println('<span class="muted">share → full colony + all logs/GPS</span>');
+    println('<span class="muted">import tip: paste full link, no extra spaces, try different app if fails</span>');
     return;
   }
 
-  if (cmd === 'status') {
+  if (lowerCmd === 'status') {
     println(`<span class="success">Day ${state.day}</span>`);
     for (let [k,v] of Object.entries(state.resources)) {
       println(`<span class="muted">${k.padEnd(12)} ${v}</span>`);
@@ -362,74 +362,96 @@ function handleCommand(cmd) {
     return;
   }
 
-  if (cmd.startsWith('build ')) {
+  if (lowerCmd.startsWith('build ')) {
     const name = cmd.slice(6).trim();
     tryBuild(name);
     return;
   }
 
-  if (cmd === 'gps') {
+  if (lowerCmd === 'gps') {
     getGPS();
     return;
   }
 
-  if (cmd === 'share') {
+  if (lowerCmd === 'share') {
     try {
       const json = JSON.stringify(state);
       const base64 = btoa(unescape(encodeURIComponent(json)));
       const shareLink = `data:text/json;base64,${base64}`;
 
-      println('<span class="success">Share link ready (includes all logs / GPS entries):</span>');
+      println('<span class="success">Share link (includes everything):</span>');
       println(`<div style="word-break:break-all; background:rgba(0,0,0,0.4); padding:0.9rem; border-radius:4px; border:1px solid var(--border); font-size:0.92rem; line-height:1.4; margin:0.5rem 0;">${shareLink}</div>`);
-      println('<span class="muted">→ long-press / select → copy</span>');
-      println('<span class="muted">→ send via email, chat, notes, etc.</span>');
+      println('<span class="muted">→ long-press or triple-tap to select full link</span>');
+      println('<span class="muted">→ copy → send via email/chat/notes</span>');
     } catch (err) {
-      println('<span class="muted">Failed to generate share link.</span>');
+      println('<span class="muted">Share failed: ' + err.message + '</span>');
     }
     return;
   }
 
-  if (cmd.startsWith('import ')) {
-    const link = cmd.slice(7).trim();
+  if (lowerCmd.startsWith('import ')) {
+    let link = cmd.slice(7).trim();
+    link = link.replace(/\s+/g, ''); // remove all whitespace
+
     if (!link.startsWith('data:text/json;base64,')) {
-      println('<span class="muted">Invalid link — must start with data:text/json;base64,...</span>');
+      println('<span class="muted">Link must start with: data:text/json;base64,…</span>');
+      println('<span class="muted">(check start and end — very long links are easy to cut off)</span>');
       return;
     }
 
     try {
-      const base64 = link.split(',')[1];
-      const jsonStr = decodeURIComponent(escape(atob(base64)));
+      const base64Part = link.split(',')[1];
+      if (!base64Part || base64Part.length < 10) {
+        println('<span class="muted">Base64 part missing or too short — link truncated?</span>');
+        return;
+      }
+
+      let jsonStr;
+      try {
+        jsonStr = decodeURIComponent(escape(atob(base64Part)));
+      } catch {
+        jsonStr = atob(base64Part); // fallback
+      }
+
       const imported = JSON.parse(jsonStr);
 
-      // Basic validation
       if (!imported || typeof imported !== 'object' ||
           !('day' in imported) || !('resources' in imported) ||
           !('buildings' in imported) || !Array.isArray(imported.fragments)) {
-        println('<span class="muted">Imported data looks invalid or incomplete.</span>');
+        println('<span class="muted">Data missing required fields (day / resources / buildings / fragments)</span>');
         return;
       }
 
       state = imported;
-      state.lastCollectedUTC = ''; // force collection check on next load
+      state.lastCollectedUTC = '';
       save();
       updateInventory();
-      println('<span class="success">Colony imported — including all logs and GPS entries.</span>');
-      println(`<span class="muted">${state.fragments.length} log entries loaded.</span>`);
+
+      println('<span class="success">Import successful!</span>');
+      println(`<span class="muted">Loaded day ${state.day} • ${state.fragments.length} logs</span>`);
+
+      // Show snippet for debugging
+      const preview = (link.length > 60)
+        ? link.substring(0, 35) + '…' + link.substring(link.length - 25)
+        : link;
+      println(`<span class="muted" style="font-size:0.9rem; opacity:0.7;">Parsed link snippet: ${preview}</span>`);
+
     } catch (err) {
-      println(`<span class="muted">Import failed: ${err.message || 'invalid format'}</span>`);
+      println(`<span class="muted">Import error: ${err.message || 'decode/parse failed'}</span>`);
+      println('<span class="muted">Try: copy again, different messaging app, or shorter link test</span>');
     }
     return;
   }
 
-  // everything else → log it
+  // default: treat as log entry
   logFragment(cmd);
 }
 
 els.input.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
-  let txt = els.input.value.trim();
-  if (!txt) return;
+  const txt = els.input.value;
+  if (!txt.trim()) return;
 
   const line = document.createElement('div');
   line.className = 'line';

@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Time Echoes – Dissolved Chrono Field</title>
 
-  <!-- Better PWA / standalone feel -->
-  <meta name="theme-color" content="#0a0014"/>
-  <meta name="background-color" content="#0a0014"/>
+  <!-- PWA / standalone enhancements -->
+  <meta name="theme-color" content="#0a0014">
+  <meta name="background-color" content="#0a0014">
   <link rel="manifest" href="data:application/manifest+json,{
     &quot;name&quot;: &quot;Time Echoes&quot;,
     &quot;short_name&quot;: &quot;Echoes&quot;,
@@ -32,6 +32,7 @@
       --glow: #a080ff44;
       --card: rgba(18,12,48,0.58);
     }
+
     body {
       font-family: system-ui, sans-serif;
       background: var(--bg-deep);
@@ -43,7 +44,13 @@
       flex-direction: column;
       touch-action: manipulation;
     }
-    canvas#world { position: fixed; inset: 0; z-index: 1; }
+
+    canvas#world {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+    }
+
     h1 {
       z-index: 10;
       text-align: center;
@@ -57,14 +64,32 @@
       animation: hue 22s linear infinite;
       text-shadow: 0 0 50px #000c, 0 0 100px #7b5eff88;
     }
-    @keyframes hue { to { background-position: 400% } }
 
-    .stats { z-index: 10; text-align:center; font-size: clamp(1rem,3.8vw,1.3rem); margin:0.4rem 0 1.4rem; opacity:0.9; }
-    .stats span { margin:0 1rem; padding:0.5rem 1.2rem; background:rgba(30,20,80,0.45); border-radius:999px; border:1px solid #7b5eff40; backdrop-filter:blur(12px); }
+    @keyframes hue {
+      to { background-position: 400%; }
+    }
+
+    .stats {
+      z-index: 10;
+      text-align: center;
+      font-size: clamp(1rem, 3.8vw, 1.3rem);
+      margin: 0.4rem 0 1.4rem;
+      opacity: 0.9;
+    }
+
+    .stats span {
+      margin: 0 1rem;
+      padding: 0.5rem 1.2rem;
+      background: rgba(30,20,80,0.45);
+      border-radius: 999px;
+      border: 1px solid #7b5eff40;
+      backdrop-filter: blur(12px);
+    }
 
     #wake-status {
       position: absolute;
-      top: 70px; left: 50%;
+      top: 70px;
+      left: 50%;
       transform: translateX(-50%);
       background: rgba(40,30,110,0.75);
       color: #c0b0ff;
@@ -79,9 +104,12 @@
     }
 
     #sidebar {
-      position: absolute; z-index: 6;
-      right: 16px; top: 120px;
-      width: 360px; max-height: 70vh;
+      position: absolute;
+      z-index: 6;
+      right: 16px;
+      top: 120px;
+      width: 360px;
+      max-height: 70vh;
       overflow-y: auto;
       padding: 16px;
       background: var(--card);
@@ -92,18 +120,28 @@
     }
 
     footer {
-      position: absolute; bottom: 14px; left: 50%;
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
       transform: translateX(-50%);
-      font-size: 0.84rem; opacity: 0.6;
-      pointer-events: none; text-align: center; max-width: 96%;
+      font-size: 0.84rem;
+      opacity: 0.6;
+      pointer-events: none;
+      text-align: center;
+      max-width: 96%;
       text-shadow: 0 1px 8px #000;
     }
 
     .controls {
-      position: absolute; z-index: 12; display: flex; gap: 14px;
+      position: absolute;
+      z-index: 12;
+      display: flex;
+      gap: 14px;
     }
+
     .controls.top-right { top: 16px; right: 16px; }
     .controls.top-left  { top: 16px; left:  16px; }
+
     button {
       padding: 10px 18px;
       background: rgba(80,100,190,0.6);
@@ -113,13 +151,16 @@
       cursor: pointer;
       font-size: 0.95rem;
       backdrop-filter: blur(8px);
-      transition: 0.2s;
+      transition: background 0.2s;
     }
+
     button:hover { background: rgba(100,120,210,0.85); }
     button.active   { background: rgba(70,180,110,0.8) !important; color: #fff; }
 
     #resume-msg {
-      position: absolute; top: 90px; left: 50%;
+      position: absolute;
+      top: 90px;
+      left: 50%;
       transform: translateX(-50%);
       background: rgba(40,30,110,0.82);
       color: #d0c0ff;
@@ -132,241 +173,270 @@
       border: 1px solid #9b7fff80;
     }
 
-    @media (max-width:880px) {
-      #sidebar { width:95%; right:2.5%; top:auto; bottom:90px; max-height:38vh; }
-      .controls { bottom:18px; left:50%; transform:translateX(-50%); flex-direction:row; width:auto; }
-      #resume-msg { top:auto; bottom:150px; font-size:1rem; padding:10px 20px; }
+    @media (max-width: 880px) {
+      #sidebar {
+        width: 95%;
+        right: 2.5%;
+        top: auto;
+        bottom: 90px;
+        max-height: 38vh;
+      }
+      .controls {
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        flex-direction: row;
+        width: auto;
+      }
+      #resume-msg {
+        top: auto;
+        bottom: 150px;
+        font-size: 1rem;
+        padding: 10px 20px;
+      }
     }
   </style>
 </head>
 <body>
 
-<h1>Time Echoes</h1>
+  <h1>Time Echoes</h1>
 
-<div class="stats">
-  <span>Echoes: <b id="pop">—</b></span>
-  <span>Nodes: <b id="builds">—</b></span>
-  <span>Harmony: <b id="happy">—</b>%</span>
-</div>
+  <div class="stats">
+    <span>Echoes: <b id="pop">—</b></span>
+    <span>Nodes:  <b id="builds">—</b></span>
+    <span>Harmony: <b id="happy">—</b>%</span>
+  </div>
 
-<div id="wake-status">Screen always on</div>
+  <div id="wake-status">Screen always on</div>
+  <div id="resume-msg"></div>
 
-<div id="resume-msg"></div>
+  <canvas id="world"></canvas>
 
-<canvas id="world"></canvas>
+  <div class="controls top-right">
+    <button id="saveFile">Save State</button>
+    <label for="loadFile">Load State</label>
+    <input type="file" id="loadFile" accept=".json">
+  </div>
 
-<div class="controls top-right">
-  <button id="saveFile">Save State</button>
-  <label for="loadFile">Load State</label>
-  <input type="file" id="loadFile" accept=".json">
-</div>
+  <div class="controls top-left">
+    <button id="wakeToggle">Keep Screen On</button>
+  </div>
 
-<div class="controls top-left">
-  <button id="wakeToggle">Keep Screen On</button>
-</div>
+  <footer>
+    tap → drift  •  long-press / shift+click → place node  •  WASD / arrows  •  auto-saves constantly • offline progress
+  </footer>
 
-<footer>tap → drift  •  long-press / shift+click → place  •  WASD/arrows  •  auto-saves constantly • offline progress</footer>
+  <div id="sidebar">
+    <div id="clocks"></div>
+  </div>
 
-<div id="sidebar"><div id="clocks"></div></div>
+  <script>
+    // ───────────────────────────────────────────────
+    // Core setup
+    // ───────────────────────────────────────────────
+    const canvas    = document.getElementById('world');
+    const ctx       = canvas.getContext('2d');
+    const resumeMsg = document.getElementById('resume-msg');
+    const wakeStatus = document.getElementById('wake-status');
 
-<script>
-// ───────────────────────────────────────────────
-// Core
-// ───────────────────────────────────────────────
-const canvas = document.getElementById('world');
-const ctx = canvas.getContext('2d');
-const resumeMsg = document.getElementById('resume-msg');
-const wakeStatus = document.getElementById('wake-status');
+    let nodes  = [];
+    let player = { x: 0, y: 0, tx: null, ty: null, trail: [] };
+    let echoes = [];
+    let time   = 0;
+    let lastTime = Date.now();
 
-let nodes = [];
-let player = { x:0, y:0, tx:null, ty:null, trail:[] };
-let echoes = [];
-let time = 0;
-let lastTime = Date.now();
-
-function resize() {
-  canvas.width = window.innerWidth|0;
-  canvas.height = window.innerHeight|0;
-  player.x = canvas.width >> 1;
-  player.y = canvas.height >> 1;
-}
-window.addEventListener('resize', resize);
-resize();
-
-// ───────────────────────────────────────────────
-// Wake Lock – auto + manual + re-request on visibility
-// ───────────────────────────────────────────────
-let wakeLock = null;
-let wakeActive = false;
-const wakeBtn = document.getElementById('wakeToggle');
-
-async function requestWake() {
-  if (wakeActive || !('wakeLock' in navigator)) return;
-  try {
-    wakeLock = await navigator.wakeLock.request('screen');
-    wakeActive = true;
-    wakeBtn.textContent = "Screen Locked (tap to release)";
-    wakeBtn.classList.add('active');
-    wakeStatus.style.display = 'block';
-  } catch (err) {
-    console.warn("Wake Lock failed", err);
-  }
-}
-
-async function releaseWake() {
-  if (!wakeActive) return;
-  try {
-    await wakeLock.release();
-    wakeLock = null;
-  } catch {}
-  wakeActive = false;
-  wakeBtn.textContent = "Keep Screen On";
-  wakeBtn.classList.remove('active');
-  wakeStatus.style.display = 'none';
-}
-
-wakeBtn.addEventListener('click', () => wakeActive ? releaseWake() : requestWake());
-
-// Auto-request on first touch / visibility / movement
-canvas.addEventListener('touchstart', () => requestWake(), {once: true});
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
-    requestWake();
-  } else if (wakeActive) {
-    releaseWake(); // optional – many prefer to release on background
-  }
-});
-
-// ───────────────────────────────────────────────
-// Storage – very aggressive auto-save
-// ───────────────────────────────────────────────
-const KEY = 'timeEchoesAbstract_v2026';
-
-function getState() {
-  return {
-    nodes,
-    player: {x: player.x, y: player.y},
-    lastTime: Date.now(),
-    version: 2026
-  };
-}
-
-function save(force = false) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(getState()));
-  } catch (e) {}
-}
-
-function load() {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return false;
-    const s = JSON.parse(raw);
-    if (s.version !== 2026) return false;
-
-    nodes = Array.isArray(s.nodes) ? s.nodes : [];
-    if (s.player) {
-      player.x = Number.isFinite(s.player.x) ? s.player.x : canvas.width/2;
-      player.y = Number.isFinite(s.player.y) ? s.player.y : canvas.height/2;
+    function resize() {
+      canvas.width  = window.innerWidth | 0;
+      canvas.height = window.innerHeight | 0;
+      player.x = canvas.width >> 1;
+      player.y = canvas.height >> 1;
     }
-    lastTime = Number.isFinite(s.lastTime) ? s.lastTime : Date.now();
-    return true;
-  } catch {
-    return false;
-  }
-}
 
-function simulateOffline() {
-  const dt = (Date.now() - lastTime) / 1000;
-  if (dt < 90) return;
+    window.addEventListener('resize', resize);
+    resize();
 
-  const added = Math.min(40, Math.floor(dt / 25));
-  if (added > 0) {
-    resumeMsg.textContent = `Continued — ≈${added} echoes appeared while away`;
-    resumeMsg.style.display = 'block';
-    setTimeout(() => resumeMsg.style.display = 'none', 9000);
+    // ───────────────────────────────────────────────
+    // Wake Lock (auto + manual)
+    // ───────────────────────────────────────────────
+    let wakeLock  = null;
+    let wakeActive = false;
+    const wakeBtn = document.getElementById('wakeToggle');
 
-    for (let i = 0; i < added; i++) {
-      placeNode(Math.random() * canvas.width, Math.random() * canvas.height, true);
+    async function requestWake() {
+      if (wakeActive || !('wakeLock' in navigator)) return;
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeActive = true;
+        wakeBtn.textContent = "Screen Locked (tap to release)";
+        wakeBtn.classList.add('active');
+        wakeStatus.style.display = 'block';
+      } catch (err) {
+        console.warn("Wake Lock failed:", err);
+      }
     }
-    nodes.forEach(n => n.age += dt * 1.0);
-  }
-  lastTime = Date.now();
-  save(true);
-}
 
-load();
-simulateOffline();
+    async function releaseWake() {
+      if (!wakeActive) return;
+      try {
+        await wakeLock.release();
+        wakeLock = null;
+      } catch {}
+      wakeActive = false;
+      wakeBtn.textContent = "Keep Screen On";
+      wakeBtn.classList.remove('active');
+      wakeStatus.style.display = 'none';
+    }
 
-// Super aggressive auto-save
-let saveInterval = setInterval(save, 4200);
-window.addEventListener('beforeunload', save);
-window.addEventListener('pagehide', save);
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') save(true);
-});
+    wakeBtn.addEventListener('click', () => wakeActive ? releaseWake() : requestWake());
 
-// ───────────────────────────────────────────────
-// Echoes + Nodes + Input + Draw  (mostly unchanged – add your abstract draw here)
-// ───────────────────────────────────────────────
-// ... paste your previous initEchoes / placeNode / updatePlayer / updateEchoes / draw / updateStats here ...
+    // Auto-activate wake lock
+    canvas.addEventListener('touchstart', () => requestWake(), { once: true });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        requestWake();
+      } else if (wakeActive) {
+        releaseWake();
+      }
+    });
 
-// Example minimal placeholder so it runs:
-function placeNode(x, y, silent = false) {
-  const snap = 40;
-  const gx = Math.round(x / snap) * snap;
-  const gy = Math.round(y / snap) * snap;
-  if (nodes.some(n => Math.hypot(n.x - gx, n.y - gy) < 60)) return;
-  nodes.push({ x: gx, y: gy, type: ['liquid','vapor','crystal'][Math.random()*3|0], age: 0, phase: Math.random()*Math.PI*2 });
-  if (!silent) { updateStats?.(); save(); }
-}
+    // ───────────────────────────────────────────────
+    // Persistent storage + offline simulation
+    // ───────────────────────────────────────────────
+    const STORAGE_KEY = 'timeEchoesAbstract_v2026';
 
-function draw() {
-  time += 0.016;
-  ctx.fillStyle = '#0a0014';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-  // your beautiful abstract drawing here...
-  requestAnimationFrame(draw);
-}
+    function getState() {
+      return {
+        nodes,
+        player: { x: player.x, y: player.y },
+        lastTime: Date.now(),
+        version: 2026
+      };
+    }
 
-draw();
-setInterval(() => { /* your updates */ }, 16);
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(getState()));
+      } catch {}
+    }
 
-// File I/O
-document.getElementById('saveFile').onclick = () => {
-  const blob = new Blob([JSON.stringify(getState(), null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `echoes-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-};
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+        const s = JSON.parse(raw);
+        if (s.version !== 2026) return false;
 
-document.getElementById('loadFile').onchange = e => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  const r = new FileReader();
-  r.onload = ev => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      if (data.version !== 2026) throw new Error("Wrong version");
-      nodes = data.nodes || [];
-      if (data.player) {
-        player.x = +data.player.x || canvas.width/2;
-        player.y = +data.player.y || canvas.height/2;
+        nodes = Array.isArray(s.nodes) ? s.nodes : [];
+        if (s.player) {
+          player.x = Number.isFinite(s.player.x) ? s.player.x : canvas.width / 2;
+          player.y = Number.isFinite(s.player.y) ? s.player.y : canvas.height / 2;
+        }
+        lastTime = Number.isFinite(s.lastTime) ? s.lastTime : Date.now();
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function simulateOfflineProgress() {
+      const dt = (Date.now() - lastTime) / 1000;
+      if (dt < 90) return;
+
+      const added = Math.min(40, Math.floor(dt / 25));
+      if (added > 0) {
+        resumeMsg.textContent = `Continued — ≈${added} echoes appeared while away`;
+        resumeMsg.style.display = 'block';
+        setTimeout(() => resumeMsg.style.display = 'none', 9000);
+
+        for (let i = 0; i < added; i++) {
+          placeNode(Math.random() * canvas.width, Math.random() * canvas.height, true);
+        }
+        nodes.forEach(n => { n.age += dt * 1.0; });
       }
       lastTime = Date.now();
       save();
-      alert("Loaded successfully");
-    } catch (err) {
-      alert("Cannot load file\n" + err.message);
     }
-  };
-  r.readAsText(file);
-  e.target.value = '';
-};
 
-</script>
+    load();
+    simulateOfflineProgress();
+
+    // Aggressive auto-save
+    setInterval(save, 4200);
+    window.addEventListener('beforeunload', save);
+    window.addEventListener('pagehide', save);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') save();
+    });
+
+    // ───────────────────────────────────────────────
+    // Placeholder game logic (replace with your real draw/update)
+    // ───────────────────────────────────────────────
+    function placeNode(x, y, silent = false) {
+      const snap = 40;
+      const gx = Math.round(x / snap) * snap;
+      const gy = Math.round(y / snap) * snap;
+
+      if (nodes.some(n => Math.hypot(n.x - gx, n.y - gy) < 60)) return;
+
+      nodes.push({
+        x: gx,
+        y: gy,
+        type: ['liquid', 'vapor', 'crystal'][Math.floor(Math.random() * 3)],
+        age: 0,
+        phase: Math.random() * Math.PI * 2
+      });
+
+      if (!silent) save();
+    }
+
+    function draw() {
+      time += 0.016;
+      ctx.fillStyle = '#0a0014';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // ← Put your beautiful abstract rendering code here
+
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+
+    // File I/O
+    document.getElementById('saveFile').onclick = () => {
+      const blob = new Blob([JSON.stringify(getState(), null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `echoes-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    document.getElementById('loadFile').onchange = e => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          if (data.version !== 2026) throw new Error("Wrong version");
+
+          nodes = data.nodes || [];
+          if (data.player) {
+            player.x = Number.isFinite(data.player.x) ? data.player.x : canvas.width / 2;
+            player.y = Number.isFinite(data.player.y) ? data.player.y : canvas.height / 2;
+          }
+          lastTime = Date.now();
+          save();
+          alert("State loaded successfully");
+        } catch (err) {
+          alert("Cannot load file:\n" + err.message);
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    };
+  </script>
 </body>
 </html>

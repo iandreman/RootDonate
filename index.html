@@ -102,7 +102,7 @@
   <button id="wakeToggle">Keep Screen On</button>
 </div>
 
-<footer>Tap/click → drift • Long-press / shift+click → place node • WASD / arrows • Auto-saves + auto-loads + offline progress</footer>
+<footer>Tap/click → drift • Long-press / shift+click → place node • WASD / arrows • Auto-saves always + offline progress</footer>
 
 <div id="sidebar"><div id="clocks"></div></div>
 
@@ -129,7 +129,7 @@ window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
 // ───────────────────────────────────────────────
-//  Wake Lock (keep screen on)
+//  Wake Lock
 // ───────────────────────────────────────────────
 let wakeLock = null;
 let wakeLockActive = false;
@@ -140,7 +140,7 @@ async function requestWakeLock() {
   try {
     wakeLock = await navigator.wakeLock.request('screen');
     wakeLockActive = true;
-    wakeToggle.textContent = "Screen Always On (tap to disable)";
+    wakeToggle.textContent = "Screen Always On (tap off)";
     wakeToggle.classList.add('active');
   } catch {}
 }
@@ -162,35 +162,43 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ───────────────────────────────────────────────
-//  Persistent Storage (auto-save / auto-load / offline sim)
+//  Persistent Storage – AUTO always on + file backup
 // ───────────────────────────────────────────────
+const STORAGE_KEY = 'timeEchoesState_v1';
+
 function getState() {
   return {
     nodes,
     player: { x: player.x, y: player.y },
-    lastTime: Date.now()
+    lastTime: Date.now(),
+    version: 1
   };
 }
 
-function saveToLocal() {
+function saveToStorage() {
   try {
-    localStorage.setItem('timeEchoesState', JSON.stringify(getState()));
-  } catch (e) { console.warn("Save failed", e); }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(getState()));
+  } catch (e) {
+    console.warn("localStorage save failed", e);
+  }
 }
 
-function loadFromLocal() {
-  const data = localStorage.getItem('timeEchoesState');
-  if (!data) return false;
+function loadFromStorage() {
   try {
-    const s = JSON.parse(data);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    if (s.version !== 1) return false;
+
     nodes = Array.isArray(s.nodes) ? s.nodes : [];
     if (s.player) {
-      player.x = s.player.x ?? canvas.width/2;
-      player.y = s.player.y ?? canvas.height/2;
+      player.x = Number.isFinite(s.player.x) ? s.player.x : canvas.width/2;
+      player.y = Number.isFinite(s.player.y) ? s.player.y : canvas.height/2;
     }
-    lastKnownTime = s.lastTime || Date.now();
+    lastKnownTime = Number.isFinite(s.lastTime) ? s.lastTime : Date.now();
     return true;
-  } catch {
+  } catch (e) {
+    console.warn("loadFromStorage failed", e);
     return false;
   }
 }
@@ -198,38 +206,31 @@ function loadFromLocal() {
 function simulateOfflineProgress() {
   const now = Date.now();
   const secondsAway = (now - lastKnownTime) / 1000;
+  if (secondsAway < 90) return;
 
-  if (secondsAway < 60) return;
-
-  const nodesAdded = Math.min(18, Math.floor(secondsAway / 35)); // ~1 node every ~35 seconds away
+  const nodesAdded = Math.min(24, Math.floor(secondsAway / 32)); // ~1 node / ~32s
   if (nodesAdded > 0) {
-    resumeMsg.textContent = `Resuming — added ~${nodesAdded} echoes while away`;
+    resumeMsg.textContent = `Welcome back — gained ≈${nodesAdded} echoes while away`;
     resumeMsg.style.display = 'block';
-    setTimeout(() => { resumeMsg.style.display = 'none'; }, 6000);
+    setTimeout(() => resumeMsg.style.display = 'none', 7000);
 
     for (let i = 0; i < nodesAdded; i++) {
-      const echo = echoes[Math.floor(Math.random() * echoes.length)];
-      const offset = 280 + Math.random() * 360;
+      const echo = echoes[Math.floor(Math.random() * echoes.length)] ?? echoes[0];
+      const offset = 240 + Math.random() * 420;
       const fx = echo.x + (Math.random() - 0.5) * offset;
       const fy = echo.y + (Math.random() - 0.5) * offset;
-      placeNode(fx, fy, true); // silent
+      placeNode(fx, fy, true);
     }
 
-    // Lightly age nodes
-    nodes.forEach(n => n.age += secondsAway * 0.9);
+    // Gentle age increase
+    nodes.forEach(n => { n.age += secondsAway * 0.85; });
   }
 
   lastKnownTime = now;
-  saveToLocal();
+  saveToStorage();
 }
 
-let saveDebounce = null;
-function requestSave() {
-  clearTimeout(saveDebounce);
-  saveDebounce = setTimeout(saveToLocal, 800);
-}
-
-// File export / import (manual backup)
+// File export / import (manual)
 function downloadAsFile() {
   const state = { ...getState(), timestamp: new Date().toISOString() };
   const blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
@@ -247,39 +248,47 @@ function loadFromFile(file) {
   reader.onload = e => {
     try {
       const data = JSON.parse(e.target.result);
+      if (data.version !== 1) throw new Error("Unsupported version");
+
       nodes = Array.isArray(data.nodes) ? data.nodes : [];
       if (data.player) {
-        player.x = data.player.x ?? canvas.width/2;
-        player.y = data.player.y ?? canvas.height/2;
+        player.x = Number.isFinite(data.player.x) ? data.player.x : canvas.width/2;
+        player.y = Number.isFinite(data.player.y) ? data.player.y : canvas.height/2;
       }
       lastKnownTime = Date.now();
-      saveToLocal();
+      saveToStorage();
       updateStats();
-      alert("Game loaded from file!");
-    } catch {
-      alert("Invalid save file");
+      alert("Loaded from file successfully");
+    } catch (err) {
+      alert("Invalid or incompatible save file\n" + err.message);
     }
   };
   reader.readAsText(file);
 }
 
-// Initial auto-load + offline progress
-const hadSave = loadFromLocal();
+// Auto-load + offline progress on start
+loadFromStorage();
 simulateOfflineProgress();
 
-// Extra save hooks
-window.addEventListener('beforeunload', saveToLocal);
-window.addEventListener('pagehide', saveToLocal);
+// Aggressive auto-save triggers
+let saveTimer = null;
+function debouncedSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveToStorage, 2200);
+}
+
+window.addEventListener('beforeunload', saveToStorage);
+window.addEventListener('pagehide', saveToStorage);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
-    saveToLocal();
+    saveToStorage();
   } else {
     simulateOfflineProgress();
   }
 });
 
 // ───────────────────────────────────────────────
-//  Echoes & Nodes
+//  Echoes & Nodes (unchanged logic)
 // ───────────────────────────────────────────────
 function initEchoes() {
   echoes = [
@@ -301,12 +310,12 @@ function placeNode(mx, my, silent = false) {
 
   if (!silent) {
     updateStats();
-    requestSave();
+    debouncedSave();
   }
 }
 
 // ───────────────────────────────────────────────
-//  Input handling
+//  Input
 // ───────────────────────────────────────────────
 const keys = {};
 window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
@@ -340,7 +349,7 @@ canvas.addEventListener('click', e => {
 });
 
 // ───────────────────────────────────────────────
-//  Game loop pieces
+//  Update / Draw loop pieces
 // ───────────────────────────────────────────────
 function updatePlayer() {
   let speed = 2.8, dx = 0, dy = 0;
@@ -367,7 +376,7 @@ function updatePlayer() {
   player.trail.push({x:player.x, y:player.y});
   if (player.trail.length > 40) player.trail.shift();
 
-  requestSave(); // frequent movement → save often
+  debouncedSave(); // movement → frequent save
 }
 
 function updateEchoes() {
@@ -392,6 +401,9 @@ function updateEchoes() {
   });
 }
 
+// ───────────────────────────────────────────────
+//  Drawing & stats (unchanged core logic)
+// ───────────────────────────────────────────────
 function draw() {
   const t = Date.now() * 0.0003;
   const hour = new Date().getHours();
@@ -409,7 +421,7 @@ function draw() {
   ctx.globalAlpha = 1;
 
   nodes.forEach(n => {
-    const age = n.age++ * 0.0008;
+    const age = n.age * 0.0008;
     const pulse = Math.sin(age*4 + globalHue*0.1) * 0.5 + 0.5;
 
     ctx.save();
@@ -519,21 +531,21 @@ async function initClocks() {
     card.className = 'clock-card';
     card.innerHTML = `
       <div class="city">${loc.name}</div>
-      <div class="time" id="t-${loc.tz}">--:--:--</div>
-      <div class="date" id="d-${loc.tz}">---</div>
+      <div class="time" id="t-${loc.tz.replace(/\//g,'_')}">--:--:--</div>
+      <div class="date" id="d-${loc.tz.replace(/\//g,'_')}">---</div>
       <div class="weather">
-        <span class="temp" id="tmp-${loc.tz}">— °C</span> •
-        <span id="c-${loc.tz}">Loading...</span>
+        <span class="temp" id="tmp-${loc.tz.replace(/\//g,'_')}">— °C</span> •
+        <span id="c-${loc.tz.replace(/\//g,'_')}">Loading...</span>
       </div>`;
     div.appendChild(card);
 
     const c = await getCoords(loc.search);
     if (c) {
       const w = await getWeather(c.lat, c.lon);
-      document.getElementById(`tmp-${loc.tz}`).textContent = `${w.t} °C`;
-      document.getElementById(`c-${loc.tz}`).textContent = w.c;
+      document.getElementById(`tmp-${loc.tz.replace(/\//g,'_')}`).textContent = `${w.t} °C`;
+      document.getElementById(`c-${loc.tz.replace(/\//g,'_')}`).textContent = w.c;
     } else {
-      document.getElementById(`c-${loc.tz}`).textContent = "n/a";
+      document.getElementById(`c-${loc.tz.replace(/\//g,'_')}`).textContent = "n/a";
     }
   }
 }
@@ -542,29 +554,30 @@ function updateClocks() {
   const now = new Date();
   locations.forEach(l => {
     const tz = l.tz === "UTC" ? "UTC" : l.tz;
-    document.getElementById(`t-${l.tz}`).textContent =
+    const safeId = l.tz.replace(/\//g,'_');
+    document.getElementById(`t-${safeId}`).textContent =
       new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now);
-    document.getElementById(`d-${l.tz}`).textContent =
+    document.getElementById(`d-${safeId}`).textContent =
       new Intl.DateTimeFormat('en-GB',{timeZone:tz,weekday:'short',month:'short',day:'numeric'}).format(now);
   });
 }
 
 // ───────────────────────────────────────────────
-//  Start everything
+//  Start
 // ───────────────────────────────────────────────
 initClocks();
 setInterval(updateClocks, 1000);
-setInterval(initClocks, 15*60*1000);
+setInterval(initClocks, 15*60*1000); // refresh weather coords ~every 15 min
 
 setInterval(updatePlayer, 1000/75);
 setInterval(updateEchoes, 1000/30);
 setInterval(updateStats, 3000);
-setInterval(requestSave, 12000); // safety net
+setInterval(debouncedSave, 8000); // safety net
 
 draw();
 updateStats();
 
-// Manual save/load buttons
+// Buttons
 document.getElementById('saveFile').onclick = downloadAsFile;
 document.getElementById('loadFile').onchange = e => {
   loadFromFile(e.target.files[0]);

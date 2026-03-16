@@ -2,363 +2,385 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🌍 Time Cities – MMO-lite Builder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>🌍 Time Cities – Browser City Builder</title>
   <style>
     body {
       font-family: system-ui, -apple-system, sans-serif;
       background: #0f0f1a;
       color: #e0e0ff;
       margin: 0;
-      padding: 20px;
-      min-height: 100vh;
+      padding: 0;
+      height: 100vh;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      align-items: center;
-    }
-    .container {
-      max-width: 1400px;
-      width: 100%;
-      display: flex;
-      gap: 2rem;
     }
     h1 {
       text-align: center;
-      font-size: 2.6rem;
-      margin: 0.4em 0 1em;
+      font-size: clamp(1.8rem, 5vw, 2.4rem);
+      margin: 0.6rem 0;
       color: #a5b4fc;
-      text-shadow: 0 0 20px rgba(165,180,252,0.4);
+      text-shadow: 0 0 16px rgba(165,180,252,0.5);
+      z-index: 10;
     }
     .stats {
       text-align: center;
-      margin-bottom: 1rem;
-      font-size: 1.3rem;
+      font-size: clamp(1rem, 3vw, 1.2rem);
+      margin: 0.4rem 0;
+      z-index: 10;
     }
     .stats span {
-      margin: 0 1.2rem;
-      padding: 0.4rem 1rem;
-      background: rgba(60,60,100,0.4);
-      border-radius: 12px;
-    }
-    #world-container {
-      flex: 3;
-      position: relative;
+      margin: 0 0.8rem;
+      padding: 0.3rem 0.9rem;
+      background: rgba(60,60,100,0.5);
+      border-radius: 10px;
+      backdrop-filter: blur(4px);
     }
     #world {
-      width: 100%;
-      height: 700px;
-      background: #1a1a38;
-      border: 2px solid #4050aa;
-      border-radius: 12px;
-      box-shadow: 0 10px 40px #000c;
+      flex: 1;
+      background: #0d1426;
+      touch-action: none;
     }
     #sidebar {
-      flex: 1;
-      min-width: 340px;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-    .clock-grid {
-      display: grid;
-      gap: 1.2rem;
+      position: absolute;
+      right: 12px;
+      top: 80px;
+      width: 320px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 12px;
+      background: rgba(20,20,50,0.7);
+      border-radius: 12px;
+      border: 1px solid rgba(100,120,255,0.25);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px #0008;
+      z-index: 5;
     }
     .clock-card {
-      background: rgba(30, 30, 60, 0.65);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(100, 120, 255, 0.2);
-      border-radius: 14px;
-      padding: 1.3rem;
-      box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+      background: rgba(30,30,60,0.6);
+      border: 1px solid rgba(100,120,255,0.2);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
     }
-    .clock-card:hover { transform: translateY(-4px); }
-    .city { font-size: 1.3rem; font-weight: 600; color: #c7d2fe; margin-bottom: 0.3rem; }
-    .time { font-size: 2.4rem; letter-spacing: 2px; color: #e0e0ff; }
-    .date  { font-size: 0.95rem; opacity: 0.8; color: #a0a0ff; }
-    .weather { padding-top: 0.6rem; border-top: 1px solid rgba(160,180,255,0.15); font-size: 1rem; }
-    .temp     { font-size: 1.4rem; color: #ffe066; }
-    .condition { color: #d0d0ff; }
-    .feels    { font-size: 0.9rem; opacity: 0.9; color: #b0b0ff; }
-
+    .city { font-size: 1.2rem; font-weight: 600; color: #c7d2fe; }
+    .time { font-size: 2.1rem; letter-spacing: 1px; }
+    .date  { font-size: 0.9rem; opacity: 0.8; }
+    .weather { margin-top: 0.5rem; font-size: 0.95rem; }
+    .temp { color: #ffe066; font-weight: 500; }
     footer {
-      margin-top: 2rem;
-      opacity: 0.6;
-      font-size: 0.9rem;
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8rem;
+      opacity: 0.65;
       text-align: center;
+      pointer-events: none;
+    }
+    @media (max-width: 800px) {
+      #sidebar { width: 94%; right: 3%; top: auto; bottom: 60px; max-height: 40vh; }
     }
   </style>
 </head>
 <body>
 
-<h1>🌍 Time Cities – MMO-lite Builder</h1>
-
+<h1>🌍 Time Cities</h1>
 <div class="stats">
-  <span>Population: <b id="pop">120</b></span>
-  <span>Buildings: <b id="builds">0</b></span>
-  <span>Happiness: <b id="happy">72</b>%</span>
+  <span>Population: <b id="pop">—</b></span>
+  <span>Buildings: <b id="builds">—</b></span>
+  <span>Happiness: <b id="happy">—</b>%</span>
 </div>
 
-<div class="container">
-  <div id="world-container">
-    <canvas id="world"></canvas>
-  </div>
+<canvas id="world"></canvas>
 
-  <div id="sidebar">
-    <div class="clock-grid" id="clocks"></div>
-  </div>
+<div id="sidebar">
+  <div id="clocks"></div>
 </div>
 
-<footer>
-  Simulated multiplayer • Real global clocks + weather • Click to build / move • Arrow keys or WASD to walk
-</footer>
+<footer>Click/tap to move • Shift+click / long press to build • WASD / arrows • Progress saved in browser</footer>
 
 <script>
-// ── Game World ───────────────────────────────────────────────────────
+// ── Core Game ────────────────────────────────────────────────────────
 
 const canvas = document.getElementById('world');
 const ctx = canvas.getContext('2d');
-canvas.width = 1000;
-canvas.height = 700;
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
 
 const TILE = 40;
-const COLS = Math.floor(canvas.width / TILE);
-const ROWS = Math.floor(canvas.height / TILE);
+const COLS = () => Math.floor(canvas.width / TILE) + 2;
+const ROWS = () => Math.floor(canvas.height / TILE) + 2;
 
-// Shared buildings (everyone sees them)
 let buildings = [];
-
-// Player (you)
-let player = { x: COLS/2 * TILE, y: ROWS/2 * TILE, color: '#00aaff', name: 'You' };
-
-// Fake other players (MMO simulation)
+let player = { x: canvas.width/2, y: canvas.height/2, tx: null, ty: null, color: '#40c0ff', name: 'You' };
 let npcs = [
-  { x: 200, y: 300, color: '#ff6b6b', name: 'Alex', targetX: 0, targetY: 0, buildingTimer: 0 },
-  { x: 600, y: 400, color: '#ffaa00', name: 'Sara', targetX: 0, targetY: 0, buildingTimer: 0 },
-  { x: 800, y: 150, color: '#aa00ff', name: 'Kai',  targetX: 0, targetY: 0, buildingTimer: 0 }
+  {x:300,y:300,color:'#ff7070',name:'Alex',tx:null,ty:null,timer:0},
+  {x:700,y:500,color:'#ffaa60',name:'Sara',tx:null,ty:null,timer:0},
+  {x:canvas.width-300,y:200,color:'#c080ff',name:'Kai',tx:null,ty:null,timer:0}
 ];
 
-// Stats
-let population = 120;
-let happiness = 72;
+let population = 0, happiness = 0;
 
-function randomBuildingType() {
-  const types = ['house', 'factory', 'park'];
-  return types[Math.floor(Math.random()*types.length)];
+// ── Save / Load ──────────────────────────────────────────────────────
+
+function saveGame() {
+  localStorage.setItem('timeCitiesSave', JSON.stringify({buildings, player: {x:player.x, y:player.y}}));
 }
 
-function addBuilding(x, y, type = null) {
-  const gridX = Math.floor(x / TILE);
-  const gridY = Math.floor(y / TILE);
-  if (gridX < 0 || gridX >= COLS || gridY < 0 || gridY >= ROWS) return;
-  const exists = buildings.some(b => b.gx === gridX && b.gy === gridY);
-  if (!exists) {
-    buildings.push({
-      gx: gridX, gy: gridY,
-      type: type || randomBuildingType(),
-      age: 0
-    });
-    updateStats();
+function loadGame() {
+  const data = localStorage.getItem('timeCitiesSave');
+  if (data) {
+    const s = JSON.parse(data);
+    buildings = s.buildings || [];
+    if (s.player) { player.x = s.player.x; player.y = s.player.y; }
   }
 }
+loadGame();
 
-// Click = build or move
-canvas.addEventListener('click', e => {
-  const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
-  player.targetX = Math.floor(mx / TILE) * TILE + TILE/2;
-  player.targetY = Math.floor(my / TILE) * TILE + TILE/2;
-  // also build if shift pressed
-  if (e.shiftKey) addBuilding(mx, my);
+// ── Building & Interaction ───────────────────────────────────────────
+
+function addBuilding(mx, my, forcedType = null) {
+  const gx = Math.floor(mx / TILE);
+  const gy = Math.floor(my / TILE);
+  if (buildings.some(b => b.gx === gx && b.gy === gy)) return;
+  const type = forcedType || ['house','factory','park'][Math.floor(Math.random()*3)];
+  buildings.push({gx, gy, type});
+  // simple sound
+  try { new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=").play(); } catch(e){}
+  saveGame();
+  updateStats();
+}
+
+// ── Controls ─────────────────────────────────────────────────────────
+
+const keys = {};
+window.addEventListener('keydown', e=>keys[e.key.toLowerCase()]=true);
+window.addEventListener('keyup',   e=>keys[e.key.toLowerCase()]=false);
+
+let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+canvas.addEventListener('touchstart', e=>{
+  e.preventDefault();
+  const t = e.touches[0];
+  touchStartX = t.clientX;
+  touchStartY = t.clientY;
+  touchStartTime = Date.now();
+});
+canvas.addEventListener('touchend', e=>{
+  e.preventDefault();
+  const t = e.changedTouches[0];
+  const dur = Date.now() - touchStartTime;
+  const dx = t.clientX - touchStartX;
+  const dy = t.clientY - touchStartY;
+  if (dur > 400 || Math.hypot(dx,dy) < 20) {
+    // long press or tap without move → build
+    addBuilding(t.clientX, t.clientY);
+  } else {
+    // short swipe/tap → move
+    player.tx = t.clientX;
+    player.ty = t.clientY;
+  }
+});
+canvas.addEventListener('click', e=>{
+  if (e.shiftKey) {
+    addBuilding(e.clientX, e.clientY);
+  } else {
+    player.tx = e.clientX;
+    player.ty = e.clientY;
+  }
 });
 
-// Keyboard movement
-const keys = {};
-window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
-window.addEventListener('keyup',   e => keys[e.key.toLowerCase()] = false);
+// ── Update & Draw ────────────────────────────────────────────────────
 
-function updatePlayer() {
-  let speed = 3;
-  if (keys['arrowup']    || keys['w']) player.y -= speed;
-  if (keys['arrowdown']  || keys['s']) player.y += speed;
-  if (keys['arrowleft']  || keys['a']) player.x -= speed;
-  if (keys['arrowright'] || keys['d']) player.x += speed;
+function updateMovement() {
+  let speed = 3.2;
+  let dx=0, dy=0;
+  if (keys['w']||keys['arrowup'   ]) dy -= speed;
+  if (keys['s']||keys['arrowdown' ]) dy += speed;
+  if (keys['a']||keys['arrowleft' ]) dx -= speed;
+  if (keys['d']||keys['arrowright']) dx += speed;
 
-  // keep in bounds
-  player.x = Math.max(20, Math.min(canvas.width-20, player.x));
-  player.y = Math.max(20, Math.min(canvas.height-20, player.y));
+  if (player.tx != null && player.ty != null) {
+    const pdx = player.tx - player.x;
+    const pdy = player.ty - player.y;
+    const dist = Math.hypot(pdx, pdy);
+    if (dist > 8) {
+      player.x += (pdx / dist) * speed * 1.4;
+      player.y += (pdy / dist) * speed * 1.4;
+    } else {
+      player.tx = player.ty = null;
+    }
+  }
+
+  player.x += dx;
+  player.y += dy;
+  player.x = Math.max(30, Math.min(canvas.width-30, player.x));
+  player.y = Math.max(30, Math.min(canvas.height-30, player.y));
 }
 
 function updateNPCs() {
-  npcs.forEach(npc => {
-    // random wander
-    if (Math.random() < 0.01) {
-      npc.targetX = Math.random() * canvas.width;
-      npc.targetY = Math.random() * canvas.height;
+  npcs.forEach(n => {
+    if (Math.random() < 0.008) {
+      n.tx = Math.random() * canvas.width;
+      n.ty = Math.random() * canvas.height;
     }
-    // move toward target
-    if (npc.targetX || npc.targetY) {
-      const dx = npc.targetX - npc.x;
-      const dy = npc.targetY - npc.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist > 5) {
-        npc.x += (dx / dist) * 1.8;
-        npc.y += (dy / dist) * 1.8;
-      }
+    if (n.tx != null) {
+      const dx = n.tx - n.x, dy = n.ty - n.y;
+      const d = Math.hypot(dx, dy);
+      if (d > 6) {
+        n.x += dx/d * 1.6;
+        n.y += dy/d * 1.6;
+      } else n.tx = n.ty = null;
     }
-    // occasionally build
-    npc.buildingTimer++;
-    if (npc.buildingTimer > 300 + Math.random()*400) {
-      addBuilding(npc.x, npc.y);
-      npc.buildingTimer = 0;
+    n.timer++;
+    if (n.timer > 280 + Math.random()*600) {
+      addBuilding(n.x, n.y);
+      n.timer = 0;
     }
   });
 }
 
 function draw() {
-  ctx.fillStyle = '#1a1a38';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const hour = new Date().getHours();
+  const night = hour < 7 || hour > 20;
+  ctx.fillStyle = night ? '#0a0e1f' : '#1a2038';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // grid lines (subtle)
-  ctx.strokeStyle = '#30408033';
-  for (let i = 0; i <= COLS; i++) {
-    ctx.beginPath(); ctx.moveTo(i*TILE, 0); ctx.lineTo(i*TILE, canvas.height); ctx.stroke();
+  // faint grid
+  ctx.strokeStyle = night ? '#20204040' : '#30406030';
+  for (let x=0; x<canvas.width; x+=TILE) {
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke();
   }
-  for (let i = 0; i <= ROWS; i++) {
-    ctx.beginPath(); ctx.moveTo(0, i*TILE); ctx.lineTo(canvas.width, i*TILE); ctx.stroke();
+  for (let y=0; y<canvas.height; y+=TILE) {
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke();
   }
 
   // buildings
   buildings.forEach(b => {
-    const x = b.gx * TILE;
-    const y = b.gy * TILE;
-    ctx.fillStyle = b.type === 'house' ? '#5a4a8a' : b.type === 'factory' ? '#8a4a3a' : '#3a7a4a';
-    ctx.fillRect(x+2, y+2, TILE-4, TILE-4);
-    ctx.fillStyle = 'white';
-    ctx.font = '24px Arial';
-    ctx.fillText({house:'🏠', factory:'🏭', park:'🌳'}[b.type] || '?', x+8, y+30);
+    const x = b.gx * TILE, y = b.gy * TILE;
+    ctx.shadowColor = 'black';
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = b.type==='house'?'#5a4a8a88':b.type==='factory'?'#8a4a3a88':'#3a7a4a88';
+    ctx.fillRect(x+4, y+4, TILE-8, TILE-8);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = night ? '#e0e0ff' : 'white';
+    ctx.font = '28px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText({house:'🏠',factory:'🏭',park:'🌳'}[b.type]||'?', x+TILE/2, y+TILE*0.75);
   });
 
-  // player & npcs
+  // entities
   [player, ...npcs].forEach(p => {
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 16;
     ctx.fillStyle = p.color;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 16, 0, Math.PI*2);
+    ctx.arc(p.x, p.y, 18, 0, Math.PI*2);
     ctx.fill();
+    ctx.shadowBlur = 0;
     ctx.fillStyle = 'white';
-    ctx.font = '12px Arial';
+    ctx.font = '13px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(p.name, p.x, p.y - 24);
+    ctx.fillText(p.name, p.x, p.y-28);
   });
 
   requestAnimationFrame(draw);
 }
 
 function updateStats() {
-  const houses   = buildings.filter(b => b.type === 'house').length;
-  const factories = buildings.filter(b => b.type === 'factory').length;
-  const parks    = buildings.filter(b => b.type === 'park').length;
-
-  population = houses * 5 + Math.floor(factories * 2) + 50;
-  happiness  = Math.min(100, 50 + parks * 10 - factories * 4 + houses * 2);
-
-  document.getElementById('pop').textContent   = Math.round(population);
+  const h = buildings.filter(b=>b.type==='house').length;
+  const f = buildings.filter(b=>b.type==='factory').length;
+  const p = buildings.filter(b=>b.type==='park').length;
+  population = Math.round(h*5 + f*1.8 + 60 + Math.random()*4);
+  happiness  = Math.min(100, Math.round(45 + p*12 - f*5 + h*1.5));
+  document.getElementById('pop').textContent   = population;
   document.getElementById('builds').textContent = buildings.length;
-  document.getElementById('happy').textContent = Math.round(happiness);
+  document.getElementById('happy').textContent = happiness;
 }
 
-setInterval(updatePlayer, 1000/60);
-setInterval(updateNPCs, 1000/30);
-setInterval(updateStats, 4000);
+setInterval(updateMovement, 1000/75);
+setInterval(updateNPCs,   1000/20);
+setInterval(updateStats,  3000);
+setInterval(saveGame,     15000); // auto-save every 15s
 draw();
 updateStats();
 
-// ── Global Clocks + Weather (your original code, slimmed) ─────────────
+// ── Clocks + Weather (kept almost original) ──────────────────────────
 
 const locations = [
-  { tz: "UTC",               name: "UTC",               search: "UTC" },
-  { tz: "America/New_York",  name: "New York",         search: "New York" },
-  { tz: "Europe/London",     name: "London",           search: "London" },
-  { tz: "Europe/Berlin",     name: "Berlin",           search: "Berlin" },
-  { tz: "Asia/Tokyo",        name: "Tokyo",            search: "Tokyo" },
-  { tz: "Australia/Sydney",  name: "Sydney",           search: "Sydney" }
+  {tz:"UTC",name:"UTC",search:"UTC"},
+  {tz:"America/New_York",name:"New York",search:"New York"},
+  {tz:"Europe/London",name:"London",search:"London"},
+  {tz:"Europe/Berlin",name:"Berlin",search:"Berlin"},
+  {tz:"Asia/Tokyo",name:"Tokyo",search:"Tokyo"},
+  {tz:"Australia/Sydney",name:"Sydney",search:"Sydney"}
 ];
 
-let coordsCache = {};
-
-async function getCoords(name) {
-  if (coordsCache[name]) return coordsCache[name];
+async function getCoords(n) {
   try {
-    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1`);
-    const data = await res.json();
-    if (data.results?.[0]) {
-      coordsCache[name] = { lat: data.results[0].latitude, lon: data.results[0].longitude };
-      return coordsCache[name];
-    }
-  } catch {}
-  return null;
+    const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(n)}&count=1`);
+    const d = await r.json();
+    return d.results?.[0] ? {lat:d.results[0].latitude, lon:d.results[0].longitude} : null;
+  } catch { return null; }
 }
 
-async function fetchWeather(lat, lon) {
+async function getWeather(lat,lon) {
   try {
-    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`);
-    const data = await res.json();
-    if (data.current) {
-      const code = data.current.weather_code;
-      const temp = data.current.temperature_2m.toFixed(1);
-      let cond = {0:"Clear",1:"Mainly clear",2:"Partly cloudy",3:"Overcast",45:"Fog",61:"Rain",71:"Snow",95:"Thunder"}[code] || "—";
-      return { temp, cond };
-    }
-  } catch {}
-  return { temp: "—", cond: "—" };
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`);
+    const d = await r.json();
+    if (!d.current) return {t:"—",c:"—"};
+    const code = d.current.weather_code;
+    const map = {0:"Clear",1:"Mostly clear",2:"Partly cloudy",3:"Overcast",45:"Fog",61:"Rain",71:"Snow",95:"Thunder"};
+    return {t:d.current.temperature_2m.toFixed(1), c:map[code]||"Unknown"};
+  } catch { return {t:"—",c:"—"}; }
 }
 
 async function initClocks() {
-  const clocksDiv = document.getElementById('clocks');
+  const div = document.getElementById('clocks');
   for (const loc of locations) {
     const card = document.createElement('div');
     card.className = 'clock-card';
     card.innerHTML = `
       <div class="city">${loc.name}</div>
-      <div class="time" id="t-${loc.tz}">-</div>
-      <div class="date" id="d-${loc.tz}">-</div>
+      <div class="time" id="t-${loc.tz}">--:--:--</div>
+      <div class="date" id="d-${loc.tz}">---</div>
       <div class="weather">
-        <span class="temp" id="tmp-${loc.tz}">— °C</span><br>
-        <span class="condition" id="c-${loc.tz}">Loading...</span>
-      </div>
-    `;
-    clocksDiv.appendChild(card);
+        <span class="temp" id="tmp-${loc.tz}">— °C</span> •
+        <span id="c-${loc.tz}">Loading...</span>
+      </div>`;
+    div.appendChild(card);
 
-    const coords = await getCoords(loc.search);
-    if (coords) {
-      const w = await fetchWeather(coords.lat, coords.lon);
-      document.getElementById(`tmp-${loc.tz}`).textContent = `${w.temp} °C`;
-      document.getElementById(`c-${loc.tz}`).textContent = w.cond;
+    const c = await getCoords(loc.search);
+    if (c) {
+      const w = await getWeather(c.lat, c.lon);
+      document.getElementById(`tmp-${loc.tz}`).textContent = `${w.t} °C`;
+      document.getElementById(`c-${loc.tz}`).textContent = w.c;
     } else {
       document.getElementById(`c-${loc.tz}`).textContent = "n/a";
     }
   }
 }
 
-function updateTimes() {
+function updateClocks() {
   const now = new Date();
-  locations.forEach(loc => {
-    const time = new Intl.DateTimeFormat('en-US', {
-      timeZone: loc.tz === "UTC" ? "UTC" : loc.tz,
-      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-    }).format(now);
-    const date = new Intl.DateTimeFormat('en-GB', {
-      timeZone: loc.tz === "UTC" ? "UTC" : loc.tz,
-      weekday: 'short', month: 'short', day: 'numeric'
-    }).format(now);
-    document.getElementById(`t-${loc.tz}`).textContent = time;
-    document.getElementById(`d-${loc.tz}`).textContent = date;
+  locations.forEach(l => {
+    const tz = l.tz === "UTC" ? "UTC" : l.tz;
+    document.getElementById(`t-${l.tz}`).textContent =
+      new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now);
+    document.getElementById(`d-${l.tz}`).textContent =
+      new Intl.DateTimeFormat('en-GB',{timeZone:tz,weekday:'short',month:'short',day:'numeric'}).format(now);
   });
 }
 
 initClocks();
-setInterval(updateTimes, 1000);
-setInterval(initClocks, 10*60*1000); // refresh weather rarely
+setInterval(updateClocks, 1000);
+setInterval(initClocks, 12*60*1000); // weather refresh ~12 min
 
 </script>
 </body>

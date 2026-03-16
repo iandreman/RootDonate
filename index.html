@@ -4,11 +4,30 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Time Echoes – Abstract Temporal Field</title>
+
+  <!-- Helps with PWA / fullscreen feeling -->
+  <meta name="theme-color" content="#050814">
+  <link rel="manifest" href="data:application/manifest+json,{
+    &quot;name&quot;: &quot;Time Echoes&quot;,
+    &quot;short_name&quot;: &quot;TimeEcho&quot;,
+    &quot;start_url&quot;: &quot;.&quot;,
+    &quot;display&quot;: &quot;standalone&quot;,
+    &quot;background_color&quot;: &quot;#000814&quot;,
+    &quot;theme_color&quot;: &quot;#6080ff&quot;
+  }">
+
   <style>
+    :root {
+      --bg-dark: #050814;
+      --accent: #6080ff;
+      --text: #d0d8ff;
+      --card-bg: rgba(20,25,60,0.65);
+    }
+
     body {
       font-family: system-ui, -apple-system, sans-serif;
-      background: #050814;
-      color: #d0d8ff;
+      background: var(--bg-dark);
+      color: var(--text);
       margin: 0;
       padding: 0;
       height: 100vh;
@@ -16,80 +35,146 @@
       display: flex;
       flex-direction: column;
     }
+
     h1 {
       text-align: center;
       font-size: clamp(1.9rem, 5vw, 2.5rem);
-      margin: 0.7rem 0 0.3rem;
+      margin: 0.6rem 0 0.2rem;
       color: #a0b4ff;
       text-shadow: 0 0 20px #6080ff80;
-      letter-spacing: 2px;
+      letter-spacing: 1.8px;
       z-index: 10;
     }
+
     .stats {
       text-align: center;
-      font-size: clamp(1rem, 3.2vw, 1.25rem);
-      margin: 0.3rem 0 1rem;
+      font-size: clamp(0.95rem, 3.2vw, 1.2rem);
+      margin: 0.4rem 0 1.1rem;
       z-index: 10;
     }
+
     .stats span {
-      margin: 0 1rem;
-      padding: 0.4rem 1rem;
-      background: rgba(40,50,100,0.45);
+      margin: 0 0.9rem;
+      padding: 0.35rem 0.9rem;
+      background: rgba(40,50,100,0.5);
       border-radius: 12px;
       backdrop-filter: blur(6px);
       border: 1px solid #6080ff30;
     }
+
     #world {
       flex: 1;
       background: #000814;
       touch-action: none;
     }
+
     #sidebar {
       position: absolute;
       right: 16px;
-      top: 90px;
+      top: 86px;
       width: 340px;
-      max-height: 78vh;
+      max-height: 76vh;
       overflow-y: auto;
-      padding: 14px;
-      background: rgba(10,15,40,0.75);
+      padding: 12px;
+      background: rgba(10,15,40,0.78);
       border-radius: 14px;
       border: 1px solid #5060ff40;
       backdrop-filter: blur(12px);
       box-shadow: 0 10px 40px #000c;
       z-index: 5;
     }
+
     .clock-card {
-      background: rgba(20,25,60,0.65);
+      background: var(--card-bg);
       border: 1px solid #7080ff30;
       border-radius: 12px;
-      padding: 1.1rem;
-      margin-bottom: 1.1rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
     }
-    .city { font-size: 1.25rem; font-weight: 600; color: #c0d0ff; margin-bottom: 0.2rem; }
-    .time { font-size: 2.3rem; letter-spacing: 3px; font-weight: 300; }
-    .date  { font-size: 0.95rem; opacity: 0.75; }
-    .weather { margin-top: 0.6rem; font-size: 1rem; }
+
+    .city { font-size: 1.2rem; font-weight: 600; color: #c0d0ff; margin-bottom: 0.15rem; }
+    .time { font-size: 2.2rem; letter-spacing: 2.8px; font-weight: 300; }
+    .date { font-size: 0.92rem; opacity: 0.78; }
+    .weather { margin-top: 0.5rem; font-size: 0.96rem; }
     .temp { color: #ffd070; font-weight: 500; }
+
     footer {
       position: absolute;
       bottom: 10px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 0.85rem;
-      opacity: 0.7;
+      font-size: 0.82rem;
+      opacity: 0.68;
       pointer-events: none;
       text-align: center;
-      max-width: 90%;
+      max-width: 92%;
     }
+
+    .save-load, .wake-control {
+      position: absolute;
+      z-index: 15;
+      display: flex;
+      gap: 10px;
+    }
+
+    .save-load {
+      top: 12px;
+      right: 16px;
+    }
+
+    .wake-control {
+      top: 12px;
+      left: 16px;
+    }
+
+    button, label {
+      padding: 8px 14px;
+      background: rgba(60,80,160,0.7);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      backdrop-filter: blur(4px);
+    }
+
+    button:hover, label:hover {
+      background: rgba(80,100,180,0.9);
+    }
+
+    button.active {
+      background: rgba(60,140,80,0.9) !important;
+    }
+
+    input[type="file"] { display: none; }
+
     @media (max-width: 820px) {
-      #sidebar { width: 92%; right: 4%; top: auto; bottom: 70px; max-height: 45vh; }
+      #sidebar {
+        width: 92%;
+        right: 4%;
+        top: auto;
+        bottom: 68px;
+        max-height: 42vh;
+      }
+      .save-load, .wake-control {
+        top: auto;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        flex-direction: row;
+        gap: 12px;
+        width: auto;
+        justify-content: center;
+      }
+      .wake-control { left: 50%; }
+      .save-load { bottom: 54px; }
     }
   </style>
 </head>
 <body>
 
 <h1>Time Echoes</h1>
+
 <div class="stats">
   <span>Echoes: <b id="pop">—</b></span>
   <span>Nodes: <b id="builds">—</b></span>
@@ -98,99 +183,241 @@
 
 <canvas id="world"></canvas>
 
-<footer>Tap/click to drift • Long-press / shift+click to place node • WASD/arrows • Saved in browser/local file</footer>
+<div class="save-load">
+  <button id="saveFile">Save to file</button>
+  <label for="loadFile">Load file</label>
+  <input type="file" id="loadFile" accept=".json">
+</div>
+
+<div class="wake-control">
+  <button id="wakeToggle">Keep Screen On</button>
+</div>
+
+<footer>Tap/click → drift • Long-press / shift+click → place node • WASD / arrows • Auto-saves to browser</footer>
 
 <div id="sidebar">
   <div id="clocks"></div>
 </div>
 
 <script>
-// ── Temporal Field ───────────────────────────────────────────────────
+// ───────────────────────────────────────────────
+//  Core Setup
+// ───────────────────────────────────────────────
 
 const canvas = document.getElementById('world');
 const ctx = canvas.getContext('2d');
 
-function resize() {
+let nodes = [];
+let player = { x: 0, y: 0, tx: null, ty: null, trail: [] };
+let echoes = [];
+
+function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resize);
-resize();
-
-let nodes = [];
-let player = { x: canvas.width/2, y: canvas.height/2, tx:null, ty:null, trail:[] };
-let echoes = [
-  {x:canvas.width*0.3, y:canvas.height*0.4, color:'#ff80a0', tx:null, ty:null, timer:0},
-  {x:canvas.width*0.7, y:canvas.height*0.6, color:'#ffd080', tx:null, ty:null, timer:0},
-  {x:canvas.width*0.6, y:canvas.height*0.2, color:'#c0a0ff', tx:null, ty:null, timer:0}
-];
-
-// ── Save / Load ──────────────────────────────────────────────────────
-
-function saveField() {
-  localStorage.setItem('timeEchoes', JSON.stringify({nodes, player:{x:player.x,y:player.y}}));
+  player.x = canvas.width / 2;
+  player.y = canvas.height / 2;
 }
 
-function loadField() {
-  const data = localStorage.getItem('timeEchoes');
-  if (data) {
-    const s = JSON.parse(data);
-    nodes = s.nodes || [];
-    if (s.player) { player.x = s.player.x; player.y = s.player.y; }
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// ───────────────────────────────────────────────
+//  Screen Wake Lock (keep screen always on)
+// ───────────────────────────────────────────────
+
+let wakeLock = null;
+let wakeLockActive = false;
+const wakeToggle = document.getElementById('wakeToggle');
+
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator)) {
+    wakeToggle.textContent = "Screen Keep-On not supported";
+    wakeToggle.disabled = true;
+    return;
+  }
+
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLockActive = true;
+    wakeToggle.textContent = "Screen Always On (tap to disable)";
+    wakeToggle.classList.add('active');
+    console.log("Screen wake lock active");
+
+    wakeLock.addEventListener('release', () => {
+      wakeLockActive = false;
+      wakeToggle.textContent = "Keep Screen On";
+      wakeToggle.classList.remove('active');
+      console.log("Wake lock released");
+    });
+  } catch (err) {
+    console.error("Wake lock failed:", err);
+    wakeToggle.textContent = "Could not keep screen on";
   }
 }
-loadField();
 
-// ── Node placement ───────────────────────────────────────────────────
+async function releaseWakeLock() {
+  if (wakeLock && wakeLockActive) {
+    try {
+      await wakeLock.release();
+      wakeLockActive = false;
+      wakeToggle.textContent = "Keep Screen On";
+      wakeToggle.classList.remove('active');
+    } catch (err) {
+      console.error("Release failed:", err);
+    }
+    wakeLock = null;
+  }
+}
+
+wakeToggle.addEventListener('click', async () => {
+  if (wakeLockActive) {
+    await releaseWakeLock();
+  } else {
+    await requestWakeLock();
+  }
+});
+
+// Try to activate after first real interaction (mobile requirement)
+canvas.addEventListener('touchstart', () => {
+  if (!wakeLockActive) requestWakeLock();
+}, { once: true });
+
+// Re-request when tab becomes visible again
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && !wakeLockActive) {
+    await requestWakeLock();
+  }
+});
+
+// ───────────────────────────────────────────────
+//  Save / Load (localStorage + file)
+// ───────────────────────────────────────────────
+
+function saveToLocal() {
+  const state = { nodes, player: { x: player.x, y: player.y } };
+  localStorage.setItem('timeEchoes', JSON.stringify(state));
+}
+
+function loadFromLocal() {
+  const data = localStorage.getItem('timeEchoes');
+  if (!data) return;
+  try {
+    const s = JSON.parse(data);
+    nodes = Array.isArray(s.nodes) ? s.nodes : [];
+    if (s.player) {
+      player.x = s.player.x ?? canvas.width/2;
+      player.y = s.player.y ?? canvas.height/2;
+    }
+  } catch {}
+}
+
+function downloadAsFile() {
+  const state = {
+    nodes,
+    player: { x: player.x, y: player.y },
+    timestamp: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `time-echoes-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function loadFromFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      nodes = Array.isArray(data.nodes) ? data.nodes : [];
+      if (data.player) {
+        player.x = data.player.x ?? canvas.width/2;
+        player.y = data.player.y ?? canvas.height/2;
+      }
+      saveToLocal();
+      updateStats();
+    } catch {
+      alert("Invalid file");
+    }
+  };
+  reader.readAsText(file);
+}
+
+loadFromLocal();
+
+// ───────────────────────────────────────────────
+//  Echoes & Nodes
+// ───────────────────────────────────────────────
+
+function initEchoes() {
+  echoes = [
+    {x: canvas.width*0.3, y: canvas.height*0.4, color:'#ff80a0', tx:null, ty:null, timer:0},
+    {x: canvas.width*0.7, y: canvas.height*0.6, color:'#ffd080', tx:null, ty:null, timer:0},
+    {x: canvas.width*0.6, y: canvas.height*0.2, color:'#c0a0ff', tx:null, ty:null, timer:0}
+  ];
+}
+initEchoes();
 
 function placeNode(mx, my) {
   const snap = 35;
   const gx = Math.round(mx / snap) * snap;
   const gy = Math.round(my / snap) * snap;
-  if (nodes.some(n => Math.hypot(n.x-gx, n.y-gy) < snap*1.4)) return;
+  if (nodes.some(n => Math.hypot(n.x - gx, n.y - gy) < snap * 1.35)) return;
 
   const types = ['melt', 'flow', 'warp'];
-  nodes.push({x:gx, y:gy, type:types[Math.floor(Math.random()*3)], age:0});
-  saveField();
+  nodes.push({ x: gx, y: gy, type: types[Math.floor(Math.random()*3)], age: 0 });
+
+  saveToLocal();
   updateStats();
 }
 
-// ── Input ────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────
+//  Input
+// ───────────────────────────────────────────────
 
 const keys = {};
-window.addEventListener('keydown', e=>keys[e.key.toLowerCase()]=true);
-window.addEventListener('keyup',   e=>keys[e.key.toLowerCase()]=false);
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup',   e => keys[e.key.toLowerCase()] = false);
 
 let tsX=0, tsY=0, tsTime=0;
-canvas.addEventListener('touchstart', e=>{
+
+canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   const t = e.touches[0];
   tsX = t.clientX; tsY = t.clientY; tsTime = Date.now();
 });
-canvas.addEventListener('touchend', e=>{
+
+canvas.addEventListener('touchend', e => {
   e.preventDefault();
   const t = e.changedTouches[0];
   const dur = Date.now() - tsTime;
-  if (dur > 380 || Math.hypot(t.clientX-tsX, t.clientY-tsY) < 24) {
+  const dist = Math.hypot(t.clientX-tsX, t.clientY-tsY);
+
+  if (dur > 400 || dist < 20) {
     placeNode(t.clientX, t.clientY);
   } else {
     player.tx = t.clientX;
     player.ty = t.clientY;
   }
 });
-canvas.addEventListener('click', e=>{
+
+canvas.addEventListener('click', e => {
   if (e.shiftKey) placeNode(e.clientX, e.clientY);
   else { player.tx = e.clientX; player.ty = e.clientY; }
 });
 
-// ── Update ───────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────
+//  Game Update & Draw
+// ───────────────────────────────────────────────
 
-function updateDrift() {
-  let speed = 2.8;
-  let dx=0, dy=0;
-  if (keys['w']||keys['arrowup'   ]) dy -= speed;
-  if (keys['s']||keys['arrowdown' ]) dy += speed;
-  if (keys['a']||keys['arrowleft' ]) dx -= speed;
+function updatePlayer() {
+  let speed = 2.8, dx=0, dy=0;
+  if (keys['w']||keys['arrowup']) dy -= speed;
+  if (keys['s']||keys['arrowdown']) dy += speed;
+  if (keys['a']||keys['arrowleft']) dx -= speed;
   if (keys['d']||keys['arrowright']) dx += speed;
 
   if (player.tx != null) {
@@ -208,7 +435,7 @@ function updateDrift() {
   player.x = Math.max(40, Math.min(canvas.width-40, player.x));
   player.y = Math.max(40, Math.min(canvas.height-40, player.y));
 
-  player.trail.push({x:player.x, y:player.y, a:1});
+  player.trail.push({x:player.x, y:player.y});
   if (player.trail.length > 40) player.trail.shift();
 }
 
@@ -234,8 +461,6 @@ function updateEchoes() {
   });
 }
 
-// ── Draw ─────────────────────────────────────────────────────────────
-
 function draw() {
   const t = Date.now() * 0.0003;
   const hour = new Date().getHours();
@@ -245,15 +470,13 @@ function draw() {
   ctx.fillStyle = isNight ? '#00040f' : `hsl(${globalHue}, 12%, 6%)`;
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // subtle time-field noise
   ctx.globalAlpha = 0.07;
   for (let i = 0; i < 8; i++) {
-    ctx.fillStyle = `hsla(${ (globalHue + i*45) % 360 }, 40%, 60%, 0.08)`;
+    ctx.fillStyle = `hsla(${(globalHue + i*45)%360}, 40%, 60%, 0.08)`;
     ctx.fillRect(Math.sin(t+i)*canvas.width*0.4 + canvas.width/2 - 300, 0, 600, canvas.height);
   }
   ctx.globalAlpha = 1;
 
-  // nodes
   nodes.forEach(n => {
     const age = n.age++ * 0.0008;
     const pulse = Math.sin(age*4 + globalHue*0.1) * 0.5 + 0.5;
@@ -274,7 +497,7 @@ function draw() {
       for (let i = 0; i < 12; i++) {
         const a = age + i*0.6;
         const r = 18 + Math.sin(a*5)*8;
-        ctx.fillStyle = `hsla(${ (globalHue + i*30) % 360 }, 80%, 70%, ${0.4 + Math.sin(a*3)*0.3})`;
+        ctx.fillStyle = `hsla(${(globalHue + i*30)%360}, 80%, 70%, ${0.4 + Math.sin(a*3)*0.3})`;
         ctx.beginPath();
         ctx.arc(Math.cos(a*2)*r, Math.sin(a*2)*r*1.6 - 20, 3.5, 0, Math.PI*2);
         ctx.fill();
@@ -288,11 +511,9 @@ function draw() {
       ctx.fill();
       ctx.shadowBlur = 0;
     }
-
     ctx.restore();
   });
 
-  // player & echoes
   [player, ...echoes].forEach(e => {
     const trail = e.trail || [];
     for (let i = 0; i < trail.length; i++) {
@@ -328,14 +549,9 @@ function updateStats() {
   document.getElementById('happy').textContent = harmony;
 }
 
-setInterval(updateDrift, 1000/80);
-setInterval(updateEchoes, 1000/25);
-setInterval(updateStats, 2800);
-setInterval(saveField, 12000);
-draw();
-updateStats();
-
-// ── Real-world time anchors (clocks + weather) ──────────────────────
+// ───────────────────────────────────────────────
+//  Clocks & Weather
+// ───────────────────────────────────────────────
 
 const locations = [
   {tz:"UTC",name:"UTC",search:"UTC"},
@@ -367,6 +583,7 @@ async function getWeather(lat,lon) {
 
 async function initClocks() {
   const div = document.getElementById('clocks');
+  div.innerHTML = '';
   for (const loc of locations) {
     const card = document.createElement('div');
     card.className = 'clock-card';
@@ -402,9 +619,28 @@ function updateClocks() {
   });
 }
 
+// ───────────────────────────────────────────────
+//  Start
+// ───────────────────────────────────────────────
+
 initClocks();
 setInterval(updateClocks, 1000);
 setInterval(initClocks, 15*60*1000);
+
+setInterval(updatePlayer, 1000/80);
+setInterval(updateEchoes, 1000/25);
+setInterval(updateStats, 2800);
+setInterval(saveToLocal, 10000);
+
+draw();
+updateStats();
+
+// Buttons
+document.getElementById('saveFile').onclick = downloadAsFile;
+document.getElementById('loadFile').onchange = e => {
+  loadFromFile(e.target.files[0]);
+  e.target.value = '';
+};
 
 </script>
 </body>

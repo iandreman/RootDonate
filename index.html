@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>Root Donate – Abstract Temporal Field</title>
+  <title>Time Echoes – Abstract Temporal Field</title>
   <style>
     body {
       font-family: system-ui, -apple-system, sans-serif;
@@ -77,9 +77,10 @@
       left: 50%;
       transform: translateX(-50%);
       font-size: 0.85rem;
-      opacity: 0.6;
+      opacity: 0.7;
       pointer-events: none;
       text-align: center;
+      max-width: 90%;
     }
     @media (max-width: 820px) {
       #sidebar { width: 92%; right: 4%; top: auto; bottom: 70px; max-height: 45vh; }
@@ -97,7 +98,7 @@
 
 <canvas id="world"></canvas>
 
-<footer>Tap / click to drift • Long-press / shift+click to place node • WASD / arrows • Field saved in browser</footer>
+<footer>Tap/click to drift • Long-press / shift+click to place node • WASD/arrows • Saved in browser/local file</footer>
 
 <div id="sidebar">
   <div id="clocks"></div>
@@ -116,9 +117,9 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-let nodes = [];           // temporal nodes (abstract "buildings")
+let nodes = [];
 let player = { x: canvas.width/2, y: canvas.height/2, tx:null, ty:null, trail:[] };
-let echoes = [            // NPC-like temporal echoes
+let echoes = [
   {x:canvas.width*0.3, y:canvas.height*0.4, color:'#ff80a0', tx:null, ty:null, timer:0},
   {x:canvas.width*0.7, y:canvas.height*0.6, color:'#ffd080', tx:null, ty:null, timer:0},
   {x:canvas.width*0.6, y:canvas.height*0.2, color:'#c0a0ff', tx:null, ty:null, timer:0}
@@ -207,7 +208,6 @@ function updateDrift() {
   player.x = Math.max(40, Math.min(canvas.width-40, player.x));
   player.y = Math.max(40, Math.min(canvas.height-40, player.y));
 
-  // trail
   player.trail.push({x:player.x, y:player.y, a:1});
   if (player.trail.length > 40) player.trail.shift();
 }
@@ -253,7 +253,7 @@ function draw() {
   }
   ctx.globalAlpha = 1;
 
-  // nodes (abstract temporal forms)
+  // nodes
   nodes.forEach(n => {
     const age = n.age++ * 0.0008;
     const pulse = Math.sin(age*4 + globalHue*0.1) * 0.5 + 0.5;
@@ -262,7 +262,6 @@ function draw() {
     ctx.translate(n.x, n.y);
 
     if (n.type === 'melt') {
-      // melting clock-like
       ctx.rotate(age * 0.3);
       ctx.fillStyle = `rgba(180,220,255,${0.6 + pulse*0.3})`;
       ctx.beginPath();
@@ -272,7 +271,6 @@ function draw() {
       ctx.lineWidth = 2;
       ctx.stroke();
     } else if (n.type === 'flow') {
-      // hourglass flow (particles)
       for (let i = 0; i < 12; i++) {
         const a = age + i*0.6;
         const r = 18 + Math.sin(a*5)*8;
@@ -282,7 +280,6 @@ function draw() {
         ctx.fill();
       }
     } else {
-      // warp / relativity sphere
       ctx.shadowColor = '#80c0ff';
       ctx.shadowBlur = 30 + pulse*20;
       ctx.fillStyle = `hsla(${globalHue}, 70%, 65%, ${0.45 + pulse*0.35})`;
@@ -295,7 +292,7 @@ function draw() {
     ctx.restore();
   });
 
-  // player & echoes (light orbs with trails)
+  // player & echoes
   [player, ...echoes].forEach(e => {
     const trail = e.trail || [];
     for (let i = 0; i < trail.length; i++) {
@@ -338,7 +335,7 @@ setInterval(saveField, 12000);
 draw();
 updateStats();
 
-// ── Real-world time anchors (clocks + weather) remain ───────────────
+// ── Real-world time anchors (clocks + weather) ──────────────────────
 
 const locations = [
   {tz:"UTC",name:"UTC",search:"UTC"},
@@ -407,7 +404,7 @@ function updateClocks() {
 
 initClocks();
 setInterval(updateClocks, 1000);
-setInterval(initClocks, 15*60*1000); // weather ~every 15 min
+setInterval(initClocks, 15*60*1000);
 
 </script>
 </body>

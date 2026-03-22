@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sugar Realms Online – Candy Shop MMORPG</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      background-attachment: fixed;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.92);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    h1 {
+      color: #d63031;
+      text-align: center;
+      text-shadow: 2px 2px 4px #ffcccc;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #636e72;
+      font-style: italic;
+      margin-bottom: 24px;
+    }
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      background: #ffeaa7;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .stat {
+      text-align: center;
+      min-width: 100px;
+    }
+    .stat strong {
+      display: block;
+      font-size: 1.4em;
+      color: #e84393;
+    }
+    .log {
+      background: #2d3436;
+      color: #dfe6e9;
+      padding: 16px;
+      border-radius: 12px;
+      height: 220px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95em;
+      line-height: 1.5;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+    button {
+      background: #ff7675;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1.1em;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 10px rgba(255,118,117,0.4);
+    }
+    button:hover {
+      background: #e84393;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(232,67,147,0.5);
+    }
+    button:disabled {
+      background: #b2bec3;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    input[type="text"] {
+      padding: 12px;
+      font-size: 1em;
+      border: 2px solid #ff7675;
+      border-radius: 30px;
+      width: 220px;
+      margin-right: 10px;
+    }
+    .emoji-big { font-size: 2.5em; margin: 0 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🍬 Sugar Realms Online 🍭</h1>
+    <p class="subtitle">Your chaotic candy shop MMORPG adventure – text-based & browser-ready!</p>
+
+    <div class="stats">
+      <div class="stat">
+        <strong id="name">Sugar Gremlin</strong>
+        <span>Shopkeeper</span>
+      </div>
+      <div class="stat">
+        <strong>Level <span id="level">1</span></strong>
+        <span>Sucrose Mastery</span>
+      </div>
+      <div class="stat">
+        <strong><span id="candies">12</span> 🍬</strong>
+        <span>Candies</span>
+      </div>
+      <div class="stat">
+        <strong><span id="shards">1</span> ✨</strong>
+        <span>Sparkle Shards</span>
+      </div>
+    </div>
+
+    <div class="log" id="log">
+      <p>→ Welcome to your Tiny Counter of Wonders! (1 shelf, 3 jars)</p>
+      <p>→ *ding-ding!* A serious caramel knight enters...</p>
+      <p><strong>Caramel Knight:</strong> "I require a confection worthy of knighthood… bold, legendary. What do you offer, shopkeep?"</p>
+    </div>
+
+    <div class="actions">
+      <button onclick="serveCustomer('offerBold')">Offer a bold legendary candy</button>
+      <button onclick="serveCustomer('haggle')">Haggle / bluff for a quest</button>
+      <button onclick="serveCustomer('bribe')">Bribe with chocolate</button>
+      <button onclick="serveCustomer('wild')">Do something totally wild!</button>
+    </div>
+
+    <div style="text-align:center; margin-top:20px;">
+      <input type="text" id="customInput" placeholder="Or type your own action..." />
+      <button onclick="serveCustomer('custom')">Submit Custom Action</button>
+    </div>
+
+    <p style="text-align:center; margin-top:30px; color:#636e72;">
+      Keep chatting actions — the shop never closes! 🍫⚔️ Level up by earning chaos points!
+    </p>
+  </div>
+
+  <script>
+    let state = {
+      level: 1,
+      candies: 12,
+      shards: 1,
+      chaosPoints: 0,
+      log: document.getElementById('log'),
+      customers: [
+        { name: "Caramel Knight", demand: "bold legendary confection" },
+        // more customers can be added later!
+      ],
+      currentCustomer: 0
+    };
+
+    function addLog(text) {
+      const p = document.createElement('p');
+      p.innerHTML = text;
+      state.log.appendChild(p);
+      state.log.scrollTop = state.log.scrollHeight;
+    }
+
+    function updateStats() {
+      document.getElementById('level').textContent = state.level;
+      document.getElementById('candies').textContent = state.candies;
+      document.getElementById('shards').textContent = state.shards;
+    }
+
+    function gainXP(amount) {
+      state.chaosPoints += amount;
+      if (state.chaosPoints >= state.level * 10) {
+        state.level++;
+        state.chaosPoints = 0;
+        addLog(`<strong>LEVEL UP! ✨ You are now level ${state.level} Sugar Gremlin! 🍭</strong>`);
+        state.candies += 5; // reward!
+      }
+      updateStats();
+    }
+
+    function serveCustomer(type) {
+      let response = "";
+      const knight = state.customers[state.currentCustomer];
+
+      if (type === 'offerBold') {
+        response = `You proudly present: <strong>"Dragonfire Toffee Lance" 🔥🍬</strong> — melts hearts, burns foes!`;
+        addLog(`<strong>You:</strong> ${response}`);
+        addLog(`<strong>${knight.name}:</strong> "Magnificent! Worthy of my order!" He pays 8 🍬 + 1 ✨`);
+        state.candies += 8;
+        state.shards += 1;
+        gainXP(15);
+        nextCustomer();
+      } else if (type === 'haggle') {
+        response = `You grin: "How about a quest first? Bring me rare Moon Sugar and I'll craft it free!"`;
+        addLog(`<strong>You:</strong> ${response}`);
+        addLog(`<strong>${knight.name}:</strong> "A challenge? I accept!" (Quest unlocked: Find Moon Sugar 🌙) — he leaves a tip of 3 🍬`);
+        state.candies += 3;
+        gainXP(10);
+        nextCustomer();
+      } else if (type === 'bribe') {
+        response = `You slide over your last melty chocolate bar... "On the house for a brave knight?" 😏`;
+        addLog(`<strong>You:</strong> ${response}`);
+        if (Math.random() > 0.4) {
+          addLog(`<strong>${knight.name}:</strong> "Honor demands I pay!" +6 🍬`);
+          state.candies += 6;
+          gainXP(12);
+        } else {
+          addLog(`<strong>${knight.name}:</strong> "Tempting... but I resist!" He leaves grumbling.`);
+          gainXP(5);
+        }
+        nextCustomer();
+      } else if (type === 'wild') {
+        response = `You flip the counter dramatically: "BEHOLD! The Infinite Gummy Hydra — eat one head, two grow back!" 🐉🍬`;
+        addLog(`<strong>You:</strong> ${response}`);
+        addLog(`<strong>${knight.name}:</strong> "...I shall return with an army." (Chaos +20!)`);
+        gainXP(20);
+        nextCustomer();
+      } else if (type === 'custom') {
+        const input = document.getElementById('customInput').value.trim();
+        if (input) {
+          addLog(`<strong>You:</strong> ${input}`);
+          addLog(`<strong>${knight.name}:</strong> "...Bold move, shopkeep." (He seems impressed!)`);
+          gainXP(8 + Math.floor(Math.random()*10));
+          document.getElementById('customInput').value = '';
+          nextCustomer();
+        }
+      }
+    }
+
+    function nextCustomer() {
+      addLog("<hr style='border-color:#ff7675'>");
+      state.currentCustomer++;
+      if (state.currentCustomer >= state.customers.length) {
+        addLog("<strong>New customer alert! ✨ A hyperactive marshmallow kid bounces in...</strong>");
+        // Add more customers dynamically in future updates
+      }
+    }
+
+    // Initial update
+    updateStats();
+  </script>
+</body>
+</html>

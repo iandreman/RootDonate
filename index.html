@@ -71,7 +71,7 @@
     }
     button:hover { background: #e84393; transform: translateY(-4px); }
 
-    #map { height: 520px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin: 20px 0; }
+    #map { height: 520px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin: 20px 0; position: relative; }
 
     .market-item {
       background: #f8f1e3; padding: 16px 20px; border-radius: 16px;
@@ -84,6 +84,28 @@
       transition: all 0.3s;
     }
     .pack:hover { transform: scale(1.04) translateY(-6px); border-color: #e84393; }
+
+    /* Terminal Styles */
+    #terminal {
+      position: absolute; bottom: 20px; right: 20px; width: 380px; height: 260px;
+      background: #0a0a0a; color: #0f0; border: 3px solid #e84393;
+      border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: none; flex-direction: column; font-family: 'Courier New', monospace; font-size: 0.95em;
+      z-index: 1000;
+    }
+    #terminal-header {
+      background: #1a1a1a; padding: 8px 12px; color: #ff7675; display: flex; justify-content: space-between; align-items: center;
+    }
+    #terminal-close { cursor: pointer; font-weight: bold; }
+    #terminal-output {
+      flex: 1; padding: 12px; overflow-y: auto; background: #111;
+    }
+    #terminal-input-line {
+      display: flex; padding: 8px 12px; background: #1a1a1a;
+    }
+    #terminal-input {
+      background: transparent; border: none; color: #0f0; flex: 1; outline: none; font-family: inherit;
+    }
   </style>
 </head>
 <body>
@@ -164,6 +186,19 @@
     </div>
   </div>
 
+  <!-- Terminal -->
+  <div id="terminal">
+    <div id="terminal-header">
+      <span>🍬 SUGAR-TERMINAL v1.0</span>
+      <span id="terminal-close" onclick="toggleTerminal()">✕</span>
+    </div>
+    <div id="terminal-output"></div>
+    <div id="terminal-input-line">
+      <span>&gt;</span>
+      <input id="terminal-input" type="text" autocomplete="off" onkeydown="if(event.key === 'Enter') runTerminalCommand()">
+    </div>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     const MONZO_LINK = "https://monzo.me/iandreme";
@@ -188,7 +223,7 @@
       { id: "gummyHydra", name: "Rainbow Gummy Hydra", avgPrice: 79, supply: 5 }
     ];
 
-    const expansionCities = [
+    const expansionCities = [ /* ... same as before ... */ 
       {name:"New York", lat:40.7128, lng:-74.0060, salesBonus:1.28, upkeepCost:52},
       {name:"Tokyo", lat:35.6762, lng:139.6503, salesBonus:1.35, upkeepCost:48},
       {name:"Paris", lat:48.8566, lng:2.3522, salesBonus:1.22, upkeepCost:45},
@@ -333,6 +368,17 @@
         attribution: '&copy; OpenStreetMap contributors'
       }).addTo(mapInstance);
       renderShopsOnMap();
+
+      // Add Terminal Button on the map
+      L.easyButton({
+        position: 'bottomright',
+        states: [{
+          stateName: 'terminal',
+          icon: '🍬',
+          title: 'Open Sugar Terminal',
+          onClick: function() { toggleTerminal(); }
+        }]
+      }).addTo(mapInstance);
     }
 
     function renderShopsOnMap() {
@@ -367,6 +413,56 @@
       }
     }
 
+    // ====================== TERMINAL ======================
+    function toggleTerminal() {
+      const term = document.getElementById('terminal');
+      term.style.display = term.style.display === 'flex' ? 'none' : 'flex';
+      if (term.style.display === 'flex') {
+        document.getElementById('terminal-input').focus();
+      }
+    }
+
+    function terminalPrint(text, color = '#0f0') {
+      const output = document.getElementById('terminal-output');
+      const line = document.createElement('div');
+      line.style.color = color;
+      line.textContent = text;
+      output.appendChild(line);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function runTerminalCommand() {
+      const input = document.getElementById('terminal-input');
+      const cmd = input.value.trim().toLowerCase();
+      if (!cmd) return;
+
+      terminalPrint('> ' + cmd, '#aaa');
+
+      if (cmd === 'help') {
+        terminalPrint('Available commands:', '#ff0');
+        terminalPrint('  add candies <number>');
+        terminalPrint('  add shards <number>');
+        terminalPrint('  clear');
+        terminalPrint('  help');
+      } else if (cmd.startsWith('add candies')) {
+        const num = parseInt(cmd.split(' ')[2]) || 100;
+        state.candies += num;
+        terminalPrint(`+${num} 🍬 added!`, '#0f0');
+        updateUI();
+      } else if (cmd.startsWith('add shards')) {
+        const num = parseInt(cmd.split(' ')[2]) || 10;
+        state.shards += num;
+        terminalPrint(`+${num} ✨ added!`, '#0f0');
+        updateUI();
+      } else if (cmd === 'clear') {
+        document.getElementById('terminal-output').innerHTML = '';
+      } else {
+        terminalPrint('Unknown command. Type "help"', '#f66');
+      }
+
+      input.value = '';
+    }
+
     // ====================== AUTO-SAVE & TIMERS ======================
     setInterval(() => {
       if (!state.bankrupt) {
@@ -384,11 +480,10 @@
       loadGame();
       updateUI();
       addLog("<em>🍭 Welcome back to Sugar Realms!</em>");
-      addLog("Realistic upkeep per shop • Global map • Auto-save active");
+      addLog("Realistic upkeep • Global map • Terminal enabled");
       createFloatingCandies();
       switchTab(0);
 
-      // Handle pending delivery after Monzo purchase
       if (window.pendingDelivery) {
         state.candies += window.pendingDelivery.candies || 0;
         state.shards += window.pendingDelivery.shards || 0;
@@ -398,5 +493,9 @@
       }
     };
   </script>
+
+  <!-- EasyButton for the terminal button -->
+  <script src="https://cdn.jsdelivr.net/npm/leaflet.easybutton@2.4.0/src/easy-button.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.easybutton@2.4.0/src/easy-button.css" />
 </body>
 </html>

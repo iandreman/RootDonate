@@ -110,7 +110,7 @@
 
     .next-upkeep {
       text-align: center;
-      font-size: 1.05em;
+      font-size: 1.1em;
       color: #d63031;
       margin: 12px 0;
       font-weight: bold;
@@ -130,7 +130,7 @@
     </div>
 
     <div class="next-upkeep">
-      Next daily upkeep in <span id="upkeepTimer">23h 59m 59s</span>
+      Next upkeep in <span id="upkeepTimer">60</span> seconds
     </div>
 
     <div class="tabs">
@@ -233,8 +233,7 @@
     ];
 
     let upkeepTimerInterval;
-    const UPKEEP_INTERVAL = 24 * 60 * 60 * 1000;   // 24 hours real time
-    // const UPKEEP_INTERVAL = 30000; // 30 seconds for testing
+    const UPKEEP_INTERVAL = 60 * 1000;   // 60 seconds (1 minute)
 
     const logEl = document.getElementById('log');
 
@@ -273,12 +272,12 @@
       }
     }
 
-    function applyDailyUpkeep() {
+    function applyUpkeep() {
       if (state.bankrupt) return;
       const upkeep = 12 + state.level * 4;
       if (state.candies >= upkeep) {
         state.candies -= upkeep;
-        addLog(`🧾 Daily upkeep paid: -${upkeep} 🍬`);
+        addLog(`🧾 Upkeep paid: -${upkeep} 🍬`);
       } else {
         state.candies = 0;
         checkBankruptcy();
@@ -290,19 +289,18 @@
     function updateUpkeepTimer() {
       const now = Date.now();
       let timeLeft = state.lastUpkeep + UPKEEP_INTERVAL - now;
+
       if (timeLeft <= 0) {
-        applyDailyUpkeep();
+        applyUpkeep();
         timeLeft = UPKEEP_INTERVAL;
       }
-      const h = Math.floor(timeLeft / 3600000);
-      const m = Math.floor((timeLeft % 3600000) / 60000);
-      const s = Math.floor((timeLeft % 60000) / 1000);
-      document.getElementById('upkeepTimer').textContent = `${h}h ${m.toString().padStart(2,'0')}m ${s.toString().padStart(2,'0')}s`;
+
+      document.getElementById('upkeepTimer').textContent = Math.ceil(timeLeft / 1000);
     }
 
-    function startDailyUpkeepTimer() {
+    function startUpkeepTimer() {
       clearInterval(upkeepTimerInterval);
-      upkeepTimerInterval = setInterval(updateUpkeepTimer, 1000);
+      upkeepTimerInterval = setInterval(updateUpkeepTimer, 200);
       updateUpkeepTimer();
     }
 
@@ -372,15 +370,14 @@
 
     function openMonzoRescue() {
       const suggested = 15 + state.level * 6;
-      const note = encodeURIComponent(`Bankruptcy Rescue - New Shop Level ${state.level}`);
+      const note = encodeURIComponent(`Rescue - New Shop Level ${state.level}`);
       window.open(`${MONZO_LINK}/${suggested}?d=${note}`, '_blank');
       addLog(`🔗 Monzo payment opened (£${suggested} suggested)`);
       
-      // The "I Have Paid" buttons will appear when user returns to the page
       setTimeout(() => {
         document.getElementById('claimRescueBtn').style.display = 'inline-block';
         document.getElementById('claimRescueBtnOverlay').style.display = 'inline-block';
-      }, 800); // small delay so user sees Monzo open first
+      }, 800);
     }
 
     function claimRescue() {
@@ -402,14 +399,13 @@
       document.getElementById('actionButtons').style.pointerEvents = 'auto';
       document.getElementById('customArea').style.pointerEvents = 'auto';
 
-      // Hide claim buttons again
       document.getElementById('claimRescueBtn').style.display = 'none';
       document.getElementById('claimRescueBtnOverlay').style.display = 'none';
 
       addLog(`<strong>🎉 New shop successfully opened!</strong> +${bonusCandies} 🍬 & +${bonusShards} ✨`);
       window.pendingDelivery = null;
       updateUI();
-      startDailyUpkeepTimer();
+      startUpkeepTimer();
     }
 
     function switchTab(n) {
@@ -426,13 +422,13 @@
     loadGame();
     updateUI();
     addLog("<em>🍬 Welcome to Sugar Realms Online!</em>");
-    addLog("Daily upkeep every 24 hours • After paying on Monzo, return here and click 'I Have Paid'");
+    addLog("Upkeep every 60 seconds • Bankruptcy requires Monzo payment");
 
-    startDailyUpkeepTimer();
+    startUpkeepTimer();
 
     if (state.candies < 10) checkBankruptcy();
 
-    // Bonus: Show claim button if user returns from Monzo (visibility change)
+    // Show claim button when returning from Monzo
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && state.bankrupt) {
         document.getElementById('claimRescueBtn').style.display = 'inline-block';

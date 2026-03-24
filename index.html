@@ -1,203 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sugar Realms • Global Candy Empire</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='72' font-size='68'%3E🍭%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  
-  <style>
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      margin: 0; padding: 20px 12px;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
-      background-attachment: fixed;
-      color: #2d2d2d;
-    }
-    .candy-bg {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
-      overflow: hidden; pointer-events: none;
-    }
-    .floating-candy {
-      position: absolute; font-size: 2.8em; opacity: 0.75;
-      animation: floatCandy linear infinite; user-select: none;
-    }
-    @keyframes floatCandy {
-      0% { transform: translateY(100vh) rotate(0deg); }
-      100% { transform: translateY(-120vh) rotate(360deg); }
-    }
-
-    .container {
-      max-width: 1100px; margin: 0 auto;
-      background: rgba(255,255,255,0.96);
-      border-radius: 24px;
-      padding: 32px 28px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.22);
-      backdrop-filter: blur(8px);
-    }
-
-    h1 { color: #d63031; text-align: center; margin: 0 0 6px; font-size: 2.7em; }
-    .subtitle { text-align: center; color: #636e72; font-style: italic; margin-bottom: 28px; }
-
-    .stats {
-      display: flex; flex-wrap: wrap; justify-content: center; gap: 24px;
-      background: #fff3d1; padding: 20px; border-radius: 18px; margin-bottom: 26px;
-    }
-    .stat { text-align: center; min-width: 110px; }
-    .stat strong { font-size: 2.1em; color: #e84393; }
-    .stat small { font-size: 0.95em; color: #636e72; }
-
-    .tabs {
-      display: flex; justify-content: center; gap: 12px; margin: 28px 0 32px; flex-wrap: wrap;
-    }
-    .tab {
-      padding: 14px 32px; background: #ff7675; color: white; border: none;
-      border-radius: 50px; cursor: pointer; font-weight: 600; font-size: 1.05em;
-    }
-    .tab.active { background: #e84393; box-shadow: 0 8px 20px rgba(232,67,147,0.35); }
-
-    .log {
-      background: #2d3436; color: #dfe6e9; padding: 20px; border-radius: 16px;
-      height: 220px; overflow-y: auto; margin-bottom: 24px;
-      font-family: monospace; font-size: 0.97em; line-height: 1.55;
-    }
-
-    button {
-      background: #ff7675; color: white; border: none; padding: 15px 34px;
-      font-size: 1.1em; border-radius: 50px; cursor: pointer; margin: 8px 6px;
-      font-weight: 600; transition: all 0.25s;
-    }
-    button:hover { background: #e84393; transform: translateY(-4px); }
-
-    #map { height: 520px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin: 20px 0; position: relative; }
-
-    .market-item {
-      background: #f8f1e3; padding: 16px 20px; border-radius: 16px;
-      margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;
-      flex-wrap: wrap; gap: 12px;
-    }
-    .pack {
-      background: white; border: 3px solid #ff7675; border-radius: 20px;
-      padding: 24px 18px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.12);
-      transition: all 0.3s;
-    }
-    .pack:hover { transform: scale(1.04) translateY(-6px); border-color: #e84393; }
-
-    #terminal {
-      position: absolute; bottom: 20px; right: 20px; width: 380px; height: 260px;
-      background: #0a0a0a; color: #0f0; border: 3px solid #e84393;
-      border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      display: none; flex-direction: column; font-family: 'Courier New', monospace; font-size: 0.95em;
-      z-index: 1000;
-    }
-    #terminal-header {
-      background: #1a1a1a; padding: 8px 12px; color: #ff7675; display: flex; justify-content: space-between; align-items: center;
-    }
-    #terminal-close { cursor: pointer; font-weight: bold; }
-    #terminal-output { flex: 1; padding: 12px; overflow-y: auto; background: #111; }
-    #terminal-input-line { display: flex; padding: 8px 12px; background: #1a1a1a; }
-    #terminal-input { background: transparent; border: none; color: #0f0; flex: 1; outline: none; font-family: inherit; }
-  </style>
-</head>
-<body>
-
-  <div class="candy-bg" id="candyBg"></div>
-
-  <div class="container">
-    <h1>🍬 Sugar Realms</h1>
-    <p class="subtitle" id="modeSubtitle">🌍 ONE GLOBAL CANDY EMPIRE (Shared with everyone)</p>
-
-    <div class="stats">
-      <div class="stat"><strong id="level">1</strong><small>Level</small></div>
-      <div class="stat"><strong><span id="candies">142</span></strong><small>🍬 Candies</small></div>
-      <div class="stat"><strong><span id="shards">27</span></strong><small>✨ Shards</small></div>
-      <div class="stat"><strong><span id="shops">1</span></strong><small>Shops</small></div>
-    </div>
-
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab(0)">My Empire</button>
-      <button class="tab" onclick="switchTab(1)">World Map</button>
-      <button class="tab" onclick="switchTab(2)">Buy Stock (Real £)</button>
-      <button class="tab" onclick="switchTab(3)">Gummy Market</button>
-    </div>
-
-    <!-- Tab 0: My Empire -->
-    <div id="tab0" class="tab-content active">
-      <div class="log" id="log"></div>
-      <div style="text-align:center; margin:24px 0;">
-        <button onclick="serveCustomer('normal')">Serve Regular Customer</button>
-        <button onclick="serveCustomer('premium')">Serve Premium Customer</button>
-        <button onclick="serveCustomer('wild')">Flash Sale!</button>
-        <button onclick="copyGlobalLink()" style="background:#6c5ce7;">🔗 Copy Global Link</button>
-      </div>
-    </div>
-
-    <!-- Tab 1: World Map -->
-    <div id="tab1" class="tab-content">
-      <h2 style="text-align:center;">🌍 Your Shops on the Real Earth Map</h2>
-      <div id="map"></div>
-      <div style="text-align:center; margin-top:20px;">
-        <button onclick="expandEmpire()">🌟 Open New Shop (£12 via Monzo)</button>
-      </div>
-    </div>
-
-    <!-- Tab 2: Buy Stock -->
-    <div id="tab2" class="tab-content">
-      <h2 style="text-align:center; margin-bottom:8px;">Buy Candy Stock – Instant Delivery</h2>
-      <p style="text-align:center; color:#636e72; margin-bottom:28px;">Pay securely with Monzo • Stock added immediately</p>
-      
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:22px;">
-        <div class="pack">
-          <strong>Starter Pack</strong><br>
-          <span style="font-size:1.9em;">800 🍬 + 25 ✨</span><br><br>
-          <span style="color:#e84393; font-size:1.55em; font-weight:700;">£9.50</span><br><br>
-          <button onclick="buyPack(800, 25, 9.5, 'Starter Pack')">Buy with Monzo</button>
-        </div>
-        <div class="pack">
-          <strong>Popular Pack</strong><br>
-          <span style="font-size:1.9em;">2,800 🍬 + 95 ✨</span><br><br>
-          <span style="color:#e84393; font-size:1.55em; font-weight:700;">£24</span><br><br>
-          <button onclick="buyPack(2800, 95, 24, 'Popular Pack')">Buy with Monzo</button>
-        </div>
-        <div class="pack">
-          <strong>Empire Builder</strong><br>
-          <span style="font-size:1.9em;">8,500 🍬 + 320 ✨</span><br><br>
-          <span style="color:#e84393; font-size:1.55em; font-weight:700;">£58</span><br><br>
-          <button onclick="buyPack(8500, 320, 58, 'Empire Builder')">Buy with Monzo</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tab 3: Gummy Market -->
-    <div id="tab3" class="tab-content">
-      <h2 style="text-align:center;">Gummy Exchange – Live Market</h2>
-      <div id="marketList"></div>
-      <p style="text-align:center; font-size:0.92em; color:#636e72; margin-top:20px;">
-        Prices fluctuate based on player activity
-      </p>
-    </div>
-  </div>
-
-  <!-- Terminal -->
-  <div id="terminal">
-    <div id="terminal-header">
-      <span>🍬 SUGAR-TERMINAL v1.0</span>
-      <span id="terminal-close" onclick="toggleTerminal()">✕</span>
-    </div>
-    <div id="terminal-output"></div>
-    <div id="terminal-input-line">
-      <span>&gt;</span>
-      <input id="terminal-input" type="text" autocomplete="off" onkeydown="if(event.key === 'Enter') runTerminalCommand()">
-    </div>
-  </div>
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/leaflet.easybutton@2.4.0/src/easy-button.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.easybutton@2.4.0/src/easy-button.css" />
-
-  <script>
+<script>
     const MONZO_LINK = "https://monzo.me/iandreme";
 
     let state = {
@@ -244,10 +45,7 @@
         try {
           const loadedState = JSON.parse(atob(saved));
           Object.assign(state, loadedState);
-          console.log("%c🌍 Global empire loaded from URL", "color: #e84393; font-weight: bold");
-        } catch(e) {
-          console.warn("Failed to load global game");
-        }
+        } catch(e) {}
       }
     }
 
@@ -258,10 +56,7 @@
       });
     }
 
-    // ====================== CORE FUNCTIONS ======================
-    function saveGame() {
-      saveToURL();   // Everything is saved only in the URL now
-    }
+    function saveGame() { saveToURL(); }
 
     function addLog(html) {
       const logEl = document.getElementById('log');
@@ -278,6 +73,9 @@
       document.getElementById('shards').textContent = state.shards;
       document.getElementById('shops').textContent = state.shops;
       saveGame();
+
+      const rescueBtn = document.getElementById('rescueBtn');
+      if (rescueBtn) rescueBtn.style.display = state.bankrupt ? 'inline-block' : 'none';
     }
 
     function calculateTotalUpkeep() {
@@ -294,12 +92,46 @@
         state.candies = 0;
         state.bankrupt = true;
         addLog(`<strong style="color:#ff7675;">💸 BANKRUPT! Total upkeep (${totalUpkeep} 🍬) exceeded stock.</strong>`);
+        addLog(`<span style="color:#e84393;">You must pay to rescue your empire!</span>`);
       }
       updateUI();
     }
 
+    // ==================== COMPULSORY RESCUE FROM BANKRUPTCY ====================
+    function rescueFromBankruptcy() {
+      if (!state.bankrupt) {
+        addLog("✅ Your empire is not bankrupt.");
+        return;
+      }
+
+      const costCandies = 180;
+      const costShards = 45;
+
+      if (state.candies >= costCandies) {
+        state.candies -= costCandies;
+        state.bankrupt = false;
+        state.candies += 100; // recovery boost
+        addLog(`🚨 <strong style="color:#00b894;">EMPIRE RESCUED!</strong> Paid ${costCandies} 🍬. +100 🍬 recovery boost!`);
+      } 
+      else if (state.shards >= costShards) {
+        state.shards -= costShards;
+        state.bankrupt = false;
+        state.candies += 130; // bigger boost when paying with shards
+        addLog(`🚨 <strong style="color:#00b894;">EMPIRE RESCUED!</strong> Paid ${costShards} ✨ shards. +130 🍬 recovery boost!`);
+      } 
+      else {
+        addLog(`❌ <strong>Cannot rescue yet.</strong> You need either <b>${costCandies} 🍬</b> or <b>${costShards} ✨</b>`);
+        return;
+      }
+
+      updateUI();
+    }
+
     function serveCustomer(type) {
-      if (state.bankrupt) return;
+      if (state.bankrupt) {
+        addLog(`<span style="color:#ff7675;">Your empire is bankrupt! You must rescue it first by paying the fee.</span>`);
+        return;
+      }
       let baseGain = type === 'premium' ? 48 : type === 'wild' ? 67 : 22;
       const totalBonus = state.shopLocations.reduce((sum, s) => sum + (s.salesBonus - 1), 0);
       const finalGain = Math.floor(baseGain * (1 + totalBonus * 0.7));
@@ -327,7 +159,10 @@
     }
 
     function tradeMarket(id, action) {
-      if (state.bankrupt) return;
+      if (state.bankrupt) {
+        addLog(`<span style="color:#ff7675;">Empire is bankrupt — rescue first.</span>`);
+        return;
+      }
       const item = marketItems.find(i => i.id === id);
       if (!item) return;
 
@@ -336,6 +171,8 @@
           state.candies -= item.avgPrice;
           item.avgPrice = Math.floor(item.avgPrice * 1.07);
           addLog(`📈 Bought 1x <strong>${item.name}</strong>`);
+        } else {
+          addLog(`❌ Not enough candies.`);
         }
       } else {
         const sellPrice = Math.floor(item.avgPrice * 0.89);
@@ -458,6 +295,7 @@
         terminalPrint('Commands:', '#ff0');
         terminalPrint('  add candies <number>');
         terminalPrint('  add shards <number>');
+        terminalPrint('  rescue          ← Pay to rescue empire from bankruptcy');
         terminalPrint('  clear');
         terminalPrint('  help');
       } else if (cmd.startsWith('add candies')) {
@@ -470,6 +308,8 @@
         state.shards += num;
         terminalPrint(`+${num} ✨ added!`, '#0f0');
         updateUI();
+      } else if (cmd === 'rescue' || cmd === 'rescue empire') {
+        rescueFromBankruptcy();
       } else if (cmd === 'clear') {
         document.getElementById('terminal-output').innerHTML = '';
       } else {
@@ -497,6 +337,18 @@
       updateUI();
       addLog("<em>🍭 Welcome to the Global Sugar Realms!</em>");
       addLog("Everyone who uses this link shares the same empire!");
+
+      // Add compulsory rescue button
+      const empireTab = document.getElementById('tab0');
+      const rescueHTML = `
+        <div style="text-align:center; margin:18px 0 10px;">
+          <button id="rescueBtn" onclick="rescueFromBankruptcy()" 
+                  style="background:#e84393; display:none; padding:16px 32px; font-size:1.2em; box-shadow:0 8px 20px rgba(232,67,147,0.4);">
+            🚨 PAY TO RESCUE EMPIRE (180 🍬 or 45 ✨)
+          </button>
+        </div>`;
+      empireTab.insertAdjacentHTML('beforeend', rescueHTML);
+
       createFloatingCandies();
       switchTab(0);
 
@@ -509,5 +361,3 @@
       }
     };
   </script>
-</body>
-</html>

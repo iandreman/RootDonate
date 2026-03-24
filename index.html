@@ -85,7 +85,6 @@
     }
     .pack:hover { transform: scale(1.04) translateY(-6px); border-color: #e84393; }
 
-    /* Terminal */
     #terminal {
       position: absolute; bottom: 20px; right: 20px; width: 380px; height: 260px;
       background: #0a0a0a; color: #0f0; border: 3px solid #e84393;
@@ -108,7 +107,7 @@
 
   <div class="container">
     <h1>🍬 Sugar Realms</h1>
-    <p class="subtitle">Your Realistic Global Candy Empire</p>
+    <p class="subtitle" id="modeSubtitle">🌍 ONE GLOBAL CANDY EMPIRE (Shared with everyone)</p>
 
     <div class="stats">
       <div class="stat"><strong id="level">1</strong><small>Level</small></div>
@@ -131,7 +130,7 @@
         <button onclick="serveCustomer('normal')">Serve Regular Customer</button>
         <button onclick="serveCustomer('premium')">Serve Premium Customer</button>
         <button onclick="serveCustomer('wild')">Flash Sale!</button>
-        <button onclick="shareGame()" style="background:#6c5ce7;">🔗 Share Game (URL Save)</button>
+        <button onclick="copyGlobalLink()" style="background:#6c5ce7;">🔗 Copy Global Link</button>
       </div>
     </div>
 
@@ -231,46 +230,37 @@
       {name:"Rio de Janeiro", lat:-22.9068, lng:-43.1729, salesBonus:1.10, upkeepCost:25}
     ];
 
-    // ====================== URL AUTO-SAVE / LOAD ======================
+    // ====================== GLOBAL URL SAVE / LOAD ======================
     function saveToURL() {
       const compressed = btoa(JSON.stringify(state));
-      const newURL = window.location.origin + window.location.pathname + '?save=' + compressed;
+      const newURL = window.location.origin + window.location.pathname + '?global=' + compressed;
       window.history.replaceState({}, '', newURL);
     }
 
     function loadFromURL() {
       const params = new URLSearchParams(window.location.search);
-      const saved = params.get('save');
+      const saved = params.get('global');
       if (saved) {
         try {
           const loadedState = JSON.parse(atob(saved));
           Object.assign(state, loadedState);
-          console.log("%cGame loaded from URL", "color: #e84393; font-weight: bold");
+          console.log("%c🌍 Global empire loaded from URL", "color: #e84393; font-weight: bold");
         } catch(e) {
-          console.warn("Failed to load game from URL");
+          console.warn("Failed to load global game");
         }
       }
     }
 
-    function shareGame() {
+    function copyGlobalLink() {
       saveToURL();
       navigator.clipboard.writeText(window.location.href).then(() => {
-        alert("✅ Game link copied!\n\nPaste this link later (or send to friends) to continue exactly where you left off.");
+        alert("✅ Global Empire link copied!\n\nShare this link with friends — everyone will play in the SAME candy empire!");
       });
     }
 
     // ====================== CORE FUNCTIONS ======================
     function saveGame() {
-      localStorage.setItem('sugarRealmsGame', JSON.stringify(state));
-      saveToURL();                    // Auto-update URL every time
-    }
-
-    function loadGame() {
-      loadFromURL();                  // URL has priority
-      const local = localStorage.getItem('sugarRealmsGame');
-      if (local && !window.location.search.includes('save=')) {
-        Object.assign(state, JSON.parse(local));
-      }
+      saveToURL();   // Everything is saved only in the URL now
     }
 
     function addLog(html) {
@@ -503,10 +493,10 @@
 
     // ====================== INIT ======================
     window.onload = () => {
-      loadGame();
+      loadFromURL();
       updateUI();
-      addLog("<em>🍭 Welcome back to Sugar Realms!</em>");
-      addLog("Progress auto-saves to URL • Share your game anytime!");
+      addLog("<em>🍭 Welcome to the Global Sugar Realms!</em>");
+      addLog("Everyone who uses this link shares the same empire!");
       createFloatingCandies();
       switchTab(0);
 

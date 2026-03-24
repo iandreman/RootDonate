@@ -61,7 +61,7 @@
       color: #dfe6e9;
       padding: 18px;
       border-radius: 14px;
-      height: 260px;
+      height: 280px;
       overflow-y: auto;
       margin-bottom: 24px;
       font-family: monospace;
@@ -80,7 +80,6 @@
       transition: all 0.2s;
     }
     button:hover { background: #e84393; transform: translateY(-3px); }
-    button:disabled { background: #b2bec3; cursor: not-allowed; transform: none; }
 
     .pack { background: white; border: 3px solid #ff7675; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     .pack:hover { transform: scale(1.03); }
@@ -99,7 +98,7 @@
     .overlay {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.75);
+      background: rgba(0,0,0,0.82);
       border-radius: 20px;
       display: none;
       align-items: center;
@@ -111,9 +110,9 @@
 
     .next-upkeep {
       text-align: center;
-      font-size: 0.95em;
+      font-size: 1.05em;
       color: #d63031;
-      margin: 10px 0;
+      margin: 12px 0;
       font-weight: bold;
     }
   </style>
@@ -130,7 +129,9 @@
       <div class="stat"><strong><span id="shops">1</span></strong> Shops Owned</div>
     </div>
 
-    <div class="next-upkeep">Next upkeep in <span id="upkeepTimer">30</span>s</div>
+    <div class="next-upkeep">
+      Next daily upkeep in <span id="upkeepTimer">23h 59m 59s</span>
+    </div>
 
     <div class="tabs">
       <button class="tab active" onclick="switchTab(0)">My Candy Shop</button>
@@ -149,25 +150,28 @@
       </div>
 
       <div style="text-align:center;" id="customArea">
-        <input type="text" id="customInput" placeholder="Describe your candy sale..." style="padding:12px; width:320px; border:2px solid #ff7675; border-radius:999px;"/>
+        <input type="text" id="customInput" placeholder="Describe your candy sale..." 
+               style="padding:12px; width:320px; border:2px solid #ff7675; border-radius:999px;"/>
         <button onclick="serveCustomer('custom')">Post Sale</button>
       </div>
 
       <!-- Bankruptcy Rescue -->
       <div id="rescuePanel" class="rescue" style="display:none;">
         <strong>💸 YOUR CANDY SHOP IS BANKRUPT!</strong><br><br>
-        You must pay to open a new shop before you can continue selling.<br><br>
-        <button onclick="openMonzoRescue()" style="background:white; color:#d63031; padding:16px 50px; font-size:1.3em; margin:10px;">
+        Pay via Monzo to open a new shop and continue playing.<br><br>
+        
+        <button onclick="openMonzoRescue()" style="background:white; color:#d63031; padding:18px 60px; font-size:1.3em;">
           Pay via Monzo.me/iandreme
         </button>
-        <br>
-        <button onclick="claimRescue()" style="background:#00b894; padding:14px 40px; font-size:1.1em;">
+        <br><br>
+        
+        <button id="claimRescueBtn" onclick="claimRescue()" style="background:#00b894; padding:16px 50px; font-size:1.1em; display: none;">
           ✅ I Have Paid – Open New Shop Now!
         </button>
       </div>
     </div>
 
-    <!-- Buy Packs & Market Tabs (same as before) -->
+    <!-- Buy Packs Tab -->
     <div id="tab1" class="tab-content">
       <h2 style="text-align:center;">Buy Candy Packs – Real Money via Monzo</h2>
       <p style="text-align:center;">Pay securely via Monzo and receive stock instantly.</p>
@@ -187,23 +191,24 @@
       </div>
     </div>
 
+    <!-- Market Tab -->
     <div id="tab2" class="tab-content">
       <h2>Gummy Exchange – Live Average Market Prices</h2>
       <div id="marketList"></div>
       <p style="font-size:0.9em; color:#636e72; text-align:center;">Prices update based on supply and demand</p>
     </div>
 
-    <!-- Bankrupt Overlay -->
+    <!-- Blocking Overlay -->
     <div id="bankruptOverlay" class="overlay">
       <div>
         <h2>💸 Shop Bankrupt!</h2>
-        <p>You must pay via Monzo to reopen your candy shop.</p>
-        <button onclick="openMonzoRescue()" style="background:white; color:#d63031; padding:18px 60px; font-size:1.4em; margin:15px;">
+        <p>You cannot sell or trade until you pay via Monzo.</p>
+        <button onclick="openMonzoRescue()" style="background:white; color:#d63031; padding:18px 70px; font-size:1.4em; margin:15px;">
           Pay via Monzo Now
         </button>
-        <br>
-        <button onclick="claimRescue()" style="background:#00b894; padding:14px 50px;">
-          ✅ I Paid – Reopen Shop
+        <br><br>
+        <button id="claimRescueBtnOverlay" onclick="claimRescue()" style="background:#00b894; padding:16px 60px; font-size:1.1em; display: none;">
+          ✅ I Have Paid – Reopen Shop
         </button>
       </div>
     </div>
@@ -211,15 +216,25 @@
 
   <script>
     const MONZO_LINK = "https://monzo.me/iandreme";
-    let state = { level: 1, candies: 85, shards: 12, shops: 1, bankrupt: false };
+
+    let state = {
+      level: 1,
+      candies: 85,
+      shards: 12,
+      shops: 1,
+      bankrupt: false,
+      lastUpkeep: Date.now()
+    };
+
     let marketItems = [
       { id: "dragonToffee", name: "Dragonfire Toffee Lance", avgPrice: 22, supply: 38 },
       { id: "moonSugar", name: "Moon Sugar 🌙", avgPrice: 38, supply: 19 },
       { id: "gummyHydra", name: "Infinite Gummy Hydra", avgPrice: 72, supply: 7 }
     ];
 
-    let upkeepInterval, timerInterval;
-    let timeToUpkeep = 30;
+    let upkeepTimerInterval;
+    const UPKEEP_INTERVAL = 24 * 60 * 60 * 1000;   // 24 hours real time
+    // const UPKEEP_INTERVAL = 30000; // 30 seconds for testing
 
     const logEl = document.getElementById('log');
 
@@ -239,7 +254,7 @@
 
     function updateUI() {
       document.getElementById('level').textContent = state.level;
-      document.getElementById('candies').textContent = state.candies;
+      document.getElementById('candies').textContent = Math.max(0, state.candies);
       document.getElementById('shards').textContent = state.shards;
       document.getElementById('shops').textContent = state.shops;
       saveGame();
@@ -249,65 +264,60 @@
     function checkBankruptcy() {
       if (state.candies < 10 && !state.bankrupt) {
         state.bankrupt = true;
+        state.candies = 0;
         document.getElementById('rescuePanel').style.display = 'block';
         document.getElementById('bankruptOverlay').style.display = 'flex';
-        document.getElementById('actionButtons').style.opacity = '0.4';
-        document.getElementById('customArea').style.opacity = '0.4';
-        addLog(`<strong style="color:#ff7675;">💸 BANKRUPT! You must pay to continue.</strong>`);
+        document.getElementById('actionButtons').style.pointerEvents = 'none';
+        document.getElementById('customArea').style.pointerEvents = 'none';
+        addLog(`<strong style="color:#ff7675;">💸 BANKRUPT! Pay via Monzo to continue playing.</strong>`);
       }
     }
 
-    function applyUpkeep() {
+    function applyDailyUpkeep() {
       if (state.bankrupt) return;
       const upkeep = 12 + state.level * 4;
       if (state.candies >= upkeep) {
         state.candies -= upkeep;
-        addLog(`🧾 Upkeep paid: -${upkeep} 🍬`);
+        addLog(`🧾 Daily upkeep paid: -${upkeep} 🍬`);
       } else {
         state.candies = 0;
         checkBankruptcy();
       }
       updateUI();
+      state.lastUpkeep = Date.now();
     }
 
-    function startUpkeepTimer() {
-      clearInterval(upkeepInterval);
-      clearInterval(timerInterval);
+    function updateUpkeepTimer() {
+      const now = Date.now();
+      let timeLeft = state.lastUpkeep + UPKEEP_INTERVAL - now;
+      if (timeLeft <= 0) {
+        applyDailyUpkeep();
+        timeLeft = UPKEEP_INTERVAL;
+      }
+      const h = Math.floor(timeLeft / 3600000);
+      const m = Math.floor((timeLeft % 3600000) / 60000);
+      const s = Math.floor((timeLeft % 60000) / 1000);
+      document.getElementById('upkeepTimer').textContent = `${h}h ${m.toString().padStart(2,'0')}m ${s.toString().padStart(2,'0')}s`;
+    }
 
-      timeToUpkeep = 30;
-      document.getElementById('upkeepTimer').textContent = timeToUpkeep;
-
-      timerInterval = setInterval(() => {
-        timeToUpkeep--;
-        document.getElementById('upkeepTimer').textContent = timeToUpkeep;
-        if (timeToUpkeep <= 0) {
-          applyUpkeep();
-          timeToUpkeep = 30;
-        }
-      }, 1000);
-
-      upkeepInterval = setInterval(applyUpkeep, 30000); // backup every 30s
+    function startDailyUpkeepTimer() {
+      clearInterval(upkeepTimerInterval);
+      upkeepTimerInterval = setInterval(updateUpkeepTimer, 1000);
+      updateUpkeepTimer();
     }
 
     function serveCustomer(type) {
       if (state.bankrupt) {
-        addLog(`<span style="color:#ff7675;">❌ You are bankrupt! Pay to reopen your shop first.</span>`);
+        addLog(`<span style="color:#ff7675;">❌ Bankrupt! Pay via Monzo first.</span>`);
         return;
       }
-
-      let gain = 18;
-      let msg = `💰 Candy sold! +${gain} 🍬`;
-
-      if (type === 'premium') { gain = 35; msg = `💎 Premium sale! +${gain} 🍬`; }
-      if (type === 'wild') { gain = 55; msg = `🔥 Wild flash sale! +${gain} 🍬`; }
+      let gain = type === 'premium' ? 35 : type === 'wild' ? 55 : type === 'custom' ? 25 : 18;
+      let msg = type === 'custom' ? `🎉 Custom sale posted! +${gain} 🍬` : `💰 Candy sold! +${gain} 🍬`;
+      
       if (type === 'custom') {
         const txt = document.getElementById('customInput').value.trim();
-        if (txt) {
-          addLog(`<strong>New Sale:</strong> ${txt}`);
-          document.getElementById('customInput').value = '';
-        }
-        gain = 25;
-        msg = `🎉 Custom sale! +${gain} 🍬`;
+        if (txt) addLog(`<strong>New Sale:</strong> ${txt}`);
+        document.getElementById('customInput').value = '';
       }
 
       state.candies += gain;
@@ -322,7 +332,7 @@
         const div = document.createElement('div');
         div.className = 'market-item';
         div.innerHTML = `
-          <span><strong>${item.name}</strong> — Avg: <strong>${item.avgPrice}</strong> 🍬 (Supply: ${item.supply})</span>
+          <span><strong>${item.name}</strong> — Avg: <strong>${item.avgPrice}</strong> 🍬</span>
           <div>
             <button onclick="tradeMarket('${item.id}', 'buy')">Buy</button>
             <button onclick="tradeMarket('${item.id}', 'sell')">Sell</button>
@@ -334,7 +344,6 @@
 
     function tradeMarket(id, action) {
       if (state.bankrupt) return;
-      // ... same as before (kept logic identical)
       const item = marketItems.find(i => i.id === id);
       if (!item) return;
 
@@ -365,36 +374,47 @@
       const suggested = 15 + state.level * 6;
       const note = encodeURIComponent(`Bankruptcy Rescue - New Shop Level ${state.level}`);
       window.open(`${MONZO_LINK}/${suggested}?d=${note}`, '_blank');
-      addLog(`🔗 Monzo rescue payment opened (£${suggested} suggested)`);
+      addLog(`🔗 Monzo payment opened (£${suggested} suggested)`);
+      
+      // The "I Have Paid" buttons will appear when user returns to the page
+      setTimeout(() => {
+        document.getElementById('claimRescueBtn').style.display = 'inline-block';
+        document.getElementById('claimRescueBtnOverlay').style.display = 'inline-block';
+      }, 800); // small delay so user sees Monzo open first
     }
 
     function claimRescue() {
-      let bonusCandies = 1500;
-      let bonusShards = 75;
+      let bonusCandies = 1800;
+      let bonusShards = 90;
       if (window.pendingDelivery) {
-        bonusCandies = window.pendingDelivery.candies || 1500;
-        bonusShards = window.pendingDelivery.shards || 75;
+        bonusCandies = window.pendingDelivery.candies || 1800;
+        bonusShards = window.pendingDelivery.shards || 90;
       }
 
       state.candies += bonusCandies;
       state.shards += bonusShards;
       state.shops++;
       state.bankrupt = false;
+      state.lastUpkeep = Date.now();
 
       document.getElementById('rescuePanel').style.display = 'none';
       document.getElementById('bankruptOverlay').style.display = 'none';
-      document.getElementById('actionButtons').style.opacity = '1';
-      document.getElementById('customArea').style.opacity = '1';
+      document.getElementById('actionButtons').style.pointerEvents = 'auto';
+      document.getElementById('customArea').style.pointerEvents = 'auto';
 
-      addLog(`<strong>🎉 New shop opened! Welcome back!</strong> +${bonusCandies} 🍬 & +${bonusShards} ✨`);
+      // Hide claim buttons again
+      document.getElementById('claimRescueBtn').style.display = 'none';
+      document.getElementById('claimRescueBtnOverlay').style.display = 'none';
+
+      addLog(`<strong>🎉 New shop successfully opened!</strong> +${bonusCandies} 🍬 & +${bonusShards} ✨`);
       window.pendingDelivery = null;
       updateUI();
-      startUpkeepTimer();
+      startDailyUpkeepTimer();
     }
 
     function switchTab(n) {
-      if (state.bankrupt && n !== 1) { // allow only buy packs tab when bankrupt? or block all except rescue
-        addLog(`<span style="color:#ff7675;">❌ Pay to reopen shop first!</span>`);
+      if (state.bankrupt) {
+        addLog(`<span style="color:#ff7675;">❌ Pay via Monzo to reopen your shop first!</span>`);
         return;
       }
       document.querySelectorAll('.tab-content').forEach((el, i) => el.classList.toggle('active', i === n));
@@ -406,11 +426,19 @@
     loadGame();
     updateUI();
     addLog("<em>🍬 Welcome to Sugar Realms Online!</em>");
-    addLog("Upkeep now runs every 30 seconds. Sell fast!");
-    startUpkeepTimer();
+    addLog("Daily upkeep every 24 hours • After paying on Monzo, return here and click 'I Have Paid'");
 
-    // Force check in case loaded in bankrupt state
+    startDailyUpkeepTimer();
+
     if (state.candies < 10) checkBankruptcy();
+
+    // Bonus: Show claim button if user returns from Monzo (visibility change)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && state.bankrupt) {
+        document.getElementById('claimRescueBtn').style.display = 'inline-block';
+        document.getElementById('claimRescueBtnOverlay').style.display = 'inline-block';
+      }
+    });
   </script>
 </body>
 </html>

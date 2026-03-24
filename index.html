@@ -3,212 +3,297 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sugar Realms Online – Your Candy Shop</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='70' font-size='70'%3E🍭%3C/text%3E%3C/svg%3E">
+  <title>Sugar Realms • Candy Shop Simulator</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='72' font-size='68'%3E🍭%3C/text%3E%3C/svg%3E">
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 99%);
-      color: #333;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+      color: #2d2d2d;
       margin: 0;
-      padding: 16px;
+      padding: 20px 12px;
       min-height: 100vh;
       background-attachment: fixed;
     }
     .container {
-      max-width: 980px;
+      max-width: 960px;
       margin: 0 auto;
-      background: rgba(255,255,255,0.95);
-      border-radius: 20px;
-      padding: 28px;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+      background: rgba(255, 255, 255, 0.97);
+      border-radius: 24px;
+      padding: 32px 28px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
       position: relative;
+      overflow: hidden;
     }
-    h1 { color: #d63031; text-align: center; margin: 0 0 8px; font-size: 2.4em; }
-    .subtitle { text-align: center; color: #636e72; font-style: italic; margin-bottom: 24px; }
-
-    .tabs { display: flex; justify-content: center; gap: 10px; margin: 24px 0; flex-wrap: wrap; }
-    .tab {
-      padding: 12px 28px;
-      background: #ff7675;
-      color: white;
-      border: none;
-      border-radius: 999px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: all 0.2s;
+    h1 {
+      color: #d63031;
+      text-align: center;
+      margin: 0 0 6px;
+      font-size: 2.7em;
+      letter-spacing: -1px;
     }
-    .tab:hover { transform: translateY(-2px); }
-    .tab.active { background: #e84393; box-shadow: 0 6px 16px rgba(232,67,147,0.4); }
-
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
+    .subtitle {
+      text-align: center;
+      color: #636e72;
+      font-style: italic;
+      margin-bottom: 28px;
+      font-size: 1.1em;
+    }
 
     .stats {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 20px;
-      background: #ffeaa7;
-      padding: 18px;
-      border-radius: 16px;
-      margin-bottom: 24px;
+      gap: 24px;
+      background: #fff3d1;
+      padding: 20px;
+      border-radius: 18px;
+      margin-bottom: 26px;
+      box-shadow: inset 0 4px 12px rgba(0,0,0,0.05);
     }
-    .stat strong { display: block; font-size: 1.7em; color: #e84393; }
+    .stat {
+      text-align: center;
+      min-width: 110px;
+    }
+    .stat strong {
+      display: block;
+      font-size: 2.1em;
+      color: #e84393;
+      line-height: 1;
+    }
+    .stat small {
+      font-size: 0.95em;
+      color: #636e72;
+    }
+
+    .next-upkeep {
+      text-align: center;
+      font-weight: 600;
+      color: #d63031;
+      margin: 10px 0 24px;
+      font-size: 1.15em;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 28px 0 32px;
+      flex-wrap: wrap;
+    }
+    .tab {
+      padding: 14px 32px;
+      background: #ff7675;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1.05em;
+      transition: all 0.25s ease;
+    }
+    .tab:hover { transform: translateY(-3px); }
+    .tab.active {
+      background: #e84393;
+      box-shadow: 0 8px 20px rgba(232, 67, 147, 0.35);
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
     .log {
       background: #2d3436;
       color: #dfe6e9;
-      padding: 18px;
-      border-radius: 14px;
-      height: 280px;
+      padding: 20px;
+      border-radius: 16px;
+      height: 260px;
       overflow-y: auto;
       margin-bottom: 24px;
-      font-family: monospace;
-      line-height: 1.5;
+      font-family: 'Consolas', monospace;
+      font-size: 0.97em;
+      line-height: 1.55;
+      box-shadow: inset 0 6px 16px rgba(0,0,0,0.4);
     }
 
     button {
       background: #ff7675;
       color: white;
       border: none;
-      padding: 14px 32px;
+      padding: 15px 34px;
       font-size: 1.1em;
-      border-radius: 999px;
+      border-radius: 50px;
       cursor: pointer;
-      margin: 6px;
-      transition: all 0.2s;
+      margin: 8px 6px;
+      transition: all 0.25s;
+      font-weight: 600;
     }
-    button:hover { background: #e84393; transform: translateY(-3px); }
+    button:hover {
+      background: #e84393;
+      transform: translateY(-4px);
+      box-shadow: 0 8px 18px rgba(232,67,147,0.3);
+    }
 
-    .pack { background: white; border: 3px solid #ff7675; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    .pack:hover { transform: scale(1.03); }
-
-    .rescue {
-      background: linear-gradient(#d63031, #e84393);
-      color: white;
-      padding: 30px;
-      border-radius: 16px;
+    .pack {
+      background: white;
+      border: 3px solid #ff7675;
+      border-radius: 20px;
+      padding: 24px 18px;
       text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+      transition: all 0.3s;
+    }
+    .pack:hover {
+      transform: scale(1.04) translateY(-6px);
+      border-color: #e84393;
+    }
+
+    .rescue, .overlay {
+      background: linear-gradient(135deg, #d63031, #e84393);
+      color: white;
+      padding: 40px 30px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 15px 40px rgba(214,48,49,0.5);
       margin: 20px 0;
-      font-size: 1.15em;
-      box-shadow: 0 8px 25px rgba(214,48,49,0.4);
     }
 
     .overlay {
       position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.82);
-      border-radius: 20px;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 100;
-      text-align: center;
-      color: white;
+      z-index: 200;
+      border-radius: 24px;
     }
 
-    .next-upkeep {
-      text-align: center;
-      font-size: 1.1em;
-      color: #d63031;
-      margin: 12px 0;
-      font-weight: bold;
+    .market-item {
+      background: #f8f1e3;
+      padding: 16px 20px;
+      border-radius: 16px;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
     }
   </style>
 </head>
 <body>
   <div class="container" id="mainContainer">
-    <h1>🍬 Sugar Realms Online 🍭</h1>
-    <p class="subtitle">Your friendly online candy shop – Sell virtual candy packs for real money via Monzo</p>
+    <h1>🍬 Sugar Realms</h1>
+    <p class="subtitle">Virtual Candy Shop • Sell sweets, grow your empire</p>
 
     <div class="stats">
-      <div class="stat"><strong id="level">1</strong> Level</div>
-      <div class="stat"><strong><span id="candies">85</span></strong> 🍬 Candies</div>
-      <div class="stat"><strong><span id="shards">12</span></strong> ✨ Shards</div>
-      <div class="stat"><strong><span id="shops">1</span></strong> Shops Owned</div>
+      <div class="stat">
+        <strong id="level">1</strong>
+        <small>Level</small>
+      </div>
+      <div class="stat">
+        <strong><span id="candies">142</span></strong>
+        <small>🍬 Candies</small>
+      </div>
+      <div class="stat">
+        <strong><span id="shards">27</span></strong>
+        <small>✨ Shards</small>
+      </div>
+      <div class="stat">
+        <strong><span id="shops">1</span></strong>
+        <small>Shops</small>
+      </div>
     </div>
 
     <div class="next-upkeep">
-      Next upkeep in <span id="upkeepTimer">60</span> seconds
+      Next upkeep in <span id="upkeepTimer">58</span> seconds
     </div>
 
     <div class="tabs">
-      <button class="tab active" onclick="switchTab(0)">My Candy Shop</button>
-      <button class="tab" onclick="switchTab(1)">Buy Candy Packs (Real £)</button>
-      <button class="tab" onclick="switchTab(2)">Gummy Exchange – Live Market</button>
+      <button class="tab active" onclick="switchTab(0)">My Shop</button>
+      <button class="tab" onclick="switchTab(1)">Buy Stock (Real £)</button>
+      <button class="tab" onclick="switchTab(2)">Gummy Market</button>
     </div>
 
-    <!-- Shop Tab -->
+    <!-- Main Shop Tab -->
     <div id="tab0" class="tab-content active">
       <div class="log" id="log"></div>
 
-      <div style="text-align:center; margin:20px 0;" id="actionButtons">
-        <button onclick="serveCustomer('normal')">Sell Regular Candy</button>
-        <button onclick="serveCustomer('premium')">Sell Premium Candy</button>
-        <button onclick="serveCustomer('wild')">Wild Flash Sale!</button>
+      <div style="text-align:center; margin:24px 0 32px;" id="actionButtons">
+        <button onclick="serveCustomer('normal')">Serve Regular Customer</button>
+        <button onclick="serveCustomer('premium')">Serve Premium Customer</button>
+        <button onclick="serveCustomer('wild')">Flash Sale Event!</button>
       </div>
 
-      <div style="text-align:center;" id="customArea">
-        <input type="text" id="customInput" placeholder="Describe your candy sale..." 
-               style="padding:12px; width:320px; border:2px solid #ff7675; border-radius:999px;"/>
-        <button onclick="serveCustomer('custom')">Post Sale</button>
+      <div style="text-align:center;">
+        <input type="text" id="customInput" placeholder="Describe your special candy creation or promotion..." 
+               style="padding:14px 20px; width:380px; max-width:92%; border:3px solid #ff7675; border-radius:50px; font-size:1.05em;"/>
+        <br><br>
+        <button onclick="serveCustomer('custom')">Post Custom Sale</button>
       </div>
 
       <!-- Bankruptcy Rescue -->
       <div id="rescuePanel" class="rescue" style="display:none;">
-        <strong>💸 YOUR CANDY SHOP IS BANKRUPT!</strong><br><br>
-        Pay via Monzo to open a new shop and continue playing.<br><br>
+        <strong style="font-size:1.5em;">💸 YOUR CANDY SHOP HAS GONE BANKRUPT!</strong><br><br>
+        Pay a small rescue fee via Monzo to reopen your shop and continue playing.<br><br>
         
-        <button onclick="openMonzoRescue()" style="background:white; color:#d63031; padding:18px 60px; font-size:1.3em;">
+        <button onclick="openMonzoRescue()" style="background:white; color:#d63031; padding:18px 70px; font-size:1.35em; border-radius:50px;">
           Pay via Monzo.me/iandreme
         </button>
         <br><br>
-        
-        <button id="claimRescueBtn" onclick="claimRescue()" style="background:#00b894; padding:16px 50px; font-size:1.1em; display: none;">
-          ✅ I Have Paid – Open New Shop Now!
+        <button id="claimRescueBtn" onclick="claimRescue()" style="background:#00b894; padding:16px 56px; font-size:1.15em; display:none; border-radius:50px;">
+          ✅ I've Paid – Reopen My Shop Now
         </button>
       </div>
     </div>
 
     <!-- Buy Packs Tab -->
     <div id="tab1" class="tab-content">
-      <h2 style="text-align:center;">Buy Candy Packs – Real Money via Monzo</h2>
-      <p style="text-align:center;">Pay securely via Monzo and receive stock instantly.</p>
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:18px;">
+      <h2 style="text-align:center; margin-bottom:8px;">Buy Candy Stock – Instant Delivery</h2>
+      <p style="text-align:center; color:#636e72; margin-bottom:28px;">Pay securely with Monzo • Stock added immediately</p>
+      
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:22px;">
         <div class="pack">
-          <strong>Starter Stock</strong><br>800 🍬 + 20 ✨<br><span style="color:#e84393; font-size:1.3em;">£8</span><br>
-          <button onclick="buyPack(800, 20, 8, 'Starter Stock')">Buy with Monzo</button>
+          <strong>Starter Pack</strong><br>
+          <span style="font-size:1.9em;">800 🍬 + 25 ✨</span><br><br>
+          <span style="color:#e84393; font-size:1.55em; font-weight:700;">£9.50</span><br><br>
+          <button onclick="buyPack(800, 25, 9.5, 'Starter Pack')">Buy with Monzo</button>
         </div>
         <div class="pack">
-          <strong>Big Seller Pack</strong><br>2,500 🍬 + 80 ✨<br><span style="color:#e84393; font-size:1.3em;">£20</span><br>
-          <button onclick="buyPack(2500, 80, 20, 'Big Seller Pack')">Buy with Monzo</button>
+          <strong>Popular Pack</strong><br>
+          <span style="font-size:1.9em;">2,800 🍬 + 95 ✨</span><br><br>
+          <span style="color:#e84393; font-size:1.55em; font-weight:700;">£24</span><br><br>
+          <button onclick="buyPack(2800, 95, 24, 'Popular Pack')">Buy with Monzo</button>
         </div>
         <div class="pack">
-          <strong>Empire Builder</strong><br>7,000 🍬 + 250 ✨<br><span style="color:#e84393; font-size:1.3em;">£50</span><br>
-          <button onclick="buyPack(7000, 250, 50, 'Empire Builder')">Buy with Monzo</button>
+          <strong>Empire Builder</strong><br>
+          <span style="font-size:1.9em;">8,500 🍬 + 320 ✨</span><br><br>
+          <span style="color:#e84393; font-size:1.55em; font-weight:700;">£58</span><br><br>
+          <button onclick="buyPack(8500, 320, 58, 'Empire Builder')">Buy with Monzo</button>
         </div>
       </div>
     </div>
 
     <!-- Market Tab -->
     <div id="tab2" class="tab-content">
-      <h2>Gummy Exchange – Live Average Market Prices</h2>
+      <h2 style="text-align:center;">Gummy Exchange – Live Market</h2>
       <div id="marketList"></div>
-      <p style="font-size:0.9em; color:#636e72; text-align:center;">Prices update based on supply and demand</p>
+      <p style="text-align:center; font-size:0.92em; color:#636e72; margin-top:20px;">
+        Prices fluctuate in real time based on player activity
+      </p>
     </div>
 
-    <!-- Blocking Overlay -->
+    <!-- Bankrupt Overlay -->
     <div id="bankruptOverlay" class="overlay">
-      <div>
+      <div style="max-width:420px; text-align:center;">
         <h2>💸 Shop Bankrupt!</h2>
-        <p>You cannot sell or trade until you pay via Monzo.</p>
-        <button onclick="openMonzoRescue()" style="background:white; color:#d63031; padding:18px 70px; font-size:1.4em; margin:15px;">
-          Pay via Monzo Now
+        <p style="font-size:1.15em; margin:20px 0 30px;">You need to pay the rescue fee via Monzo before you can sell again.</p>
+        <button onclick="openMonzoRescue()" style="background:white; color:#d63031; padding:18px 80px; font-size:1.4em; border-radius:50px;">
+          Pay Rescue Fee Now
         </button>
         <br><br>
-        <button id="claimRescueBtnOverlay" onclick="claimRescue()" style="background:#00b894; padding:16px 60px; font-size:1.1em; display: none;">
-          ✅ I Have Paid – Reopen Shop
+        <button id="claimRescueBtnOverlay" onclick="claimRescue()" style="background:#00b894; padding:16px 60px; font-size:1.15em; display:none; border-radius:50px;">
+          ✅ I've Paid – Reopen Shop
         </button>
       </div>
     </div>
@@ -219,27 +304,30 @@
 
     let state = {
       level: 1,
-      candies: 85,
-      shards: 12,
+      candies: 142,
+      shards: 27,
       shops: 1,
       bankrupt: false,
       lastUpkeep: Date.now()
     };
 
     let marketItems = [
-      { id: "dragonToffee", name: "Dragonfire Toffee Lance", avgPrice: 22, supply: 38 },
-      { id: "moonSugar", name: "Moon Sugar 🌙", avgPrice: 38, supply: 19 },
-      { id: "gummyHydra", name: "Infinite Gummy Hydra", avgPrice: 72, supply: 7 }
+      { id: "dragonToffee", name: "Dragonfire Toffee", avgPrice: 24, supply: 42 },
+      { id: "moonSugar", name: "Moon Sugar Crystals", avgPrice: 41, supply: 18 },
+      { id: "gummyHydra", name: "Rainbow Gummy Hydra", avgPrice: 79, supply: 5 }
     ];
 
+    const UPKEEP_INTERVAL = 60000; // 60 seconds
     let upkeepTimerInterval;
-    const UPKEEP_INTERVAL = 60 * 1000;   // 60 seconds (1 minute)
 
     const logEl = document.getElementById('log');
 
-    function saveGame() { localStorage.setItem('sugarRealmsMonzoShop', JSON.stringify(state)); }
+    function saveGame() {
+      localStorage.setItem('sugarRealmsGame', JSON.stringify(state));
+    }
+
     function loadGame() {
-      const saved = localStorage.getItem('sugarRealmsMonzoShop');
+      const saved = localStorage.getItem('sugarRealmsGame');
       if (saved) Object.assign(state, JSON.parse(saved));
     }
 
@@ -248,12 +336,12 @@
       p.innerHTML = html;
       logEl.appendChild(p);
       logEl.scrollTop = logEl.scrollHeight;
-      if (logEl.children.length > 60) logEl.removeChild(logEl.children[0]);
+      if (logEl.children.length > 55) logEl.removeChild(logEl.children[0]);
     }
 
     function updateUI() {
       document.getElementById('level').textContent = state.level;
-      document.getElementById('candies').textContent = Math.max(0, state.candies);
+      document.getElementById('candies').textContent = Math.max(0, Math.floor(state.candies));
       document.getElementById('shards').textContent = state.shards;
       document.getElementById('shops').textContent = state.shops;
       saveGame();
@@ -261,66 +349,68 @@
     }
 
     function checkBankruptcy() {
-      if (state.candies < 10 && !state.bankrupt) {
+      if (state.candies < 15 && !state.bankrupt) {
         state.bankrupt = true;
         state.candies = 0;
         document.getElementById('rescuePanel').style.display = 'block';
         document.getElementById('bankruptOverlay').style.display = 'flex';
         document.getElementById('actionButtons').style.pointerEvents = 'none';
-        document.getElementById('customArea').style.pointerEvents = 'none';
-        addLog(`<strong style="color:#ff7675;">💸 BANKRUPT! Pay via Monzo to continue playing.</strong>`);
+        addLog(`<strong style="color:#ff7675;">💸 BANKRUPT! Your shop has run out of stock.</strong>`);
       }
     }
 
     function applyUpkeep() {
       if (state.bankrupt) return;
-      const upkeep = 12 + state.level * 4;
-      if (state.candies >= upkeep) {
-        state.candies -= upkeep;
-        addLog(`🧾 Upkeep paid: -${upkeep} 🍬`);
+      const upkeepCost = Math.floor(14 + state.level * 5.5);
+      if (state.candies >= upkeepCost) {
+        state.candies -= upkeepCost;
+        addLog(`🧾 Daily upkeep paid: -${upkeepCost} 🍬`);
       } else {
-        state.candies = 0;
         checkBankruptcy();
       }
       updateUI();
-      state.lastUpkeep = Date.now();
     }
 
     function updateUpkeepTimer() {
-      const now = Date.now();
-      let timeLeft = state.lastUpkeep + UPKEEP_INTERVAL - now;
+      const timeLeft = Math.max(0, state.lastUpkeep + UPKEEP_INTERVAL - Date.now());
+      document.getElementById('upkeepTimer').textContent = Math.ceil(timeLeft / 1000);
 
       if (timeLeft <= 0) {
         applyUpkeep();
-        timeLeft = UPKEEP_INTERVAL;
+        state.lastUpkeep = Date.now();
       }
-
-      document.getElementById('upkeepTimer').textContent = Math.ceil(timeLeft / 1000);
     }
 
     function startUpkeepTimer() {
       clearInterval(upkeepTimerInterval);
-      upkeepTimerInterval = setInterval(updateUpkeepTimer, 200);
+      upkeepTimerInterval = setInterval(updateUpkeepTimer, 300);
       updateUpkeepTimer();
     }
 
     function serveCustomer(type) {
-      if (state.bankrupt) {
-        addLog(`<span style="color:#ff7675;">❌ Bankrupt! Pay via Monzo first.</span>`);
-        return;
-      }
-      let gain = type === 'premium' ? 35 : type === 'wild' ? 55 : type === 'custom' ? 25 : 18;
-      let msg = type === 'custom' ? `🎉 Custom sale posted! +${gain} 🍬` : `💰 Candy sold! +${gain} 🍬`;
-      
-      if (type === 'custom') {
+      if (state.bankrupt) return;
+
+      let gain = 22;
+      let message = "💰 Sold some regular candy!";
+
+      if (type === 'premium') {
+        gain = 48;
+        message = "✨ Premium customer paid well!";
+      } else if (type === 'wild') {
+        gain = 67;
+        message = "🔥 Flash sale went crazy!";
+      } else if (type === 'custom') {
         const txt = document.getElementById('customInput').value.trim();
-        if (txt) addLog(`<strong>New Sale:</strong> ${txt}`);
+        if (txt) addLog(`<strong>📣 New promotion:</strong> ${txt}`);
         document.getElementById('customInput').value = '';
+        gain = 31;
+        message = "🎉 Custom sale completed!";
       }
 
       state.candies += gain;
-      addLog(msg);
+      addLog(message + ` <strong>+${gain} 🍬</strong>`);
       updateUI();
+      checkBankruptcy();
     }
 
     function renderMarket() {
@@ -330,7 +420,7 @@
         const div = document.createElement('div');
         div.className = 'market-item';
         div.innerHTML = `
-          <span><strong>${item.name}</strong> — Avg: <strong>${item.avgPrice}</strong> 🍬</span>
+          <div><strong>${item.name}</strong><br><small>Avg price: <b>${item.avgPrice} 🍬</b></small></div>
           <div>
             <button onclick="tradeMarket('${item.id}', 'buy')">Buy</button>
             <button onclick="tradeMarket('${item.id}', 'sell')">Sell</button>
@@ -348,44 +438,44 @@
       if (action === 'buy') {
         if (state.candies >= item.avgPrice) {
           state.candies -= item.avgPrice;
-          item.supply = Math.max(0, item.supply - 1);
-          item.avgPrice = Math.floor(item.avgPrice * 1.05);
-          addLog(`📈 Bought ${item.name}!`);
+          item.avgPrice = Math.floor(item.avgPrice * 1.07);
+          addLog(`📈 Bought 1x <strong>${item.name}</strong>`);
         }
       } else {
-        state.candies += Math.floor(item.avgPrice * 0.92);
-        item.supply++;
-        item.avgPrice = Math.max(10, Math.floor(item.avgPrice * 0.96));
-        addLog(`📉 Sold ${item.name}!`);
+        const sellPrice = Math.floor(item.avgPrice * 0.89);
+        state.candies += sellPrice;
+        item.avgPrice = Math.max(12, Math.floor(item.avgPrice * 0.94));
+        addLog(`📉 Sold 1x <strong>${item.name}</strong> for ${sellPrice} 🍬`);
       }
       updateUI();
     }
 
     function buyPack(candiesAmount, shardsAmount, priceGBP, packName) {
-      const note = encodeURIComponent(`${packName} for Sugar Realms Online`);
+      const note = encodeURIComponent(`Sugar Realms - ${packName}`);
       window.open(`${MONZO_LINK}/${priceGBP}?d=${note}`, '_blank');
-      addLog(`🔗 Monzo opened for <strong>${packName}</strong> (£${priceGBP})`);
+      addLog(`🔗 Opened Monzo payment for <strong>${packName}</strong> (£${priceGBP})`);
       window.pendingDelivery = {candies: candiesAmount, shards: shardsAmount};
     }
 
     function openMonzoRescue() {
-      const suggested = 15 + state.level * 6;
-      const note = encodeURIComponent(`Rescue - New Shop Level ${state.level}`);
+      const suggested = Math.floor(12 + state.level * 7);
+      const note = encodeURIComponent(`Sugar Realms Rescue - Level ${state.level}`);
       window.open(`${MONZO_LINK}/${suggested}?d=${note}`, '_blank');
-      addLog(`🔗 Monzo payment opened (£${suggested} suggested)`);
-      
+      addLog(`🔗 Monzo rescue payment opened (£${suggested} suggested)`);
+
       setTimeout(() => {
         document.getElementById('claimRescueBtn').style.display = 'inline-block';
         document.getElementById('claimRescueBtnOverlay').style.display = 'inline-block';
-      }, 800);
+      }, 900);
     }
 
     function claimRescue() {
-      let bonusCandies = 1800;
-      let bonusShards = 90;
+      let bonusCandies = 2200;
+      let bonusShards = 110;
+
       if (window.pendingDelivery) {
-        bonusCandies = window.pendingDelivery.candies || 1800;
-        bonusShards = window.pendingDelivery.shards || 90;
+        bonusCandies = window.pendingDelivery.candies || 2200;
+        bonusShards = window.pendingDelivery.shards || 110;
       }
 
       state.candies += bonusCandies;
@@ -397,20 +487,19 @@
       document.getElementById('rescuePanel').style.display = 'none';
       document.getElementById('bankruptOverlay').style.display = 'none';
       document.getElementById('actionButtons').style.pointerEvents = 'auto';
-      document.getElementById('customArea').style.pointerEvents = 'auto';
 
       document.getElementById('claimRescueBtn').style.display = 'none';
       document.getElementById('claimRescueBtnOverlay').style.display = 'none';
 
-      addLog(`<strong>🎉 New shop successfully opened!</strong> +${bonusCandies} 🍬 & +${bonusShards} ✨`);
+      addLog(`<strong style="color:#00b894;">🎉 Shop successfully reopened!</strong> +${bonusCandies} 🍬 & +${bonusShards} ✨`);
       window.pendingDelivery = null;
       updateUI();
       startUpkeepTimer();
     }
 
     function switchTab(n) {
-      if (state.bankrupt) {
-        addLog(`<span style="color:#ff7675;">❌ Pay via Monzo to reopen your shop first!</span>`);
+      if (state.bankrupt && n !== 1) {
+        addLog(`<span style="color:#ff7675;">❌ You must reopen your shop first via Monzo.</span>`);
         return;
       }
       document.querySelectorAll('.tab-content').forEach((el, i) => el.classList.toggle('active', i === n));
@@ -418,17 +507,15 @@
       if (n === 2) renderMarket();
     }
 
-    // Initialize
+    // Init
     loadGame();
     updateUI();
-    addLog("<em>🍬 Welcome to Sugar Realms Online!</em>");
-    addLog("Upkeep every 60 seconds • Bankruptcy requires Monzo payment");
+    addLog("<em>🍭 Welcome back to Sugar Realms!</em>");
+    addLog("Upkeep every 60 seconds • Run out of candy = bankruptcy");
 
     startUpkeepTimer();
+    if (state.candies < 15) checkBankruptcy();
 
-    if (state.candies < 10) checkBankruptcy();
-
-    // Show claim button when returning from Monzo
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && state.bankrupt) {
         document.getElementById('claimRescueBtn').style.display = 'inline-block';

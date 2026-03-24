@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sugar Realms Online – Candy Shop MMORPG</title>
+  <title>Sugar Realms Online – Your Candy Shop MMORPG</title>
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 99%); color: #333; margin: 0; padding: 16px; min-height: 100vh; background-attachment: fixed; }
     .container { max-width: 920px; margin: 0 auto; background: rgba(255,255,255,0.94); border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
@@ -11,30 +11,29 @@
     .subtitle { text-align: center; color: #636e72; font-style: italic; margin: 0 0 24px; }
     .tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
     .tab { padding: 10px 22px; background: #ff7675; color: white; border: none; border-radius: 999px; cursor: pointer; }
-    .tab.active { background: #e84393; box-shadow: 0 4px 12px rgba(232,67,147,0.4); }
+    .tab.active { background: #e84393; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     .stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; background: #ffeaa7; padding: 16px; border-radius: 12px; margin-bottom: 24px; }
     .stat strong { display: block; font-size: 1.5em; color: #e84393; }
     .log { background: #2d3436; color: #dfe6e9; padding: 16px; border-radius: 12px; height: 280px; overflow-y: auto; margin-bottom: 24px; font-family: 'Courier New', monospace; font-size: 0.97em; line-height: 1.55; }
-    button { background: #ff7675; color: white; border: none; padding: 12px 26px; font-size: 1.05em; border-radius: 999px; cursor: pointer; transition: all 0.22s; box-shadow: 0 4px 12px rgba(255,118,117,0.35); }
+    button { background: #ff7675; color: white; border: none; padding: 12px 26px; font-size: 1.05em; border-radius: 999px; cursor: pointer; transition: all 0.22s; }
     button:hover:not(:disabled) { background: #e84393; transform: translateY(-2px); }
-    button.danger { background: #d63031; }
+    button.danger { background: #d63031; font-weight: bold; }
+    .rescue { background:#d63031; color:white; padding:20px; border-radius:12px; text-align:center; margin:16px 0; display:none; }
     .market-item { background: #fff; padding: 12px; margin: 8px 0; border-radius: 12px; border: 2px solid #ff7675; display: flex; justify-content: space-between; align-items: center; }
-    .buy-pack { background:#ffeaa7; padding:16px; border-radius:12px; text-align:center; margin:8px; }
-    .rescue { background:#d63031; color:white; padding:16px; border-radius:12px; text-align:center; margin:16px 0; display:none; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>🍬 Sugar Realms Online 🍭</h1>
-    <p class="subtitle">Chaotic Candy MMORPG – Monzo Rescue When Bankrupt!</p>
+    <p class="subtitle">Your Real Candy Shop MMORPG – Sell sweets, trade, and rescue with Monzo!</p>
 
     <div class="stats">
       <div class="stat"><strong id="playerName">Sugar Gremlin</strong><span>Shopkeep</span></div>
       <div class="stat"><strong>Level <span id="level">1</span></strong><span>Sucrose Mastery</span></div>
-      <div class="stat"><strong><span id="candies">42</span> 🍬</strong><span>Candies</span></div>
-      <div class="stat"><strong><span id="shards">5</span> ✨</strong><span>Shards</span></div>
+      <div class="stat"><strong><span id="candies">42</span> 🍬</strong><span>Candies Sold Today</span></div>
+      <div class="stat"><strong><span id="shards">5</span> ✨</strong><span>Sparkle Shards</span></div>
       <div class="stat"><strong><span id="bankBalance">120</span> 🍬</strong><span>Bank</span></div>
     </div>
 
@@ -48,55 +47,60 @@
     <!-- Shop Tab -->
     <div id="tab0" class="tab-content active">
       <div class="log" id="log"></div>
-      <div class="actions" style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;">
+      <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:12px 0;">
         <button onclick="serveCustomer('offerBold')">Offer Bold Legendary Candy</button>
         <button onclick="serveCustomer('haggle')">Haggle / Quest</button>
         <button onclick="serveCustomer('bribe')">Bribe with Chocolate</button>
         <button onclick="serveCustomer('wild')">Do Something Wild!</button>
       </div>
-      <div style="text-align:center;margin:12px;">
-        <input type="text" id="customInput" placeholder="Your own chaotic action..." style="padding:10px;width:260px;border:2px solid #ff7675;border-radius:999px;"/>
+      <div style="text-align:center;">
+        <input type="text" id="customInput" placeholder="Your own wild candy action..." style="padding:10px;width:260px;border:2px solid #ff7675;border-radius:999px;"/>
         <button onclick="serveCustomer('custom')">Submit</button>
       </div>
 
-      <!-- Bankruptcy Rescue Section -->
       <div id="rescuePanel" class="rescue">
-        <strong>💸 Your shop went bankrupt from upkeep!</strong><br>
-        Pay via Monzo to reopen the candy empire!<br><br>
-        <button onclick="openMonzoRescue()" style="background:white;color:#d63031;padding:14px 30px;font-size:1.1em;">Pay via Monzo.me/iandreme</button>
+        <strong>💸 YOUR CANDY SHOP WENT BANKRUPT!</strong><br><br>
+        Pay via Monzo to reopen and get a big comeback bonus!<br><br>
+        <button onclick="openMonzoRescue()" class="danger" style="padding:16px 40px;font-size:1.2em;">Pay via Monzo.me/iandreme</button>
         <br><br>
-        <button onclick="claimRescue()" style="background:#00b894;">I Paid – Restore My Shop!</button>
+        <button onclick="claimRescue()" style="background:#00b894;padding:12px 30px;">✅ I Paid – Restore My Shop!</button>
       </div>
     </div>
 
-    <!-- Bank, Exchange, Shard Shop tabs (kept from before) -->
+    <!-- Bank Tab -->
     <div id="tab1" class="tab-content">
       <h2>🍬 Sugar Bank</h2>
-      <p>Bank: <strong id="bankDisplay">120</strong> 🍬 | Interest: <strong id="interestDisplay">1.2</strong>%/hr</p>
-      <button onclick="depositToBank()">Deposit All</button>
+      <p>Bank: <strong id="bankDisplay">120</strong> 🍬</p>
+      <button onclick="depositToBank()">Deposit All Candies</button>
       <button onclick="withdrawFromBank()">Withdraw All</button>
     </div>
 
+    <!-- Gummy Exchange -->
     <div id="tab2" class="tab-content">
-      <h2>🌟 Gummy Exchange</h2>
+      <h2>🌟 Gummy Exchange – Live Prices</h2>
       <div id="marketList"></div>
     </div>
 
+    <!-- Shard Shop -->
     <div id="tab3" class="tab-content">
-      <h2>✨ Shard Shop (Real Money Demo)</h2>
+      <h2>✨ Shard Shop</h2>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
-        <div class="buy-pack"><strong>50 Shards ~£5</strong><br><button onclick="buyShards(50)">Buy</button></div>
-        <div class="buy-pack"><strong>200 Shards ~£15</strong><br><button onclick="buyShards(200)">Buy</button></div>
+        <div style="background:#ffeaa7;padding:16px;border-radius:12px;text-align:center;">
+          <strong>50 Shards</strong><br><button onclick="buyShards(50)">Buy (Demo)</button>
+        </div>
+        <div style="background:#ffeaa7;padding:16px;border-radius:12px;text-align:center;">
+          <strong>200 Shards</strong><br><button onclick="buyShards(200)">Buy (Demo)</button>
+        </div>
       </div>
     </div>
 
-    <p style="text-align:center;margin-top:20px;color:#636e72;font-size:0.9em;">
-      Upkeep can bankrupt you • Use Monzo rescue to reopen • Everything auto-saves
+    <p style="text-align:center;margin-top:24px;color:#636e72;font-size:0.9em;">
+      Keep selling candy • Upkeep can bankrupt you • Monzo rescue brings you back stronger!
     </p>
   </div>
 
   <script>
-    const STORAGE_KEY = 'sugarRealmsMonzoSave';
+    const STORAGE_KEY = 'sugarRealmsFinalSave';
     const MONZO_LINK = "https://monzo.me/iandreme";
 
     let state = {
@@ -138,61 +142,70 @@
       document.getElementById('shards').textContent = state.shards;
       document.getElementById('bankBalance').textContent = state.bankBalance;
       document.getElementById('bankDisplay').textContent = state.bankBalance;
-      document.getElementById('interestDisplay').textContent = "1.2";
       saveGame();
       renderMarket();
       checkBankruptcy();
     }
 
     function checkBankruptcy() {
-      const rescuePanel = document.getElementById('rescuePanel');
-      if (state.candies < 5 && state.bankBalance < 10) {
+      const panel = document.getElementById('rescuePanel');
+      if (state.candies < 8 && state.bankBalance < 15) {
         state.bankrupt = true;
-        rescuePanel.style.display = 'block';
-        addLog(`<strong style="color:#d63031;">💸 BANKRUPT! Upkeep wiped you out. Use Monzo rescue to reopen.</strong>`);
+        panel.style.display = 'block';
       }
     }
 
     function applyUpkeep() {
-      const upkeep = Math.max(8, 8 + state.level * 3);
+      const upkeep = 10 + Math.floor(state.level * 2.5);
       if (state.candies >= upkeep) {
         state.candies -= upkeep;
       } else {
         state.candies = 0;
-        addLog(`🧾 Upkeep bankrupted you!`);
+        addLog(`<strong style="color:#d63031;">💸 Upkeep bankrupted your shop!</strong>`);
         checkBankruptcy();
       }
     }
 
     function serveCustomer(action) {
-      // Simple actions (expand as needed)
+      let gain = 12 + Math.floor(Math.random() * 12);
       if (action === 'custom') {
         const txt = document.getElementById('customInput').value.trim();
-        if (!txt) return;
-        addLog(`<strong>You:</strong> ${txt}`);
-        document.getElementById('customInput').value = '';
+        if (txt) {
+          addLog(`<strong>You:</strong> ${txt}`);
+          document.getElementById('customInput').value = '';
+        }
       } else {
-        addLog(`<strong>You served a wild customer!</strong>`);
+        addLog(`<strong>You sold some delicious candy!</strong>`);
       }
-      state.candies += 8 + Math.floor(Math.random()*10);
+      state.candies += gain;
       state.customersServed++;
-      if (state.customersServed % 6 === 0) applyUpkeep();
+      addLog(`+${gain} 🍬 from today's sales`);
+
+      if (state.customersServed % 7 === 0) applyUpkeep();
       updateUI();
     }
 
     function depositToBank() {
-      if (state.candies > 0) { state.bankBalance += state.candies; state.candies = 0; addLog(`🏦 Deposited all!`); }
+      if (state.candies > 0) {
+        state.bankBalance += state.candies;
+        state.candies = 0;
+        addLog(`🏦 All candies deposited to the bank!`);
+      }
       updateUI();
     }
 
     function withdrawFromBank() {
-      if (state.bankBalance > 0) { state.candies += state.bankBalance; state.bankBalance = 0; addLog(`🏦 Withdrew all!`); }
+      if (state.bankBalance > 0) {
+        state.candies += state.bankBalance;
+        state.bankBalance = 0;
+        addLog(`🏦 Withdrew everything from the bank!`);
+      }
       updateUI();
     }
 
     function renderMarket() {
       const container = document.getElementById('marketList');
-      container.innerHTML = '<p>Market items (prices move with trades):</p>';
+      container.innerHTML = '';
       marketItems.forEach(item => {
         const div = document.createElement('div');
         div.className = 'market-item';
@@ -205,46 +218,46 @@
       const item = marketItems.find(i => i.id === id);
       if (item && state.candies >= item.avgPrice) {
         state.candies -= item.avgPrice;
-        addLog(`📈 Bought ${item.name}!`);
+        addLog(`📈 Bought ${item.name} from the market!`);
         updateUI();
       }
     }
 
     function buyShards(amount) {
       state.shards += amount;
-      addLog(`✨ +${amount} Shards (demo purchase)`);
+      addLog(`✨ +${amount} Sparkle Shards (demo)`);
       updateUI();
     }
 
     function openMonzoRescue() {
-      const amount = 5 + state.level * 2; // suggested £ amount
-      const note = encodeURIComponent(`Sugar Realms Bankruptcy Rescue - Level ${state.level}`);
-      const fullLink = `${MONZO_LINK}/${amount}?d=${note}`;
-      window.open(fullLink, '_blank');
-      addLog(`🔗 Opened Monzo rescue link with suggested amount £${amount}`);
+      const suggested = 8 + state.level * 3;
+      const note = encodeURIComponent(`Sugar Realms Rescue - Level ${state.level} - Thank you!`);
+      const link = `${MONZO_LINK}/${suggested}?d=${note}`;
+      window.open(link, '_blank');
+      addLog(`🔗 Monzo rescue opened – suggested £${suggested}`);
     }
 
     function claimRescue() {
-      // After paying via Monzo, player clicks this
-      state.candies += 200 + state.level * 20;
-      state.shards += 10;
+      const bonus = 250 + state.level * 30;
+      state.candies += bonus;
+      state.shards += 15;
       state.bankrupt = false;
       document.getElementById('rescuePanel').style.display = 'none';
-      addLog(`<strong>🎉 Shop restored! Thank you for the Monzo rescue. +200+ 🍬 & +10 ✨</strong>`);
+      addLog(`<strong>🎉 Shop rescued! +${bonus} 🍬 & +15 ✨ – Thank you for using Monzo!</strong>`);
       updateUI();
     }
 
     function switchTab(n) {
       document.querySelectorAll('.tab-content').forEach((el,i) => el.classList.toggle('active', i===n));
       document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', i===n));
-      if (n===2) renderMarket();
+      if (n === 2) renderMarket();
     }
 
     // Init
     loadGame();
     updateUI();
     applyUpkeep();
-    addLog("<em>Welcome back! If upkeep bankrupts you, use the Monzo rescue button.</em>");
+    addLog("<em>Welcome to your very own candy shop! Sell sweets, trade on the market, and use Monzo if upkeep bankrupts you.</em>");
     setInterval(saveGame, 30000);
   </script>
 </body>

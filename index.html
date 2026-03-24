@@ -4,67 +4,156 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🍭 Sugar Realms - Global Candy Empire</title>
+
+  <!-- Leaflet -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+  <!-- Leaflet EasyButton -->
   <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2.4.0/src/easy-button.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2.4.0/src/easy-button.css">
 
   <style>
     body {
-      margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #1a0f2e; color: #fff;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #1a0f2e;
+      color: #fff;
       overflow: hidden;
     }
+
     #header {
-      background: linear-gradient(90deg, #e84393, #6c5ce7); padding: 15px; text-align: center; font-size: 1.8em;
-      box-shadow: 0 4px 20px rgba(232,67,147,0.6);
+      background: linear-gradient(90deg, #e84393, #6c5ce7);
+      padding: 15px;
+      text-align: center;
+      font-size: 1.8em;
+      font-weight: bold;
+      box-shadow: 0 4px 20px rgba(232, 67, 147, 0.6);
     }
+
     .tabs {
-      display: flex; background: #2d1b4e; justify-content: center;
+      display: flex;
+      background: #2d1b4e;
+      justify-content: center;
+      flex-wrap: wrap;
     }
+
     .tab {
-      padding: 14px 24px; cursor: pointer; font-weight: bold; transition: all 0.3s;
+      padding: 14px 24px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
     }
+
     .tab.active {
-      background: #6c5ce7; color: white; border-bottom: 4px solid #00b894;
+      background: #6c5ce7;
+      color: white;
+      border-bottom: 4px solid #00b894;
     }
+
     .tab-content {
-      display: none; padding: 20px; min-height: 70vh;
+      display: none;
+      padding: 20px;
+      min-height: 70vh;
     }
-    .tab-content.active { display: block; }
+
+    .tab-content.active {
+      display: block;
+    }
 
     #empire {
-      text-align: center; font-size: 1.4em;
+      text-align: center;
+      font-size: 1.4em;
     }
-    button {
-      background: #00b894; color: white; border: none; padding: 12px 24px; margin: 8px; border-radius: 8px;
-      font-size: 1.1em; cursor: pointer; transition: 0.2s;
-    }
-    button:hover { transform: scale(1.05); background: #00a07a; }
 
-    #map { height: 500px; border-radius: 12px; margin: 15px 0; }
+    button {
+      background: #00b894;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      margin: 8px;
+      border-radius: 8px;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      background: #00a07a;
+    }
+
+    #map {
+      height: 500px;
+      border-radius: 12px;
+      margin: 15px 0;
+    }
+
     .market-item {
-      background: #2d1b4e; padding: 15px; margin: 10px 0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;
+      background: #2d1b4e;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
+
     #log {
-      background: #0f0a1f; height: 180px; overflow-y: auto; padding: 12px; border-radius: 10px; font-size: 0.95em; line-height: 1.4;
+      background: #0f0a1f;
+      height: 180px;
+      overflow-y: auto;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 0.95em;
+      line-height: 1.4;
     }
+
     .floating-candy {
-      position: absolute; font-size: 2.5em; opacity: 0.7; pointer-events: none; z-index: -1;
+      position: absolute;
+      font-size: 2.5em;
+      opacity: 0.7;
+      pointer-events: none;
+      z-index: -1;
       animation: float linear infinite;
     }
+
     @keyframes float {
-      0% { transform: translateY(100vh) rotate(0deg); }
+      0%   { transform: translateY(100vh) rotate(0deg); }
       100% { transform: translateY(-100px) rotate(360deg); }
     }
+
+    /* Terminal */
     #terminal {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95);
-      display: none; flex-direction: column; z-index: 9999;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      display: none;
+      flex-direction: column;
+      z-index: 9999;
     }
+
     #terminal-output {
-      flex: 1; padding: 15px; font-family: monospace; overflow-y: auto; color: #0f0;
+      flex: 1;
+      padding: 15px;
+      font-family: monospace;
+      overflow-y: auto;
+      color: #0f0;
+      background: #000;
     }
+
     #terminal-input {
-      background: #000; color: #0f0; border: none; padding: 12px; font-family: monospace; font-size: 1.1em; width: 100%;
+      background: #000;
+      color: #0f0;
+      border: none;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 1.1em;
+      width: 100%;
     }
   </style>
 </head>
@@ -109,7 +198,7 @@
   <!-- Sales Tab -->
   <div id="tab2" class="tab-content">
     <h2>💰 Worldwide Sales Terminal</h2>
-    <p>Click buttons above in Empire tab to serve customers worldwide.</p>
+    <p>Click the customer buttons in the <strong>Empire</strong> tab to serve customers worldwide.</p>
   </div>
 
   <!-- Black Market Tab -->
@@ -121,13 +210,14 @@
   <!-- Terminal -->
   <div id="terminal">
     <div id="terminal-output"></div>
-    <input id="terminal-input" type="text" placeholder="Type command... (help)" onkeydown="if(event.key === 'Enter') runTerminalCommand()">
+    <input id="terminal-input" type="text" placeholder="Type command... (help)" 
+           onkeydown="if(event.key === 'Enter') runTerminalCommand()">
   </div>
 
   <div id="candyBg"></div>
 
   <script>
-    // ====================== YOUR FULL CODE ======================
+    // ====================== CONFIG ======================
     const MONZO_LINK = "https://monzo.me/iandreme";
 
     let state = {
@@ -137,30 +227,38 @@
       shops: 1,
       bankrupt: false,
       shopLocations: [
-        { id: 1, name: "London Flagship", lat: 51.5074, lng: -0.1278, salesBonus: 1.12, upkeepCost: 38 }
+        { 
+          id: 1, 
+          name: "London Flagship", 
+          lat: 51.5074, 
+          lng: -0.1278, 
+          salesBonus: 1.12, 
+          upkeepCost: 38 
+        }
       ]
     };
 
     let mapInstance;
     let markers = [];
+
     let marketItems = [
       { id: "dragonToffee", name: "Dragonfire Toffee", avgPrice: 24, supply: 42 },
-      { id: "moonSugar", name: "Moon Sugar Crystals", avgPrice: 41, supply: 18 },
-      { id: "gummyHydra", name: "Rainbow Gummy Hydra", avgPrice: 79, supply: 5 }
+      { id: "moonSugar",    name: "Moon Sugar Crystals", avgPrice: 41, supply: 18 },
+      { id: "gummyHydra",   name: "Rainbow Gummy Hydra", avgPrice: 79, supply: 5 }
     ];
 
     const expansionCities = [
-      {name:"New York", lat:40.7128, lng:-74.0060, salesBonus:1.28, upkeepCost:52},
-      {name:"Tokyo", lat:35.6762, lng:139.6503, salesBonus:1.35, upkeepCost:48},
-      {name:"Paris", lat:48.8566, lng:2.3522, salesBonus:1.22, upkeepCost:45},
-      {name:"Sydney", lat:-33.8688, lng:151.2093, salesBonus:1.15, upkeepCost:35},
-      {name:"Dubai", lat:25.2048, lng:55.2708, salesBonus:1.30, upkeepCost:42},
-      {name:"Los Angeles", lat:34.0522, lng:-118.2437, salesBonus:1.18, upkeepCost:44},
-      {name:"Mumbai", lat:19.0760, lng:72.8777, salesBonus:1.08, upkeepCost:22},
-      {name:"Rio de Janeiro", lat:-22.9068, lng:-43.1729, salesBonus:1.10, upkeepCost:25}
+      {name: "New York",      lat: 40.7128, lng: -74.0060, salesBonus: 1.28, upkeepCost: 52},
+      {name: "Tokyo",         lat: 35.6762, lng: 139.6503, salesBonus: 1.35, upkeepCost: 48},
+      {name: "Paris",         lat: 48.8566, lng: 2.3522,   salesBonus: 1.22, upkeepCost: 45},
+      {name: "Sydney",        lat: -33.8688, lng: 151.2093, salesBonus: 1.15, upkeepCost: 35},
+      {name: "Dubai",         lat: 25.2048, lng: 55.2708,  salesBonus: 1.30, upkeepCost: 42},
+      {name: "Los Angeles",   lat: 34.0522, lng: -118.2437, salesBonus: 1.18, upkeepCost: 44},
+      {name: "Mumbai",        lat: 19.0760, lng: 72.8777,  salesBonus: 1.08, upkeepCost: 22},
+      {name: "Rio de Janeiro",lat: -22.9068, lng: -43.1729, salesBonus: 1.10, upkeepCost: 25}
     ];
 
-    // ====================== GLOBAL URL SAVE / LOAD ======================
+    // ====================== URL SAVE / LOAD ======================
     function saveToURL() {
       const compressed = btoa(JSON.stringify(state));
       const newURL = window.location.origin + window.location.pathname + '?global=' + compressed;
@@ -174,7 +272,9 @@
         try {
           const loadedState = JSON.parse(atob(saved));
           Object.assign(state, loadedState);
-        } catch(e) {}
+        } catch (e) {
+          console.warn("Failed to load saved game from URL");
+        }
       }
     }
 
@@ -185,15 +285,22 @@
       });
     }
 
-    function saveGame() { saveToURL(); }
+    function saveGame() {
+      saveToURL();
+    }
 
+    // ====================== LOG & UI ======================
     function addLog(html) {
       const logEl = document.getElementById('log');
       const p = document.createElement('p');
       p.innerHTML = html;
       logEl.appendChild(p);
       logEl.scrollTop = logEl.scrollHeight;
-      if (logEl.children.length > 60) logEl.removeChild(logEl.children[0]);
+
+      // Limit log entries
+      if (logEl.children.length > 60) {
+        logEl.removeChild(logEl.children[0]);
+      }
     }
 
     function updateUI() {
@@ -201,10 +308,11 @@
       document.getElementById('candies').textContent = Math.floor(state.candies);
       document.getElementById('shards').textContent = state.shards;
       document.getElementById('shops').textContent = state.shops;
-      saveGame();
 
       const rescueBtn = document.getElementById('rescueBtn');
       if (rescueBtn) rescueBtn.style.display = state.bankrupt ? 'inline-block' : 'none';
+
+      saveGame();
     }
 
     function calculateTotalUpkeep() {
@@ -213,6 +321,7 @@
 
     function applyUpkeep() {
       if (state.bankrupt) return;
+
       const totalUpkeep = calculateTotalUpkeep();
       if (state.candies >= totalUpkeep) {
         state.candies -= totalUpkeep;
@@ -226,7 +335,7 @@
       updateUI();
     }
 
-    // ==================== COMPULSORY RESCUE FROM BANKRUPTCY ====================
+    // ====================== BANKRUPTCY RESCUE ======================
     function rescueFromBankruptcy() {
       if (!state.bankrupt) {
         addLog("✅ Your empire is not bankrupt.");
@@ -256,11 +365,13 @@
       updateUI();
     }
 
+    // ====================== CUSTOMER SERVING ======================
     function serveCustomer(type) {
       if (state.bankrupt) {
-        addLog(`<span style="color:#ff7675;">Your empire is bankrupt! You must rescue it first by paying the fee.</span>`);
+        addLog(`<span style="color:#ff7675;">Your empire is bankrupt! Rescue it first.</span>`);
         return;
       }
+
       let baseGain = type === 'premium' ? 48 : type === 'wild' ? 67 : 22;
       const totalBonus = state.shopLocations.reduce((sum, s) => sum + (s.salesBonus - 1), 0);
       const finalGain = Math.floor(baseGain * (1 + totalBonus * 0.7));
@@ -270,14 +381,19 @@
       updateUI();
     }
 
+    // ====================== BLACK MARKET ======================
     function renderMarket() {
       const container = document.getElementById('marketList');
       container.innerHTML = '';
+
       marketItems.forEach(item => {
         const div = document.createElement('div');
         div.className = 'market-item';
         div.innerHTML = `
-          <div><strong>${item.name}</strong><br><small>Avg price: <b>${item.avgPrice} 🍬</b></small></div>
+          <div>
+            <strong>${item.name}</strong><br>
+            <small>Avg price: <b>${item.avgPrice} 🍬</b></small>
+          </div>
           <div>
             <button onclick="tradeMarket('${item.id}', 'buy')">Buy</button>
             <button onclick="tradeMarket('${item.id}', 'sell')">Sell</button>
@@ -292,6 +408,7 @@
         addLog(`<span style="color:#ff7675;">Empire is bankrupt — rescue first.</span>`);
         return;
       }
+
       const item = marketItems.find(i => i.id === id);
       if (!item) return;
 
@@ -303,28 +420,24 @@
         } else {
           addLog(`❌ Not enough candies.`);
         }
-      } else {
+      } else { // sell
         const sellPrice = Math.floor(item.avgPrice * 0.89);
         state.candies += sellPrice;
         item.avgPrice = Math.max(12, Math.floor(item.avgPrice * 0.94));
         addLog(`📉 Sold 1x <strong>${item.name}</strong> for ${sellPrice} 🍬`);
       }
+
       updateUI();
       renderMarket();
     }
 
-    function buyPack(candiesAmount, shardsAmount, priceGBP, packName) {
-      const note = encodeURIComponent(`Sugar Realms - ${packName}`);
-      window.open(`${MONZO_LINK}/${priceGBP}?d=${note}`, '_blank');
-      addLog(`🔗 Opened Monzo for <strong>${packName}</strong> (£${priceGBP})`);
-      window.pendingDelivery = {candies: candiesAmount, shards: shardsAmount};
-    }
-
+    // ====================== EMPIRE EXPANSION ======================
     function expandEmpire() {
       if (state.shopLocations.length >= 10) {
         alert("Your empire is already massive! (Max 10 shops)");
         return;
       }
+
       const note = encodeURIComponent("Sugar Realms - New Shop Expansion");
       window.open(`${MONZO_LINK}/12?d=${note}`, '_blank');
 
@@ -333,27 +446,34 @@
         const newShop = {
           id: state.shopLocations.length + 1,
           name: city.name + " Candy Store",
-          lat: city.lat, lng: city.lng,
+          lat: city.lat,
+          lng: city.lng,
           salesBonus: city.salesBonus,
           upkeepCost: city.upkeepCost
         };
+
         state.shopLocations.push(newShop);
         state.shops = state.shopLocations.length;
         state.candies += 380;
 
         addLog(`🎉 New shop opened in <strong>${city.name}</strong>! (+${Math.round((city.salesBonus-1)*100)}% sales | ${city.upkeepCost} 🍬 upkeep)`);
+
         if (mapInstance) renderShopsOnMap();
         updateUI();
       }, 800);
     }
 
+    // ====================== MAP ======================
     function initMap() {
       mapInstance = L.map('map').setView([20, 0], 2);
+
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
       }).addTo(mapInstance);
+
       renderShopsOnMap();
 
+      // Terminal button
       L.easyButton({
         position: 'bottomright',
         states: [{
@@ -368,21 +488,38 @@
     function renderShopsOnMap() {
       markers.forEach(m => m.remove());
       markers = [];
+
       state.shopLocations.forEach(shop => {
-        const popup = `<b>${shop.name}</b><br>Sales Bonus: +${Math.round((shop.salesBonus-1)*100)}%<br>Daily Upkeep: ${shop.upkeepCost} 🍬`;
-        const marker = L.marker([shop.lat, shop.lng]).addTo(mapInstance).bindPopup(popup);
+        const popup = `
+          <b>${shop.name}</b><br>
+          Sales Bonus: +${Math.round((shop.salesBonus-1)*100)}%<br>
+          Daily Upkeep: ${shop.upkeepCost} 🍬
+        `;
+        const marker = L.marker([shop.lat, shop.lng])
+                        .addTo(mapInstance)
+                        .bindPopup(popup);
         markers.push(marker);
       });
     }
 
+    // ====================== TAB SWITCHING ======================
     function switchTab(n) {
-      document.querySelectorAll('.tab-content').forEach((el, i) => el.classList.toggle('active', i === n));
-      document.querySelectorAll('.tab').forEach((el, i) => el.classList.toggle('active', i === n));
+      document.querySelectorAll('.tab-content').forEach((el, i) => 
+        el.classList.toggle('active', i === n)
+      );
+      document.querySelectorAll('.tab').forEach((el, i) => 
+        el.classList.toggle('active', i === n)
+      );
 
-      if (n === 1 && !mapInstance) setTimeout(initMap, 100);
-      if (n === 3) renderMarket();
+      if (n === 1 && !mapInstance) {
+        setTimeout(initMap, 100);
+      }
+      if (n === 3) {
+        renderMarket();
+      }
     }
 
+    // ====================== FLOATING CANDIES ======================
     function createFloatingCandies() {
       const bg = document.getElementById('candyBg');
       bg.style.position = 'fixed';
@@ -394,10 +531,11 @@
       bg.style.zIndex = '-1';
 
       const emojis = ['🍭','🍬','🍫','🍩','🧁','🍪','🌈','✨'];
+
       for (let i = 0; i < 18; i++) {
         const candy = document.createElement('div');
         candy.className = 'floating-candy';
-        candy.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        candy.textContent = emojis[Math.floor(Math.random() * emojis.length)];
         candy.style.left = Math.random() * 100 + 'vw';
         candy.style.animationDuration = (Math.random() * 12 + 15) + 's';
         candy.style.animationDelay = '-' + (Math.random() * 30) + 's';
@@ -408,8 +546,12 @@
     // ====================== TERMINAL ======================
     function toggleTerminal() {
       const term = document.getElementById('terminal');
-      term.style.display = (term.style.display === 'flex') ? 'none' : 'flex';
-      if (term.style.display === 'flex') document.getElementById('terminal-input').focus();
+      if (term.style.display === 'flex') {
+        term.style.display = 'none';
+      } else {
+        term.style.display = 'flex';
+        document.getElementById('terminal-input').focus();
+      }
     }
 
     function terminalPrint(text, color = '#0f0') {
@@ -429,27 +571,32 @@
       terminalPrint('> ' + cmd, '#aaa');
 
       if (cmd === 'help') {
-        terminalPrint('Commands:', '#ff0');
+        terminalPrint('Available commands:', '#ff0');
         terminalPrint('  add candies <number>');
         terminalPrint('  add shards <number>');
         terminalPrint('  rescue');
         terminalPrint('  clear');
         terminalPrint('  help');
-      } else if (cmd.startsWith('add candies')) {
+      } 
+      else if (cmd.startsWith('add candies')) {
         const num = parseInt(cmd.split(' ')[2]) || 100;
         state.candies += num;
         terminalPrint(`+${num} 🍬 added!`, '#0f0');
         updateUI();
-      } else if (cmd.startsWith('add shards')) {
+      } 
+      else if (cmd.startsWith('add shards')) {
         const num = parseInt(cmd.split(' ')[2]) || 10;
         state.shards += num;
         terminalPrint(`+${num} ✨ added!`, '#0f0');
         updateUI();
-      } else if (cmd === 'rescue' || cmd === 'rescue empire') {
+      } 
+      else if (cmd === 'rescue' || cmd === 'rescue empire') {
         rescueFromBankruptcy();
-      } else if (cmd === 'clear') {
+      } 
+      else if (cmd === 'clear') {
         document.getElementById('terminal-output').innerHTML = '';
-      } else {
+      } 
+      else {
         terminalPrint('Unknown command. Type "help"', '#f66');
       }
 
@@ -468,13 +615,15 @@
 
     setInterval(applyUpkeep, 60000);
 
-    // ====================== INIT ======================
+    // ====================== INITIALIZATION ======================
     window.onload = () => {
       loadFromURL();
       updateUI();
+
       addLog("<em>🍭 Welcome to the Global Sugar Realms!</em>");
       addLog("Everyone who uses this link shares the same empire!");
 
+      // Add rescue button
       const empireTab = document.getElementById('tab0');
       const rescueHTML = `
         <div style="text-align:center; margin:18px 0 10px;">
@@ -488,6 +637,7 @@
       createFloatingCandies();
       switchTab(0);
 
+      // Handle pending Monzo delivery
       if (window.pendingDelivery) {
         state.candies += window.pendingDelivery.candies || 0;
         state.shards += window.pendingDelivery.shards || 0;

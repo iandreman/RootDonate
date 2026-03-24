@@ -1,4 +1,133 @@
-<script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍭 Sugar Realms - Global Candy Empire</title>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2.4.0/src/easy-button.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2.4.0/src/easy-button.css">
+
+  <style>
+    body {
+      margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #1a0f2e; color: #fff;
+      overflow: hidden;
+    }
+    #header {
+      background: linear-gradient(90deg, #e84393, #6c5ce7); padding: 15px; text-align: center; font-size: 1.8em;
+      box-shadow: 0 4px 20px rgba(232,67,147,0.6);
+    }
+    .tabs {
+      display: flex; background: #2d1b4e; justify-content: center;
+    }
+    .tab {
+      padding: 14px 24px; cursor: pointer; font-weight: bold; transition: all 0.3s;
+    }
+    .tab.active {
+      background: #6c5ce7; color: white; border-bottom: 4px solid #00b894;
+    }
+    .tab-content {
+      display: none; padding: 20px; min-height: 70vh;
+    }
+    .tab-content.active { display: block; }
+
+    #empire {
+      text-align: center; font-size: 1.4em;
+    }
+    button {
+      background: #00b894; color: white; border: none; padding: 12px 24px; margin: 8px; border-radius: 8px;
+      font-size: 1.1em; cursor: pointer; transition: 0.2s;
+    }
+    button:hover { transform: scale(1.05); background: #00a07a; }
+
+    #map { height: 500px; border-radius: 12px; margin: 15px 0; }
+    .market-item {
+      background: #2d1b4e; padding: 15px; margin: 10px 0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;
+    }
+    #log {
+      background: #0f0a1f; height: 180px; overflow-y: auto; padding: 12px; border-radius: 10px; font-size: 0.95em; line-height: 1.4;
+    }
+    .floating-candy {
+      position: absolute; font-size: 2.5em; opacity: 0.7; pointer-events: none; z-index: -1;
+      animation: float linear infinite;
+    }
+    @keyframes float {
+      0% { transform: translateY(100vh) rotate(0deg); }
+      100% { transform: translateY(-100px) rotate(360deg); }
+    }
+    #terminal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95);
+      display: none; flex-direction: column; z-index: 9999;
+    }
+    #terminal-output {
+      flex: 1; padding: 15px; font-family: monospace; overflow-y: auto; color: #0f0;
+    }
+    #terminal-input {
+      background: #000; color: #0f0; border: none; padding: 12px; font-family: monospace; font-size: 1.1em; width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="header">🍭 Sugar Realms — Global Candy Empire 🍬</div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(0)">Empire</div>
+    <div class="tab" onclick="switchTab(1)">World Map</div>
+    <div class="tab" onclick="switchTab(2)">Sales</div>
+    <div class="tab" onclick="switchTab(3)">Black Market</div>
+  </div>
+
+  <!-- Empire Tab -->
+  <div id="tab0" class="tab-content active">
+    <div id="empire">
+      <p>Level <span id="level">1</span> Candy Overlord</p>
+      <p>🍬 Candies: <span id="candies">142</span></p>
+      <p>✨ Shards: <span id="shards">27</span></p>
+      <p>🏪 Shops: <span id="shops">1</span></p>
+
+      <button onclick="serveCustomer('normal')">Serve Normal Customer (+22 🍬 base)</button>
+      <button onclick="serveCustomer('premium')">Serve Premium (+48 🍬 base)</button>
+      <button onclick="serveCustomer('wild')">Serve Wild Customer (+67 🍬 base)</button>
+
+      <button onclick="expandEmpire()">🌍 Expand Empire (£12 via Monzo)</button>
+      <button onclick="copyGlobalLink()">🔗 Copy Global Empire Link</button>
+    </div>
+
+    <div style="margin-top: 30px;">
+      <h3>📜 Activity Log</h3>
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <!-- World Map Tab -->
+  <div id="tab1" class="tab-content">
+    <div id="map"></div>
+  </div>
+
+  <!-- Sales Tab -->
+  <div id="tab2" class="tab-content">
+    <h2>💰 Worldwide Sales Terminal</h2>
+    <p>Click buttons above in Empire tab to serve customers worldwide.</p>
+  </div>
+
+  <!-- Black Market Tab -->
+  <div id="tab3" class="tab-content">
+    <h2>🛒 Shadow Market</h2>
+    <div id="marketList"></div>
+  </div>
+
+  <!-- Terminal -->
+  <div id="terminal">
+    <div id="terminal-output"></div>
+    <input id="terminal-input" type="text" placeholder="Type command... (help)" onkeydown="if(event.key === 'Enter') runTerminalCommand()">
+  </div>
+
+  <div id="candyBg"></div>
+
+  <script>
+    // ====================== YOUR FULL CODE ======================
     const MONZO_LINK = "https://monzo.me/iandreme";
 
     let state = {
@@ -110,13 +239,13 @@
       if (state.candies >= costCandies) {
         state.candies -= costCandies;
         state.bankrupt = false;
-        state.candies += 100; // recovery boost
+        state.candies += 100;
         addLog(`🚨 <strong style="color:#00b894;">EMPIRE RESCUED!</strong> Paid ${costCandies} 🍬. +100 🍬 recovery boost!`);
       } 
       else if (state.shards >= costShards) {
         state.shards -= costShards;
         state.bankrupt = false;
-        state.candies += 130; // bigger boost when paying with shards
+        state.candies += 130;
         addLog(`🚨 <strong style="color:#00b894;">EMPIRE RESCUED!</strong> Paid ${costShards} ✨ shards. +130 🍬 recovery boost!`);
       } 
       else {
@@ -256,6 +385,14 @@
 
     function createFloatingCandies() {
       const bg = document.getElementById('candyBg');
+      bg.style.position = 'fixed';
+      bg.style.top = '0';
+      bg.style.left = '0';
+      bg.style.width = '100%';
+      bg.style.height = '100%';
+      bg.style.pointerEvents = 'none';
+      bg.style.zIndex = '-1';
+
       const emojis = ['🍭','🍬','🍫','🍩','🧁','🍪','🌈','✨'];
       for (let i = 0; i < 18; i++) {
         const candy = document.createElement('div');
@@ -295,7 +432,7 @@
         terminalPrint('Commands:', '#ff0');
         terminalPrint('  add candies <number>');
         terminalPrint('  add shards <number>');
-        terminalPrint('  rescue          ← Pay to rescue empire from bankruptcy');
+        terminalPrint('  rescue');
         terminalPrint('  clear');
         terminalPrint('  help');
       } else if (cmd.startsWith('add candies')) {
@@ -338,7 +475,6 @@
       addLog("<em>🍭 Welcome to the Global Sugar Realms!</em>");
       addLog("Everyone who uses this link shares the same empire!");
 
-      // Add compulsory rescue button
       const empireTab = document.getElementById('tab0');
       const rescueHTML = `
         <div style="text-align:center; margin:18px 0 10px;">
@@ -361,3 +497,5 @@
       }
     };
   </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-i<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -19,6 +19,7 @@ i<!DOCTYPE html>
       padding: 12px 20px;
       background: #161b22;
       border-bottom: 1px solid #30363d;
+      font-size: 14px;
     }
     #terminal {
       flex: 1;
@@ -29,10 +30,10 @@ i<!DOCTYPE html>
       width: 100%;
       height: 100%;
       border: none;
-      background: white;
+      background: #ffffff;
     }
     #input-area {
-      padding: 14px 20px;
+      padding: 16px 20px;
       background: #161b22;
       border-top: 1px solid #30363d;
       display: flex;
@@ -52,6 +53,9 @@ i<!DOCTYPE html>
       outline: none;
       flex: 1;
     }
+    input::placeholder {
+      color: #666;
+    }
     #overlay {
       position: absolute;
       inset: 0;
@@ -69,20 +73,20 @@ i<!DOCTYPE html>
 <body>
 
   <div id="header">
-    <span class="prompt">$</span> Smart Terminal — Type anything and press Enter to load rootdonate.co.uk
+    <span class="prompt">$</span> Smart Terminal — Type any text → rootdonate.co.uk
   </div>
 
   <div id="terminal">
     <div id="overlay">
       <div><span class="prompt">$</span> Ready.</div>
-      <div style="margin-top: 10px;">Type any text and press Enter</div>
+      <div style="margin-top: 8px;">Type any text and press Enter</div>
     </div>
     <iframe id="iframe" src="https://rootdonate.co.uk"></iframe>
   </div>
 
   <div id="input-area">
     <span class="prompt">$</span>
-    <input type="text" id="input" placeholder="type anything → loads rootdonate.co.uk" autofocus autocomplete="off">
+    <input type="text" id="input" placeholder="type any text here..." autofocus autocomplete="off">
   </div>
 
   <script>
@@ -97,20 +101,20 @@ i<!DOCTYPE html>
       const trimmed = cmd.trim();
       if (!trimmed) return;
 
-      // Add to history (Up/Down arrows)
+      // Save typed text to history (↑/↓ arrows still work)
       history.unshift(trimmed);
       if (history.length > 50) history.pop();
       historyIndex = -1;
 
-      // Always load rootdonate.co.uk no matter what you type
+      // Always load ONLY rootdonate.co.uk — ignore typed text for URL
       overlay.style.display = 'none';
       iframe.src = "https://rootdonate.co.uk";
 
-      // Optional: clear the input after loading
+      // Clear input after Enter (clean smart terminal feel)
       input.value = "";
     }
 
-    // Press Enter
+    // Press Enter to load rootdonate.co.uk
     input.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         loadRootDonate(input.value);
@@ -140,7 +144,7 @@ i<!DOCTYPE html>
     // Click anywhere focuses the input
     document.addEventListener('click', () => input.focus());
 
-    // Initial focus
+    // Focus on load
     window.onload = () => input.focus();
   </script>
 

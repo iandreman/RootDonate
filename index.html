@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+i<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Terminal - URL + Commands</title>
+  <title>Smart Terminal - rootdonate.co.uk</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -23,7 +23,6 @@
     #terminal {
       flex: 1;
       position: relative;
-      overflow: hidden;
       background: #0d1117;
     }
     iframe {
@@ -41,7 +40,7 @@
     }
     .prompt {
       color: #00ff9d;
-      margin-right: 8px;
+      margin-right: 10px;
       user-select: none;
     }
     input {
@@ -63,28 +62,27 @@
       justify-content: center;
       z-index: 10;
       text-align: center;
-      padding: 20px;
+      color: #888;
     }
   </style>
 </head>
 <body>
 
   <div id="header">
-    <span class="prompt">$</span> Smart Terminal — Type URL or command (Up/Down for history)
+    <span class="prompt">$</span> Smart Terminal — Type anything and press Enter to load rootdonate.co.uk
   </div>
 
   <div id="terminal">
     <div id="overlay">
       <div><span class="prompt">$</span> Ready.</div>
-      <div style="margin-top: 10px; color: #888;">Type a URL or command and press Enter</div>
-      <div style="margin-top: 20px; color: #666;">Examples: google.com  clear  x.com</div>
+      <div style="margin-top: 10px;">Type any text and press Enter</div>
     </div>
-    <iframe id="iframe" src="about:blank"></iframe>
+    <iframe id="iframe" src="https://rootdonate.co.uk"></iframe>
   </div>
 
   <div id="input-area">
     <span class="prompt">$</span>
-    <input type="text" id="input" placeholder="type url or command..." autofocus autocomplete="off">
+    <input type="text" id="input" placeholder="type anything → loads rootdonate.co.uk" autofocus autocomplete="off">
   </div>
 
   <script>
@@ -95,53 +93,31 @@
     let history = [];
     let historyIndex = -1;
 
-    function processCommand(cmd) {
+    function loadRootDonate(cmd) {
       const trimmed = cmd.trim();
       if (!trimmed) return;
 
-      // Add to history
+      // Add to history (Up/Down arrows)
       history.unshift(trimmed);
-      if (history.length > 50) history.pop(); // keep last 50 commands
+      if (history.length > 50) history.pop();
       historyIndex = -1;
 
-      if (trimmed.toLowerCase() === 'clear') {
-        overlay.style.display = 'flex';
-        iframe.src = 'about:blank';
-        return;
-      }
+      // Always load rootdonate.co.uk no matter what you type
+      overlay.style.display = 'none';
+      iframe.src = "https://rootdonate.co.uk";
 
-      // Check if it looks like a URL
-      let isUrl = false;
-      let url = trimmed;
-      if (/^https?:\/\//i.test(trimmed) || 
-          trimmed.includes('.') && !trimmed.includes(' ') && 
-          !trimmed.startsWith('http')) {
-        isUrl = true;
-        if (!/^https?:\/\//i.test(trimmed)) {
-          url = 'https://' + trimmed;
-        }
-      }
-
-      if (isUrl) {
-        overlay.style.display = 'none';
-        iframe.src = url;
-      } else {
-        // For non-URL commands, just echo (you can add more commands later)
-        console.log(`Command executed: ${trimmed}`);
-        // Optionally show feedback in overlay if you want
-      }
+      // Optional: clear the input after loading
+      input.value = "";
     }
 
-    // Enter key
+    // Press Enter
     input.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
-        const cmd = input.value;
-        processCommand(cmd);
-        input.value = '';
+        loadRootDonate(input.value);
       }
     });
 
-    // Arrow keys for history
+    // History with Up / Down arrows
     input.addEventListener('keydown', function(e) {
       if (e.key === 'ArrowUp') {
         e.preventDefault();
@@ -161,10 +137,10 @@
       }
     });
 
-    // Click anywhere focuses the input line
+    // Click anywhere focuses the input
     document.addEventListener('click', () => input.focus());
 
-    // Focus on load
+    // Initial focus
     window.onload = () => input.focus();
   </script>
 

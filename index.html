@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Terminal - rootdonate.co.uk</title>
+  <title>Smart Terminal - Type to URL</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -19,6 +19,9 @@
       padding: 12px 20px;
       background: #161b22;
       border-bottom: 1px solid #30363d;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       font-size: 14px;
     }
     #terminal {
@@ -68,25 +71,39 @@
       text-align: center;
       color: #888;
     }
+    button {
+      background: #21262d;
+      color: #00ff9d;
+      border: 1px solid #30363d;
+      padding: 6px 14px;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #30363d;
+    }
   </style>
 </head>
 <body>
 
   <div id="header">
-    <span class="prompt">$</span> Smart Terminal — Type any text → rootdonate.co.uk
+    <span><span class="prompt">$</span> Smart Terminal — Type text to import URL</span>
+    <button onclick="shareTerminal()">Share Link</button>
   </div>
 
   <div id="terminal">
     <div id="overlay">
       <div><span class="prompt">$</span> Ready.</div>
-      <div style="margin-top: 8px;">Type any text and press Enter</div>
+      <div style="margin-top: 8px;">Type text or URL and press Enter (starts with rootdonate.co.uk)</div>
     </div>
     <iframe id="iframe" src="https://rootdonate.co.uk"></iframe>
   </div>
 
   <div id="input-area">
     <span class="prompt">$</span>
-    <input type="text" id="input" placeholder="type any text here..." autofocus autocomplete="off">
+    <input type="text" id="input" placeholder="type text or url here..." autofocus autocomplete="off">
   </div>
 
   <script>
@@ -97,31 +114,42 @@
     let history = [];
     let historyIndex = -1;
 
-    function loadRootDonate(cmd) {
-      const trimmed = cmd.trim();
+    function smartURLImport(cmd) {
+      let trimmed = cmd.trim();
       if (!trimmed) return;
 
-      // Save typed text to history (↑/↓ arrows still work)
+      // Save to history for Up/Down arrows
       history.unshift(trimmed);
       if (history.length > 50) history.pop();
       historyIndex = -1;
 
-      // Always load ONLY rootdonate.co.uk — ignore typed text for URL
-      overlay.style.display = 'none';
-      iframe.src = "https://rootdonate.co.uk";
+      let url = trimmed;
 
-      // Clear input after Enter (clean smart terminal feel)
-      input.value = "";
+      // Smart text → URL conversion
+      if (!/^https?:\/\//i.test(trimmed)) {
+        if (trimmed.includes('.')) {
+          url = 'https://' + trimmed;
+        } else {
+          url = 'https://' + trimmed + '.com';
+        }
+      }
+
+      // Load the URL
+      overlay.style.display = 'none';
+      iframe.src = url;
+
+      // Clear input for clean next typing
+      input.value = '';
     }
 
-    // Press Enter to load rootdonate.co.uk
+    // Press Enter to import URL from typed text
     input.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
-        loadRootDonate(input.value);
+        smartURLImport(input.value);
       }
     });
 
-    // History with Up / Down arrows
+    // History navigation
     input.addEventListener('keydown', function(e) {
       if (e.key === 'ArrowUp') {
         e.preventDefault();
@@ -144,8 +172,21 @@
     // Click anywhere focuses the input
     document.addEventListener('click', () => input.focus());
 
-    // Focus on load
+    // Initial focus
     window.onload = () => input.focus();
+
+    // Share Link function
+    function shareTerminal() {
+      const shareUrl = window.location.href;
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        const btn = document.querySelector('button');
+        const original = btn.textContent;
+        btn.textContent = '✅ Link Copied!';
+        setTimeout(() => { btn.textContent = original; }, 2000);
+      }).catch(() => {
+        alert('Copy failed. Manually share this URL: ' + shareUrl);
+      });
+    }
   </script>
 
 </body>

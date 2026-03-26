@@ -96,7 +96,7 @@
   <div id="terminal">
     <div id="overlay">
       <div><span class="prompt">$</span> Ready.</div>
-      <div style="margin-top: 8px;">Type text or URL and press Enter (starts with rootdonate.co.uk)</div>
+      <div style="margin-top: 8px;">Type any text or URL and press Enter</div>
     </div>
     <iframe id="iframe" src="https://rootdonate.co.uk"></iframe>
   </div>
@@ -118,7 +118,7 @@
       let trimmed = cmd.trim();
       if (!trimmed) return;
 
-      // Save to history for Up/Down arrows
+      // Save typed text to history for Up/Down arrows
       history.unshift(trimmed);
       if (history.length > 50) history.pop();
       historyIndex = -1;
@@ -138,7 +138,7 @@
       overlay.style.display = 'none';
       iframe.src = url;
 
-      // Clear input for clean next typing
+      // Clear input for clean typing
       input.value = '';
     }
 
@@ -149,7 +149,7 @@
       }
     });
 
-    // History navigation
+    // History navigation with Up / Down arrows
     input.addEventListener('keydown', function(e) {
       if (e.key === 'ArrowUp') {
         e.preventDefault();

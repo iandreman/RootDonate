@@ -3,452 +3,170 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🍭 Sugar Realms - Global Candy Empire</title>
-
-  <!-- Leaflet -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-
-  <!-- Leaflet EasyButton -->
-  <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2.4.0/src/easy-button.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2.4.0/src/easy-button.css">
-
+  <title>Smart Terminal - URL + Commands</title>
   <style>
-    body { margin:0; padding:0; font-family:'Segoe UI',system-ui,sans-serif; background:#1a0f2e; color:#fff; overflow:hidden; }
-    #header { background:linear-gradient(90deg,#e84393,#6c5ce7); padding:15px; text-align:center; font-size:1.8em; font-weight:bold; box-shadow:0 4px 20px rgba(232,67,147,0.6); }
-    .tabs { display:flex; background:#2d1b4e; justify-content:center; flex-wrap:wrap; }
-    .tab { padding:14px 24px; cursor:pointer; font-weight:bold; transition:all 0.3s ease; }
-    .tab.active { background:#6c5ce7; color:white; border-bottom:4px solid #00b894; }
-    .tab-content { display:none; padding:20px; min-height:70vh; }
-    .tab-content.active { display:block; }
-    #empire { text-align:center; font-size:1.4em; }
-    button { background:#00b894; color:white; border:none; padding:12px 24px; margin:8px; border-radius:8px; font-size:1.1em; cursor:pointer; transition:all 0.2s ease; }
-    button:hover { transform:scale(1.05); background:#00a07a; }
-    #map { height:550px; border-radius:12px; margin:15px 0; width:100%; }
-    .market-item { background:#2d1b4e; padding:15px; margin:10px 0; border-radius:10px; display:flex; justify-content:space-between; align-items:center; }
-    #log { background:#0f0a1f; height:200px; overflow-y:auto; padding:12px; border-radius:10px; font-size:0.95em; line-height:1.5; }
-    .floating-candy { position:absolute; font-size:2.5em; opacity:0.7; pointer-events:none; z-index:-1; animation:float linear infinite; }
-    @keyframes float { 0% { transform:translateY(100vh) rotate(0deg); } 100% { transform:translateY(-100px) rotate(360deg); } }
-    #terminal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.96); display:none; flex-direction:column; z-index:9999; }
-    #terminal-output { flex:1; padding:15px; font-family:monospace; overflow-y:auto; color:#0f0; background:#000; }
-    #terminal-input { background:#000; color:#0f0; border:none; padding:14px; font-family:monospace; font-size:1.15em; width:100%; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0d1117;
+      color: #00ff9d;
+      font-family: 'Courier New', monospace;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #header {
+      padding: 12px 20px;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+    }
+    #terminal {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #0d1117;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: white;
+    }
+    #input-area {
+      padding: 14px 20px;
+      background: #161b22;
+      border-top: 1px solid #30363d;
+      display: flex;
+      align-items: center;
+    }
+    .prompt {
+      color: #00ff9d;
+      margin-right: 8px;
+      user-select: none;
+    }
+    input {
+      background: transparent;
+      border: none;
+      color: #00ff9d;
+      font-family: inherit;
+      font-size: 16px;
+      outline: none;
+      flex: 1;
+    }
+    #overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      text-align: center;
+      padding: 20px;
+    }
   </style>
 </head>
 <body>
 
-  <div id="header">🍭 Sugar Realms — Global Candy Empire 🍬</div>
-
-  <div class="tabs">
-    <div class="tab active" onclick="switchTab(0)">Empire</div>
-    <div class="tab" onclick="switchTab(1)">World Map</div>
-    <div class="tab" onclick="switchTab(2)">Sales</div>
-    <div class="tab" onclick="switchTab(3)">Black Market</div>
+  <div id="header">
+    <span class="prompt">$</span> Smart Terminal — Type URL or command (Up/Down for history)
   </div>
 
-  <!-- Empire Tab -->
-  <div id="tab0" class="tab-content active">
-    <div id="empire">
-      <p>Level <span id="level">1</span> Candy Overlord</p>
-      <p>🍬 Candies: <span id="candies">142</span></p>
-      <p>✨ Shards: <span id="shards">27</span></p>
-      <p>🏪 Shops: <span id="shops">1</span></p>
-
-      <button onclick="serveCustomer('normal')">Serve Normal Customer (+22 🍬 base)</button>
-      <button onclick="serveCustomer('premium')">Serve Premium (+48 🍬 base)</button>
-      <button onclick="serveCustomer('wild')">Serve Wild Customer (+67 🍬 base)</button>
-
-      <button onclick="expandEmpire()">🌍 Expand Empire (Free!)</button>
-      <button onclick="copyGlobalLink()">🔗 Copy Global Empire Link</button>
-    </div>
-
-    <div style="margin-top:30px;">
-      <h3>📜 Activity Log</h3>
-      <div id="log"></div>
-    </div>
-  </div>
-
-  <!-- World Map Tab -->
-  <div id="tab1" class="tab-content">
-    <div id="map"></div>
-    <div style="text-align:center; margin-top:10px;">
-      <button onclick="toggleTerminal()" style="background:#6c5ce7;">🍬 Open Sugar Terminal</button>
-    </div>
-  </div>
-
-  <!-- Sales Tab -->
-  <div id="tab2" class="tab-content">
-    <h2>💰 Worldwide Sales Terminal</h2>
-    <p>Click the customer buttons in the <strong>Empire</strong> tab to serve customers worldwide.</p>
-  </div>
-
-  <!-- Black Market Tab -->
-  <div id="tab3" class="tab-content">
-    <h2>🛒 Shadow Market</h2>
-    <div id="marketList"></div>
-  </div>
-
-  <!-- Terminal -->
   <div id="terminal">
-    <div id="terminal-output"></div>
-    <input id="terminal-input" type="text" placeholder="Type command... (help)" onkeydown="if(event.key==='Enter') runTerminalCommand()">
+    <div id="overlay">
+      <div><span class="prompt">$</span> Ready.</div>
+      <div style="margin-top: 10px; color: #888;">Type a URL or command and press Enter</div>
+      <div style="margin-top: 20px; color: #666;">Examples: google.com  clear  x.com</div>
+    </div>
+    <iframe id="iframe" src="about:blank"></iframe>
   </div>
 
-  <div id="candyBg"></div>
+  <div id="input-area">
+    <span class="prompt">$</span>
+    <input type="text" id="input" placeholder="type url or command..." autofocus autocomplete="off">
+  </div>
 
   <script>
-    // ====================== CONFIG ======================
-    let state = {
-      level: 1,
-      candies: 142,
-      shards: 27,
-      shops: 1,
-      bankrupt: false,
-      shopLocations: [
-        { id: 1, name: "London Flagship", lat: 51.5074, lng: -0.1278, salesBonus: 1.12, upkeepCost: 38 }
-      ]
-    };
+    const input = document.getElementById('input');
+    const iframe = document.getElementById('iframe');
+    const overlay = document.getElementById('overlay');
 
-    let mapInstance = null;
-    let markers = [];
+    let history = [];
+    let historyIndex = -1;
 
-    let marketItems = [
-      { id: "dragonToffee", name: "Dragonfire Toffee", avgPrice: 24, supply: 42 },
-      { id: "moonSugar",    name: "Moon Sugar Crystals", avgPrice: 41, supply: 18 },
-      { id: "gummyHydra",   name: "Rainbow Gummy Hydra", avgPrice: 79, supply: 5 }
-    ];
+    function processCommand(cmd) {
+      const trimmed = cmd.trim();
+      if (!trimmed) return;
 
-    const expansionCities = [
-      {name:"New York", lat:40.7128, lng:-74.0060, salesBonus:1.28, upkeepCost:52},
-      {name:"Tokyo", lat:35.6762, lng:139.6503, salesBonus:1.35, upkeepCost:48},
-      {name:"Paris", lat:48.8566, lng:2.3522, salesBonus:1.22, upkeepCost:45},
-      {name:"Sydney", lat:-33.8688, lng:151.2093, salesBonus:1.15, upkeepCost:35},
-      {name:"Dubai", lat:25.2048, lng:55.2708, salesBonus:1.30, upkeepCost:42},
-      {name:"Los Angeles", lat:34.0522, lng:-118.2437, salesBonus:1.18, upkeepCost:44},
-      {name:"Mumbai", lat:19.0760, lng:72.8777, salesBonus:1.08, upkeepCost:22},
-      {name:"Rio de Janeiro", lat:-22.9068, lng:-43.1729, salesBonus:1.10, upkeepCost:25}
-    ];
+      // Add to history
+      history.unshift(trimmed);
+      if (history.length > 50) history.pop(); // keep last 50 commands
+      historyIndex = -1;
 
-    // ====================== URL SAVE / LOAD ======================
-    function saveToURL() {
-      const compressed = btoa(JSON.stringify(state));
-      const newURL = window.location.origin + window.location.pathname + '?global=' + compressed;
-      window.history.replaceState({}, '', newURL);
-    }
-
-    function loadFromURL() {
-      const params = new URLSearchParams(window.location.search);
-      const saved = params.get('global');
-      if (saved) {
-        try { Object.assign(state, JSON.parse(atob(saved))); } 
-        catch(e) { console.warn("Failed to load saved game"); }
-      }
-    }
-
-    function copyGlobalLink() {
-      saveToURL();
-      navigator.clipboard.writeText(window.location.href).then(() => {
-        alert("✅ Global Empire link copied!\n\nShare with friends — everyone plays in the SAME empire!");
-      });
-    }
-
-    function saveGame() { saveToURL(); }
-
-    // ====================== LOG & UI ======================
-    function addLog(html) {
-      const logEl = document.getElementById('log');
-      const p = document.createElement('p');
-      p.innerHTML = html;
-      logEl.appendChild(p);
-      logEl.scrollTop = logEl.scrollHeight;
-      if (logEl.children.length > 60) logEl.removeChild(logEl.children[0]);
-    }
-
-    function updateUI() {
-      document.getElementById('level').textContent = state.level;
-      document.getElementById('candies').textContent = Math.floor(state.candies);
-      document.getElementById('shards').textContent = state.shards;
-      document.getElementById('shops').textContent = state.shops;
-
-      const rescueBtn = document.getElementById('rescueBtn');
-      if (rescueBtn) rescueBtn.style.display = state.bankrupt ? 'inline-block' : 'none';
-
-      saveGame();
-    }
-
-    function calculateTotalUpkeep() {
-      return state.shopLocations.reduce((total, shop) => total + shop.upkeepCost, 0);
-    }
-
-    function applyUpkeep() {
-      if (state.bankrupt) return;
-      const totalUpkeep = calculateTotalUpkeep();
-      if (state.candies >= totalUpkeep) {
-        state.candies -= totalUpkeep;
-        addLog(`🧾 Upkeep paid for ${state.shops} shops: -${totalUpkeep} 🍬`);
-      } else {
-        state.candies = 0;
-        state.bankrupt = true;
-        addLog(`<strong style="color:#ff7675;">💸 BANKRUPT! Total upkeep (${totalUpkeep} 🍬) exceeded stock.</strong>`);
-        addLog(`<span style="color:#e84393;">Rescue your empire using the button below.</span>`);
-      }
-      updateUI();
-    }
-
-    // ====================== BANKRUPTCY RESCUE (no Monzo) ======================
-    function rescueFromBankruptcy() {
-      if (!state.bankrupt) {
-        addLog("✅ Your empire is not bankrupt.");
+      if (trimmed.toLowerCase() === 'clear') {
+        overlay.style.display = 'flex';
+        iframe.src = 'about:blank';
         return;
       }
 
-      const costCandies = 180;
-      const costShards = 45;
-
-      if (state.candies >= costCandies) {
-        state.candies -= costCandies;
-        state.candies += 100;   // net +100 recovery
-        state.bankrupt = false;
-        addLog(`🚨 <strong style="color:#00b894;">EMPIRE RESCUED!</strong> Paid ${costCandies} 🍬. +100 recovery!`);
-      } else if (state.shards >= costShards) {
-        state.shards -= costShards;
-        state.bankrupt = false;
-        state.candies += 130;
-        addLog(`🚨 <strong style="color:#00b894;">EMPIRE RESCUED!</strong> Paid ${costShards} ✨. +130 🍬 recovery!`);
-      } else {
-        addLog(`❌ Not enough resources. Need ${costCandies} 🍬 or ${costShards} ✨`);
-        return;
-      }
-      updateUI();
-    }
-
-    // ====================== CUSTOMER SERVING ======================
-    function serveCustomer(type) {
-      if (state.bankrupt) {
-        addLog(`<span style="color:#ff7675;">Empire is bankrupt! Rescue it first.</span>`);
-        return;
-      }
-
-      let baseGain = type === 'premium' ? 48 : type === 'wild' ? 67 : 22;
-      const totalBonus = state.shopLocations.reduce((sum, s) => sum + (s.salesBonus - 1), 0);
-      const finalGain = Math.floor(baseGain * (1 + totalBonus * 0.7));
-
-      state.candies += finalGain;
-      addLog(`💰 Worldwide sales! <strong>+${finalGain} 🍬</strong>`);
-      updateUI();
-    }
-
-    // ====================== BLACK MARKET ======================
-    function renderMarket() {
-      const container = document.getElementById('marketList');
-      container.innerHTML = '';
-      marketItems.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'market-item';
-        div.innerHTML = `
-          <div><strong>${item.name}</strong><br><small>Avg price: <b>${item.avgPrice} 🍬</b></small></div>
-          <div>
-            <button onclick="tradeMarket('${item.id}', 'buy')">Buy</button>
-            <button onclick="tradeMarket('${item.id}', 'sell')">Sell</button>
-          </div>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    function tradeMarket(id, action) {
-      if (state.bankrupt) {
-        addLog(`<span style="color:#ff7675;">Empire is bankrupt — rescue first.</span>`);
-        return;
-      }
-      const item = marketItems.find(i => i.id === id);
-      if (!item) return;
-
-      if (action === 'buy') {
-        if (state.candies >= item.avgPrice) {
-          state.candies -= item.avgPrice;
-          item.avgPrice = Math.floor(item.avgPrice * 1.07);
-          addLog(`📈 Bought 1x <strong>${item.name}</strong>`);
-        } else {
-          addLog(`❌ Not enough candies.`);
+      // Check if it looks like a URL
+      let isUrl = false;
+      let url = trimmed;
+      if (/^https?:\/\//i.test(trimmed) || 
+          trimmed.includes('.') && !trimmed.includes(' ') && 
+          !trimmed.startsWith('http')) {
+        isUrl = true;
+        if (!/^https?:\/\//i.test(trimmed)) {
+          url = 'https://' + trimmed;
         }
+      }
+
+      if (isUrl) {
+        overlay.style.display = 'none';
+        iframe.src = url;
       } else {
-        const sellPrice = Math.floor(item.avgPrice * 0.89);
-        state.candies += sellPrice;
-        item.avgPrice = Math.max(12, Math.floor(item.avgPrice * 0.94));
-        addLog(`📉 Sold 1x <strong>${item.name}</strong> for ${sellPrice} 🍬`);
-      }
-      updateUI();
-      renderMarket();
-    }
-
-    // ====================== EMPIRE EXPANSION (FREE - no Monzo) ======================
-    function expandEmpire() {
-      if (state.shopLocations.length >= 10) {
-        alert("Your empire is already massive! (Max 10 shops)");
-        return;
-      }
-
-      const city = expansionCities[Math.floor(Math.random() * expansionCities.length)];
-      const newShop = {
-        id: state.shopLocations.length + 1,
-        name: city.name + " Candy Store",
-        lat: city.lat,
-        lng: city.lng,
-        salesBonus: city.salesBonus,
-        upkeepCost: city.upkeepCost
-      };
-
-      state.shopLocations.push(newShop);
-      state.shops = state.shopLocations.length;
-      state.candies += 380;
-
-      addLog(`🎉 New shop opened in <strong>${city.name}</strong>! (+${Math.round((city.salesBonus-1)*100)}% sales | ${city.upkeepCost} 🍬 upkeep)`);
-
-      if (mapInstance) renderShopsOnMap();
-      updateUI();
-    }
-
-    // ====================== MAP ======================
-    function initMap() {
-      if (mapInstance) return;
-      mapInstance = L.map('map', { zoomControl: true }).setView([20, 0], 2);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(mapInstance);
-      renderShopsOnMap();
-
-      L.easyButton({
-        position: 'bottomright',
-        states: [{ stateName: 'terminal', icon: '<span style="font-size:1.6em;">🍬</span>', title: 'Open Sugar Terminal', onClick: toggleTerminal }]
-      }).addTo(mapInstance);
-    }
-
-    function renderShopsOnMap() {
-      markers.forEach(m => m.remove());
-      markers = [];
-      state.shopLocations.forEach(shop => {
-        const popup = `<b>${shop.name}</b><br>Sales Bonus: +${Math.round((shop.salesBonus-1)*100)}%<br>Daily Upkeep: ${shop.upkeepCost} 🍬`;
-        const marker = L.marker([shop.lat, shop.lng]).addTo(mapInstance).bindPopup(popup);
-        markers.push(marker);
-      });
-    }
-
-    // ====================== TAB SWITCHING ======================
-    function switchTab(n) {
-      document.querySelectorAll('.tab-content').forEach((el, i) => el.classList.toggle('active', i === n));
-      document.querySelectorAll('.tab').forEach((el, i) => el.classList.toggle('active', i === n));
-      if (n === 1) {
-        setTimeout(() => { initMap(); if (mapInstance) mapInstance.invalidateSize(); }, 50);
-      }
-      if (n === 3) renderMarket();
-    }
-
-    // ====================== FLOATING CANDIES ======================
-    function createFloatingCandies() {
-      const bg = document.getElementById('candyBg');
-      bg.style.position = 'fixed'; bg.style.inset = '0'; bg.style.pointerEvents = 'none'; bg.style.zIndex = '-1';
-      const emojis = ['🍭','🍬','🍫','🍩','🧁','🍪','🌈','✨'];
-      for (let i = 0; i < 18; i++) {
-        const candy = document.createElement('div');
-        candy.className = 'floating-candy';
-        candy.textContent = emojis[Math.floor(Math.random()*emojis.length)];
-        candy.style.left = Math.random() * 100 + 'vw';
-        candy.style.animationDuration = (Math.random() * 12 + 15) + 's';
-        candy.style.animationDelay = '-' + (Math.random() * 30) + 's';
-        bg.appendChild(candy);
+        // For non-URL commands, just echo (you can add more commands later)
+        console.log(`Command executed: ${trimmed}`);
+        // Optionally show feedback in overlay if you want
       }
     }
 
-    // ====================== TERMINAL ======================
-    function toggleTerminal() {
-      const term = document.getElementById('terminal');
-      term.style.display = (term.style.display === 'flex') ? 'none' : 'flex';
-      if (term.style.display === 'flex') document.getElementById('terminal-input').focus();
-    }
-
-    function terminalPrint(text, color = '#0f0') {
-      const output = document.getElementById('terminal-output');
-      const line = document.createElement('div');
-      line.style.color = color;
-      line.textContent = text;
-      output.appendChild(line);
-      output.scrollTop = output.scrollHeight;
-    }
-
-    function runTerminalCommand() {
-      const input = document.getElementById('terminal-input');
-      const cmd = input.value.trim().toLowerCase();
-      if (!cmd) return;
-
-      terminalPrint('> ' + cmd, '#aaa');
-
-      if (cmd === 'help') {
-        terminalPrint('Commands:', '#ff0');
-        terminalPrint('  add candies <number>');
-        terminalPrint('  add shards <number>');
-        terminalPrint('  rescue');
-        terminalPrint('  clear');
-        terminalPrint('  help');
-      } else if (cmd.startsWith('add candies')) {
-        const num = parseInt(cmd.split(' ')[2]) || 100;
-        state.candies += num;
-        terminalPrint(`+${num} 🍬 added!`, '#0f0');
-        updateUI();
-      } else if (cmd.startsWith('add shards')) {
-        const num = parseInt(cmd.split(' ')[2]) || 10;
-        state.shards += num;
-        terminalPrint(`+${num} ✨ added!`, '#0f0');
-        updateUI();
-      } else if (cmd === 'rescue' || cmd === 'rescue empire') {
-        rescueFromBankruptcy();
-      } else if (cmd === 'clear') {
-        document.getElementById('terminal-output').innerHTML = '';
-      } else {
-        terminalPrint('Unknown command. Type "help"', '#f66');
+    // Enter key
+    input.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        const cmd = input.value;
+        processCommand(cmd);
+        input.value = '';
       }
-      input.value = '';
-    }
+    });
 
-    // ====================== AUTO TIMERS ======================
-    setInterval(() => {
-      if (!state.bankrupt) {
-        const bonus = Math.floor(Math.random() * 6) + 1;
-        state.candies += bonus;
-        addLog(`💾 Auto bonus +${bonus} 🍬`);
-        updateUI();
+    // Arrow keys for history
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (history.length === 0) return;
+        historyIndex = Math.min(historyIndex + 1, history.length - 1);
+        input.value = history[historyIndex];
+      } 
+      else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (historyIndex <= 0) {
+          historyIndex = -1;
+          input.value = '';
+        } else {
+          historyIndex--;
+          input.value = history[historyIndex];
+        }
       }
-    }, 60000);
+    });
 
-    setInterval(applyUpkeep, 60000);
+    // Click anywhere focuses the input line
+    document.addEventListener('click', () => input.focus());
 
-    // ====================== INITIALIZATION ======================
-    window.onload = () => {
-      loadFromURL();
-      
-      // Free starting boost (candies + shards)
-      state.candies += 250;
-      state.shards += 60;
-      addLog("🎁 <strong>Free starter pack added:</strong> +250 🍬 and +60 ✨");
-
-      updateUI();
-
-      addLog("<em>🍭 Welcome to the Global Sugar Realms!</em>");
-      addLog("No payments needed — expand freely and enjoy!");
-
-      // Rescue button
-      const empireTab = document.getElementById('tab0');
-      const rescueHTML = `
-        <div style="text-align:center; margin:18px 0 10px;">
-          <button id="rescueBtn" onclick="rescueFromBankruptcy()" 
-                  style="background:#e84393; display:none; padding:16px 32px; font-size:1.2em;">
-            🚨 RESCUE EMPIRE (180 🍬 or 45 ✨)
-          </button>
-        </div>`;
-      empireTab.insertAdjacentHTML('beforeend', rescueHTML);
-
-      createFloatingCandies();
-      switchTab(0);
-    };
+    // Focus on load
+    window.onload = () => input.focus();
   </script>
+
 </body>
 </html>

@@ -3,14 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Terminal • Type to URL</title>
+  <title>Smart Terminal • Live Type</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background: #0d1117;
       color: #00ff9d;
@@ -29,7 +24,6 @@
       justify-content: space-between;
       align-items: center;
       font-size: 14px;
-      user-select: none;
     }
 
     #terminal {
@@ -42,7 +36,6 @@
       width: 100%;
       height: 100%;
       border: none;
-      background: #ffffff;
     }
 
     #input-area {
@@ -60,7 +53,7 @@
       pointer-events: none;
     }
 
-    input {
+    #input {
       background: transparent;
       border: none;
       color: #00ff9d;
@@ -71,22 +64,15 @@
       caret-color: #00ff9d;
     }
 
-    input::placeholder {
-      color: #555;
-    }
-
-    #overlay {
+    #typing {
       position: absolute;
-      inset: 0;
-      background: rgba(13, 17, 23, 0.95);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-      text-align: center;
-      color: #888;
+      bottom: 80px;
+      left: 20px;
+      color: #00cc77;
+      font-size: 15px;
+      opacity: 0.8;
       pointer-events: none;
+      white-space: pre;
     }
 
     button {
@@ -95,36 +81,25 @@
       border: 1px solid #30363d;
       padding: 6px 14px;
       font-family: inherit;
-      font-size: 13px;
       cursor: pointer;
       border-radius: 4px;
-      transition: all 0.2s;
     }
 
     button:hover {
       background: #30363d;
       border-color: #00ff9d;
     }
-
-    .status {
-      font-size: 13px;
-      color: #666;
-      margin-top: 6px;
-    }
   </style>
 </head>
 <body>
 
   <div id="header">
-    <span><span class="prompt">$</span> Smart Terminal — Type anything → Open URL</span>
-    <button onclick="shareTerminal()">Share Link</button>
+    <span><span class="prompt">$</span> Smart Terminal — Type → Live Load</span>
+    <button onclick="shareTerminal()">Share</button>
   </div>
 
   <div id="terminal">
-    <div id="overlay">
-      <div><span class="prompt">$</span> Ready to go</div>
-      <div class="status">Type text, domain, or full URL and press <strong>Enter</strong></div>
-    </div>
+    <div id="typing"></div>
     <iframe id="iframe" src="https://rootdonate.co.uk"></iframe>
   </div>
 
@@ -133,7 +108,7 @@
     <input 
       type="text" 
       id="input" 
-      placeholder="google.com or just type 'youtube'..." 
+      placeholder="Type anything... (google, youtube, wikipedia...)"
       autofocus 
       autocomplete="off"
       spellcheck="false">
@@ -142,13 +117,35 @@
   <script>
     const input = document.getElementById('input');
     const iframe = document.getElementById('iframe');
-    const overlay = document.getElementById('overlay');
+    const typingEl = document.getElementById('typing');
 
     let history = [];
     let historyIndex = -1;
+    let typingTimeout = null;
 
-    // Smart URL conversion with better logic
-    function smartURLImport(cmd) {
+    // Live typing animation
+    function typeText(text) {
+      typingEl.textContent = '';
+      let i = 0;
+      
+      clearTimeout(typingTimeout);
+      
+      function type() {
+        if (i < text.length) {
+          typingEl.textContent += text[i];
+          i++;
+          typingTimeout = setTimeout(type, 30); // typing speed
+        } else {
+          setTimeout(() => {
+            typingEl.textContent = '';
+          }, 1200);
+        }
+      }
+      type();
+    }
+
+    // Smart URL logic
+    function smartOpen(cmd) {
       let trimmed = cmd.trim();
       if (!trimmed) return;
 
@@ -159,37 +156,48 @@
 
       let url = trimmed;
 
-      // Smart conversion logic
       if (!/^https?:\/\//i.test(trimmed)) {
         trimmed = trimmed.toLowerCase();
 
-        // If it looks like a domain (has dot and no spaces)
         if (/\.[a-z]{2,}/.test(trimmed) && !trimmed.includes(' ')) {
+          // It's probably a domain
           url = trimmed.startsWith('www.') ? 'https://' + trimmed : 'https://' + trimmed;
+        } 
+        else if (trimmed === 'youtube' || trimmed === 'yt') {
+          url = 'https://youtube.com';
         }
-        // Search query fallback
+        else if (trimmed === 'github' || trimmed === 'gh') {
+          url = 'https://github.com';
+        }
+        else if (trimmed === 'reddit') {
+          url = 'https://reddit.com';
+        }
         else {
+          // Default to Google search
           url = 'https://www.google.com/search?q=' + encodeURIComponent(trimmed);
         }
       }
 
-      // Hide overlay and load URL
-      overlay.style.display = 'none';
-      iframe.src = url;
+      // Show live typing effect
+      typeText(`Opening → ${trimmed}`);
 
-      // Clear input
+      // Load in iframe
+      setTimeout(() => {
+        iframe.src = url;
+      }, 800);
+
       input.value = '';
     }
 
-    // Enter key handler
-    input.addEventListener('keypress', function(e) {
+    // Event Listeners
+    input.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
-        smartURLImport(input.value);
+        smartOpen(input.value);
       }
     });
 
-    // History navigation (Up / Down arrows)
-    input.addEventListener('keydown', function(e) {
+    // History with Arrow Up / Down
+    input.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowUp') {
         e.preventDefault();
         if (history.length === 0) return;
@@ -208,29 +216,21 @@
       }
     });
 
-    // Focus input when clicking anywhere
+    // Click anywhere to focus input
     document.addEventListener('click', () => input.focus());
 
     // Initial focus
-    window.onload = () => {
-      input.focus();
-    };
+    window.onload = () => input.focus();
 
-    // Share current terminal link
+    // Share function
     function shareTerminal() {
-      const shareUrl = window.location.href;
-      navigator.clipboard.writeText(shareUrl).then(() => {
+      navigator.clipboard.writeText(window.location.href).then(() => {
         const btn = document.querySelector('button');
-        const originalText = btn.textContent;
+        const orig = btn.textContent;
         btn.textContent = '✅ Copied!';
-        setTimeout(() => {
-          btn.textContent = originalText;
-        }, 2000);
-      }).catch(() => {
-        alert('Failed to copy. Here is the link:\n' + shareUrl);
+        setTimeout(() => btn.textContent = orig, 2000);
       });
     }
   </script>
-
 </body>
 </html>

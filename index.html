@@ -3,18 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Terminal - Type to URL</title>
+  <title>Smart Terminal • Type to URL</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       background: #0d1117;
       color: #00ff9d;
-      font-family: 'Courier New', monospace;
+      font-family: 'Courier New', Consolas, monospace;
       height: 100vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
+
     #header {
       padding: 12px 20px;
       background: #161b22;
@@ -23,30 +29,37 @@
       justify-content: space-between;
       align-items: center;
       font-size: 14px;
+      user-select: none;
     }
+
     #terminal {
       flex: 1;
       position: relative;
       background: #0d1117;
     }
+
     iframe {
       width: 100%;
       height: 100%;
       border: none;
       background: #ffffff;
     }
+
     #input-area {
       padding: 16px 20px;
       background: #161b22;
       border-top: 1px solid #30363d;
       display: flex;
       align-items: center;
+      gap: 10px;
     }
+
     .prompt {
       color: #00ff9d;
-      margin-right: 10px;
       user-select: none;
+      pointer-events: none;
     }
+
     input {
       background: transparent;
       border: none;
@@ -55,10 +68,13 @@
       font-size: 16px;
       outline: none;
       flex: 1;
+      caret-color: #00ff9d;
     }
+
     input::placeholder {
-      color: #666;
+      color: #555;
     }
+
     #overlay {
       position: absolute;
       inset: 0;
@@ -70,7 +86,9 @@
       z-index: 10;
       text-align: center;
       color: #888;
+      pointer-events: none;
     }
+
     button {
       background: #21262d;
       color: #00ff9d;
@@ -80,30 +98,45 @@
       font-size: 13px;
       cursor: pointer;
       border-radius: 4px;
+      transition: all 0.2s;
     }
+
     button:hover {
       background: #30363d;
+      border-color: #00ff9d;
+    }
+
+    .status {
+      font-size: 13px;
+      color: #666;
+      margin-top: 6px;
     }
   </style>
 </head>
 <body>
 
   <div id="header">
-    <span><span class="prompt">$</span> Smart Terminal — Type text to import URL</span>
+    <span><span class="prompt">$</span> Smart Terminal — Type anything → Open URL</span>
     <button onclick="shareTerminal()">Share Link</button>
   </div>
 
   <div id="terminal">
     <div id="overlay">
-      <div><span class="prompt">$</span> Ready.</div>
-      <div style="margin-top: 8px;">Type any text or URL and press Enter</div>
+      <div><span class="prompt">$</span> Ready to go</div>
+      <div class="status">Type text, domain, or full URL and press <strong>Enter</strong></div>
     </div>
     <iframe id="iframe" src="https://rootdonate.co.uk"></iframe>
   </div>
 
   <div id="input-area">
     <span class="prompt">$</span>
-    <input type="text" id="input" placeholder="type text or url here..." autofocus autocomplete="off">
+    <input 
+      type="text" 
+      id="input" 
+      placeholder="google.com or just type 'youtube'..." 
+      autofocus 
+      autocomplete="off"
+      spellcheck="false">
   </div>
 
   <script>
@@ -114,42 +147,48 @@
     let history = [];
     let historyIndex = -1;
 
+    // Smart URL conversion with better logic
     function smartURLImport(cmd) {
       let trimmed = cmd.trim();
       if (!trimmed) return;
 
-      // Save typed text to history for Up/Down arrows
+      // Save to history
       history.unshift(trimmed);
       if (history.length > 50) history.pop();
       historyIndex = -1;
 
       let url = trimmed;
 
-      // Smart text → URL conversion
+      // Smart conversion logic
       if (!/^https?:\/\//i.test(trimmed)) {
-        if (trimmed.includes('.')) {
-          url = 'https://' + trimmed;
-        } else {
-          url = 'https://' + trimmed + '.com';
+        trimmed = trimmed.toLowerCase();
+
+        // If it looks like a domain (has dot and no spaces)
+        if (/\.[a-z]{2,}/.test(trimmed) && !trimmed.includes(' ')) {
+          url = trimmed.startsWith('www.') ? 'https://' + trimmed : 'https://' + trimmed;
+        }
+        // Search query fallback
+        else {
+          url = 'https://www.google.com/search?q=' + encodeURIComponent(trimmed);
         }
       }
 
-      // Load the URL
+      // Hide overlay and load URL
       overlay.style.display = 'none';
       iframe.src = url;
 
-      // Clear input for clean typing
+      // Clear input
       input.value = '';
     }
 
-    // Press Enter to import URL from typed text
+    // Enter key handler
     input.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         smartURLImport(input.value);
       }
     });
 
-    // History navigation with Up / Down arrows
+    // History navigation (Up / Down arrows)
     input.addEventListener('keydown', function(e) {
       if (e.key === 'ArrowUp') {
         e.preventDefault();
@@ -169,22 +208,26 @@
       }
     });
 
-    // Click anywhere focuses the input
+    // Focus input when clicking anywhere
     document.addEventListener('click', () => input.focus());
 
     // Initial focus
-    window.onload = () => input.focus();
+    window.onload = () => {
+      input.focus();
+    };
 
-    // Share Link function
+    // Share current terminal link
     function shareTerminal() {
       const shareUrl = window.location.href;
       navigator.clipboard.writeText(shareUrl).then(() => {
         const btn = document.querySelector('button');
-        const original = btn.textContent;
-        btn.textContent = '✅ Link Copied!';
-        setTimeout(() => { btn.textContent = original; }, 2000);
+        const originalText = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => {
+          btn.textContent = originalText;
+        }, 2000);
       }).catch(() => {
-        alert('Copy failed. Manually share this URL: ' + shareUrl);
+        alert('Failed to copy. Here is the link:\n' + shareUrl);
       });
     }
   </script>

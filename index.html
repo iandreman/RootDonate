@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cleverbot - No API Key</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0f0f0f;
+            color: #ddd;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background: #1a1a1a;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message {
+            padding: 12px 18px;
+            border-radius: 20px;
+            max-width: 75%;
+            line-height: 1.45;
+        }
+        .user {
+            background: #0078d4;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            color: white;
+        }
+        .bot {
+            background: #2a2a2a;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        .input-area {
+            background: #1a1a1a;
+            padding: 15px;
+            border-top: 1px solid #333;
+        }
+        form {
+            display: flex;
+            max-width: 800px;
+            margin: 0 auto;
+            gap: 10px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 30px;
+            background: #333;
+            color: #fff;
+            font-size: 16px;
+        }
+        button {
+            padding: 0 28px;
+            background: #0078d4;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background: #106ebe; }
+        .typing {
+            font-style: italic;
+            color: #888;
+            align-self: flex-start;
+        }
+        .warning {
+            font-size: 0.9em;
+            color: #ffcc00;
+            text-align: center;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Cleverbot</h1>
+        <p>Unofficial free version • No API key needed</p>
+    </header>
+
+    <div class="chat-container" id="chat"></div>
+
+    <div class="input-area">
+        <form id="chat-form">
+            <input type="text" id="user-input" placeholder="Say something..." autocomplete="off" autofocus>
+            <button type="submit">Send</button>
+        </form>
+        <div class="warning">This uses a public proxy. May be slow or rate-limited.</div>
+    </div>
+
+    <script>
+        const chat = document.getElementById('chat');
+        const form = document.getElementById('chat-form');
+        const input = document.getElementById('user-input');
+
+        // Public proxy endpoint (unofficial, based on cleverbot-free style implementations)
+        const PROXY_URL = "https://www.cleverbot.com/webservicemin";
+
+        let conversationState = {
+            sessionid: "",
+            logurl: "",
+            vText8: "", vText7: "", vText6: "", vText5: "", vText4: "", vText3: "", vText2: "",
+            prevref: "",
+            emotionalhistory: "",
+            ttsText: ""
+        };
+
+        function addMessage(text, isUser) {
+            const div = document.createElement('div');
+            div.className = `message ${isUser ? 'user' : 'bot'}`;
+            div.textContent = text;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function showTyping() {
+            const id = 'typing-' + Date.now();
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = 'message bot typing';
+            div.textContent = "Cleverbot is thinking...";
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+            return id;
+        }
+
+        async function askCleverbot(message) {
+            const thinkingId = showTyping();
+
+            try {
+                const formData = new URLSearchParams();
+
+                // Build the same parameters the old Python script used
+                formData.append('stimulus', message);
+                formData.append('start', 'y');
+                formData.append('sessionid', conversationState.sessionid || '');
+                formData.append('vText8', conversationState.vText8 || '');
+                formData.append('vText7', conversationState.vText7 || '');
+                formData.append('vText6', conversationState.vText6 || '');
+                formData.append('vText5', conversationState.vText5 || '');
+                formData.append('vText4', conversationState.vText4 || '');
+                formData.append('vText3', conversationState.vText3 || '');
+                formData.append('vText2', conversationState.vText2 || '');
+                formData.append('icognoid', 'wsf');
+                formData.append('icognocheck', ''); // will be calculated if needed, but many proxies ignore it
+                formData.append('prevref', conversationState.prevref || '');
+                formData.append('emotionaloutput', '');
+                formData.append('emotionalhistory', conversationState.emotionalhistory || '');
+                formData.append('asbotname', '');
+                formData.append('ttsvoice', '');
+                formData.append('typing', '0');
+                formData.append('lineref', '');
+                formData.append('fno', '0');
+                formData.append('sub', 'Say');
+                formData.append('islearning', '1');
+                formData.append('cleanslate', 'false');
+
+                const response = await fetch(PROXY_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    },
+                    body: formData.toString()
+                });
+
+                if (!response.ok) throw new Error('Network error');
+
+                const text = await response.text();
+                const parts = text.split('\r');
+
+                // Parse reply (same format as old parseAnswers)
+                const reply = parts[0] || "Sorry, I didn't get that.";
+
+                // Update conversation state for context
+                if (parts.length > 1) conversationState.sessionid = parts[1];
+                if (parts.length > 9) conversationState.vText2 = parts[9];
+                if (parts.length > 10) conversationState.prevref = parts[10];
+                if (parts.length > 12) conversationState.emotionalhistory = parts[12];
+                if (parts.length > 16) conversationState.ttsText = parts[16];
+
+                // Remove typing indicator
+                const typingEl = document.getElementById(thinkingId);
+                if (typingEl) typingEl.remove();
+
+                return reply;
+
+            } catch (err) {
+                console.error(err);
+                const typingEl = document.getElementById(thinkingId);
+                if (typingEl) typingEl.remove();
+                return "Connection issue with the proxy. Try again in a moment.";
+            }
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            addMessage(msg, true);
+            input.value = '';
+
+            const reply = await askCleverbot(msg);
+            addMessage(reply, false);
+        }
+
+        form.addEventListener('submit', handleSubmit);
+
+        // Welcome message
+        window.onload = () => {
+            addMessage("Hi! I'm Cleverbot. What do you want to talk about today?", false);
+        };
+    </script>
+</body>
+</html>

@@ -54,6 +54,50 @@
             box-shadow: 0 0 20px rgba(0, 255, 65, 0.25);
         }
 
+        /* Overlay for clear typing instructions */
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            cursor: pointer;
+            transition: opacity 0.6s ease;
+            user-select: none;
+        }
+
+        #overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .overlay-content {
+            text-align: center;
+            padding: 30px 40px;
+            border: 2px dashed var(--accent);
+            border-radius: 8px;
+            background: rgba(10, 10, 10, 0.9);
+        }
+
+        .overlay-text {
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .overlay-sub {
+            font-size: 15px;
+            color: #aaffaa;
+            line-height: 1.4;
+        }
+
         .controls {
             position: absolute;
             bottom: 20px;
@@ -69,6 +113,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            z-index: 5;
         }
 
         .how-to {
@@ -127,23 +172,34 @@
     
     <div id="container">
         <iframe 
+            id="cleverbot-frame"
             src="https://www.cleverbot.com/cleverbotif" 
             allowtransparency="true" 
             frameborder="0" 
             scrolling="yes"
             sandbox="allow-scripts allow-same-origin allow-popups allow-forms">
         </iframe>
+
+        <!-- Clear typing overlay -->
+        <div id="overlay" onclick="hideOverlay()">
+            <div class="overlay-content">
+                <div class="overlay-text">Click here and start typing...</div>
+                <div class="overlay-sub">
+                    Type your message • Press Enter<br>
+                    or click the Send button in the chat
+                </div>
+            </div>
+        </div>
         
         <div class="controls">
             <div class="how-to">
                 <strong>✅ Connected to official Cleverbot</strong><br><br>
                 
-                <strong>How to type to Cleverbot:</strong>
+                <strong>How to chat:</strong>
                 <div class="instructions">
-                    • Click anywhere inside the white chat box below<br>
+                    • Click inside the chat area (or the overlay above)<br>
                     • Type your message<br>
-                    • Press <strong>Enter</strong> on your keyboard<br>
-                    <span style="color:#88ff88;">or</span> click the <strong>Send</strong> button in the chat
+                    • Press <strong>Enter</strong> or click <strong>Send</strong>
                 </div>
             </div>
             
@@ -156,10 +212,27 @@
     </div>
 
     <script>
+        const overlay = document.getElementById('overlay');
+
+        function hideOverlay() {
+            overlay.classList.add('hidden');
+            // Remove it completely after fade animation
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 600);
+        }
+
+        // Auto-hide overlay after 8 seconds if user hasn't clicked
+        setTimeout(() => {
+            if (overlay.style.display !== 'none') {
+                hideOverlay();
+            }
+        }, 8000);
+
         function saveAndShare() {
             alert("💾 Save & Share is currently a placeholder.\n\n" + 
-                  "The iframe prevents automatic message capture.\n\n" +
-                  "Tip: You can manually copy-paste important parts of the conversation if needed.");
+                  "Due to iframe security, messages cannot be captured automatically.\n\n" +
+                  "Tip: You can manually copy-paste the conversation if needed.");
         }
 
         console.log("%c✅ Cleverbot Terminal loaded successfully", 

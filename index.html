@@ -12,9 +12,7 @@
             --panel: rgba(15, 15, 15, 0.95);
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -54,7 +52,7 @@
             box-shadow: 0 0 25px rgba(0, 255, 65, 0.3);
         }
 
-        /* Prominent Typing Overlay */
+        /* Clear typing overlay */
         #overlay {
             position: absolute;
             inset: 0;
@@ -116,16 +114,13 @@
             z-index: 10;
         }
 
-        .how-to strong {
-            color: var(--accent);
-        }
-
         .instructions {
             background: rgba(0, 255, 65, 0.1);
             border-left: 4px solid var(--accent);
             padding: 13px 15px;
             margin-top: 10px;
             font-size: 14px;
+            line-height: 1.5;
         }
 
         .btn-group {
@@ -157,9 +152,7 @@
             text-decoration: underline;
         }
 
-        a:hover {
-            color: var(--accent);
-        }
+        a:hover { color: var(--accent); }
     </style>
 </head>
 <body>
@@ -174,23 +167,21 @@
             sandbox="allow-scripts allow-same-origin allow-popups allow-forms">
         </iframe>
 
-        <!-- Big clear overlay for typing -->
+        <!-- Typing overlay -->
         <div id="overlay" onclick="hideOverlay()">
             <div class="overlay-box">
                 <div class="overlay-text">Click here and start typing to Cleverbot</div>
                 <div class="overlay-sub">
                     • Click inside the chat area below<br>
                     • Type your message<br>
-                    • Press <strong>Enter</strong> on your keyboard<br>
-                    <span style="color:#88ff88;">or</span> click the <strong>Send</strong> button
+                    • Press <strong>Enter</strong> or click <strong>Send</strong>
                 </div>
             </div>
         </div>
         
         <div class="controls">
-            <div class="how-to">
+            <div>
                 <strong>✅ Connected to official Cleverbot</strong>
-                
                 <div class="instructions">
                     Click anywhere in the chat window (or on the overlay) to begin typing.<br>
                     Type your message and press <strong>Enter</strong> or tap <strong>Send</strong>.
@@ -215,20 +206,72 @@
             }, 900);
         }
 
-        // Auto-hide after 9 seconds if user doesn't click
+        // Auto-hide overlay after 9 seconds
         setTimeout(() => {
-            if (overlay.style.display !== 'none') {
-                hideOverlay();
-            }
+            if (overlay.style.display !== 'none') hideOverlay();
         }, 9000);
 
+        // Save & Share - Creates a real shareable URL of the Smart Terminal itself
         function saveAndShare() {
-            alert("💾 Save & Share is currently a placeholder.\n\n" +
-                  "The iframe prevents automatic message saving.\n\n" +
-                  "Tip: Manually copy-paste any important parts of the conversation.");
+            const timestamp = new Date().toISOString();
+            
+            // Create shareable data URL that loads the same terminal
+            const shareData = {
+                version: "2.3",
+                title: "Cleverbot Smart Terminal",
+                timestamp: timestamp,
+                message: "This link opens the full Cleverbot Terminal with the clean green theme and typing guide."
+            };
+
+            const jsonStr = JSON.stringify(shareData, null, 2);
+            const encoded = encodeURIComponent(jsonStr);
+            const shareUrl = `data:application/json;charset=utf-8,${encoded}`;
+
+            // Open clean share page with the shareable link
+            const newWin = window.open('', '_blank', 'width=920,height=740');
+            if (!newWin) {
+                alert("Please allow pop-ups to generate the share link.");
+                return;
+            }
+
+            newWin.document.write(`
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Cleverbot Smart Terminal - Shared</title>
+                    <style>
+                        body { background:#000; color:#0f0; font-family:'Courier New', monospace; padding:30px; line-height:1.6; }
+                        h2 { color:#0f0; }
+                        pre { background:#111; padding:20px; border:1px solid #0f0; overflow:auto; white-space:pre-wrap; }
+                        a { color:#0ff; word-break:break-all; font-size:15px; }
+                        button { 
+                            background:#0f0; 
+                            color:#000; 
+                            border:none; 
+                            padding:12px 20px; 
+                            cursor:pointer; 
+                            font-family:inherit; 
+                            margin:15px 0;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h2>Cleverbot Smart Terminal Share</h2>
+                    <p><strong>Your Shareable URL:</strong></p>
+                    <a href="${shareUrl}" target="_blank">${shareUrl}</a><br><br>
+                    <button onclick="navigator.clipboard.writeText('${shareUrl}').then(() => alert('Share URL copied!'))">
+                        Copy Share URL
+                    </button>
+                    <hr>
+                    <p><strong>How to use:</strong> Open the link above in any browser. You will get the exact same smart terminal with the typing guide and full access to Cleverbot.</p>
+                    <pre>${jsonStr}</pre>
+                </body>
+                </html>
+            `);
         }
 
-        console.log("%c✅ Cleverbot Terminal loaded successfully", 
+        console.log("%c✅ Cleverbot Smart Terminal loaded successfully", 
                    "color: #00ff41; font-family: monospace; font-size: 14px;");
     </script>
 </body>

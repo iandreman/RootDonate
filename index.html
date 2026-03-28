@@ -30,10 +30,10 @@
 
         .header {
             background: #111;
-            padding: 14px 20px;
+            padding: 15px 20px;
             text-align: center;
             border-bottom: 2px solid var(--accent);
-            font-size: 17px;
+            font-size: 18px;
             font-weight: bold;
             letter-spacing: 2px;
             text-transform: uppercase;
@@ -42,15 +42,13 @@
 
         #container {
             flex: 1;
-            display: flex;
-            flex-direction: column;
             position: relative;
             overflow: hidden;
         }
 
         iframe {
-            flex: 1;
             width: 100%;
+            height: 100%;
             border: 2px solid var(--accent);
             background: #111;
             box-shadow: 0 0 20px rgba(0, 255, 65, 0.25);
@@ -62,41 +60,44 @@
             left: 20px;
             right: 20px;
             background: var(--panel);
-            padding: 14px 18px;
+            padding: 16px 20px;
             font-size: 14px;
             color: #aaffaa;
             border: 1px solid var(--accent);
             border-radius: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .info {
-            line-height: 1.5;
+        .how-to {
+            line-height: 1.6;
         }
 
-        .status {
+        .how-to strong {
             color: var(--accent);
-            font-weight: bold;
         }
 
         .instructions {
-            background: rgba(0, 255, 65, 0.08);
-            padding: 10px 12px;
+            background: rgba(0, 255, 65, 0.1);
             border-left: 4px solid var(--accent);
-            margin-top: 6px;
-            font-size: 13.5px;
+            padding: 12px 14px;
+            margin-top: 8px;
+            font-size: 13.8px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .btn {
             background: transparent;
             color: #88ff88;
             border: 1px solid var(--accent);
-            padding: 8px 16px;
+            padding: 9px 16px;
             cursor: pointer;
             font-family: inherit;
             font-size: 13px;
@@ -134,18 +135,20 @@
         </iframe>
         
         <div class="controls">
-            <div class="info">
-                ✅ Connected to the official Cleverbot<br>
-                <span class="status">How to chat:</span>
+            <div class="how-to">
+                <strong>✅ Connected to official Cleverbot</strong><br><br>
+                
+                <strong>How to type to Cleverbot:</strong>
                 <div class="instructions">
-                    1. Click inside the chat area below<br>
-                    2. Type your message and press <strong>Enter</strong> or click <strong>Send</strong><br>
-                    3. Wait for Cleverbot to reply
+                    • Click anywhere inside the white chat box below<br>
+                    • Type your message<br>
+                    • Press <strong>Enter</strong> on your keyboard<br>
+                    <span style="color:#88ff88;">or</span> click the <strong>Send</strong> button in the chat
                 </div>
             </div>
             
-            <div>
-                <button class="btn" onclick="saveAndShare()">💾 Save & Share Conversation</button>
+            <div class="btn-group">
+                <button class="btn" onclick="saveAndShare()">💾 Save &amp; Share Conversation</button>
                 <button class="btn" onclick="window.location.reload()">⟳ Reset Terminal</button>
                 <a href="https://www.cleverbot.com" target="_blank">Open Full Site →</a>
             </div>
@@ -153,80 +156,10 @@
     </div>
 
     <script>
-        let chatHistory = [];
-
-        function addToHistory(role, text) {
-            chatHistory.push({
-                role,
-                text,
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            });
-        }
-
         function saveAndShare() {
-            if (chatHistory.length === 0) {
-                alert("No conversation recorded yet.\n\nYou can still enjoy chatting!\n\nTip: Manually note important messages if you want to save them.");
-                return;
-            }
-
-            const data = {
-                version: "2.1",
-                timestamp: new Date().toISOString(),
-                history: chatHistory
-            };
-
-            const jsonStr = JSON.stringify(data, null, 2);
-            const encoded = encodeURIComponent(jsonStr);
-            const shareUrl = `data:application/json;charset=utf-8,${encoded}`;
-
-            const newWin = window.open('', '_blank', 'width=820,height=720');
-            if (!newWin) {
-                alert("Please allow pop-ups to view the shared conversation.");
-                return;
-            }
-
-            newWin.document.write(`
-                <!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>Cleverbot Conversation Share</title>
-                    <style>
-                        body { 
-                            background:#000; 
-                            color:#0f0; 
-                            font-family:'Courier New', monospace; 
-                            padding:25px; 
-                            line-height:1.6;
-                        }
-                        pre { 
-                            background:#111; 
-                            padding:20px; 
-                            overflow:auto; 
-                            border:1px solid #0f0;
-                            white-space: pre-wrap;
-                        }
-                        a { color:#0ff; text-decoration: underline; }
-                        button { 
-                            background: #0f0; 
-                            color: #000; 
-                            border: none; 
-                            padding: 10px 16px; 
-                            cursor: pointer;
-                            font-family: inherit;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <h2>Cleverbot Conversation Share</h2>
-                    <p><strong>Shareable Link:</strong></p>
-                    <a href="${shareUrl}" target="_blank" style="word-break:break-all; font-size:15px;">[Open this conversation in a new tab]</a><br><br>
-                    <button onclick="navigator.clipboard.writeText('${shareUrl}').then(() => alert('Link copied to clipboard!'))">Copy Share Link</button>
-                    <hr>
-                    <pre>${jsonStr}</pre>
-                </body>
-                </html>
-            `);
+            alert("💾 Save & Share is currently a placeholder.\n\n" + 
+                  "The iframe prevents automatic message capture.\n\n" +
+                  "Tip: You can manually copy-paste important parts of the conversation if needed.");
         }
 
         console.log("%c✅ Cleverbot Terminal loaded successfully", 

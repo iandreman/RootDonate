@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cleverbot Smart Terminal</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            background: #111;
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #0f0;
+            font-weight: bold;
+        }
+        #terminal {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            line-height: 1.5;
+            font-size: 15px;
+        }
+        .line { margin: 4px 0; }
+        .prompt { color: #0f0; }
+        .user { color: #0ff; }
+        .bot { color: #ff0; }
+        .share {
+            color: #88f;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .share:hover { color: #ccf; }
+        input {
+            background: transparent;
+            border: none;
+            color: #0f0;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">CLEVERBOT SMART TERMINAL — Type 'clear' or 'bye'</div>
+    <div id="terminal"></div>
+
+    <script>
+        const terminal = document.getElementById('terminal');
+        let history = []; // stores {role: 'user'|'bot', text: string}
+
+        function print(text, className = '') {
+            const div = document.createElement('div');
+            div.className = `line ${className}`;
+            div.innerHTML = text;
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function generateShareLink() {
+            const data = {
+                version: "1.1",
+                history: history
+            };
+            const json = JSON.stringify(data);
+            const encoded = encodeURIComponent(json);
+            return `data:application/json,${encoded}`;
+        }
+
+        function addPrompt() {
+            const promptDiv = document.createElement('div');
+            promptDiv.className = 'line';
+            promptDiv.innerHTML = `<span class="prompt">&gt;</span> <input type="text" autofocus spellcheck="false">`;
+            terminal.appendChild(promptDiv);
+            terminal.scrollTop = terminal.scrollHeight;
+
+            const input = promptDiv.querySelector('input');
+            input.focus();
+
+            input.addEventListener('keydown', async (e) => {
+                if (e.key !== 'Enter') return;
+
+                const text = input.value.trim();
+                if (!text) return;
+
+                input.disabled = true;
+                promptDiv.innerHTML = `<span class="prompt">&gt;</span> <span class="user">${text}</span>`;
+
+                history.push({ role: 'user', text });
+
+                print('', 'bot'); // spacing
+
+                if (text.toLowerCase() === 'clear') {
+                    terminal.innerHTML = '';
+                    history = [];
+                    print('Terminal cleared.', 'bot');
+                    addPrompt();
+                    return;
+                }
+                if (text.toLowerCase() === 'bye') {
+                    print('Goodbye!', 'bot');
+                    return;
+                }
+
+                // Show thinking
+                const thinkingId = 'think-' + Date.now();
+                print('<span id="' + thinkingId + '">Thinking...</span>', 'bot');
+
+                try {
+                    const form = new URLSearchParams({
+                        stimulus: text,
+                        cb_settings_language: 'en',
+                        islearning: '1',
+                        icognoid: 'wsf'
+                    });
+
+                    const res = await fetch('https://www.cleverbot.com/webservicemin', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: form
+                    });
+
+                    const raw = await res.text();
+                    const parts = raw.split('\r');
+                    const reply = parts[0] || "Hmm... I don't know what to say.";
+
+                    // Remove thinking line
+                    const thinkEl = document.getElementById(thinkingId);
+                    if (thinkEl) thinkEl.parentNode.remove();
+
+                    print(reply, 'bot');
+                    history.push({ role: 'bot', text: reply });
+
+                    // Show share link for this reply
+                    const shareUrl = generateShareLink();
+                    const shareHtml = `Share this conversation: <a href="${shareUrl}" target="_blank" class="share">[Open Link]</a> <span class="share" onclick="navigator.clipboard.writeText('${shareUrl}');alert('Link copied to clipboard!')"> [Copy]</span>`;
+                    print(shareHtml, 'bot');
+
+                } catch (err) {
+                    const thinkEl = document.getElementById(thinkingId);
+                    if (thinkEl) thinkEl.parentNode.remove();
+                    print('Connection error. Check your internet.', 'bot');
+                }
+
+                addPrompt();
+            });
+        }
+
+        // Welcome
+        print('Welcome to the Cleverbot Smart Terminal!', 'bot');
+        print('Every bot reply now comes with a shareable link.', 'bot');
+        print('------------------------------------------------', 'bot');
+        print('');
+
+        addPrompt();
+    </script>
+</body>
+</html>

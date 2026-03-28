@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cleverbot - Free (unofficial)</title>
+    <title>Cleverbot - Free (via CORS Proxy)</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -96,22 +96,26 @@
             text-align: center;
             margin-top: 8px;
         }
-        .clear-btn, .retry-btn {
+        .clear-btn {
             background: #444;
             padding: 8px 16px;
             font-size: 14px;
             border-radius: 20px;
         }
-        .retry-btn { background: #d32f2f; }
-        .retry-btn:hover { background: #b71c1c; }
+        .clear-btn:hover { background: #555; }
+        .retry-btn {
+            background: #d32f2f;
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 20px;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
     <header>
         <h1>Cleverbot</h1>
-        <div>
-            <button class="clear-btn" onclick="clearChat()">Clear</button>
-        </div>
+        <button class="clear-btn" onclick="clearChat()">Clear Chat</button>
     </header>
 
     <div class="chat-container" id="chat"></div>
@@ -122,8 +126,8 @@
             <button type="submit">Send</button>
         </form>
         <div class="warning">
-            ⚠️ Unofficial free method (webservicemin endpoint).<br>
-            May be slow or blocked temporarily due to CORS / rate limits.
+            ⚠️ Using public CORS proxy + unofficial endpoint.<br>
+            This may still be slow/unreliable. For best results, get an official API key.
         </div>
     </div>
 
@@ -132,7 +136,9 @@
         const form = document.getElementById('chat-form');
         const input = document.getElementById('user-input');
 
-        const ENDPOINT = "https://www.cleverbot.com/webservicemin";
+        // Public CORS proxy (try different ones if one fails)
+        const CORS_PROXY = "https://api.allorigins.win/raw?url=";
+        const CLEVERBOT_URL = "https://www.cleverbot.com/webservicemin";
 
         let conversationState = {
             sessionid: "", vText2: "", prevref: "", emotionalhistory: ""
@@ -180,13 +186,15 @@
                 formData.append('islearning', '1');
                 formData.append('cleanslate', 'false');
 
-                const response = await fetch(ENDPOINT, {
-                    method: 'POST',
+                // Proxy the request
+                const targetUrl = CLEVERBOT_URL + "?" + formData.toString();
+                const proxyUrl = CORS_PROXY + encodeURIComponent(targetUrl);
+
+                const response = await fetch(proxyUrl, {
+                    method: 'GET',   // AllOrigins usually converts POST to GET for simplicity
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36'
-                    },
-                    body: formData.toString()
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    }
                 });
 
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -197,7 +205,7 @@
                 const parts = text.split('\r');
                 const reply = parts[0] ? parts[0].trim() : "Sorry, I didn't get that.";
 
-                // Update conversation memory
+                // Update state
                 if (parts.length > 1) conversationState.sessionid = parts[1];
                 if (parts.length > 9) conversationState.vText2 = parts[9];
                 if (parts.length > 10) conversationState.prevref = parts[10];
@@ -212,8 +220,7 @@
                 console.error(err);
                 const typingEl = document.getElementById(thinkingId);
                 if (typingEl) typingEl.remove();
-
-                return "❌ Connection failed.\n\nThe free unofficial endpoint is often blocked by the browser (CORS) or rate-limited by Cleverbot.\n\nTry again or use the official paid API.";
+                return "❌ Failed to connect (proxy or Cleverbot issue).\nTry again or switch to official API key version.";
             }
         }
 
@@ -235,15 +242,14 @@
             if (confirm("Clear the chat?")) {
                 chat.innerHTML = '';
                 conversationState = { sessionid: "", vText2: "", prevref: "", emotionalhistory: "" };
-                addMessage("Hi! I'm Cleverbot (free version). What would you like to talk about?", false);
+                addMessage("Hi! I'm Cleverbot (free via proxy). What would you like to talk about?", false);
             }
         }
 
         form.addEventListener('submit', handleSubmit);
 
-        // Welcome message
         window.onload = () => {
-            addMessage("Hi! I'm Cleverbot (free unofficial version).\n\nNote: This may fail due to browser restrictions. If it doesn't work, the official API with a key is more reliable.", false);
+            addMessage("Hi! I'm Cleverbot (free unofficial version via CORS proxy).\n\nIt may still fail sometimes. If it does, the most reliable option is the official paid API.", false);
         };
     </script>
 </body>

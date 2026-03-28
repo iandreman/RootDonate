@@ -18,61 +18,133 @@
         }
         .header {
             background: #111;
-            padding: 10px;
+            padding: 12px 15px;
             text-align: center;
-            border-bottom: 1px solid #0f0;
+            border-bottom: 2px solid #0f0;
             font-weight: bold;
+            font-size: 18px;
+            letter-spacing: 1px;
         }
-        #terminal {
+        #container {
             flex: 1;
-            padding: 10px;
-            overflow: hidden;
+            display: flex;
+            flex-direction: column;
             position: relative;
+            overflow: hidden;
         }
         iframe {
+            flex: 1;
             width: 100%;
-            height: 100%;
-            border: 1px solid #0f0;
+            border: 2px solid #0f0;
             background: #111;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
         }
-        .info {
+        .controls {
             position: absolute;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.8);
-            padding: 8px;
+            bottom: 15px;
+            left: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 10px 12px;
             font-size: 13px;
             color: #88f;
             border: 1px solid #0f0;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
-        .share {
+        .share-btn {
+            background: transparent;
             color: #88f;
+            border: 1px solid #0f0;
+            padding: 6px 12px;
             cursor: pointer;
-            text-decoration: underline;
+            font-family: inherit;
+        }
+        .share-btn:hover {
+            background: #0f0;
+            color: #000;
+        }
+        .status {
+            color: #0f0;
         }
     </style>
 </head>
 <body>
     <div class="header">CLEVERBOT OFFICIAL TERMINAL — Powered by cleverbot.com</div>
-    <div id="terminal">
-        <iframe src="https://www.cleverbot.com/cleverbotif" 
-                allowtransparency="true" 
-                frameborder="0" 
-                scrolling="no">
+    
+    <div id="container">
+        <iframe 
+            src="https://www.cleverbot.com/cleverbotif" 
+            allowtransparency="true" 
+            frameborder="0" 
+            scrolling="yes"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms">
         </iframe>
         
-        <div class="info">
-            This is the official Cleverbot embedded directly.<br>
-            It has full memory and learning capabilities.<br><br>
-            <span class="share" onclick="window.location.reload()">Reset Conversation</span> | 
-            <a href="https://www.cleverbot.com" target="_blank" class="share">Open Full Site</a>
+        <div class="controls">
+            <div>
+                ✅ Official Cleverbot with full memory &amp; learning<br>
+                <span class="status">Type in the chat window below</span>
+            </div>
+            <div>
+                <button class="share-btn" onclick="saveAndShare()">💾 Save & Share Conversation</button>
+                <button class="share-btn" onclick="window.location.reload()">Reset Terminal</button>
+                <a href="https://www.cleverbot.com" target="_blank" style="color:#88f; text-decoration:underline;">Open Full Site</a>
+            </div>
         </div>
     </div>
 
     <script>
-        // Optional: Auto-refresh iframe if needed (rarely required)
-        console.log("%cCleverbot Official Terminal loaded successfully!", "color: #0f0; font-family: monospace;");
+        let chatHistory = [];
+
+        // Optional: You can manually add important messages here if you copy-paste them
+        function addToHistory(role, text) {
+            chatHistory.push({ role, text, time: new Date().toLocaleTimeString() });
+        }
+
+        function saveAndShare() {
+            if (chatHistory.length === 0) {
+                alert("No messages recorded yet.\n\nTip: You can manually note replies or just enjoy the official chat.\nThe share link will include what you add.");
+                return;
+            }
+
+            const data = {
+                version: "1.2",
+                timestamp: new Date().toISOString(),
+                history: chatHistory
+            };
+
+            const jsonStr = JSON.stringify(data);
+            const encoded = encodeURIComponent(jsonStr);
+            const shareUrl = `data:application/json,${encoded}`;
+
+            // Show the link
+            const linkHTML = `
+                <strong>Shareable Conversation Link:</strong><br>
+                <a href="${shareUrl}" target="_blank" style="color:#0ff; word-break:break-all;">[Open this conversation in new tab]</a><br><br>
+                <button onclick="navigator.clipboard.writeText('${shareUrl}').then(()=>alert('Link copied to clipboard!'))">Copy Link</button>
+            `;
+
+            const newWin = window.open('', '_blank');
+            newWin.document.write(`
+                <html><head><title>Shared Cleverbot Conversation</title></head><body style="background:#000;color:#0f0;font-family:Courier New;padding:20px;">
+                <h2>Cleverbot Conversation Share</h2>
+                ${linkHTML}
+                <pre style="background:#111;padding:15px;overflow:auto;">${JSON.stringify(data, null, 2)}</pre>
+                </body></html>
+            `);
+        }
+
+        console.log("%c✅ Cleverbot Official Terminal with Share Feature loaded!", 
+                   "color: #0f0; font-family: monospace; font-size: 14px;");
+        
+        // Tip for user
+        console.log("%cUse the 'Save & Share Conversation' button after chatting to generate a share link.", 
+                   "color: #88f; font-family: monospace;");
     </script>
 </body>
 </html>

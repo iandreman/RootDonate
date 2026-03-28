@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cleverbot - No API Key</title>
+    <title>Cleverbot - Free (unofficial)</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -20,7 +20,11 @@
             padding: 15px;
             text-align: center;
             border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
+        header h1 { margin: 0; font-size: 1.6em; }
         .chat-container {
             flex: 1;
             overflow-y: auto;
@@ -30,28 +34,29 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 14px;
         }
         .message {
-            padding: 12px 18px;
+            padding: 13px 18px;
             border-radius: 20px;
-            max-width: 75%;
+            max-width: 78%;
             line-height: 1.45;
+            word-wrap: break-word;
         }
         .user {
             background: #0078d4;
             align-self: flex-end;
-            border-bottom-right-radius: 4px;
+            border-bottom-right-radius: 5px;
             color: white;
         }
         .bot {
             background: #2a2a2a;
             align-self: flex-start;
-            border-bottom-left-radius: 4px;
+            border-bottom-left-radius: 5px;
         }
         .input-area {
             background: #1a1a1a;
-            padding: 15px;
+            padding: 15px 20px;
             border-top: 1px solid #333;
         }
         form {
@@ -70,7 +75,7 @@
             font-size: 16px;
         }
         button {
-            padding: 0 28px;
+            padding: 0 26px;
             background: #0078d4;
             color: white;
             border: none;
@@ -83,29 +88,43 @@
             font-style: italic;
             color: #888;
             align-self: flex-start;
+            padding: 13px 18px;
         }
         .warning {
-            font-size: 0.9em;
+            font-size: 0.85em;
             color: #ffcc00;
             text-align: center;
-            margin-top: 5px;
+            margin-top: 8px;
         }
+        .clear-btn, .retry-btn {
+            background: #444;
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 20px;
+        }
+        .retry-btn { background: #d32f2f; }
+        .retry-btn:hover { background: #b71c1c; }
     </style>
 </head>
 <body>
     <header>
         <h1>Cleverbot</h1>
-        <p>Unofficial free version • No API key needed</p>
+        <div>
+            <button class="clear-btn" onclick="clearChat()">Clear</button>
+        </div>
     </header>
 
     <div class="chat-container" id="chat"></div>
 
     <div class="input-area">
         <form id="chat-form">
-            <input type="text" id="user-input" placeholder="Say something..." autocomplete="off" autofocus>
+            <input type="text" id="user-input" placeholder="Type your message..." autocomplete="off" autofocus>
             <button type="submit">Send</button>
         </form>
-        <div class="warning">This uses a public proxy. May be slow or rate-limited.</div>
+        <div class="warning">
+            ⚠️ Unofficial free method (webservicemin endpoint).<br>
+            May be slow or blocked temporarily due to CORS / rate limits.
+        </div>
     </div>
 
     <script>
@@ -113,16 +132,10 @@
         const form = document.getElementById('chat-form');
         const input = document.getElementById('user-input');
 
-        // Public proxy endpoint (unofficial, based on cleverbot-free style implementations)
-        const PROXY_URL = "https://www.cleverbot.com/webservicemin";
+        const ENDPOINT = "https://www.cleverbot.com/webservicemin";
 
         let conversationState = {
-            sessionid: "",
-            logurl: "",
-            vText8: "", vText7: "", vText6: "", vText5: "", vText4: "", vText3: "", vText2: "",
-            prevref: "",
-            emotionalhistory: "",
-            ttsText: ""
+            sessionid: "", vText2: "", prevref: "", emotionalhistory: ""
         };
 
         function addMessage(text, isUser) {
@@ -149,23 +162,15 @@
 
             try {
                 const formData = new URLSearchParams();
-
-                // Build the same parameters the old Python script used
                 formData.append('stimulus', message);
                 formData.append('start', 'y');
                 formData.append('sessionid', conversationState.sessionid || '');
-                formData.append('vText8', conversationState.vText8 || '');
-                formData.append('vText7', conversationState.vText7 || '');
-                formData.append('vText6', conversationState.vText6 || '');
-                formData.append('vText5', conversationState.vText5 || '');
-                formData.append('vText4', conversationState.vText4 || '');
-                formData.append('vText3', conversationState.vText3 || '');
                 formData.append('vText2', conversationState.vText2 || '');
-                formData.append('icognoid', 'wsf');
-                formData.append('icognocheck', ''); // will be calculated if needed, but many proxies ignore it
                 formData.append('prevref', conversationState.prevref || '');
-                formData.append('emotionaloutput', '');
                 formData.append('emotionalhistory', conversationState.emotionalhistory || '');
+                formData.append('icognoid', 'wsf');
+                formData.append('icognocheck', '');
+                formData.append('emotionaloutput', '');
                 formData.append('asbotname', '');
                 formData.append('ttsvoice', '');
                 formData.append('typing', '0');
@@ -175,31 +180,29 @@
                 formData.append('islearning', '1');
                 formData.append('cleanslate', 'false');
 
-                const response = await fetch(PROXY_URL, {
+                const response = await fetch(ENDPOINT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36'
                     },
                     body: formData.toString()
                 });
 
-                if (!response.ok) throw new Error('Network error');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
                 const text = await response.text();
+                if (!text || text.trim() === '') throw new Error("Empty response");
+
                 const parts = text.split('\r');
+                const reply = parts[0] ? parts[0].trim() : "Sorry, I didn't get that.";
 
-                // Parse reply (same format as old parseAnswers)
-                const reply = parts[0] || "Sorry, I didn't get that.";
-
-                // Update conversation state for context
+                // Update conversation memory
                 if (parts.length > 1) conversationState.sessionid = parts[1];
                 if (parts.length > 9) conversationState.vText2 = parts[9];
                 if (parts.length > 10) conversationState.prevref = parts[10];
                 if (parts.length > 12) conversationState.emotionalhistory = parts[12];
-                if (parts.length > 16) conversationState.ttsText = parts[16];
 
-                // Remove typing indicator
                 const typingEl = document.getElementById(thinkingId);
                 if (typingEl) typingEl.remove();
 
@@ -209,7 +212,8 @@
                 console.error(err);
                 const typingEl = document.getElementById(thinkingId);
                 if (typingEl) typingEl.remove();
-                return "Connection issue with the proxy. Try again in a moment.";
+
+                return "❌ Connection failed.\n\nThe free unofficial endpoint is often blocked by the browser (CORS) or rate-limited by Cleverbot.\n\nTry again or use the official paid API.";
             }
         }
 
@@ -223,13 +227,23 @@
 
             const reply = await askCleverbot(msg);
             addMessage(reply, false);
+
+            input.focus();
+        }
+
+        function clearChat() {
+            if (confirm("Clear the chat?")) {
+                chat.innerHTML = '';
+                conversationState = { sessionid: "", vText2: "", prevref: "", emotionalhistory: "" };
+                addMessage("Hi! I'm Cleverbot (free version). What would you like to talk about?", false);
+            }
         }
 
         form.addEventListener('submit', handleSubmit);
 
         // Welcome message
         window.onload = () => {
-            addMessage("Hi! I'm Cleverbot. What do you want to talk about today?", false);
+            addMessage("Hi! I'm Cleverbot (free unofficial version).\n\nNote: This may fail due to browser restrictions. If it doesn't work, the official API with a key is more reliable.", false);
         };
     </script>
 </body>

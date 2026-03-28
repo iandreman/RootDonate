@@ -187,7 +187,8 @@
                 <strong>✅ Connected to official Cleverbot</strong>
                 <div class="instructions">
                     Click anywhere in the chat window (or on the overlay) to begin typing.<br>
-                    Type your message and press <strong>Enter</strong> or tap <strong>Send</strong>.
+                    Type your message and press <strong>Enter</strong> or tap <strong>Send</strong>.<br>
+                    <small>The chat may take a few seconds to load.</small>
                 </div>
             </div>
             
@@ -209,12 +210,12 @@
             }, 800);
         }
 
-        // Auto-hide overlay after 8 seconds
+        // Auto-hide overlay after 10 seconds (gives more time for iframe to load)
         setTimeout(() => {
             if (overlay.style.display !== 'none') hideOverlay();
-        }, 8000);
+        }, 10000);
 
-        // Save & Share - Opens a clean shared version of the terminal
+        // Save & Share - Opens a clean fresh terminal for others
         function saveAndShare() {
             const timestamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
@@ -279,7 +280,7 @@
                     <div class="info">
                         <strong>Shared on:</strong> ${timestamp}<br><br>
                         This is a clean Cleverbot Terminal.<br>
-                        The recipient can immediately start typing to Cleverbot.
+                        Start typing immediately — click inside the chat area.
                     </div>
 
                     <iframe 
@@ -293,7 +294,7 @@
                     <div class="note">
                         💡 Click inside the chat area and start typing.<br>
                         Press <strong>Enter</strong> to send messages.<br>
-                        You can share this page by copying the URL from your browser.
+                        You can share this page by copying the browser URL.
                     </div>
                 </body>
                 </html>

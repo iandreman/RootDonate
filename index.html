@@ -3,19 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Terminal - Reset Accounts & Nodes</title>
+  <title>Smart Terminal - Accounts & Nodes Manager</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
   <style>
-    body { margin:0; background:#0d1117; color:#c9d1d9; font-family: 'Courier New', monospace; overflow: hidden; }
-    #terminal { width: 100vw; height: 100vh; }
+    body {
+      margin: 0;
+      background: #0d1117;
+      color: #c9d1d9;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+    }
+    #terminal {
+      width: 100vw;
+      height: 100vh;
+    }
     .header {
-      position: absolute; top: 8px; left: 12px; z-index: 10;
-      font-size: 14px; color: #58a6ff; pointer-events: none;
+      position: absolute;
+      top: 10px;
+      left: 15px;
+      z-index: 10;
+      font-size: 14px;
+      color: #58a6ff;
+      pointer-events: none;
+      user-select: none;
     }
   </style>
 </head>
 <body>
-  <div class="header">Smart Terminal v1.2 — Accounts + Nodes (Name/IP)</div>
+  <div class="header">Smart Terminal v1.4 — Accounts & Nodes Manager</div>
   <div id="terminal"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
@@ -29,12 +44,15 @@
       },
       fontFamily: 'Courier New, monospace',
       fontSize: 15,
-      scrollback: 1000
+      scrollback: 1000,
+      convertEol: true
     });
 
     term.open(document.getElementById('terminal'));
-    term.writeln('\x1b[1;32mSmart Terminal v1.2 initialized\x1b[0m');
-    term.writeln('Reset accounts by email • Reset nodes by name or IP');
+
+    // Welcome message
+    term.writeln('\x1b[1;32mSmart Terminal v1.4 initialized\x1b[0m');
+    term.writeln('Dynamically manage accounts and nodes');
     term.writeln('Type \x1b[1;34mhelp\x1b[0m for commands\r\n');
 
     let commandHistory = [];
@@ -61,36 +79,71 @@
       term.write('\r\n\x1b[1;34madmin@smart-terminal\x1b[0m:\x1b[1;32m~\x1b[0m$ ');
     };
 
-    prompt();
-
     const findNode = (identifier) => {
       if (!identifier) return null;
-      return nodes.find(n => 
-        n.name.toLowerCase() === identifier.toLowerCase() || 
-        n.ip === identifier
-      );
+      const lower = identifier.toLowerCase();
+      return nodes.find(n => n.name.toLowerCase() === lower || n.ip === identifier);
     };
 
     const commands = {
       help: () => {
-        term.writeln('\r\nAvailable commands:');
+        term.writeln('\r\nAvailable Commands:');
         term.writeln('  help                          - Show this help');
         term.writeln('  clear                         - Clear screen');
-        term.writeln('  list accounts                 - List all user accounts');
-        term.writeln('  reset account <email>         - Reset password for account');
-        term.writeln('  list nodes                    - List nodes with name + IP');
+        term.writeln('  list accounts                 - List all accounts');
+        term.writeln('  add account <email>           - Add new account');
+        term.writeln('  remove account <email>        - Remove an account');
+        term.writeln('  reset account <email>         - Reset account password');
+        term.writeln('  list nodes                    - List all nodes');
+        term.writeln('  add node <name> <ip>          - Add new node');
+        term.writeln('  remove node <name|ip>         - Remove a node');
         term.writeln('  reset node <name|ip>          - Factory reset node (DANGEROUS)');
         term.writeln('  status                        - Show system status');
         term.writeln('  exit                          - Close terminal\r\n');
+
         term.writeln('Examples:');
+        term.writeln('  add account newuser@company.com');
+        term.writeln('  add node web-server-5 192.168.1.150');
+        term.writeln('  remove node edge-node-7');
         term.writeln('  reset account admin@company.com');
-        term.writeln('  reset node 192.168.1.101');
-        term.writeln('  reset node node-01');
+      },
+
+      // Account commands
+      'add account': (email) => {
+        if (!email || !email.includes('@')) {
+          term.writeln('\r\n\x1b[31mError: Please provide a valid email address\x1b[0m');
+          return;
+        }
+        if (accounts.includes(email)) {
+          term.writeln(`\r\n\x1b[33mAccount already exists: ${email}\x1b[0m`);
+          return;
+        }
+        accounts.push(email);
+        term.writeln(`\r\n\x1b[32m✓ Account added successfully: ${email}\x1b[0m`);
+      },
+
+      'remove account': (email) => {
+        if (!email) {
+          term.writeln('\r\nUsage: remove account <email>');
+          return;
+        }
+        const index = accounts.indexOf(email);
+        if (index === -1) {
+          term.writeln(`\r\n\x1b[31mAccount not found: ${email}\x1b[0m`);
+          return;
+        }
+        accounts.splice(index, 1);
+        term.writeln(`\r\n\x1b[32m✓ Account removed: ${email}\x1b[0m`);
       },
 
       'list accounts': () => {
         term.writeln('\r\nUser Accounts:');
-        accounts.forEach(acc => term.writeln(`  • ${acc}`));
+        if (accounts.length === 0) {
+          term.writeln('  No accounts found.');
+        } else {
+          accounts.forEach(acc => term.writeln(`  • ${acc}`));
+        }
+        term.writeln(`\r\nTotal: ${accounts.length} account(s)`);
       },
 
       'reset account': (email) => {
@@ -104,22 +157,75 @@
         }
         term.writeln(`\r\n\x1b[33mResetting password for ${email}...\x1b[0m`);
         setTimeout(() => {
-          term.writeln(`\x1b[32m✓ Success: Temporary password generated and sent to ${email}\x1b[0m`);
+          term.writeln(`\x1b[32m✓ Success: Temporary password sent to ${email}\x1b[0m`);
         }, 900);
+      },
+
+      // Node commands
+      'add node': (args) => {
+        const parts = args.trim().split(/\s+/);
+        if (parts.length < 2) {
+          term.writeln('\r\nUsage: add node <name> <ip>');
+          term.writeln('Example: add node web-server-5 192.168.1.150');
+          return;
+        }
+
+        const name = parts[0];
+        const ip = parts[1];
+
+        const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+        if (!ipRegex.test(ip)) {
+          term.writeln('\r\n\x1b[31mError: Invalid IP address format\x1b[0m');
+          return;
+        }
+
+        if (nodes.some(n => n.name === name || n.ip === ip)) {
+          term.writeln('\r\n\x1b[33mA node with this name or IP already exists\x1b[0m');
+          return;
+        }
+
+        nodes.push({ name, ip, status: 'online' });
+        term.writeln(`\r\n\x1b[32m✓ Node added successfully:\x1b[0m`);
+        term.writeln(`   Name : ${name}`);
+        term.writeln(`   IP   : ${ip}`);
+      },
+
+      'remove node': (identifier) => {
+        if (!identifier) {
+          term.writeln('\r\nUsage: remove node <name or IP>');
+          return;
+        }
+
+        const index = nodes.findIndex(n => 
+          n.name.toLowerCase() === identifier.toLowerCase() || n.ip === identifier
+        );
+
+        if (index === -1) {
+          term.writeln(`\r\n\x1b[31mNode not found: ${identifier}\x1b[0m`);
+          return;
+        }
+
+        const node = nodes[index];
+        nodes.splice(index, 1);
+        term.writeln(`\r\n\x1b[32m✓ Node removed: ${node.name} (${node.ip})\x1b[0m`);
       },
 
       'list nodes': () => {
         term.writeln('\r\nManaged Nodes:');
-        nodes.forEach(n => {
-          const color = n.status === 'online' ? '\x1b[32m' : '\x1b[33m';
-          term.writeln(`  • ${n.name.padEnd(15)} ${n.ip.padEnd(18)} ${color}[${n.status}]\x1b[0m`);
-        });
+        if (nodes.length === 0) {
+          term.writeln('  No nodes found.');
+        } else {
+          nodes.forEach(n => {
+            const color = n.status === 'online' ? '\x1b[32m' : '\x1b[33m';
+            term.writeln(`  • ${n.name.padEnd(18)} ${n.ip.padEnd(18)} ${color}[${n.status}]\x1b[0m`);
+          });
+        }
+        term.writeln(`\r\nTotal: ${nodes.length} node(s)`);
       },
 
       'reset node': (identifier) => {
         if (!identifier) {
           term.writeln('\r\nUsage: reset node <name or IP>');
-          term.writeln('Example: reset node 192.168.1.102');
           return;
         }
 
@@ -129,31 +235,28 @@
           return;
         }
 
-        term.writeln(`\r\n\x1b[31mWARNING: This will perform a factory reset on ${node.name} (${node.ip}).`);
-        term.writeln('All data will be permanently erased!\x1b[0m');
+        term.writeln(`\r\n\x1b[31mWARNING: This will factory reset ${node.name} (${node.ip}).`);
+        term.writeln('ALL DATA WILL BE PERMANENTLY ERASED!\x1b[0m');
         term.write('Type \x1b[1;31mYES\x1b[0m to confirm: ');
 
         let confirmInput = '';
-        const originalHandler = term._core?._onData?._listeners?.[0];
 
         const confirmHandler = (data) => {
-          if (data === '\r') { // Enter
+          if (data === '\r') {
             term.writeln('');
             term.offData(confirmHandler);
-            if (originalHandler) term.onData(originalHandler);
 
-            if (confirmInput.trim() === 'YES') {
-              term.writeln(`\x1b[33mStarting factory reset on ${node.name} (${node.ip})...\x1b[0m`);
+            if (confirmInput.trim().toUpperCase() === 'YES') {
+              term.writeln(`\x1b[33mPerforming factory reset on ${node.name}...\x1b[0m`);
               setTimeout(() => {
-                term.writeln(`\x1b[32m✓ Factory reset completed successfully for ${node.name}.\x1b[0m`);
+                term.writeln(`\x1b[32m✓ Factory reset completed for ${node.name} (${node.ip})\x1b[0m`);
                 term.writeln('Node will reboot automatically.');
               }, 1600);
             } else {
-              term.writeln('\x1b[33mReset operation cancelled.\x1b[0m');
+              term.writeln('\x1b[33mOperation cancelled.\x1b[0m');
             }
-            confirmInput = '';
           } 
-          else if (data === '\u007f') { // Backspace
+          else if (data === '\u007f') {
             if (confirmInput.length > 0) {
               confirmInput = confirmInput.slice(0, -1);
               term.write('\b \b');
@@ -184,7 +287,7 @@
     };
 
     // Input handler
-    term.onData(data => {
+    term.onData((data) => {
       switch (data) {
         case '\r': // Enter
           term.writeln('');
@@ -194,8 +297,8 @@
 
             const parts = currentLine.trim().split(/\s+/);
             const mainCmd = parts[0];
-            const subCmd = parts[1] ? mainCmd + ' ' + parts[1] : mainCmd;
-            const argument = parts.slice(2).join(' ') || parts[1];
+            const subCmd = parts[1] ? `${mainCmd} ${parts[1]}` : mainCmd;
+            const argument = parts.slice(2).join(' ');
 
             if (commands[subCmd]) {
               commands[subCmd](argument);
@@ -219,7 +322,7 @@
         case '\u001b[A': // Up arrow
           if (historyIndex < commandHistory.length - 1) {
             historyIndex++;
-            term.write('\r' + ' '.repeat(70) + '\r');
+            term.write('\r' + ' '.repeat(80) + '\r');
             prompt();
             currentLine = commandHistory[historyIndex];
             term.write(currentLine);
@@ -229,13 +332,13 @@
         case '\u001b[B': // Down arrow
           if (historyIndex > 0) {
             historyIndex--;
-            term.write('\r' + ' '.repeat(70) + '\r');
+            term.write('\r' + ' '.repeat(80) + '\r');
             prompt();
             currentLine = commandHistory[historyIndex];
             term.write(currentLine);
           } else if (historyIndex === 0) {
             historyIndex = -1;
-            term.write('\r' + ' '.repeat(70) + '\r');
+            term.write('\r' + ' '.repeat(80) + '\r');
             prompt();
             currentLine = '';
           }
@@ -249,7 +352,8 @@
       }
     });
 
-    setTimeout(() => term.focus(), 50);
+    prompt();
+    setTimeout(() => term.focus(), 100);
   </script>
 </body>
 </html>

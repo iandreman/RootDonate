@@ -40,8 +40,8 @@
 
     .footer {
       position: absolute;
-      bottom: 10px;
-      right: 18px;
+      bottom: 12px;
+      right: 20px;
       font-size: 12px;
       color: #586e75;
       z-index: 10;
@@ -52,11 +52,10 @@
 <body>
   <div class="header">Smart Terminal v2.1 — Accounts • Nodes • Smart Lookup (IP • Domain • Node • Street Address)</div>
   <div id="terminal"></div>
-  <div class="footer">Press Tab for autocomplete • ↑↓ for history</div>
+  <div class="footer">Tab = Autocomplete • ↑↓ = History • ESC to clear current line</div>
 
   <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
   <script>
-    // Initialize Terminal
     const term = new Terminal({
       cursorBlink: true,
       theme: {
@@ -64,7 +63,6 @@
         foreground: '#c9d1d9',
         cursor: '#58a6ff',
         selectionBackground: '#264f78',
-        black: '#0d1117',
         red: '#f85149',
         green: '#3fb950',
         yellow: '#d29922',
@@ -77,13 +75,12 @@
       fontSize: 15,
       lineHeight: 1.2,
       scrollback: 2000,
-      convertEol: true,
-      allowTransparency: false
+      convertEol: true
     });
 
     term.open(document.getElementById('terminal'));
 
-    // Data Storage
+    // Data
     let accounts = [
       'user1@example.com',
       'admin@company.com',
@@ -201,7 +198,6 @@
         if (geo) showGeoInfo(geo, arg);
       } 
       else {
-        // Try as street address
         const coords = await addressToCoords(arg);
         if (coords) {
           term.writeln(`\x1b[32m✓ Address resolved:\x1b[0m ${coords.displayName}`);
@@ -217,7 +213,6 @@
           return;
         }
 
-        // DNS or Node lookup
         let ips = await dnsLookup(arg);
         const node = nodes.find(n => n.name.toLowerCase() === arg.toLowerCase());
         if (node) ips = [node.ip];
@@ -245,7 +240,7 @@
       }
     }
 
-    // ====================== Management Functions ======================
+    // Management Functions
     function addAccount(email) {
       if (!email || !email.includes('@')) {
         term.writeln('\x1b[31mInvalid email address\x1b[0m');
@@ -292,7 +287,7 @@
       term.writeln(`\x1b[32m✓ Node removed: ${removed.name} (${removed.ip})\x1b[0m`);
     }
 
-    // ====================== Suggestions ======================
+    // Suggestions
     function getSuggestions(partial) {
       if (!partial) return [];
       const lower = partial.toLowerCase();
@@ -310,7 +305,7 @@
       return [...new Set(suggestions)].slice(0, 8);
     }
 
-    // ====================== Commands ======================
+    // Commands
     const commands = {
       help: () => {
         term.writeln('\r\n\x1b[1;37mAvailable Commands:\x1b[0m');
@@ -363,13 +358,23 @@
       
       exit: () => {
         term.writeln('\r\n\x1b[33mGoodbye! Closing terminal...\x1b[0m');
-        setTimeout(() => window.close(), 1000);
+        setTimeout(() => window.close(), 1200);
       }
     };
 
-    // ====================== Input Handler ======================
+    // Input Handler
     term.onData((data) => {
-      if (data === '\t') { // Tab - Autocomplete
+      // ESC key - clear current line
+      if (data === '\u001b') {
+        if (currentLine.length > 0) {
+          term.write('\r' + ' '.repeat(currentLine.length + 50) + '\r');
+          prompt();
+          currentLine = '';
+        }
+        return;
+      }
+
+      if (data === '\t') { // Tab autocomplete for lookup
         const trimmed = currentLine.trim();
         if (trimmed.toLowerCase().startsWith('lookup ')) {
           const partial = trimmed.slice(7).trim();
@@ -455,11 +460,11 @@
       }
     });
 
-    // Initialize
+    // Startup
     term.writeln('\x1b[1;32mSmart Terminal v2.1 initialized successfully\x1b[0m');
     term.writeln('Type \x1b[1;34mhelp\x1b[0m to see available commands.\r\n');
     prompt();
-    setTimeout(() => term.focus(), 150);
+    setTimeout(() => term.focus(), 100);
   </script>
 </body>
 </html>

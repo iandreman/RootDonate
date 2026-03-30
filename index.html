@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Terminal v2.3 — Accounts • Nodes • Smart Lookup</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
-  
+
   <style>
     body {
       margin: 0;
@@ -18,7 +18,7 @@
       display: flex;
       flex-direction: column;
     }
-    
+
     .header {
       position: absolute;
       top: 14px;
@@ -56,6 +56,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
   <script>
+    // Initialize Terminal
     const term = new Terminal({
       cursorBlink: true,
       theme: {
@@ -80,7 +81,7 @@
 
     term.open(document.getElementById('terminal'));
 
-    // Data Storage
+    // ── Data ─────────────────────────────────────
     let accounts = [
       'user1@example.com',
       'admin@company.com',
@@ -101,7 +102,7 @@
       '8.8.8.8', '8.8.4.4', '1.1.1.1', '1.0.0.1', '9.9.9.9', 'dns.google'
     ];
 
-    // State
+    // ── State ─────────────────────────────────────
     let commandHistory = [];
     let historyIndex = -1;
     let currentLine = '';
@@ -112,7 +113,7 @@
       term.write('\r\n\x1b[1;34madmin\x1b[0m@\x1b[1;32msmart-terminal\x1b[0m:\x1b[1;36m~\x1b[0m$ ');
     };
 
-    // Safe fetch helper
+    // ── Safe Fetch Helper ─────────────────────────
     async function safeFetch(url, options = {}) {
       try {
         const res = await fetch(url, options);
@@ -124,7 +125,7 @@
       }
     }
 
-    // Lookup Functions
+    // ── Lookup Functions ─────────────────────────
     async function dnsLookup(domain) {
       const res = await safeFetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=A`);
       return res?.Answer ? res.Answer.map(a => a.data) : null;
@@ -139,10 +140,10 @@
 
     async function addressToCoords(address) {
       try {
-        await new Promise(r => setTimeout(r, 600)); // Polite delay for Nominatim
+        await new Promise(r => setTimeout(r, 600)); // simulate thinking time
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=3&addressdetails=1`;
         const data = await safeFetch(url, {
-          headers: { 'User-Agent': 'SmartTerminal/2.3 (Educational Project)' }
+          headers: { 'User-Agent': 'SmartTerminal/2.3' }
         });
 
         if (!data || data.length === 0) return null;
@@ -194,7 +195,7 @@
       term.writeln(`└──────────────────────────────────────────────`);
     }
 
-    // Main Lookup Command
+    // ── Main Lookup Command ───────────────────────
     async function lookupCommand(arg) {
       if (!arg) {
         term.writeln('\r\n\x1b[33mUsage:\x1b[0m lookup <domain | IP | node-name | "street address">');
@@ -204,7 +205,7 @@
       term.writeln(`\r\n\x1b[33mResolving "${arg}"...\x1b[0m`);
 
       const isIp = /^(\d{1,3}\.){3}\d{1,3}$/.test(arg);
-      const looksLikeAddress = (/\d+\s+[a-zA-Z]/.test(arg) || arg.length > 25 || arg.includes('"') || arg.includes(','));
+      const looksLikeAddress = (/\d+\s+[a-zA-Z]/.test(arg) || arg.length > 30 || arg.includes(',') || arg.includes('"'));
 
       if (isIp) {
         const hostnames = await reverseDnsLookup(arg);
@@ -218,7 +219,6 @@
         showGeoInfo(geo, arg);
       } 
       else if (looksLikeAddress) {
-        // Street Address
         const results = await addressToCoords(arg);
         if (results && results.length > 0) {
           term.writeln(`\x1b[32m✓ Address resolved (${results.length} match${results.length > 1 ? 'es' : ''}):\x1b[0m`);
@@ -228,11 +228,10 @@
           });
         } else {
           term.writeln(`\x1b[31m✗ Could not resolve address "${arg}"\x1b[0m`);
-          term.writeln(`   Tip: Use a more complete address with city/state.`);
+          term.writeln(`   Tip: Try a more complete address with city/state.`);
         }
       } 
       else {
-        // Domain or Internal Node
         let ips = await dnsLookup(arg);
         const node = nodes.find(n => n.name.toLowerCase() === arg.toLowerCase());
         if (node) ips = [node.ip];
@@ -259,7 +258,7 @@
       }
     }
 
-    // Management Commands
+    // ── Account & Node Management ─────────────────
     function addAccount(email) {
       if (!email || !email.includes('@')) return term.writeln('\x1b[31mInvalid email address\x1b[0m');
       if (accounts.includes(email)) return term.writeln('\x1b[33mAccount already exists\x1b[0m');
@@ -289,7 +288,7 @@
       term.writeln(`\x1b[32m✓ Node removed: ${removed.name} (${removed.ip})\x1b[0m`);
     }
 
-    // Autocomplete Suggestions
+    // ── Suggestions ───────────────────────────────
     function getSuggestions(partial) {
       if (!partial) return [];
       const lower = partial.toLowerCase();
@@ -307,7 +306,7 @@
       return [...new Set(suggestions)].slice(0, 8);
     }
 
-    // Commands Registry
+    // ── Commands ──────────────────────────────────
     const commands = {
       help: () => {
         term.writeln('\r\n\x1b[1;37mAvailable Commands:\x1b[0m');
@@ -355,16 +354,16 @@
       lookup: (arg) => lookupCommand(arg),
       myip: () => myIpCommand(),
       clear: () => term.clear(),
-      
+
       exit: () => {
         term.writeln('\r\n\x1b[33mGoodbye! Closing terminal...\x1b[0m');
         setTimeout(() => window.close(), 1000);
       }
     };
 
-    // Input Handler
+    // ── Input Handler ─────────────────────────────
     term.onData((data) => {
-      if (data === '\u001b') { // ESC key - clear current line
+      if (data === '\u001b') {                    // ESC key
         if (currentLine.length > 0) {
           term.write('\r' + ' '.repeat(currentLine.length + 60) + '\r');
           prompt();
@@ -373,7 +372,7 @@
         return;
       }
 
-      if (data === '\t') { // Tab autocomplete (for lookup)
+      if (data === '\t') {                        // Tab = Autocomplete
         const trimmed = currentLine.trim();
         if (trimmed.toLowerCase().startsWith('lookup ')) {
           const partial = trimmed.slice(7).trim();
@@ -394,7 +393,7 @@
       }
 
       switch (data) {
-        case '\r': // Enter
+        case '\r':                                // Enter
           term.writeln('');
           const trimmed = currentLine.trim();
 
@@ -419,14 +418,14 @@
           prompt();
           break;
 
-        case '\u007f': // Backspace
+        case '\u007f':                            // Backspace
           if (currentLine.length > 0) {
             currentLine = currentLine.slice(0, -1);
             term.write('\b \b');
           }
           break;
 
-        case '\u001b[A': // Arrow Up
+        case '\u001b[A':                          // Up arrow
           if (commandHistory.length > 0 && historyIndex < commandHistory.length - 1) {
             historyIndex++;
             term.write('\r' + ' '.repeat(120) + '\r');
@@ -436,7 +435,7 @@
           }
           break;
 
-        case '\u001b[B': // Arrow Down
+        case '\u001b[B':                          // Down arrow
           if (historyIndex > 0) {
             historyIndex--;
             term.write('\r' + ' '.repeat(120) + '\r');
@@ -459,11 +458,12 @@
       }
     });
 
-    // Fresh Start Message
+    // ── Fresh Start Message ───────────────────────
     term.writeln('\x1b[1;32mSmart Terminal v2.3 initialized successfully\x1b[0m');
-    term.writeln('Ready for Accounts • Nodes • Smart Lookup\r\n');
+    term.writeln('Accounts • Nodes • Smart Lookup ready.\r\n');
     term.writeln('Type \x1b[1;34mhelp\x1b[0m to see available commands.\r\n');
     prompt();
+
     setTimeout(() => term.focus(), 100);
   </script>
 </body>

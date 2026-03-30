@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Terminal - Reset Accounts & Nodes</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+  <style>
+    body { margin:0; background:#0d1117; color:#c9d1d9; font-family: 'Courier New', monospace; overflow: hidden; }
+    #terminal { width: 100vw; height: 100vh; }
+    .header {
+      position: absolute; top: 8px; left: 12px; z-index: 10;
+      font-size: 14px; color: #58a6ff; pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">Smart Terminal v1.2 — Accounts + Nodes (Name/IP)</div>
+  <div id="terminal"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+  <script>
+    const term = new Terminal({
+      cursorBlink: true,
+      theme: {
+        background: '#0d1117',
+        foreground: '#c9d1d9',
+        cursor: '#58a6ff'
+      },
+      fontFamily: 'Courier New, monospace',
+      fontSize: 15,
+      scrollback: 1000
+    });
+
+    term.open(document.getElementById('terminal'));
+    term.writeln('\x1b[1;32mSmart Terminal v1.2 initialized\x1b[0m');
+    term.writeln('Reset accounts by email • Reset nodes by name or IP');
+    term.writeln('Type \x1b[1;34mhelp\x1b[0m for commands\r\n');
+
+    let commandHistory = [];
+    let historyIndex = -1;
+    let currentLine = '';
+
+    // Data
+    let accounts = [
+      'user1@example.com',
+      'admin@company.com',
+      'test@demo.local',
+      'support@internal.net'
+    ];
+
+    let nodes = [
+      { name: 'node-01', ip: '192.168.1.101', status: 'online' },
+      { name: 'node-02', ip: '192.168.1.102', status: 'online' },
+      { name: 'k8s-worker-3', ip: '10.0.0.45', status: 'maintenance' },
+      { name: 'db-node-prod', ip: '172.16.0.10', status: 'online' },
+      { name: 'edge-node-7', ip: '203.0.113.45', status: 'online' }
+    ];
+
+    const prompt = () => {
+      term.write('\r\n\x1b[1;34madmin@smart-terminal\x1b[0m:\x1b[1;32m~\x1b[0m$ ');
+    };
+
+    prompt();
+
+    const findNode = (identifier) => {
+      if (!identifier) return null;
+      return nodes.find(n => 
+        n.name.toLowerCase() === identifier.toLowerCase() || 
+        n.ip === identifier
+      );
+    };
+
+    const commands = {
+      help: () => {
+        term.writeln('\r\nAvailable commands:');
+        term.writeln('  help                          - Show this help');
+        term.writeln('  clear                         - Clear screen');
+        term.writeln('  list accounts                 - List all user accounts');
+        term.writeln('  reset account <email>         - Reset password for account');
+        term.writeln('  list nodes                    - List nodes with name + IP');
+        term.writeln('  reset node <name|ip>          - Factory reset node (DANGEROUS)');
+        term.writeln('  status                        - Show system status');
+        term.writeln('  exit                          - Close terminal\r\n');
+        term.writeln('Examples:');
+        term.writeln('  reset account admin@company.com');
+        term.writeln('  reset node 192.168.1.101');
+        term.writeln('  reset node node-01');
+      },
+
+      'list accounts': () => {
+        term.writeln('\r\nUser Accounts:');
+        accounts.forEach(acc => term.writeln(`  • ${acc}`));
+      },
+
+      'reset account': (email) => {
+        if (!email) {
+          term.writeln('\r\nUsage: reset account <email>');
+          return;
+        }
+        if (!accounts.includes(email)) {
+          term.writeln(`\r\n\x1b[31mAccount not found: ${email}\x1b[0m`);
+          return;
+        }
+        term.writeln(`\r\n\x1b[33mResetting password for ${email}...\x1b[0m`);
+        setTimeout(() => {
+          term.writeln(`\x1b[32m✓ Success: Temporary password generated and sent to ${email}\x1b[0m`);
+        }, 900);
+      },
+
+      'list nodes': () => {
+        term.writeln('\r\nManaged Nodes:');
+        nodes.forEach(n => {
+          const color = n.status === 'online' ? '\x1b[32m' : '\x1b[33m';
+          term.writeln(`  • ${n.name.padEnd(15)} ${n.ip.padEnd(18)} ${color}[${n.status}]\x1b[0m`);
+        });
+      },
+
+      'reset node': (identifier) => {
+        if (!identifier) {
+          term.writeln('\r\nUsage: reset node <name or IP>');
+          term.writeln('Example: reset node 192.168.1.102');
+          return;
+        }
+
+        const node = findNode(identifier);
+        if (!node) {
+          term.writeln(`\r\n\x1b[31mNode not found: ${identifier}\x1b[0m`);
+          return;
+        }
+
+        term.writeln(`\r\n\x1b[31mWARNING: This will perform a factory reset on ${node.name} (${node.ip}).`);
+        term.writeln('All data will be permanently erased!\x1b[0m');
+        term.write('Type \x1b[1;31mYES\x1b[0m to confirm: ');
+
+        let confirmInput = '';
+        const originalHandler = term._core?._onData?._listeners?.[0];
+
+        const confirmHandler = (data) => {
+          if (data === '\r') { // Enter
+            term.writeln('');
+            term.offData(confirmHandler);
+            if (originalHandler) term.onData(originalHandler);
+
+            if (confirmInput.trim() === 'YES') {
+              term.writeln(`\x1b[33mStarting factory reset on ${node.name} (${node.ip})...\x1b[0m`);
+              setTimeout(() => {
+                term.writeln(`\x1b[32m✓ Factory reset completed successfully for ${node.name}.\x1b[0m`);
+                term.writeln('Node will reboot automatically.');
+              }, 1600);
+            } else {
+              term.writeln('\x1b[33mReset operation cancelled.\x1b[0m');
+            }
+            confirmInput = '';
+          } 
+          else if (data === '\u007f') { // Backspace
+            if (confirmInput.length > 0) {
+              confirmInput = confirmInput.slice(0, -1);
+              term.write('\b \b');
+            }
+          } 
+          else if (data.length === 1 && data >= ' ') {
+            confirmInput += data;
+            term.write(data);
+          }
+        };
+
+        term.onData(confirmHandler);
+      },
+
+      status: () => {
+        const onlineCount = nodes.filter(n => n.status === 'online').length;
+        term.writeln(`\r\nSystem Status: \x1b[32mOnline\x1b[0m`);
+        term.writeln(`Connected Nodes : ${nodes.length} (${onlineCount} online)`);
+        term.writeln(`Active Accounts : ${accounts.length}`);
+      },
+
+      clear: () => term.clear(),
+
+      exit: () => {
+        term.writeln('\r\nGoodbye! Closing terminal...');
+        setTimeout(() => window.close(), 800);
+      }
+    };
+
+    // Input handler
+    term.onData(data => {
+      switch (data) {
+        case '\r': // Enter
+          term.writeln('');
+          if (currentLine.trim()) {
+            commandHistory.unshift(currentLine);
+            historyIndex = -1;
+
+            const parts = currentLine.trim().split(/\s+/);
+            const mainCmd = parts[0];
+            const subCmd = parts[1] ? mainCmd + ' ' + parts[1] : mainCmd;
+            const argument = parts.slice(2).join(' ') || parts[1];
+
+            if (commands[subCmd]) {
+              commands[subCmd](argument);
+            } else if (commands[mainCmd]) {
+              commands[mainCmd](argument);
+            } else {
+              term.writeln(`\x1b[31mUnknown command: ${mainCmd}\x1b[0m`);
+            }
+          }
+          currentLine = '';
+          prompt();
+          break;
+
+        case '\u007f': // Backspace
+          if (currentLine.length > 0) {
+            currentLine = currentLine.slice(0, -1);
+            term.write('\b \b');
+          }
+          break;
+
+        case '\u001b[A': // Up arrow
+          if (historyIndex < commandHistory.length - 1) {
+            historyIndex++;
+            term.write('\r' + ' '.repeat(70) + '\r');
+            prompt();
+            currentLine = commandHistory[historyIndex];
+            term.write(currentLine);
+          }
+          break;
+
+        case '\u001b[B': // Down arrow
+          if (historyIndex > 0) {
+            historyIndex--;
+            term.write('\r' + ' '.repeat(70) + '\r');
+            prompt();
+            currentLine = commandHistory[historyIndex];
+            term.write(currentLine);
+          } else if (historyIndex === 0) {
+            historyIndex = -1;
+            term.write('\r' + ' '.repeat(70) + '\r');
+            prompt();
+            currentLine = '';
+          }
+          break;
+
+        default:
+          if (data.length === 1 && data >= ' ') {
+            currentLine += data;
+            term.write(data);
+          }
+      }
+    });
+
+    setTimeout(() => term.focus(), 50);
+  </script>
+</body>
+</html>

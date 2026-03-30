@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Smart Terminal v2.3 — Accounts • Nodes • Smart Lookup</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
 
@@ -118,7 +118,13 @@
       try {
         const res = await fetch(url, options);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return await res.json();
+        // attempt to parse JSON, but gracefully handle non-JSON
+        const text = await res.text();
+        try {
+          return JSON.parse(text);
+        } catch {
+          return text;
+        }
       } catch (e) {
         console.error("Fetch error:", e);
         return null;
@@ -133,8 +139,8 @@
 
     async function reverseDnsLookup(ip) {
       const res = await safeFetch(`https://dns.google/resolve?name=${encodeURIComponent(ip)}&type=PTR`);
-      return res?.Answer && res.Answer.length > 0 
-        ? res.Answer.map(a => a.data.replace(/\.$/, '')) 
+      return res?.Answer && res.Answer.length > 0
+        ? res.Answer.map(a => String(a.data).replace(/\.$/, ''))
         : null;
     }
 
@@ -146,7 +152,7 @@
           headers: { 'User-Agent': 'SmartTerminal/2.3' }
         });
 
-        if (!data || data.length === 0) return null;
+        if (!data || !Array.isArray(data) || data.length === 0) return null;
 
         return data.map(item => ({
           lat: parseFloat(item.lat),
@@ -160,21 +166,21 @@
 
     async function ipGeoLookup(ip = '') {
       try {
-        const url = ip 
+        const url = ip
           ? `https://freeipapi.com/api/json/${encodeURIComponent(ip)}`
           : `https://freeipapi.com/api/json/`;
-        
+
         const data = await safeFetch(url);
         if (!data || data.error) return null;
 
         return {
-          query: data.ipAddress || ip,
-          country: data.countryName,
-          countryCode: data.countryCode,
-          regionName: data.regionName,
-          city: data.cityName,
-          isp: data.isp || data.connection?.isp || 'N/A',
-          org: data.organization || 'N/A'
+          query: data.ipAddress || ip || data.ip || (data.query ? data.query : ''),
+          country: data.countryName || data.country || null,
+          countryCode: data.countryCode || data.country_code || null,
+          regionName: data.regionName || data.region || null,
+          city: data.cityName || data.city || null,
+          isp: data.isp || (data.connection && data.connection.isp) || 'N/A',
+          org: data.organization || data.org || 'N/A'
         };
       } catch (e) {
         return null;
@@ -217,7 +223,7 @@
         }
         const geo = await ipGeoLookup(arg);
         showGeoInfo(geo, arg);
-      } 
+      }
       else if (looksLikeAddress) {
         const results = await addressToCoords(arg);
         if (results && results.length > 0) {
@@ -230,7 +236,7 @@
           term.writeln(`\x1b[31m✗ Could not resolve address "${arg}"\x1b[0m`);
           term.writeln(`   Tip: Try a more complete address with city/state.`);
         }
-      } 
+      }
       else {
         let ips = await dnsLookup(arg);
         const node = nodes.find(n => n.name.toLowerCase() === arg.toLowerCase());
@@ -275,7 +281,7 @@
 
     function addNode(name, ip) {
       if (!name || !ip) return term.writeln('\x1b[31mUsage: add node <name> <ip>\x1b[0m');
-      if (nodes.some(n => n.name === name || n.ip === ip)) 
+      if (nodes.some(n => n.name === name || n.ip === ip))
         return term.writeln('\x1b[33mNode already exists\x1b[0m');
       nodes.push({ name, ip, status: 'online' });
       term.writeln(`\x1b[32m✓ Node added: ${name} (${ip})\x1b[0m`);
@@ -345,7 +351,7 @@
       'add account': (arg) => addAccount(arg),
       'remove account': (arg) => removeAccount(arg),
       'add node': (arg) => {
-        const parts = arg.trim().split(/\s+/);
+        const parts = (arg || '').trim().split(/\s+/);
         if (parts.length >= 2) addNode(parts[0], parts[1]);
         else term.writeln('\x1b[31mUsage: add node <name> <ip>\x1b[0m');
       },
@@ -357,13 +363,26 @@
 
       exit: () => {
         term.writeln('\r\n\x1b[33mGoodbye! Closing terminal...\x1b[0m');
-        setTimeout(() => window.close(), 1000);
+        setTimeout(() => {
+          try { window.close(); } catch (e) {}
+        }, 1000);
       }
     };
 
+    // find a matching command key (supports multi-word commands)
+    function findCommandKey(line) {
+      const keys = Object.keys(commands).sort((a, b) => b.length - a.length);
+      const low = (line || '').toLowerCase();
+      for (const k of keys) {
+        if (low === k || low.startsWith(k + ' ')) return k;
+      }
+      return null;
+    }
+
     // ── Input Handler ─────────────────────────────
     term.onData((data) => {
-      if (data === '\u001b') {                    // ESC key
+      // ESC key (clear current line)
+      if (data === '\x1b') {
         if (currentLine.length > 0) {
           term.write('\r' + ' '.repeat(currentLine.length + 60) + '\r');
           prompt();
@@ -372,10 +391,11 @@
         return;
       }
 
-      if (data === '\t') {                        // Tab = Autocomplete
+      // Tab = Autocomplete
+      if (data === '\t') {
         const trimmed = currentLine.trim();
-        if (trimmed.toLowerCase().startsWith('lookup ')) {
-          const partial = trimmed.slice(7).trim();
+        if (trimmed.toLowerCase().startsWith('lookup')) {
+          const partial = trimmed.length > 6 ? trimmed.slice(6).trim() : '';
           currentSuggestions = getSuggestions(partial);
 
           if (currentSuggestions.length > 0) {
@@ -392,69 +412,74 @@
         return;
       }
 
-      switch (data) {
-        case '\r':                                // Enter
-          term.writeln('');
-          const trimmed = currentLine.trim();
+      // handle special sequences for arrows/backspace/enter (some sequences may arrive as multiple events)
+      // Simple handling: check known single-character events and common sequences.
+      if (data === '\r') { // Enter
+        term.writeln('');
+        const trimmed = currentLine.trim();
+        if (trimmed) {
+          commandHistory.unshift(trimmed);
+          historyIndex = -1;
 
-          if (trimmed) {
-            commandHistory.unshift(trimmed);
-            historyIndex = -1;
-
-            const parts = trimmed.split(/\s+/);
-            const cmdKey = parts[0].toLowerCase();
-            const arg = parts.slice(1).join(' ');
-
-            if (commands[cmdKey]) {
-              commands[cmdKey](arg);
-            } else {
-              term.writeln(`\x1b[31mUnknown command: ${cmdKey}\x1b[0m`);
+          const matchedKey = findCommandKey(trimmed);
+          if (matchedKey) {
+            const arg = trimmed.slice(matchedKey.length).trim();
+            try {
+              commands[matchedKey](arg);
+            } catch (e) {
+              term.writeln(`\x1b[31mError executing command: ${e.message}\x1b[0m`);
             }
+          } else {
+            term.writeln(`\x1b[31mUnknown command: ${trimmed.split(/\s+/)[0]}\x1b[0m`);
           }
+        }
 
-          currentLine = '';
-          currentSuggestions = [];
-          suggestionIndex = -1;
+        currentLine = '';
+        currentSuggestions = [];
+        suggestionIndex = -1;
+        prompt();
+        return;
+      }
+
+      if (data === '\x7f') { // Backspace
+        if (currentLine.length > 0) {
+          currentLine = currentLine.slice(0, -1);
+          term.write('\b \b');
+        }
+        return;
+      }
+
+      // Up / Down arrow sequences (xterm may send them as '\x1b[A' or individual bytes; handle likely full sequences)
+      if (data === '\x1b[A') { // Up
+        if (commandHistory.length > 0 && historyIndex < commandHistory.length - 1) {
+          historyIndex++;
+          term.write('\r' + ' '.repeat(120) + '\r');
           prompt();
-          break;
+          currentLine = commandHistory[historyIndex];
+          term.write(currentLine);
+        }
+        return;
+      }
+      if (data === '\x1b[B') { // Down
+        if (historyIndex > 0) {
+          historyIndex--;
+          term.write('\r' + ' '.repeat(120) + '\r');
+          prompt();
+          currentLine = commandHistory[historyIndex];
+          term.write(currentLine);
+        } else if (historyIndex === 0) {
+          historyIndex = -1;
+          term.write('\r' + ' '.repeat(120) + '\r');
+          prompt();
+          currentLine = '';
+        }
+        return;
+      }
 
-        case '\u007f':                            // Backspace
-          if (currentLine.length > 0) {
-            currentLine = currentLine.slice(0, -1);
-            term.write('\b \b');
-          }
-          break;
-
-        case '\u001b[A':                          // Up arrow
-          if (commandHistory.length > 0 && historyIndex < commandHistory.length - 1) {
-            historyIndex++;
-            term.write('\r' + ' '.repeat(120) + '\r');
-            prompt();
-            currentLine = commandHistory[historyIndex];
-            term.write(currentLine);
-          }
-          break;
-
-        case '\u001b[B':                          // Down arrow
-          if (historyIndex > 0) {
-            historyIndex--;
-            term.write('\r' + ' '.repeat(120) + '\r');
-            prompt();
-            currentLine = commandHistory[historyIndex];
-            term.write(currentLine);
-          } else if (historyIndex === 0) {
-            historyIndex = -1;
-            term.write('\r' + ' '.repeat(120) + '\r');
-            prompt();
-            currentLine = '';
-          }
-          break;
-
-        default:
-          if (data.length === 1 && data >= ' ') {
-            currentLine += data;
-            term.write(data);
-          }
+      // Default: printable characters
+      if (data.length === 1 && data >= ' ') {
+        currentLine += data;
+        term.write(data);
       }
     });
 

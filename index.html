@@ -80,8 +80,13 @@
 
     term.open(document.getElementById('terminal'));
 
-    // Data
-    let accounts = ['user1@example.com', 'admin@company.com', 'test@demo.local', 'support@internal.net'];
+    // Data Storage
+    let accounts = [
+      'user1@example.com',
+      'admin@company.com',
+      'test@demo.local',
+      'support@internal.net'
+    ];
 
     let nodes = [
       { name: 'node-01', ip: '192.168.1.101', status: 'online' },
@@ -91,8 +96,10 @@
       { name: 'edge-node-7', ip: '203.0.113.45', status: 'online' }
     ];
 
-    const commonTargets = ['google.com', 'cloudflare.com', 'github.com', 'microsoft.com', 'amazon.com',
-      '8.8.8.8', '8.8.4.4', '1.1.1.1', '1.0.0.1', '9.9.9.9', 'dns.google'];
+    const commonTargets = [
+      'google.com', 'cloudflare.com', 'github.com', 'microsoft.com', 'amazon.com',
+      '8.8.8.8', '8.8.4.4', '1.1.1.1', '1.0.0.1', '9.9.9.9', 'dns.google'
+    ];
 
     // State
     let commandHistory = [];
@@ -117,6 +124,7 @@
       }
     }
 
+    // Lookup Functions
     async function dnsLookup(domain) {
       const res = await safeFetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=A`);
       return res?.Answer ? res.Answer.map(a => a.data) : null;
@@ -129,17 +137,12 @@
         : null;
     }
 
-    // Improved Street Address Lookup
     async function addressToCoords(address) {
       try {
-        // Small delay to be polite to Nominatim
-        await new Promise(r => setTimeout(r, 800));
-
+        await new Promise(r => setTimeout(r, 600)); // Polite delay for Nominatim
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=3&addressdetails=1`;
         const data = await safeFetch(url, {
-          headers: { 
-            'User-Agent': 'SmartTerminal/2.3 (Educational Project - https://github.com)' 
-          }
+          headers: { 'User-Agent': 'SmartTerminal/2.3 (Educational Project)' }
         });
 
         if (!data || data.length === 0) return null;
@@ -147,11 +150,9 @@
         return data.map(item => ({
           lat: parseFloat(item.lat),
           lon: parseFloat(item.lon),
-          displayName: item.display_name,
-          address: item.address || {}
+          displayName: item.display_name
         }));
       } catch (e) {
-        console.error(e);
         return null;
       }
     }
@@ -193,7 +194,7 @@
       term.writeln(`└──────────────────────────────────────────────`);
     }
 
-    // Main Lookup Command (Cleaned up)
+    // Main Lookup Command
     async function lookupCommand(arg) {
       if (!arg) {
         term.writeln('\r\n\x1b[33mUsage:\x1b[0m lookup <domain | IP | node-name | "street address">');
@@ -203,10 +204,9 @@
       term.writeln(`\r\n\x1b[33mResolving "${arg}"...\x1b[0m`);
 
       const isIp = /^(\d{1,3}\.){3}\d{1,3}$/.test(arg);
-      const looksLikeAddress = /\d+\s+[a-zA-Z]/.test(arg) || arg.length > 25 || arg.includes('"');
+      const looksLikeAddress = (/\d+\s+[a-zA-Z]/.test(arg) || arg.length > 25 || arg.includes('"') || arg.includes(','));
 
       if (isIp) {
-        // IP path
         const hostnames = await reverseDnsLookup(arg);
         if (hostnames?.length) {
           term.writeln(`\x1b[32m✓ Hostname(s):\x1b[0m`);
@@ -214,12 +214,11 @@
         } else {
           term.writeln(`\x1b[33mNo PTR record found\x1b[0m`);
         }
-
         const geo = await ipGeoLookup(arg);
         showGeoInfo(geo, arg);
       } 
       else if (looksLikeAddress) {
-        // Street Address path (improved)
+        // Street Address
         const results = await addressToCoords(arg);
         if (results && results.length > 0) {
           term.writeln(`\x1b[32m✓ Address resolved (${results.length} match${results.length > 1 ? 'es' : ''}):\x1b[0m`);
@@ -229,11 +228,11 @@
           });
         } else {
           term.writeln(`\x1b[31m✗ Could not resolve address "${arg}"\x1b[0m`);
-          term.writeln(`   Tip: Try a more complete address or city name.`);
+          term.writeln(`   Tip: Use a more complete address with city/state.`);
         }
       } 
       else {
-        // Domain or Node fallback
+        // Domain or Internal Node
         let ips = await dnsLookup(arg);
         const node = nodes.find(n => n.name.toLowerCase() === arg.toLowerCase());
         if (node) ips = [node.ip];
@@ -241,7 +240,6 @@
         if (ips?.length) {
           term.writeln(`\x1b[32m✓ Resolved IP(s):\x1b[0m`);
           ips.forEach(ip => term.writeln(`   • ${ip}`));
-
           const geo = await ipGeoLookup(ips[0]);
           showGeoInfo(geo, ips[0]);
         } else {
@@ -257,11 +255,11 @@
         term.writeln(`\x1b[32m✓ Your Public IP : ${geo.query}\x1b[0m`);
         showGeoInfo(geo, geo.query);
       } else {
-        term.writeln(`\x1b[31mFailed to fetch public IP (check internet connection)\x1b[0m`);
+        term.writeln(`\x1b[31mFailed to fetch public IP (check your internet connection)\x1b[0m`);
       }
     }
 
-    // Management functions (unchanged)
+    // Management Commands
     function addAccount(email) {
       if (!email || !email.includes('@')) return term.writeln('\x1b[31mInvalid email address\x1b[0m');
       if (accounts.includes(email)) return term.writeln('\x1b[33mAccount already exists\x1b[0m');
@@ -291,7 +289,7 @@
       term.writeln(`\x1b[32m✓ Node removed: ${removed.name} (${removed.ip})\x1b[0m`);
     }
 
-    // Suggestions (only for common + nodes)
+    // Autocomplete Suggestions
     function getSuggestions(partial) {
       if (!partial) return [];
       const lower = partial.toLowerCase();
@@ -309,19 +307,19 @@
       return [...new Set(suggestions)].slice(0, 8);
     }
 
-    // Commands
+    // Commands Registry
     const commands = {
       help: () => {
         term.writeln('\r\n\x1b[1;37mAvailable Commands:\x1b[0m');
         term.writeln('  help                    Show this help');
         term.writeln('  clear                   Clear screen');
-        term.writeln('  list accounts           List accounts');
-        term.writeln('  list nodes              List nodes');
-        term.writeln('  lookup <target>         Smart lookup');
-        term.writeln('  myip                    Show your public IP');
-        term.writeln('  add account <email>     Add account');
+        term.writeln('  list accounts           List all accounts');
+        term.writeln('  list nodes              List all managed nodes');
+        term.writeln('  lookup <target>         Smart lookup (domain/IP/node/street address)');
+        term.writeln('  myip                    Show your public IP + location');
+        term.writeln('  add account <email>     Add new account');
         term.writeln('  remove account <email>  Remove account');
-        term.writeln('  add node <name> <ip>    Add node');
+        term.writeln('  add node <name> <ip>    Add new node');
         term.writeln('  remove node <name|ip>   Remove node');
         term.writeln('  exit                    Close terminal\r\n');
 
@@ -359,14 +357,14 @@
       clear: () => term.clear(),
       
       exit: () => {
-        term.writeln('\r\n\x1b[33mGoodbye!\x1b[0m');
+        term.writeln('\r\n\x1b[33mGoodbye! Closing terminal...\x1b[0m');
         setTimeout(() => window.close(), 1000);
       }
     };
 
     // Input Handler
     term.onData((data) => {
-      if (data === '\u001b') { // ESC
+      if (data === '\u001b') { // ESC key - clear current line
         if (currentLine.length > 0) {
           term.write('\r' + ' '.repeat(currentLine.length + 60) + '\r');
           prompt();
@@ -375,7 +373,7 @@
         return;
       }
 
-      if (data === '\t') {
+      if (data === '\t') { // Tab autocomplete (for lookup)
         const trimmed = currentLine.trim();
         if (trimmed.toLowerCase().startsWith('lookup ')) {
           const partial = trimmed.slice(7).trim();
@@ -396,9 +394,10 @@
       }
 
       switch (data) {
-        case '\r':
+        case '\r': // Enter
           term.writeln('');
           const trimmed = currentLine.trim();
+
           if (trimmed) {
             commandHistory.unshift(trimmed);
             historyIndex = -1;
@@ -413,6 +412,7 @@
               term.writeln(`\x1b[31mUnknown command: ${cmdKey}\x1b[0m`);
             }
           }
+
           currentLine = '';
           currentSuggestions = [];
           suggestionIndex = -1;
@@ -426,7 +426,7 @@
           }
           break;
 
-        case '\u001b[A': // Up
+        case '\u001b[A': // Arrow Up
           if (commandHistory.length > 0 && historyIndex < commandHistory.length - 1) {
             historyIndex++;
             term.write('\r' + ' '.repeat(120) + '\r');
@@ -436,7 +436,7 @@
           }
           break;
 
-        case '\u001b[B': // Down
+        case '\u001b[B': // Arrow Down
           if (historyIndex > 0) {
             historyIndex--;
             term.write('\r' + ' '.repeat(120) + '\r');
@@ -459,10 +459,10 @@
       }
     });
 
-    // Startup
+    // Fresh Start Message
     term.writeln('\x1b[1;32mSmart Terminal v2.3 initialized successfully\x1b[0m');
-    term.writeln('Street address lookup cleaned & improved.\r\n');
-    term.writeln('Type \x1b[1;34mhelp\x1b[0m for commands.\r\n');
+    term.writeln('Ready for Accounts • Nodes • Smart Lookup\r\n');
+    term.writeln('Type \x1b[1;34mhelp\x1b[0m to see available commands.\r\n');
     prompt();
     setTimeout(() => term.focus(), 100);
   </script>

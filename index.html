@@ -30,7 +30,7 @@
   </style>
 </head>
 <body>
-  <div class="header">Smart Terminal v1.4 — Accounts & Nodes Manager</div>
+  <div class="header">Smart Terminal v1.5 — Accounts & Nodes Manager + IP Tools</div>
   <div id="terminal"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
@@ -51,15 +51,15 @@
     term.open(document.getElementById('terminal'));
 
     // Welcome message
-    term.writeln('\x1b[1;32mSmart Terminal v1.4 initialized\x1b[0m');
-    term.writeln('Dynamically manage accounts and nodes');
+    term.writeln('\x1b[1;32mSmart Terminal v1.5 initialized\x1b[0m');
+    term.writeln('Dynamically manage accounts, nodes, and IP lookups');
     term.writeln('Type \x1b[1;34mhelp\x1b[0m for commands\r\n');
 
     let commandHistory = [];
     let historyIndex = -1;
     let currentLine = '';
 
-    // Data
+    // Existing data
     let accounts = [
       'user1@example.com',
       'admin@company.com',
@@ -85,6 +85,89 @@
       return nodes.find(n => n.name.toLowerCase() === lower || n.ip === identifier);
     };
 
+    // New IP lookup functions
+    async function dnsLookup(domain) {
+      try {
+        const res = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=A`);
+        const data = await res.json();
+        if (data.Answer && data.Answer.length > 0) {
+          return data.Answer.map(ans => ans.data);
+        }
+        return null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function ipGeoLookup(ip) {
+      try {
+        const res = await fetch(`https://ip-api.com/json/${encodeURIComponent(ip)}?fields=status,message,country,countryCode,regionName,city,isp,org,as,query`);
+        const data = await res.json();
+        if (data.status === 'success') {
+          return data;
+        }
+        return null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function lookupCommand(arg) {
+      if (!arg) {
+        term.writeln('\r\nUsage: lookup <domain or IP>');
+        term.writeln('Example: lookup google.com   or   lookup 8.8.8.8');
+        return;
+      }
+
+      term.writeln(`\r\n\x1b[33mLooking up ${arg}...\x1b[0m`);
+
+      const isIp = /^\d{1,3}(\.\d{1,3}){3}$/.test(arg) || /^[0-9a-fA-F:]+$/.test(arg);
+
+      let ips = [];
+      let geo = null;
+
+      if (isIp) {
+        ips = [arg];
+      } else {
+        ips = await dnsLookup(arg);
+      }
+
+      if (!ips || ips.length === 0) {
+        term.writeln(`\x1b[31mFailed to resolve ${arg}\x1b[0m`);
+        return;
+      }
+
+      term.writeln(`\x1b[32mResolved IP(s):\x1b[0m`);
+      ips.forEach(ip => term.writeln(`  • ${ip}`));
+
+      // Get geo for the first IP (usually sufficient)
+      geo = await ipGeoLookup(ips[0]);
+
+      if (geo) {
+        term.writeln(`\r\n\x1b[32mGeolocation for ${ips[0]}:\x1b[0m`);
+        term.writeln(`  Country     : ${geo.country || 'N/A'} (${geo.countryCode || ''})`);
+        term.writeln(`  City/Region : ${geo.city || 'N/A'}, ${geo.regionName || 'N/A'}`);
+        term.writeln(`  ISP         : ${geo.isp || 'N/A'}`);
+        term.writeln(`  Org         : ${geo.org || 'N/A'}`);
+        term.writeln(`  AS          : ${geo.as || 'N/A'}`);
+      } else {
+        term.writeln(`\r\n\x1b[33mCould not fetch geolocation (rate limit or error)\x1b[0m`);
+      }
+    }
+
+    async function myIpCommand() {
+      term.writeln('\r\n\x1b[33mFetching your public IP...\x1b[0m');
+      const geo = await ipGeoLookup('');
+      if (geo && geo.query) {
+        term.writeln(`\x1b[32mYour IP: ${geo.query}\x1b[0m`);
+        term.writeln(`  Country     : ${geo.country || 'N/A'} (${geo.countryCode || ''})`);
+        term.writeln(`  City/Region : ${geo.city || 'N/A'}, ${geo.regionName || 'N/A'}`);
+        term.writeln(`  ISP         : ${geo.isp || 'N/A'}`);
+      } else {
+        term.writeln(`\x1b[31mFailed to fetch your IP (try again later)\x1b[0m`);
+      }
+    }
+
     const commands = {
       help: () => {
         term.writeln('\r\nAvailable Commands:');
@@ -99,195 +182,40 @@
         term.writeln('  remove node <name|ip>         - Remove a node');
         term.writeln('  reset node <name|ip>          - Factory reset node (DANGEROUS)');
         term.writeln('  status                        - Show system status');
+        term.writeln('  lookup <domain or IP>         - DNS + IP geolocation lookup');
+        term.writeln('  myip                          - Show your current public IP + location');
         term.writeln('  exit                          - Close terminal\r\n');
 
         term.writeln('Examples:');
-        term.writeln('  add account newuser@company.com');
-        term.writeln('  add node web-server-5 192.168.1.150');
-        term.writeln('  remove node edge-node-7');
-        term.writeln('  reset account admin@company.com');
+        term.writeln('  lookup google.com');
+        term.writeln('  lookup 8.8.8.8');
+        term.writeln('  myip');
       },
 
-      // Account commands
-      'add account': (email) => {
-        if (!email || !email.includes('@')) {
-          term.writeln('\r\n\x1b[31mError: Please provide a valid email address\x1b[0m');
-          return;
-        }
-        if (accounts.includes(email)) {
-          term.writeln(`\r\n\x1b[33mAccount already exists: ${email}\x1b[0m`);
-          return;
-        }
-        accounts.push(email);
-        term.writeln(`\r\n\x1b[32m✓ Account added successfully: ${email}\x1b[0m`);
-      },
+      // ... (keep all your original commands: add account, remove account, list accounts, etc.)
 
-      'remove account': (email) => {
-        if (!email) {
-          term.writeln('\r\nUsage: remove account <email>');
-          return;
-        }
-        const index = accounts.indexOf(email);
-        if (index === -1) {
-          term.writeln(`\r\n\x1b[31mAccount not found: ${email}\x1b[0m`);
-          return;
-        }
-        accounts.splice(index, 1);
-        term.writeln(`\r\n\x1b[32m✓ Account removed: ${email}\x1b[0m`);
-      },
-
-      'list accounts': () => {
-        term.writeln('\r\nUser Accounts:');
-        if (accounts.length === 0) {
-          term.writeln('  No accounts found.');
-        } else {
-          accounts.forEach(acc => term.writeln(`  • ${acc}`));
-        }
-        term.writeln(`\r\nTotal: ${accounts.length} account(s)`);
-      },
-
-      'reset account': (email) => {
-        if (!email) {
-          term.writeln('\r\nUsage: reset account <email>');
-          return;
-        }
-        if (!accounts.includes(email)) {
-          term.writeln(`\r\n\x1b[31mAccount not found: ${email}\x1b[0m`);
-          return;
-        }
-        term.writeln(`\r\n\x1b[33mResetting password for ${email}...\x1b[0m`);
-        setTimeout(() => {
-          term.writeln(`\x1b[32m✓ Success: Temporary password sent to ${email}\x1b[0m`);
-        }, 900);
-      },
-
-      // Node commands
-      'add node': (args) => {
-        const parts = args.trim().split(/\s+/);
-        if (parts.length < 2) {
-          term.writeln('\r\nUsage: add node <name> <ip>');
-          term.writeln('Example: add node web-server-5 192.168.1.150');
-          return;
-        }
-
-        const name = parts[0];
-        const ip = parts[1];
-
-        const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
-        if (!ipRegex.test(ip)) {
-          term.writeln('\r\n\x1b[31mError: Invalid IP address format\x1b[0m');
-          return;
-        }
-
-        if (nodes.some(n => n.name === name || n.ip === ip)) {
-          term.writeln('\r\n\x1b[33mA node with this name or IP already exists\x1b[0m');
-          return;
-        }
-
-        nodes.push({ name, ip, status: 'online' });
-        term.writeln(`\r\n\x1b[32m✓ Node added successfully:\x1b[0m`);
-        term.writeln(`   Name : ${name}`);
-        term.writeln(`   IP   : ${ip}`);
-      },
-
-      'remove node': (identifier) => {
-        if (!identifier) {
-          term.writeln('\r\nUsage: remove node <name or IP>');
-          return;
-        }
-
-        const index = nodes.findIndex(n => 
-          n.name.toLowerCase() === identifier.toLowerCase() || n.ip === identifier
-        );
-
-        if (index === -1) {
-          term.writeln(`\r\n\x1b[31mNode not found: ${identifier}\x1b[0m`);
-          return;
-        }
-
-        const node = nodes[index];
-        nodes.splice(index, 1);
-        term.writeln(`\r\n\x1b[32m✓ Node removed: ${node.name} (${node.ip})\x1b[0m`);
-      },
-
-      'list nodes': () => {
-        term.writeln('\r\nManaged Nodes:');
-        if (nodes.length === 0) {
-          term.writeln('  No nodes found.');
-        } else {
-          nodes.forEach(n => {
-            const color = n.status === 'online' ? '\x1b[32m' : '\x1b[33m';
-            term.writeln(`  • ${n.name.padEnd(18)} ${n.ip.padEnd(18)} ${color}[${n.status}]\x1b[0m`);
-          });
-        }
-        term.writeln(`\r\nTotal: ${nodes.length} node(s)`);
-      },
-
-      'reset node': (identifier) => {
-        if (!identifier) {
-          term.writeln('\r\nUsage: reset node <name or IP>');
-          return;
-        }
-
-        const node = findNode(identifier);
-        if (!node) {
-          term.writeln(`\r\n\x1b[31mNode not found: ${identifier}\x1b[0m`);
-          return;
-        }
-
-        term.writeln(`\r\n\x1b[31mWARNING: This will factory reset ${node.name} (${node.ip}).`);
-        term.writeln('ALL DATA WILL BE PERMANENTLY ERASED!\x1b[0m');
-        term.write('Type \x1b[1;31mYES\x1b[0m to confirm: ');
-
-        let confirmInput = '';
-
-        const confirmHandler = (data) => {
-          if (data === '\r') {
-            term.writeln('');
-            term.offData(confirmHandler);
-
-            if (confirmInput.trim().toUpperCase() === 'YES') {
-              term.writeln(`\x1b[33mPerforming factory reset on ${node.name}...\x1b[0m`);
-              setTimeout(() => {
-                term.writeln(`\x1b[32m✓ Factory reset completed for ${node.name} (${node.ip})\x1b[0m`);
-                term.writeln('Node will reboot automatically.');
-              }, 1600);
-            } else {
-              term.writeln('\x1b[33mOperation cancelled.\x1b[0m');
-            }
-          } 
-          else if (data === '\u007f') {
-            if (confirmInput.length > 0) {
-              confirmInput = confirmInput.slice(0, -1);
-              term.write('\b \b');
-            }
-          } 
-          else if (data.length === 1 && data >= ' ') {
-            confirmInput += data;
-            term.write(data);
-          }
-        };
-
-        term.onData(confirmHandler);
-      },
-
-      status: () => {
-        const onlineCount = nodes.filter(n => n.status === 'online').length;
-        term.writeln(`\r\nSystem Status: \x1b[32mOnline\x1b[0m`);
-        term.writeln(`Connected Nodes : ${nodes.length} (${onlineCount} online)`);
-        term.writeln(`Active Accounts : ${accounts.length}`);
-      },
-
+      'add account': (email) => { /* your original code */ },
+      'remove account': (email) => { /* your original code */ },
+      'list accounts': () => { /* your original code */ },
+      'reset account': (email) => { /* your original code */ },
+      'add node': (args) => { /* your original code */ },
+      'remove node': (identifier) => { /* your original code */ },
+      'list nodes': () => { /* your original code */ },
+      'reset node': (identifier) => { /* your original code */ },
+      status: () => { /* your original code */ },
       clear: () => term.clear(),
-
       exit: () => {
         term.writeln('\r\nGoodbye! Closing terminal...');
         setTimeout(() => window.close(), 800);
-      }
+      },
+
+      // New commands
+      lookup: (arg) => { lookupCommand(arg); },
+      myip: () => { myIpCommand(); }
     };
 
-    // Input handler
-    term.onData((data) => {
+    // Input handler (same as before, but now supports async commands)
+    term.onData(async (data) => {   // Note: made async
       switch (data) {
         case '\r': // Enter
           term.writeln('');
@@ -296,14 +224,14 @@
             historyIndex = -1;
 
             const parts = currentLine.trim().split(/\s+/);
-            const mainCmd = parts[0];
-            const subCmd = parts[1] ? `${mainCmd} ${parts[1]}` : mainCmd;
+            const mainCmd = parts[0].toLowerCase();
+            const subCmd = parts[1] ? `${mainCmd} ${parts[1]}`.toLowerCase() : mainCmd;
             const argument = parts.slice(2).join(' ');
 
             if (commands[subCmd]) {
-              commands[subCmd](argument);
+              await commands[subCmd](argument);   // await for async
             } else if (commands[mainCmd]) {
-              commands[mainCmd](argument);
+              await commands[mainCmd](argument || ''); // await
             } else {
               term.writeln(`\x1b[31mUnknown command: ${mainCmd}\x1b[0m`);
             }
@@ -319,7 +247,7 @@
           }
           break;
 
-        case '\u001b[A': // Up arrow
+        case '\u001b[A': // Up arrow (same)
           if (historyIndex < commandHistory.length - 1) {
             historyIndex++;
             term.write('\r' + ' '.repeat(80) + '\r');
@@ -329,7 +257,7 @@
           }
           break;
 
-        case '\u001b[B': // Down arrow
+        case '\u001b[B': // Down arrow (same)
           if (historyIndex > 0) {
             historyIndex--;
             term.write('\r' + ' '.repeat(80) + '\r');

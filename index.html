@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Terminal - Accounts & Nodes Manager</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+  
   <style>
     body {
       margin: 0;
@@ -12,11 +13,14 @@
       color: #c9d1d9;
       font-family: 'Courier New', monospace;
       overflow: hidden;
+      height: 100vh;
     }
+    
     #terminal {
       width: 100vw;
       height: 100vh;
     }
+    
     .header {
       position: absolute;
       top: 12px;
@@ -31,7 +35,7 @@
   </style>
 </head>
 <body>
-  <div class="header">Smart Terminal v2.0 — Accounts • Nodes • Smart IP ↔ Address ↔ Street Lookup</div>
+  <div class="header">Smart Terminal v2.0 — Accounts • Nodes • Smart Lookup (IP • Domain • Node • Street Address)</div>
   <div id="terminal"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
@@ -52,9 +56,10 @@
 
     term.open(document.getElementById('terminal'));
 
+    // Initial welcome message
     term.writeln('\x1b[1;32mSmart Terminal v2.0 initialized\x1b[0m');
     term.writeln('Accounts • Nodes • Smart Lookup (Domain / IP / Node / Street Address)');
-    term.writeln('Type \x1b[1;34mhelp\x1b[0m for commands\r\n');
+    term.writeln('Type \x1b[1;34mhelp\x1b[0m for available commands\r\n');
 
     // Data
     let accounts = [
@@ -94,7 +99,9 @@
         const res = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=A`);
         const data = await res.json();
         return data.Answer ? data.Answer.map(a => a.data) : null;
-      } catch (e) { return null; }
+      } catch (e) {
+        return null;
+      }
     }
 
     async function reverseDnsLookup(ip) {
@@ -104,7 +111,9 @@
         return data.Answer && data.Answer.length > 0 
           ? data.Answer.map(a => a.data.replace(/\.$/, '')) 
           : null;
-      } catch (e) { return null; }
+      } catch (e) {
+        return null;
+      }
     }
 
     async function addressToCoords(address) {
@@ -121,7 +130,9 @@
           };
         }
         return null;
-      } catch (e) { return null; }
+      } catch (e) {
+        return null;
+      }
     }
 
     async function ipGeoLookup(ip = '') {
@@ -133,7 +144,9 @@
         const res = await fetch(url);
         const data = await res.json();
         return data.status === 'success' ? data : null;
-      } catch (e) { return null; }
+      } catch (e) {
+        return null;
+      }
     }
 
     async function lookupCommand(arg) {
@@ -147,7 +160,7 @@
       const isIp = /^(\d{1,3}\.){3}\d{1,3}$/.test(arg);
 
       if (isIp) {
-        // Reverse DNS + Geo
+        // IP Lookup: Reverse DNS + Geo
         const hostnames = await reverseDnsLookup(arg);
         if (hostnames && hostnames.length > 0) {
           term.writeln(`\x1b[32m✓ Hostname(s):\x1b[0m`);
@@ -160,13 +173,13 @@
         if (geo) showGeoInfo(geo, arg);
       } 
       else {
-        // Try street address first
+        // Try as street address first
         const coords = await addressToCoords(arg);
         if (coords) {
           term.writeln(`\x1b[32m✓ Address resolved:\x1b[0m ${coords.displayName}`);
           term.writeln(`   Coordinates : ${coords.lat.toFixed(6)}, ${coords.lon.toFixed(6)}\r\n`);
 
-          term.writeln('\x1b[36mFetching nearby location & ISP data...\x1b[0m');
+          term.writeln('\x1b[36mFetching nearby ISP & location data...\x1b[0m');
           const geo = await ipGeoLookup();
           if (geo) {
             term.writeln(`\x1b[32mApproximate Location & ISP Info:\x1b[0m`);
@@ -179,7 +192,7 @@
           return;
         }
 
-        // Fallback: DNS or Node
+        // Fallback: DNS lookup or internal node
         let ips = await dnsLookup(arg);
         const node = nodes.find(n => n.name.toLowerCase() === arg.toLowerCase());
         if (node) ips = [node.ip];
@@ -265,7 +278,7 @@
       term.writeln(`\x1b[32m✓ Node removed: ${removed.name} (${removed.ip})\x1b[0m`);
     }
 
-    // ====================== Autosuggestions ======================
+    // ====================== Suggestions ======================
     function getSuggestions(partial) {
       if (!partial) return [];
       const lower = partial.toLowerCase();
@@ -285,7 +298,7 @@
       return [...new Set(suggestions)].slice(0, 10);
     }
 
-    // ====================== Commands ======================
+    // ====================== Commands Registry ======================
     const commands = {
       help: () => {
         term.writeln('\r\nAvailable Commands:');
@@ -300,6 +313,7 @@
         term.writeln('  add node <name> <ip>          Add new node');
         term.writeln('  remove node <name|ip>         Remove node');
         term.writeln('  exit                          Close terminal\r\n');
+
         term.writeln('\x1b[33mExamples:\x1b[0m');
         term.writeln('    lookup 8.8.8.8');
         term.writeln('    lookup "1600 Amphitheatre Parkway, Mountain View"');
@@ -323,24 +337,31 @@
 
       'add account': (arg) => addAccount(arg),
       'remove account': (arg) => removeAccount(arg),
+
       'add node': (arg) => {
         const parts = arg.trim().split(/\s+/);
-        addNode(parts[0], parts[1]);
+        if (parts.length >= 2) {
+          addNode(parts[0], parts[1]);
+        } else {
+          term.writeln('\x1b[31mUsage: add node <name> <ip>\x1b[0m');
+        }
       },
+
       'remove node': (arg) => removeNode(arg),
 
       lookup: (arg) => lookupCommand(arg),
       myip: () => myIpCommand(),
       clear: () => term.clear(),
+      
       exit: () => {
         term.writeln('\r\n\x1b[33mGoodbye!\x1b[0m');
         setTimeout(() => window.close(), 800);
       }
     };
 
-    // ====================== Input Handler with improved Tab & Autocorrect ======================
+    // ====================== Input Handler ======================
     term.onData((data) => {
-      if (data === '\t') {
+      if (data === '\t') { // Tab key - Autocomplete
         const trimmed = currentLine.trim();
         if (trimmed.toLowerCase().startsWith('lookup ')) {
           const partial = trimmed.slice(7).trim();
@@ -350,6 +371,8 @@
             suggestionIndex = (suggestionIndex + 1) % currentSuggestions.length;
             const suggested = currentSuggestions[suggestionIndex];
             const newLine = `lookup ${suggested}`;
+
+            // Clear current line and rewrite with suggestion
             term.write('\r' + ' '.repeat(120) + '\r');
             prompt();
             term.write(newLine);
@@ -360,13 +383,14 @@
       }
 
       if (data.length === 1 && data >= ' ') {
-        suggestionIndex = -1;
+        suggestionIndex = -1; // Reset suggestion index on new typing
       }
 
       switch (data) {
-        case '\r':
+        case '\r': // Enter key
           term.writeln('');
           const trimmed = currentLine.trim();
+
           if (trimmed) {
             commandHistory.unshift(trimmed);
             historyIndex = -1;
@@ -375,13 +399,13 @@
             const cmdKey = parts[0].toLowerCase();
             const arg = parts.slice(1).join(' ');
 
-            // Smart command matching (autocorrect-style)
             if (commands[cmdKey]) {
               commands[cmdKey](arg);
             } else {
               term.writeln(`\x1b[31mUnknown command: ${cmdKey}\x1b[0m`);
             }
           }
+
           currentLine = '';
           currentSuggestions = [];
           suggestionIndex = -1;
@@ -428,6 +452,7 @@
       }
     });
 
+    // Start the terminal
     prompt();
     setTimeout(() => term.focus(), 100);
   </script>

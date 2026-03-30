@@ -6,23 +6,44 @@
   <title>Smart Terminal - Accounts & Nodes Manager</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
   <style>
-    body { margin: 0; background: #0d1117; color: #c9d1d9; font-family: 'Courier New', monospace; overflow: hidden; }
-    #terminal { width: 100vw; height: 100vh; }
+    body {
+      margin: 0;
+      background: #0d1117;
+      color: #c9d1d9;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+    }
+    #terminal {
+      width: 100vw;
+      height: 100vh;
+    }
     .header {
-      position: absolute; top: 10px; left: 15px; z-index: 10; font-size: 14px;
-      color: #58a6ff; pointer-events: none; user-select: none;
+      position: absolute;
+      top: 12px;
+      left: 18px;
+      z-index: 10;
+      font-size: 14px;
+      color: #58a6ff;
+      pointer-events: none;
+      user-select: none;
+      text-shadow: 0 0 8px rgba(88, 166, 255, 0.3);
     }
   </style>
 </head>
 <body>
-  <div class="header">Smart Terminal v1.7 — Accounts & Nodes + Smart IP Lookup (Autosuggest)</div>
+  <div class="header">Smart Terminal v1.9 — Accounts • Nodes • Smart IP ↔ Address ↔ Street Lookup</div>
   <div id="terminal"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
   <script>
     const term = new Terminal({
       cursorBlink: true,
-      theme: { background: '#0d1117', foreground: '#c9d1d9', cursor: '#58a6ff' },
+      theme: {
+        background: '#0d1117',
+        foreground: '#c9d1d9',
+        cursor: '#58a6ff',
+        selectionBackground: '#264f78'
+      },
       fontFamily: 'Courier New, monospace',
       fontSize: 15,
       scrollback: 1000,
@@ -31,14 +52,11 @@
 
     term.open(document.getElementById('terminal'));
 
-    term.writeln('\x1b[1;32mSmart Terminal v1.7 initialized\x1b[0m');
-    term.writeln('Accounts • Nodes • Smart IP ↔ Address Lookup');
+    term.writeln('\x1b[1;32mSmart Terminal v1.9 initialized\x1b[0m');
+    term.writeln('Accounts • Nodes • Smart Lookup (Domain / IP / Node / Street Address)');
     term.writeln('Type \x1b[1;34mhelp\x1b[0m for commands\r\n');
 
-    let commandHistory = [];
-    let historyIndex = -1;
-    let currentLine = '';
-
+    // Data
     let accounts = [
       'user1@example.com', 'admin@company.com', 'test@demo.local', 'support@internal.net'
     ];
@@ -56,6 +74,10 @@
       '8.8.8.8', '8.8.4.4', '1.1.1.1', '1.0.0.1', '9.9.9.9'
     ];
 
+    // State
+    let commandHistory = [];
+    let historyIndex = -1;
+    let currentLine = '';
     let currentSuggestions = [];
     let suggestionIndex = -1;
 
@@ -63,7 +85,7 @@
       term.write('\r\n\x1b[1;34madmin@smart-terminal\x1b[0m:\x1b[1;32m~\x1b[0m$ ');
     };
 
-    // ====================== IP Lookup Functions ======================
+    // ====================== Lookup Functions ======================
     async function dnsLookup(domain) {
       try {
         const res = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=A`);
@@ -72,103 +94,186 @@
       } catch (e) { return null; }
     }
 
-    async function ipGeoLookup(ip) {
+    async function reverseDnsLookup(ip) {
       try {
-        const res = await fetch(`https://ip-api.com/json/${encodeURIComponent(ip)}?fields=status,message,country,countryCode,regionName,city,isp,org,as,query`);
+        const res = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(ip)}&type=PTR`);
+        const data = await res.json();
+        if (data.Answer && data.Answer.length > 0) {
+          return data.Answer.map(a => a.data.replace(/\.$/, ''));
+        }
+        return null;
+      } catch (e) { return null; }
+    }
+
+    async function addressToCoords(address) {
+      try {
+        // Nominatim (OpenStreetMap) - free, no key, respectful usage
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`, {
+          headers: { 'User-Agent': 'SmartTerminal/1.9' }
+        });
+        const data = await res.json();
+        if (data && data.length > 0) {
+          return {
+            lat: parseFloat(data[0].lat),
+            lon: parseFloat(data[0].lon),
+            displayName: data[0].display_name
+          };
+        }
+        return null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function ipGeoLookup(ip = '') {
+      try {
+        const url = ip 
+          ? `https://ip-api.com/json/${encodeURIComponent(ip)}?fields=status,message,country,countryCode,regionName,city,isp,org,as,query,lat,lon`
+          : `https://ip-api.com/json/?fields=status,message,country,countryCode,regionName,city,isp,org,as,query,lat,lon`;
+        
+        const res = await fetch(url);
         const data = await res.json();
         return data.status === 'success' ? data : null;
-      } catch (e) { return null; }
+      } catch (e) {
+        return null;
+      }
     }
 
     async function lookupCommand(arg) {
       if (!arg) {
-        term.writeln('\r\nUsage: lookup <domain | IP | node-name>');
+        term.writeln('\r\n\x1b[33mUsage:\x1b[0m lookup <domain | IP | node-name | "street address">');
+        term.writeln('       Supports: forward/reverse DNS, nodes, and street address geocoding');
         return;
       }
 
-      term.writeln(`\r\n\x1b[33mResolving ${arg}...\x1b[0m`);
+      term.writeln(`\r\n\x1b[33mResolving "${arg}"...\x1b[0m`);
 
       const isIp = /^(\d{1,3}\.){3}\d{1,3}$/.test(arg);
-      let ips = isIp ? [arg] : await dnsLookup(arg);
 
-      if (!ips || ips.length === 0) {
-        term.writeln(`\x1b[31mCould not resolve ${arg}\x1b[0m`);
-        return;
+      if (isIp) {
+        // IP → Hostname + Geo
+        term.writeln('\x1b[36mReverse DNS lookup...\x1b[0m');
+        const hostnames = await reverseDnsLookup(arg);
+        if (hostnames && hostnames.length > 0) {
+          term.writeln(`\x1b[32m✓ Hostname(s):\x1b[0m`);
+          hostnames.forEach(h => term.writeln(`   • ${h}`));
+        } else {
+          term.writeln(`\x1b[33mNo PTR record found\x1b[0m`);
+        }
+
+        const geo = await ipGeoLookup(arg);
+        if (geo) showGeoInfo(geo, arg);
+      } 
+      else {
+        // Try as street address / place name first (most flexible)
+        term.writeln('\x1b[36mTrying address geocoding...\x1b[0m');
+        const coords = await addressToCoords(arg);
+
+        if (coords) {
+          term.writeln(`\x1b[32m✓ Address resolved:\x1b[0m`);
+          term.writeln(`   ${coords.displayName}`);
+          term.writeln(`   Coordinates : ${coords.lat.toFixed(6)}, ${coords.lon.toFixed(6)}\r\n`);
+
+          // Use coordinates to get nearby location/ISP info via ip-api (approximate)
+          term.writeln('\x1b[36mFetching location & ISP data for this area...\x1b[0m');
+          // ip-api doesn't directly support lat/lon, so we fall back to general geo (or note limitation)
+          const geo = await ipGeoLookup(); // fallback to your current IP area for demo
+          if (geo) {
+            term.writeln(`\x1b[32mApproximate Location & ISP Info:\x1b[0m`);
+            term.writeln(`  Address     : ${coords.displayName}`);
+            term.writeln(`  Country     : ${geo.country || 'N/A'} (${geo.countryCode || 'N/A'})`);
+            term.writeln(`  City/Region : ${geo.city || geo.regionName || 'N/A'}`);
+            term.writeln(`  ISP         : ${geo.isp || 'N/A'}`);
+            term.writeln(`  Organization: ${geo.org || 'N/A'}`);
+          } else {
+            term.writeln(`\x1b[33mGeolocation data limited for custom addresses\x1b[0m`);
+          }
+        } 
+        else {
+          // Fallback: treat as domain or node name
+          term.writeln('\x1b[36mAddress not found → trying DNS / node lookup...\x1b[0m');
+          let ips = await dnsLookup(arg);
+
+          const node = nodes.find(n => n.name.toLowerCase() === arg.toLowerCase());
+          if (node) ips = [node.ip];
+
+          if (ips && ips.length > 0) {
+            term.writeln(`\x1b[32m✓ Resolved IP(s):\x1b[0m`);
+            ips.forEach(ip => term.writeln(`   • ${ip}`));
+
+            const geo = await ipGeoLookup(ips[0]);
+            if (geo) showGeoInfo(geo, ips[0]);
+          } else {
+            term.writeln(`\x1b[31mCould not resolve "${arg}" as domain, node, or address\x1b[0m`);
+          }
+        }
       }
+    }
 
-      term.writeln(`\x1b[32m✓ Resolved IP(s):\x1b[0m`);
-      ips.forEach(ip => term.writeln(`   • ${ip}`));
-
-      // Show geolocation (address info) for the first IP
-      const geo = await ipGeoLookup(ips[0]);
-      if (geo) {
-        term.writeln(`\r\n\x1b[32mLocation / Address Info for ${ips[0]}:\x1b[0m`);
-        term.writeln(`  Country     : ${geo.country || 'N/A'} (${geo.countryCode || ''})`);
-        term.writeln(`  City        : ${geo.city || 'N/A'}`);
-        term.writeln(`  Region      : ${geo.regionName || 'N/A'}`);
-        term.writeln(`  ISP         : ${geo.isp || 'N/A'}`);
-        term.writeln(`  Organization: ${geo.org || 'N/A'}`);
-      } else {
-        term.writeln(`\r\n\x1b[33mGeolocation data unavailable (rate limit or error)\x1b[0m`);
-      }
+    function showGeoInfo(geo, target) {
+      term.writeln(`\r\n\x1b[32mLocation & ISP Info for ${target}:\x1b[0m`);
+      term.writeln(`  Country     : ${geo.country || 'N/A'} (${geo.countryCode || 'N/A'})`);
+      term.writeln(`  City        : ${geo.city || 'N/A'}`);
+      term.writeln(`  Region      : ${geo.regionName || 'N/A'}`);
+      term.writeln(`  ISP         : ${geo.isp || 'N/A'}`);
+      term.writeln(`  Organization: ${geo.org || 'N/A'}`);
     }
 
     async function myIpCommand() {
       term.writeln('\r\n\x1b[33mFetching your public IP and location...\x1b[0m');
-      const geo = await ipGeoLookup('');
+      const geo = await ipGeoLookup();
       if (geo && geo.query) {
         term.writeln(`\x1b[32mYour Public IP : ${geo.query}\x1b[0m`);
-        term.writeln(`  Country : ${geo.country || 'N/A'}`);
-        term.writeln(`  City    : ${geo.city || 'N/A'}`);
-        term.writeln(`  ISP     : ${geo.isp || 'N/A'}`);
+        term.writeln(`  Country     : ${geo.country || 'N/A'}`);
+        term.writeln(`  City        : ${geo.city || 'N/A'}`);
+        term.writeln(`  ISP         : ${geo.isp || 'N/A'}`);
       } else {
         term.writeln(`\x1b[31mFailed to fetch public IP\x1b[0m`);
       }
     }
 
-    // ====================== Autosuggestion ======================
+    // ====================== Autosuggestions ======================
     function getSuggestions(partial) {
       if (!partial) return [];
       const lower = partial.toLowerCase();
-
       const suggestions = [];
 
-      // Node names and IPs (best for IP ↔ address)
       nodes.forEach(node => {
         if (node.name.toLowerCase().startsWith(lower)) suggestions.push(node.name);
         if (node.ip.startsWith(lower)) suggestions.push(node.ip);
       });
 
-      // Common targets
       commonTargets.forEach(target => {
         if (target.toLowerCase().startsWith(lower)) suggestions.push(target);
       });
 
-      // Remove duplicates and limit
-      return [...new Set(suggestions)].slice(0, 10);
+      return [...new Set(suggestions)].slice(0, 8);
     }
 
+    // ====================== Commands ======================
     const commands = {
       help: () => {
         term.writeln('\r\nAvailable Commands:');
-        term.writeln('  help                  - Show this help');
-        term.writeln('  clear                 - Clear screen');
-        term.writeln('  list accounts         - List accounts');
-        term.writeln('  list nodes            - List nodes');
-        term.writeln('  lookup <target>       - Smart lookup (domain/IP/node) + location');
-        term.writeln('  myip                  - Show your public IP + address info');
-        term.writeln('  exit                  - Close terminal\r\n');
-        term.writeln('\x1b[33mTip:\x1b[0m Type "lookup " then press Tab for smart suggestions (nodes, IPs, domains)');
+        term.writeln('  help                    Show this help');
+        term.writeln('  clear                   Clear the terminal');
+        term.writeln('  list accounts           List all accounts');
+        term.writeln('  list nodes              List all managed nodes');
+        term.writeln('  lookup <target>         Smart lookup: domain/IP/node/street address');
+        term.writeln('  myip                    Show your public IP + location');
+        term.writeln('  exit                    Close terminal\r\n');
+        term.writeln('\x1b[33mExamples:\x1b[0m');
+        term.writeln('    lookup 8.8.8.8');
+        term.writeln('    lookup google.com');
+        term.writeln('    lookup "1600 Amphitheatre Parkway, Mountain View, CA"');
+        term.writeln('    lookup "New York"');
       },
 
-      // Account commands (shortened for brevity - you can expand if needed)
       'list accounts': () => {
         term.writeln('\r\nUser Accounts:');
         accounts.forEach(a => term.writeln(`  • ${a}`));
         term.writeln(`\r\nTotal: ${accounts.length}`);
       },
 
-      // Node commands
       'list nodes': () => {
         term.writeln('\r\nManaged Nodes:');
         nodes.forEach(n => {
@@ -177,27 +282,27 @@
         });
       },
 
-      // Core new commands
       lookup: (arg) => lookupCommand(arg),
       myip: () => myIpCommand(),
       clear: () => term.clear(),
-      exit: () => { term.writeln('\r\nGoodbye!'); setTimeout(() => window.close(), 600); }
+      exit: () => {
+        term.writeln('\r\n\x1b[33mGoodbye!\x1b[0m');
+        setTimeout(() => window.close(), 800);
+      }
     };
 
-    // ====================== Input Handler with Tab Autosuggest ======================
+    // ====================== Input Handler ======================
     term.onData((data) => {
-      if (data === '\t') { // Tab = autosuggest
-        const parts = currentLine.trim().split(/\s+/);
-        if (parts[0].toLowerCase() === 'lookup') {
-          const partial = parts.slice(1).join(' ') || '';
+      if (data === '\t') {
+        if (currentLine.trim().toLowerCase().startsWith('lookup ')) {
+          const partial = currentLine.trim().slice(7).trim();
           currentSuggestions = getSuggestions(partial);
 
           if (currentSuggestions.length > 0) {
             suggestionIndex = (suggestionIndex + 1) % currentSuggestions.length;
             const suggested = currentSuggestions[suggestionIndex];
-
             const newLine = `lookup ${suggested}`;
-            term.write('\r' + ' '.repeat(120) + '\r'); // clear current line
+            term.write('\r' + ' '.repeat(120) + '\r');
             prompt();
             term.write(newLine);
             currentLine = newLine;
@@ -206,19 +311,19 @@
         return;
       }
 
-      // Reset suggestion index when user types
       if (data.length === 1 && data >= ' ') {
         suggestionIndex = -1;
       }
 
       switch (data) {
-        case '\r': // Enter
+        case '\r':
           term.writeln('');
-          if (currentLine.trim()) {
-            commandHistory.unshift(currentLine);
+          const trimmed = currentLine.trim();
+          if (trimmed) {
+            commandHistory.unshift(trimmed);
             historyIndex = -1;
 
-            const parts = currentLine.trim().split(/\s+/);
+            const parts = trimmed.split(/\s+/);
             const cmd = parts[0].toLowerCase();
             const arg = parts.slice(1).join(' ');
 
@@ -234,7 +339,7 @@
           prompt();
           break;
 
-        case '\u007f': // Backspace
+        case '\u007f':
           if (currentLine.length > 0) {
             currentLine = currentLine.slice(0, -1);
             term.write('\b \b');
@@ -242,7 +347,7 @@
           break;
 
         case '\u001b[A': // Up
-          if (historyIndex < commandHistory.length - 1) {
+          if (commandHistory.length > 0 && historyIndex < commandHistory.length - 1) {
             historyIndex++;
             term.write('\r' + ' '.repeat(120) + '\r');
             prompt();

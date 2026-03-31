@@ -6,210 +6,174 @@
     <title>Cleverbot Chat</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: #fff;
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            background: #f0f0f0;
+            display: flex;
+            flex-direction: column;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
+        #chat {
             flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        header {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 15px 20px;
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-        }
-        .chat {
-            flex: 1;
-            padding: 20px;
             overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+            padding: 15px;
+            background: white;
+            border-bottom: 1px solid #ddd;
         }
         .message {
-            max-width: 75%;
-            padding: 12px 18px;
-            border-radius: 18px;
-            line-height: 1.4;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 80%;
         }
         .user {
+            background: #007bff;
+            color: white;
             align-self: flex-end;
-            background: #4a90e2;
-            border-bottom-right-radius: 4px;
+            margin-left: auto;
         }
         .bot {
-            align-self: flex-start;
-            background: #2c3e50;
-            border-bottom-left-radius: 4px;
+            background: #e9e9e9;
+            color: black;
         }
-        .input-area {
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.3);
+        #input-area {
             display: flex;
-            gap: 10px;
+            padding: 10px;
+            background: #fff;
+            border-top: 1px solid #ddd;
         }
-        input {
+        #input {
             flex: 1;
-            padding: 14px 18px;
-            border: none;
-            border-radius: 30px;
+            padding: 12px;
             font-size: 16px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
         button {
-            padding: 0 28px;
-            background: #4a90e2;
+            margin-left: 8px;
+            padding: 12px 20px;
+            background: #007bff;
             color: white;
             border: none;
-            border-radius: 30px;
-            font-size: 16px;
+            border-radius: 4px;
             cursor: pointer;
-            transition: background 0.2s;
         }
-        button:hover {
-            background: #357abd;
-        }
-        .status {
-            text-align: center;
-            padding: 8px;
-            font-size: 14px;
-            color: #aaa;
-        }
-        .thinking {
-            font-style: italic;
-            color: #bbb;
+        button:hover { background: #0056b3; }
+        iframe {
+            display: none; /* hidden, we use it only for automation */
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>💬 Cleverbot Chat (Standalone)</header>
-        
-        <div id="chat" class="chat"></div>
-        
-        <div class="input-area">
-            <input type="text" id="userInput" placeholder="Type your message here..." autocomplete="off">
-            <button onclick="sendMessage()">Send</button>
-        </div>
-        
-        <div class="status" id="status">Ready • Works offline in your browser</div>
+
+    <div id="chat"></div>
+
+    <div id="input-area">
+        <input type="text" id="input" placeholder="Type a message to Cleverbot..." autocomplete="off">
+        <button onclick="sendMessage()">Send</button>
     </div>
 
-    <script>
-        // Pure HTML/JS Cleverbot-style chat
-        let isThinking = false;
+    <!-- Hidden iframe to load Cleverbot -->
+    <iframe id="cleverbot-frame" src="https://www.cleverbot.com" width="1" height="1"></iframe>
 
-        const chatDiv = document.getElementById('chat');
-        const inputField = document.getElementById('userInput');
+<script>
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('input');
+    const frame = document.getElementById('cleverbot-frame');
 
-        // ✅ Valid function with URL parameter (as requested)
-        function getBotResponse(userMessage, url = "https://www.cleverbot.com") {
-            if (!userMessage || typeof userMessage !== "string") {
-                return "Sorry, I didn't understand that.";
-            }
+    let isReady = false;
 
-            const msg = userMessage.toLowerCase().trim();
+    // Add message to UI
+    function addMessage(text, isUser) {
+        const div = document.createElement('div');
+        div.className = `message ${isUser ? 'user' : 'bot'}`;
+        div.textContent = text;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+    }
 
-            // Basic responses
-            if (["hello", "hi", "hey"].includes(msg)) {
-                return "Hello there! How are you today?";
-            }
-            if (msg.includes("how are you")) {
-                return "I'm doing great, thanks for asking! How about you?";
-            }
-            if (msg.includes("your name") || msg.includes("who are you")) {
-                return `I'm Cleverbot! (Running from ${url})`;
-            }
-            if (msg.includes("bye") || msg.includes("goodbye")) {
-                return "Goodbye! Come back anytime!";
-            }
-            if (msg.includes("joke")) {
-                const jokes = [
-                    "Why don't programmers prefer dark mode? Because light attracts bugs!",
-                    "Why did the scarecrow win an award? Because he was outstanding in his field!",
-                    "Parallel lines have so much in common... It's a shame they'll never meet."
-                ];
-                return jokes[Math.floor(Math.random() * jokes.length)];
-            }
-            if (msg.includes("weather")) {
-                return "I'm just a chatbot in your browser — I don't have real-time weather. But I hope it's sunny where you are!";
-            }
-
-            // Default responses
-            const responses = [
-                `Interesting point about "${userMessage}". Tell me more!`,
-                `Hmm... ${userMessage}. What made you say that?`,
-                `That's a cool thought! My take: I agree, but maybe there's more to it.`,
-                `You said "${userMessage}". Reminds me of something... but I forgot! 😂`,
-                `Wow, "${userMessage}" — you're keeping me on my toes!`,
-                `I like how you said "${userMessage}". What's your reason behind it?`
-            ];
-
-            return responses[Math.floor(Math.random() * responses.length)];
+    // Send message to Cleverbot via the iframe (simplified automation)
+    async function sendToCleverbot(message) {
+        if (!isReady) {
+            addMessage("Waiting for Cleverbot to load...", false);
+            return;
         }
 
-        function addMessage(text, sender) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}`;
-            messageDiv.textContent = text;
-            chatDiv.appendChild(messageDiv);
-            chatDiv.scrollTop = chatDiv.scrollHeight;
-        }
+        try {
+            // This is a best-effort automation. Cleverbot's site changes often.
+            const doc = frame.contentDocument || frame.contentWindow.document;
 
-        async function sendMessage() {
-            const userText = inputField.value.trim();
-            if (!userText || isThinking) return;
+            // Find the input box on Cleverbot site (selector may change)
+            const cbInput = doc.querySelector('input[type="text"]') || 
+                           doc.querySelector('#avatarform input') ||
+                           doc.querySelector('textarea');
 
-            addMessage(userText, 'user');
-            inputField.value = '';
-            isThinking = true;
+            if (cbInput) {
+                cbInput.value = message;
+                // Trigger input event
+                cbInput.dispatchEvent(new Event('input', { bubbles: true }));
 
-            const thinkingDiv = document.createElement('div');
-            thinkingDiv.className = 'message bot thinking';
-            thinkingDiv.textContent = 'Cleverbot is thinking...';
-            chatDiv.appendChild(thinkingDiv);
-            chatDiv.scrollTop = chatDiv.scrollHeight;
+                // Find and click the Say button
+                const sayButton = doc.querySelector('input[value="Say"]') || 
+                                 doc.querySelector('button') ||
+                                 Array.from(doc.querySelectorAll('input[type="submit"]')).find(b => b.value?.toLowerCase().includes('say'));
 
-            await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 700));
+                if (sayButton) {
+                    sayButton.click();
+                } else {
+                    // Fallback: press Enter
+                    const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+                    cbInput.dispatchEvent(enterEvent);
+                }
 
-            chatDiv.removeChild(thinkingDiv);
+                addMessage(message, true);
 
-            // Call with URL parameter
-            const botReply = getBotResponse(userText, "https://www.cleverbot.com");
-            addMessage(botReply, 'bot');
-
-            isThinking = false;
-        }
-
-        // Enter key support
-        inputField.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
+                // Wait a bit and try to read the latest reply
+                setTimeout(() => {
+                    try {
+                        const replies = doc.querySelectorAll('.bot, .reply, div[id*="response"]');
+                        if (replies.length > 0) {
+                            const lastReply = replies[replies.length - 1].textContent.trim();
+                            if (lastReply && lastReply.length > 2) {
+                                addMessage(lastReply, false);
+                            }
+                        }
+                    } catch(e) {}
+                }, 2500);
             }
-        });
+        } catch (err) {
+            addMessage("Error communicating with Cleverbot. Try refreshing the page.", false);
+            console.error(err);
+        }
+    }
 
-        // Welcome message
-        window.onload = function() {
-            setTimeout(() => {
-                addMessage("Hi! I'm Cleverbot. Talk to me about anything!", 'bot');
-            }, 300);
-        };
-    </script>
+    function sendMessage() {
+        const text = input.value.trim();
+        if (!text) return;
+
+        addMessage(text, true);
+        input.value = '';
+
+        sendToCleverbot(text);
+    }
+
+    // Allow pressing Enter to send
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+
+    // When the iframe loads, mark as ready
+    frame.onload = () => {
+        isReady = true;
+        addMessage("Cleverbot is ready! Type something below.", false);
+    };
+
+    // Optional: initial greeting
+    window.onload = () => {
+        addMessage("Hello! I'm connecting to Cleverbot...", false);
+    };
+</script>
+
 </body>
 </html>

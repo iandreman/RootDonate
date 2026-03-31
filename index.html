@@ -3,160 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cleverbot Chat - No CORS</title>
+    <title>Grok Chat</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             margin: 0;
             padding: 0;
-            background: #f0f0f0;
+            background: #0a0a0a;
+            color: #e0e0e0;
             display: flex;
             flex-direction: column;
             height: 100vh;
+            overflow: hidden;
+        }
+        .header {
+            background: #111;
+            padding: 14px 20px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            border-bottom: 1px solid #222;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
         #chat {
             flex: 1;
             overflow-y: auto;
-            padding: 15px;
-            background: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background: #0a0a0a;
         }
         .message {
-            margin: 12px 0;
-            padding: 12px 16px;
-            border-radius: 18px;
-            max-width: 75%;
-            line-height: 1.4;
+            padding: 14px 18px;
+            border-radius: 20px;
+            max-width: 82%;
+            line-height: 1.5;
+            word-wrap: break-word;
         }
         .user {
-            background: #007bff;
+            background: #1e88e5;
             color: white;
-            margin-left: auto;
-            border-bottom-right-radius: 4px;
+            align-self: flex-end;
+            border-bottom-right-radius: 6px;
         }
-        .bot {
-            background: #e9ecef;
-            color: black;
-            margin-right: auto;
-            border-bottom-left-radius: 4px;
+        .grok {
+            background: #1f1f1f;
+            color: #e0e0e0;
+            align-self: flex-start;
+            border-bottom-left-radius: 6px;
+        }
+        .thinking {
+            font-style: italic;
+            color: #888;
+            align-self: flex-start;
+            padding: 14px 18px;
         }
         #input-area {
+            padding: 16px 20px;
+            background: #111;
             display: flex;
-            padding: 12px;
-            background: #fff;
-            border-top: 1px solid #ddd;
+            gap: 10px;
+            border-top: 1px solid #222;
         }
         #input {
             flex: 1;
-            padding: 14px;
+            padding: 14px 20px;
             font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 25px;
+            background: #1f1f1f;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 30px;
             outline: none;
         }
         button {
-            margin-left: 10px;
-            padding: 0 24px;
-            background: #007bff;
+            padding: 0 26px;
+            background: #1e88e5;
             color: white;
             border: none;
-            border-radius: 25px;
+            border-radius: 30px;
             cursor: pointer;
             font-size: 16px;
+            font-weight: 500;
         }
-        button:hover { background: #0056b3; }
-        button:disabled { background: #888; cursor: not-allowed; }
-        .thinking {
-            font-style: italic;
-            color: #666;
-            margin-right: auto;
+        button:hover { background: #1565c0; }
+        button:disabled { background: #444; cursor: not-allowed; }
+        #clearBtn {
+            background: #444;
         }
+        #clearBtn:hover { background: #555; }
         .note {
-            font-size: 12px;
-            color: #666;
+            font-size: 13px;
+            color: #999;
             text-align: center;
-            padding: 8px;
-            background: #fff3cd;
+            padding: 10px;
+            background: #111;
+            border-bottom: 1px solid #222;
+        }
+        .key-input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            background: #1f1f1f;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 8px;
+            font-family: monospace;
         }
     </style>
 </head>
 <body>
 
+    <div class="header">💬 Grok Chat (xAI API)</div>
+
     <div class="note">
-        Using a public CORS proxy to talk to Cleverbot (free method). It may be slow or stop working if the proxy is overloaded.
+        Get your free/paid API key at <strong>https://console.x.ai</strong><br>
+        Paste your key below (it starts with <code>xai-</code>).
     </div>
 
     <div id="chat"></div>
 
     <div id="input-area">
-        <input type="text" id="input" placeholder="Type a message to Cleverbot..." autocomplete="off">
+        <input type="text" id="input" placeholder="Ask Grok anything..." autocomplete="off">
         <button id="sendBtn">Send</button>
+        <button id="clearBtn">Clear</button>
     </div>
 
 <script>
     const chat = document.getElementById('chat');
     const input = document.getElementById('input');
     const sendBtn = document.getElementById('sendBtn');
+    const clearBtn = document.getElementById('clearBtn');
 
-    // Public CORS proxy (you can change to another if this one is down)
-    const CORS_PROXY = "https://cleverbot.com/cleverbotif";
+    // ================== CONFIGURATION ==================
+    let API_KEY = ''; // Will be set by user
+    const MODEL = "grok-4.20-reasoning";   // Current strong model (March 2026)
+
+    const USE_PROXY = true;
+    const CORS_PROXY = "https://corsproxy.io/?";
+
+    const API_URL = "https://api.x.ai/v1/chat/completions";
+
+    // Conversation history
+    let messages = [
+        { role: "system", content: "You are Grok, a helpful and maximally truthful AI built by xAI. Be witty, honest, and useful." }
+    ];
+
+    // Add a key input field at the top
+    function addKeyInput() {
+        const note = document.querySelector('.note');
+        const keyDiv = document.createElement('div');
+        keyDiv.style.padding = '10px';
+        keyDiv.style.textAlign = 'center';
+        keyDiv.innerHTML = `
+            <input type="password" id="apiKeyInput" class="key-input" 
+                   placeholder="Paste your xAI API key here (xai-...)" 
+                   value="${API_KEY}">
+            <button id="saveKeyBtn" style="margin-top: 6px; padding: 8px 16px;">Save Key</button>
+        `;
+        note.appendChild(keyDiv);
+
+        const keyInput = document.getElementById('apiKeyInput');
+        const saveBtn = document.getElementById('saveKeyBtn');
+
+        saveBtn.addEventListener('click', () => {
+            API_KEY = keyInput.value.trim();
+            if (API_KEY) {
+                alert('API key saved! You can now chat.');
+            } else {
+                alert('Please enter a valid API key.');
+            }
+        });
+
+        // Allow pressing Enter to save
+        keyInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') saveBtn.click();
+        });
+    }
 
     function addMessage(text, isUser) {
         const div = document.createElement('div');
-        div.className = `message ${isUser ? 'user' : 'bot'}`;
+        div.className = `message ${isUser ? 'user' : 'grok'}`;
         div.textContent = text;
         chat.appendChild(div);
         chat.scrollTop = chat.scrollHeight;
     }
 
-    async function sendToCleverbot(message) {
+    async function sendToGrok(userMessage) {
+        if (!API_KEY) {
+            addMessage("❌ Please enter your xAI API key first.", false);
+            return;
+        }
+
         sendBtn.disabled = true;
-        addMessage(message, true);
+        input.disabled = true;
+        addMessage(userMessage, true);
+
+        messages.push({ role: "user", content: userMessage });
 
         const thinking = document.createElement('div');
-        thinking.className = 'message bot thinking';
-        thinking.textContent = 'Cleverbot is thinking...';
+        thinking.className = 'message thinking';
+        thinking.textContent = 'Grok is thinking...';
         chat.appendChild(thinking);
         chat.scrollTop = chat.scrollHeight;
 
         try {
-            // Build the form data like the old Python script
-            const formData = new URLSearchParams({
-                'stimulus': message,
-                'cb_settings_language': 'en',
-                'cb_settings_scripting': 'no',
-                'islearning': '1',
-                'icognoid': 'wsf',
-                'icognocheck': ''   // many proxies handle the session lightly
-            });
+            const payload = {
+                model: MODEL,
+                messages: messages,
+                temperature: 0.75,
+                max_tokens: 1200
+            };
 
-            const response = await fetch(CORS_PROXY + encodeURIComponent('https://www.cleverbot.com/webservicemin'), {
+            let url = API_URL;
+            if (USE_PROXY) {
+                url = CORS_PROXY + encodeURIComponent(API_URL);
+            }
+
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
                 },
-                body: formData
+                body: JSON.stringify(payload)
             });
 
-            if (!response.ok) throw new Error('Request failed');
+            if (!response.ok) {
+                const errorText = await response.text().catch(() => '');
+                throw new Error(`HTTP ${response.status} - ${response.statusText}\n${errorText}`);
+            }
 
-            const text = await response.text();
-
-            // Parse the reply (first part before \r or |)
-            let reply = text.split('\r')[0] || text.split('|')[0] || "I didn't catch that. Can you say it again?";
-
-            reply = reply.trim().replace(/^Cleverbot:\s*/i, '');
+            const data = await response.json();
+            const grokReply = data.choices?.[0]?.message?.content || 
+                             "Sorry, I couldn't generate a response right now.";
 
             thinking.remove();
-            addMessage(reply || "Hmm, interesting point.", false);
+            addMessage(grokReply, false);
+
+            messages.push({ role: "assistant", content: grokReply });
 
         } catch (err) {
             console.error(err);
             thinking.remove();
-            addMessage("Sorry, couldn't reach Cleverbot right now. The proxy might be busy or blocked. Try again later.", false);
+            addMessage(`❌ Error: Could not reach Grok.\n\n${err.message}\n\nMake sure your API key is correct and has credits.`, false);
         }
 
         sendBtn.disabled = false;
+        input.disabled = false;
         input.focus();
     }
 
@@ -165,17 +262,27 @@
         if (!text || sendBtn.disabled) return;
 
         input.value = '';
-        sendToCleverbot(text);
+        sendToGrok(text);
     }
 
+    // Event listeners
     sendBtn.addEventListener('click', sendMessage);
     input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
     });
 
-    // Welcome
+    clearBtn.addEventListener('click', () => {
+        if (confirm('Clear the entire conversation?')) {
+            chat.innerHTML = '';
+            messages = [{ role: "system", content: "You are Grok, a helpful and maximally truthful AI built by xAI. Be witty, honest, and useful." }];
+            addMessage("Chat cleared. How can I help you today?", false);
+        }
+    });
+
+    // Welcome message + key input
     window.onload = () => {
-        addMessage("Connected via CORS proxy! Type something to start chatting with Cleverbot.", false);
+        addMessage("👋 Hello! I'm Grok, built by xAI. Paste your API key above to start chatting.", false);
+        addKeyInput();
         input.focus();
     };
 </script>

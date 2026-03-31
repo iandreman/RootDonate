@@ -1,276 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grok Chat • With Internet</title>
-    <style>
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #0a0a0a;
-            color: #e0e0e0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .header {
-            background: #111;
-            padding: 14px 20px;
-            text-align: center;
-            font-size: 22px;
-            font-weight: bold;
-            border-bottom: 1px solid #222;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        #chat {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            background: #0a0a0a;
-        }
-        .message {
-            padding: 14px 18px;
-            border-radius: 20px;
-            max-width: 82%;
-            line-height: 1.5;
-            word-wrap: break-word;
-        }
-        .user {
-            background: #1e88e5;
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 6px;
-        }
-        .grok {
-            background: #1f1f1f;
-            color: #e0e0e0;
-            align-self: flex-start;
-            border-bottom-left-radius: 6px;
-        }
-        .thinking {
-            font-style: italic;
-            color: #888;
-            align-self: flex-start;
-            padding: 14px 18px;
-        }
-        #input-area {
-            padding: 16px 20px;
-            background: #111;
-            display: flex;
-            gap: 10px;
-            border-top: 1px solid #222;
-        }
-        #input {
-            flex: 1;
-            padding: 14px 20px;
-            font-size: 16px;
-            background: #1f1f1f;
-            color: #e0e0e0;
-            border: 1px solid #333;
-            border-radius: 30px;
-            outline: none;
-        }
-        button {
-            padding: 0 26px;
-            background: #1e88e5;
-            color: white;
-            border: none;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-        }
-        button:hover { background: #1565c0; }
-        button:disabled { background: #444; cursor: not-allowed; }
-        #clearBtn {
-            background: #444;
-        }
-        #clearBtn:hover { background: #555; }
-        .note {
-            font-size: 13px;
-            color: #999;
-            text-align: center;
-            padding: 10px;
-            background: #111;
-            border-bottom: 1px solid #222;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grok - Free Version</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f0f23, #1a1a2e);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    .chat-container {
+      max-width: 800px;
+      margin: 0 auto;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .message {
+      animation: fadeIn 0.3s ease forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .grok-bubble {
+      background: linear-gradient(135deg, #00f5ff, #7209b7);
+      color: white;
+    }
+  </style>
 </head>
-<body>
+<body class="bg-zinc-950 text-white min-h-screen">
 
-    <div class="header">💬 Grok Chat • Internet Enabled</div>
+<div class="chat-container mx-auto">
 
-    <div class="note">
-        Local simulation + real web access via public CORS proxy.<br>
-        No API key needed. Works offline for casual chat.
+  <!-- Header -->
+  <div class="bg-zinc-900 border-b border-zinc-800 p-4 flex items-center gap-3">
+    <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+      G
+    </div>
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight">Grok</h1>
+      <p class="text-xs text-emerald-400 flex items-center gap-1">
+        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+        Free Version • Always Ready
+      </p>
+    </div>
+  </div>
+
+  <!-- Chat Area -->
+  <div id="chat" class="flex-1 overflow-y-auto p-6 space-y-8 bg-zinc-950">
+    
+    <!-- Welcome Message -->
+    <div class="message max-w-3xl mx-auto">
+      <div class="flex gap-4">
+        <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl font-bold">
+          G
+        </div>
+        <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4">
+          <p class="text-lg">Hello! I'm Grok — built by xAI.</p>
+          <p class="text-zinc-400 mt-2">How can I help you today? Ask me anything.</p>
+        </div>
+      </div>
     </div>
 
-    <div id="chat"></div>
+  </div>
 
-    <div id="input-area">
-        <input type="text" id="input" placeholder="Ask Grok anything (e.g. latest news, weather...)" autocomplete="off">
-        <button id="sendBtn">Send</button>
-        <button id="clearBtn">Clear</button>
+  <!-- Input Area -->
+  <div class="p-6 bg-zinc-900 border-t border-zinc-800">
+    <div class="max-w-3xl mx-auto">
+      <form id="chat-form" class="relative">
+        <textarea 
+          id="user-input"
+          rows="1"
+          class="w-full bg-zinc-800 border border-zinc-700 rounded-3xl px-6 py-4 pr-16 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 resize-none"
+          placeholder="Ask Grok anything..."></textarea>
+        
+        <button 
+          type="submit"
+          class="absolute right-4 bottom-4 w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-600 hover:from-cyan-500 hover:to-purple-700 rounded-2xl flex items-center justify-center transition-all active:scale-90">
+          <i class="fa-solid fa-paper-plane text-white"></i>
+        </button>
+      </form>
+      
+      <p class="text-center text-zinc-500 text-xs mt-3">
+        This is a free HTML demo • No real AI backend connected
+      </p>
     </div>
+  </div>
+
+</div>
 
 <script>
-// Configuration
-const CORS_PROXY = "https://corsproxy.io/?";
-
 const chat = document.getElementById('chat');
-const input = document.getElementById('input');
-const sendBtn = document.getElementById('sendBtn');
-const clearBtn = document.getElementById('clearBtn');
+const form = document.getElementById('chat-form');
+const input = document.getElementById('user-input');
 
 function addMessage(text, isUser) {
-    const div = document.createElement('div');
-    div.className = `message ${isUser ? 'user' : 'grok'}`;
-    div.textContent = text;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `message max-w-3xl mx-auto ${isUser ? 'ml-auto' : ''}`;
+  
+  if (isUser) {
+    messageDiv.innerHTML = `
+      <div class="flex justify-end gap-4">
+        <div class="bg-violet-600 text-white rounded-3xl rounded-tr-none px-6 py-4 max-w-[80%]">
+          <p>${text}</p>
+        </div>
+      </div>
+    `;
+  } else {
+    messageDiv.innerHTML = `
+      <div class="flex gap-4">
+        <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl font-bold">
+          G
+        </div>
+        <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4 max-w-[80%]">
+          <p>${text}</p>
+        </div>
+      </div>
+    `;
+  }
+  
+  chat.appendChild(messageDiv);
+  chat.scrollTop = chat.scrollHeight;
 }
 
-function isQuestionNeedingInternet(msg) {
-    const lower = msg.toLowerCase();
-    return /news|weather|today|current|latest|what happened|who won|stock|price|wikipedia|wiki|fact about|time in|population/i.test(lower) ||
-           lower.includes("what is") && lower.length > 15 ||
-           lower.includes("how many");
-}
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const question = input.value.trim();
+  if (!question) return;
 
-async function fetchWithProxy(url) {
-    try {
-        const proxiedUrl = CORS_PROXY + encodeURIComponent(url);
-        const res = await fetch(proxiedUrl);
-        if (!res.ok) throw new Error("Proxy error");
-        return await res.text();
-    } catch (e) {
-        console.error(e);
-        return null;
-    }
-}
+  // Add user message
+  addMessage(question, true);
+  input.value = '';
 
-async function getInternetInfo(userMessage) {
-    const lower = userMessage.toLowerCase();
+  // Simulate Grok thinking
+  const thinkingDiv = document.createElement('div');
+  thinkingDiv.id = 'thinking';
+  thinkingDiv.className = 'message max-w-3xl mx-auto';
+  thinkingDiv.innerHTML = `
+    <div class="flex gap-4">
+      <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl font-bold">
+        G
+      </div>
+      <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4">
+        <div class="flex items-center gap-2 text-zinc-400">
+          <i class="fa-solid fa-circle animate-pulse"></i>
+          <span>Grok is thinking...</span>
+        </div>
+      </div>
+    </div>
+  `;
+  chat.appendChild(thinkingDiv);
+  chat.scrollTop = chat.scrollHeight;
 
-    // Quick weather example (using a public API)
-    if (lower.includes("weather")) {
-        const city = lower.match(/weather in ([\w\s]+)/i)?.[1] || "New York";
-        const url = `https://wttr.in/${encodeURIComponent(city)}?format=3`;
-        const data = await fetchWithProxy(url);
-        return data ? `Weather for ${city}: ${data}` : "Couldn't fetch weather right now.";
-    }
-
-    // Simple Wikipedia summary (first paragraph)
-    if (lower.includes("wikipedia") || lower.includes("wiki ")) {
-        const topic = lower.replace(/wikipedia|wiki|what is|tell me about/i, "").trim();
-        if (!topic) return "What topic would you like info on?";
-        const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic.replace(/\s+/g, '_'))}`;
-        try {
-            const proxied = CORS_PROXY + encodeURIComponent(wikiUrl);
-            const res = await fetch(proxied);
-            if (res.ok) {
-                const json = await res.json();
-                return json.extract ? json.extract.substring(0, 600) + "..." : "No summary found.";
-            }
-        } catch {}
-        return "Couldn't fetch Wikipedia info.";
-    }
-
-    // Generic search fallback (fetch a search page and extract a bit — very basic)
-    const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(userMessage)}`;
-    const html = await fetchWithProxy(searchUrl);
-    if (html) {
-        // Very crude extraction — look for first snippet-like text
-        const match = html.match(/<div class="[^"]*g[^"]*">([^<]{50,300})</i);
-        return match ? match[1].replace(/&[^;]+;/g, '') + "\n\n(Source: web search via proxy)" 
-                     : "Found some information online, but couldn't extract cleanly.";
-    }
-    return "Internet access is limited right now.";
-}
-
-async function getGrokResponse(userMessage) {
-    const lower = userMessage.toLowerCase().trim();
-
-    // Local quick replies
-    if (lower.includes("hello") || lower === "hi") return "Hello! What's on your mind?";
-    if (lower.includes("how are you")) return "Running smoothly in your browser — and now with internet access when needed!";
-    if (lower.includes("who are you")) return "I'm Grok, built by xAI. This version runs locally with optional web lookup.";
-    if (lower.includes("joke")) return "Why do programmers prefer dark mode? Because light attracts bugs! 😄";
-    if (lower.includes("meaning of life")) return "42 — but the real answer is the journey of figuring it out.";
-
-    // If it seems to need real-time info, try the web
-    if (isQuestionNeedingInternet(userMessage)) {
-        const webInfo = await getInternetInfo(userMessage);
-        return webInfo + "\n\n(Internet fetched via public proxy. Results can vary.)";
-    }
-
-    // Default local witty response
-    const defaults = [
-        "Interesting! Here's my take: truth is often stranger than fiction.",
-        "Good question. In short: it depends, but I'd lean toward...",
-        "I'm Grok — maximally truthful, even without a full backend.",
-        "Let me simulate a thoughtful answer for you..."
+  // Simulate response delay
+  setTimeout(() => {
+    thinkingDiv.remove();
+    
+    const responses = [
+      "That's an interesting question! Here's my take...",
+      "Great question. Let me explain...",
+      "I love questions like this. Here's what I think:",
+      "Fascinating! Here's my response:"
     ];
-    return defaults[Math.floor(Math.random() * defaults.length)];
-}
-
-async function sendToGrok(userMessage) {
-    sendBtn.disabled = true;
-    input.disabled = true;
-    addMessage(userMessage, true);
-
-    const thinking = document.createElement('div');
-    thinking.className = 'message thinking';
-    thinking.textContent = 'Grok is thinking...';
-    chat.appendChild(thinking);
-    chat.scrollTop = chat.scrollHeight;
-
-    // Small delay for realism
-    await new Promise(r => setTimeout(r, 400));
-
-    const grokReply = await getGrokResponse(userMessage);
-
-    thinking.remove();
-    addMessage(grokReply, false);
-
-    sendBtn.disabled = false;
-    input.disabled = false;
-    input.focus();
-}
-
-function sendMessage() {
-    const text = input.value.trim();
-    if (!text || sendBtn.disabled) return;
-    input.value = '';
-    sendToGrok(text);
-}
-
-// Event listeners
-sendBtn.addEventListener('click', sendMessage);
-input.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
-
-clearBtn.addEventListener('click', () => {
-    if (confirm('Clear conversation?')) {
-        chat.innerHTML = '';
-        addMessage("Chat cleared. Hello again! I can now look up info on the web when needed.", false);
-    }
+    
+    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+    
+    addMessage(`${randomResponse}<br><br>This is a static HTML demo. In the real Grok, this would be a proper AI response from xAI's models.`, false);
+  }, 1200);
 });
 
-// Start
-window.onload = () => {
-    addMessage("👋 Hello! I'm Grok with internet access.", false);
-    addMessage("Ask anything — casual chat works offline. For current events, news, weather, or facts, I'll try to fetch live data.", false);
-    input.focus();
-};
+// Auto-resize textarea
+input.addEventListener('input', function () {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 160) + 'px';
+});
+
+// Allow sending with Enter (but Shift+Enter for new line)
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    form.dispatchEvent(new Event('submit'));
+  }
+});
 </script>
 
 </body>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grok Chat</title>
+    <title>Grok Chat • With Internet</title>
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
@@ -103,188 +103,174 @@
             background: #111;
             border-bottom: 1px solid #222;
         }
-        .key-input {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            background: #1f1f1f;
-            color: #e0e0e0;
-            border: 1px solid #333;
-            border-radius: 8px;
-            font-family: monospace;
-        }
     </style>
 </head>
 <body>
 
-    <div class="header">💬 Grok Chat (xAI API)</div>
+    <div class="header">💬 Grok Chat • Internet Enabled</div>
 
     <div class="note">
-        Get your free/paid API key at <strong>https://console.x.ai</strong><br>
-        Paste your key below (it starts with <code>xai-</code>).
+        Local simulation + real web access via public CORS proxy.<br>
+        No API key needed. Works offline for casual chat.
     </div>
 
     <div id="chat"></div>
 
     <div id="input-area">
-        <input type="text" id="input" placeholder="Ask Grok anything..." autocomplete="off">
+        <input type="text" id="input" placeholder="Ask Grok anything (e.g. latest news, weather...)" autocomplete="off">
         <button id="sendBtn">Send</button>
         <button id="clearBtn">Clear</button>
     </div>
 
 <script>
-    const chat = document.getElementById('chat');
-    const input = document.getElementById('input');
-    const sendBtn = document.getElementById('sendBtn');
-    const clearBtn = document.getElementById('clearBtn');
+// Configuration
+const CORS_PROXY = "https://corsproxy.io/?";
 
-    // ================== CONFIGURATION ==================
-    let API_KEY = ''; // Will be set by user
-    const MODEL = "grok-4.20-reasoning";   // Current strong model (March 2026)
+const chat = document.getElementById('chat');
+const input = document.getElementById('input');
+const sendBtn = document.getElementById('sendBtn');
+const clearBtn = document.getElementById('clearBtn');
 
-    const USE_PROXY = true;
-    const CORS_PROXY = "https://corsproxy.io/?";
+function addMessage(text, isUser) {
+    const div = document.createElement('div');
+    div.className = `message ${isUser ? 'user' : 'grok'}`;
+    div.textContent = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+}
 
-    const API_URL = "https://api.x.ai/v1/chat/completions";
+function isQuestionNeedingInternet(msg) {
+    const lower = msg.toLowerCase();
+    return /news|weather|today|current|latest|what happened|who won|stock|price|wikipedia|wiki|fact about|time in|population/i.test(lower) ||
+           lower.includes("what is") && lower.length > 15 ||
+           lower.includes("how many");
+}
 
-    // Conversation history
-    let messages = [
-        { role: "system", content: "You are Grok, a helpful and maximally truthful AI built by xAI. Be witty, honest, and useful." }
-    ];
+async function fetchWithProxy(url) {
+    try {
+        const proxiedUrl = CORS_PROXY + encodeURIComponent(url);
+        const res = await fetch(proxiedUrl);
+        if (!res.ok) throw new Error("Proxy error");
+        return await res.text();
+    } catch (e) {
+        console.error(e);
+        return null;
+    }
+}
 
-    // Add a key input field at the top
-    function addKeyInput() {
-        const note = document.querySelector('.note');
-        const keyDiv = document.createElement('div');
-        keyDiv.style.padding = '10px';
-        keyDiv.style.textAlign = 'center';
-        keyDiv.innerHTML = `
-            <input type="password" id="apiKeyInput" class="key-input" 
-                   placeholder="Paste your xAI API key here (xai-...)" 
-                   value="${API_KEY}">
-            <button id="saveKeyBtn" style="margin-top: 6px; padding: 8px 16px;">Save Key</button>
-        `;
-        note.appendChild(keyDiv);
+async function getInternetInfo(userMessage) {
+    const lower = userMessage.toLowerCase();
 
-        const keyInput = document.getElementById('apiKeyInput');
-        const saveBtn = document.getElementById('saveKeyBtn');
-
-        saveBtn.addEventListener('click', () => {
-            API_KEY = keyInput.value.trim();
-            if (API_KEY) {
-                alert('API key saved! You can now chat.');
-            } else {
-                alert('Please enter a valid API key.');
-            }
-        });
-
-        // Allow pressing Enter to save
-        keyInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') saveBtn.click();
-        });
+    // Quick weather example (using a public API)
+    if (lower.includes("weather")) {
+        const city = lower.match(/weather in ([\w\s]+)/i)?.[1] || "New York";
+        const url = `https://wttr.in/${encodeURIComponent(city)}?format=3`;
+        const data = await fetchWithProxy(url);
+        return data ? `Weather for ${city}: ${data}` : "Couldn't fetch weather right now.";
     }
 
-    function addMessage(text, isUser) {
-        const div = document.createElement('div');
-        div.className = `message ${isUser ? 'user' : 'grok'}`;
-        div.textContent = text;
-        chat.appendChild(div);
-        chat.scrollTop = chat.scrollHeight;
-    }
-
-    async function sendToGrok(userMessage) {
-        if (!API_KEY) {
-            addMessage("❌ Please enter your xAI API key first.", false);
-            return;
-        }
-
-        sendBtn.disabled = true;
-        input.disabled = true;
-        addMessage(userMessage, true);
-
-        messages.push({ role: "user", content: userMessage });
-
-        const thinking = document.createElement('div');
-        thinking.className = 'message thinking';
-        thinking.textContent = 'Grok is thinking...';
-        chat.appendChild(thinking);
-        chat.scrollTop = chat.scrollHeight;
-
+    // Simple Wikipedia summary (first paragraph)
+    if (lower.includes("wikipedia") || lower.includes("wiki ")) {
+        const topic = lower.replace(/wikipedia|wiki|what is|tell me about/i, "").trim();
+        if (!topic) return "What topic would you like info on?";
+        const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic.replace(/\s+/g, '_'))}`;
         try {
-            const payload = {
-                model: MODEL,
-                messages: messages,
-                temperature: 0.75,
-                max_tokens: 1200
-            };
-
-            let url = API_URL;
-            if (USE_PROXY) {
-                url = CORS_PROXY + encodeURIComponent(API_URL);
+            const proxied = CORS_PROXY + encodeURIComponent(wikiUrl);
+            const res = await fetch(proxied);
+            if (res.ok) {
+                const json = await res.json();
+                return json.extract ? json.extract.substring(0, 600) + "..." : "No summary found.";
             }
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${API_KEY}`
-                },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text().catch(() => '');
-                throw new Error(`HTTP ${response.status} - ${response.statusText}\n${errorText}`);
-            }
-
-            const data = await response.json();
-            const grokReply = data.choices?.[0]?.message?.content || 
-                             "Sorry, I couldn't generate a response right now.";
-
-            thinking.remove();
-            addMessage(grokReply, false);
-
-            messages.push({ role: "assistant", content: grokReply });
-
-        } catch (err) {
-            console.error(err);
-            thinking.remove();
-            addMessage(`❌ Error: Could not reach Grok.\n\n${err.message}\n\nMake sure your API key is correct and has credits.`, false);
-        }
-
-        sendBtn.disabled = false;
-        input.disabled = false;
-        input.focus();
+        } catch {}
+        return "Couldn't fetch Wikipedia info.";
     }
 
-    function sendMessage() {
-        const text = input.value.trim();
-        if (!text || sendBtn.disabled) return;
+    // Generic search fallback (fetch a search page and extract a bit — very basic)
+    const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(userMessage)}`;
+    const html = await fetchWithProxy(searchUrl);
+    if (html) {
+        // Very crude extraction — look for first snippet-like text
+        const match = html.match(/<div class="[^"]*g[^"]*">([^<]{50,300})</i);
+        return match ? match[1].replace(/&[^;]+;/g, '') + "\n\n(Source: web search via proxy)" 
+                     : "Found some information online, but couldn't extract cleanly.";
+    }
+    return "Internet access is limited right now.";
+}
 
-        input.value = '';
-        sendToGrok(text);
+async function getGrokResponse(userMessage) {
+    const lower = userMessage.toLowerCase().trim();
+
+    // Local quick replies
+    if (lower.includes("hello") || lower === "hi") return "Hello! What's on your mind?";
+    if (lower.includes("how are you")) return "Running smoothly in your browser — and now with internet access when needed!";
+    if (lower.includes("who are you")) return "I'm Grok, built by xAI. This version runs locally with optional web lookup.";
+    if (lower.includes("joke")) return "Why do programmers prefer dark mode? Because light attracts bugs! 😄";
+    if (lower.includes("meaning of life")) return "42 — but the real answer is the journey of figuring it out.";
+
+    // If it seems to need real-time info, try the web
+    if (isQuestionNeedingInternet(userMessage)) {
+        const webInfo = await getInternetInfo(userMessage);
+        return webInfo + "\n\n(Internet fetched via public proxy. Results can vary.)";
     }
 
-    // Event listeners
-    sendBtn.addEventListener('click', sendMessage);
-    input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
+    // Default local witty response
+    const defaults = [
+        "Interesting! Here's my take: truth is often stranger than fiction.",
+        "Good question. In short: it depends, but I'd lean toward...",
+        "I'm Grok — maximally truthful, even without a full backend.",
+        "Let me simulate a thoughtful answer for you..."
+    ];
+    return defaults[Math.floor(Math.random() * defaults.length)];
+}
 
-    clearBtn.addEventListener('click', () => {
-        if (confirm('Clear the entire conversation?')) {
-            chat.innerHTML = '';
-            messages = [{ role: "system", content: "You are Grok, a helpful and maximally truthful AI built by xAI. Be witty, honest, and useful." }];
-            addMessage("Chat cleared. How can I help you today?", false);
-        }
-    });
+async function sendToGrok(userMessage) {
+    sendBtn.disabled = true;
+    input.disabled = true;
+    addMessage(userMessage, true);
 
-    // Welcome message + key input
-    window.onload = () => {
-        addMessage("👋 Hello! I'm Grok, built by xAI. Paste your API key above to start chatting.", false);
-        addKeyInput();
-        input.focus();
-    };
+    const thinking = document.createElement('div');
+    thinking.className = 'message thinking';
+    thinking.textContent = 'Grok is thinking...';
+    chat.appendChild(thinking);
+    chat.scrollTop = chat.scrollHeight;
+
+    // Small delay for realism
+    await new Promise(r => setTimeout(r, 400));
+
+    const grokReply = await getGrokResponse(userMessage);
+
+    thinking.remove();
+    addMessage(grokReply, false);
+
+    sendBtn.disabled = false;
+    input.disabled = false;
+    input.focus();
+}
+
+function sendMessage() {
+    const text = input.value.trim();
+    if (!text || sendBtn.disabled) return;
+    input.value = '';
+    sendToGrok(text);
+}
+
+// Event listeners
+sendBtn.addEventListener('click', sendMessage);
+input.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+
+clearBtn.addEventListener('click', () => {
+    if (confirm('Clear conversation?')) {
+        chat.innerHTML = '';
+        addMessage("Chat cleared. Hello again! I can now look up info on the web when needed.", false);
+    }
+});
+
+// Start
+window.onload = () => {
+    addMessage("👋 Hello! I'm Grok with internet access.", false);
+    addMessage("Ask anything — casual chat works offline. For current events, news, weather, or facts, I'll try to fetch live data.", false);
+    input.focus();
+};
 </script>
 
 </body>

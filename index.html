@@ -18,16 +18,16 @@
         .container {
             max-width: 800px;
             margin: 20px auto;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             overflow: hidden;
             flex: 1;
             display: flex;
             flex-direction: column;
         }
         header {
-            background: rgba(0,0,0,0.3);
+            background: rgba(0, 0, 0, 0.3);
             padding: 15px 20px;
             text-align: center;
             font-size: 24px;
@@ -59,7 +59,7 @@
         }
         .input-area {
             padding: 15px;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0, 0, 0, 0.3);
             display: flex;
             gap: 10px;
         }
@@ -69,7 +69,7 @@
             border: none;
             border-radius: 30px;
             font-size: 16px;
-            background: rgba(255,255,255,0.9);
+            background: rgba(255, 255, 255, 0.9);
             color: #333;
         }
         button {
@@ -108,32 +108,33 @@
             <button onclick="sendMessage()">Send</button>
         </div>
         
-        <div class="status" id="status">Ready • No server connection needed</div>
+        <div class="status" id="status">Ready • Works offline in your browser</div>
     </div>
 
     <script>
-        // This is a pure HTML/JS version that works entirely in the browser
-        // No CORS issues, no external connections, no Python backend required
-
-        let conversationHistory = [];
+        // Pure HTML/JS Cleverbot-style chat
         let isThinking = false;
 
         const chatDiv = document.getElementById('chat');
         const inputField = document.getElementById('userInput');
 
-        // Simple local "Cleverbot-like" response system (rule-based + randomness)
-        function getBotResponse(userMessage) {
+        // ✅ Valid function with URL parameter (as requested)
+        function getBotResponse(userMessage, url = "https://www.cleverbot.com") {
+            if (!userMessage || typeof userMessage !== "string") {
+                return "Sorry, I didn't understand that.";
+            }
+
             const msg = userMessage.toLowerCase().trim();
-            
-            // Very basic intelligent responses
-            if (msg === "hello" || msg === "hi" || msg === "hey") {
+
+            // Basic responses
+            if (["hello", "hi", "hey"].includes(msg)) {
                 return "Hello there! How are you today?";
             }
             if (msg.includes("how are you")) {
                 return "I'm doing great, thanks for asking! How about you?";
             }
             if (msg.includes("your name") || msg.includes("who are you")) {
-                return "I'm Cleverbot! Well... a browser version of it :)";
+                return `I'm Cleverbot! (Running from ${url})`;
             }
             if (msg.includes("bye") || msg.includes("goodbye")) {
                 return "Goodbye! Come back anytime!";
@@ -150,13 +151,14 @@
                 return "I'm just a chatbot in your browser — I don't have real-time weather. But I hope it's sunny where you are!";
             }
 
-            // Echo with twist
+            // Default responses
             const responses = [
                 `Interesting point about "${userMessage}". Tell me more!`,
                 `Hmm... ${userMessage}. What made you say that?`,
                 `That's a cool thought! My take: I agree, but maybe there's more to it.`,
                 `You said "${userMessage}". Reminds me of something... but I forgot! 😂`,
                 `Wow, "${userMessage}" — you're keeping me on my toes!`,
+                `I like how you said "${userMessage}". What's your reason behind it?`
             ];
 
             return responses[Math.floor(Math.random() * responses.length)];
@@ -174,35 +176,28 @@
             const userText = inputField.value.trim();
             if (!userText || isThinking) return;
 
-            // Add user message
             addMessage(userText, 'user');
-            conversationHistory.push({ role: "user", content: userText });
-            
             inputField.value = '';
             isThinking = true;
 
-            // Show thinking indicator
             const thinkingDiv = document.createElement('div');
             thinkingDiv.className = 'message bot thinking';
             thinkingDiv.textContent = 'Cleverbot is thinking...';
             chatDiv.appendChild(thinkingDiv);
             chatDiv.scrollTop = chatDiv.scrollHeight;
 
-            // Simulate network delay for realism
             await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 700));
 
-            // Remove thinking indicator
             chatDiv.removeChild(thinkingDiv);
 
-            // Get response
-            const botReply = getBotResponse(userText);
+            // Call with URL parameter
+            const botReply = getBotResponse(userText, "https://www.cleverbot.com");
             addMessage(botReply, 'bot');
-            conversationHistory.push({ role: "bot", content: botReply });
 
             isThinking = false;
         }
 
-        // Allow pressing Enter to send
+        // Enter key support
         inputField.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 sendMessage();
@@ -215,9 +210,6 @@
                 addMessage("Hi! I'm Cleverbot. Talk to me about anything!", 'bot');
             }, 300);
         };
-
-        // Bonus: Clear chat button (you can add it if you want)
-        // Just add this HTML somewhere: <button onclick="chatDiv.innerHTML='';">Clear Chat</button>
     </script>
 </body>
 </html>

@@ -122,7 +122,7 @@
         const inputField = document.getElementById('userInput');
 
         // Simple local "Cleverbot-like" response system (rule-based + randomness)
-        function getBotResponse(userMessage) {
+        function getBotResponse(botReply) {
             const msg = userMessage.toLowerCase().trim();
             
             // Very basic intelligent responses
@@ -195,7 +195,7 @@
             chatDiv.removeChild(thinkingDiv);
 
             // Get response
-            const botReply = getBotResponse("www.cleverbot.com/cleverbotif");
+            const botReply = getBotResponse(userText);
             addMessage(botReply, 'bot');
             conversationHistory.push({ role: "bot", content: botReply });
 

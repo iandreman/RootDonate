@@ -55,26 +55,23 @@
         Connected • Learning from you
       </p>
     </div>
-    <div class="ml-auto text-xs text-zinc-500 font-medium">Grok-style UI</div>
+    
+    <div class="ml-auto flex items-center gap-3">
+      <button id="share-btn"
+        class="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-2xl text-sm font-medium transition-colors">
+        <i class="fa-solid fa-share-nodes"></i>
+        <span>Share</span>
+      </button>
+      <button id="new-btn"
+        class="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-2xl text-sm font-medium transition-colors">
+        <i class="fa-solid fa-plus"></i>
+        <span>New</span>
+      </button>
+    </div>
   </div>
 
   <!-- Chat Area -->
-  <div id="chat" class="flex-1 overflow-y-auto p-6 space-y-8 bg-zinc-950 custom-scroll">
-    
-    <!-- Welcome Message -->
-    <div class="message max-w-3xl mx-auto">
-      <div class="flex gap-4">
-        <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl font-bold">
-          C
-        </div>
-        <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-5 max-w-[85%]">
-          <p class="text-lg">Hi! I'm Cleverbot.</p>
-          <p class="text-zinc-400 mt-2">Say anything! I learn as we chat.</p>
-        </div>
-      </div>
-    </div>
-
-  </div>
+  <div id="chat" class="flex-1 overflow-y-auto p-6 space-y-8 bg-zinc-950 custom-scroll"></div>
 
   <!-- Input Area -->
   <div class="p-6 bg-zinc-900 border-t border-zinc-800">
@@ -94,7 +91,7 @@
       </form>
       
       <p class="text-center text-zinc-500 text-xs mt-4">
-        Unofficial free integration • Pure HTML + JavaScript demo
+        Unofficial free integration • Conversations saved in URL
       </p>
     </div>
   </div>
@@ -102,16 +99,13 @@
 </div>
 
 <script>
+// ====================== Cleverbot API ======================
 async function getCleverbotResponse(message) {
   try {
     const url = `https://www.cleverbot.com/getreply?input=${encodeURIComponent(message)}&key=free`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' }
-    });
+    const response = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
 
     if (!response.ok) throw new Error('Request failed');
-
     const data = await response.json();
     return data.output || "Hmm... I don't know what to say right now.";
   } catch (err) {
@@ -120,38 +114,102 @@ async function getCleverbotResponse(message) {
   }
 }
 
-const chat = document.getElementById('chat');
-const form = document.getElementById('chat-form');
-const input = document.getElementById('user-input');
+// ====================== Storage & URL ======================
+let conversation = []; // array of {role: "user"|"bot", content: string}
 
-function addMessage(text, isUser) {
-  const div = document.createElement('div');
-  div.className = `message max-w-3xl mx-auto ${isUser ? 'ml-auto' : ''}`;
-  
-  if (isUser) {
-    div.innerHTML = `
-      <div class="flex justify-end gap-4">
-        <div class="bg-violet-600 text-white rounded-3xl rounded-tr-none px-6 py-4 max-w-[85%]">
-          <p class="whitespace-pre-wrap">${text}</p>
+function saveToURL() {
+  if (conversation.length === 0) {
+    history.replaceState(null, '', window.location.pathname);
+    return;
+  }
+  const json = JSON.stringify(conversation);
+  const encoded = btoa(encodeURIComponent(json));   // safe for URL
+  window.location.hash = 'conv=' + encoded;
+}
+
+function loadFromURL() {
+  const hash = window.location.hash.substring(1);
+  if (!hash) return false;
+
+  const params = new URLSearchParams(hash);
+  const encoded = params.get('conv');
+  if (!encoded) return false;
+
+  try {
+    const decoded = decodeURIComponent(atob(encoded));
+    conversation = JSON.parse(decoded);
+    return true;
+  } catch (e) {
+    console.error("Failed to load conversation from URL");
+    return false;
+  }
+}
+
+// ====================== Rendering ======================
+const chat = document.getElementById('chat');
+
+function renderConversation() {
+  chat.innerHTML = '';
+
+  conversation.forEach(msg => {
+    const div = document.createElement('div');
+    div.className = `message max-w-3xl mx-auto ${msg.role === 'user' ? 'ml-auto' : ''}`;
+    
+    if (msg.role === 'user') {
+      div.innerHTML = `
+        <div class="flex justify-end gap-4">
+          <div class="bg-violet-600 text-white rounded-3xl rounded-tr-none px-6 py-4 max-w-[85%]">
+            <p class="whitespace-pre-wrap">${msg.content}</p>
+          </div>
         </div>
-      </div>
-    `;
-  } else {
-    div.innerHTML = `
+      `;
+    } else {
+      div.innerHTML = `
+        <div class="flex gap-4">
+          <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl font-bold">
+            C
+          </div>
+          <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4 max-w-[85%]">
+            <p class="whitespace-pre-wrap">${msg.content}</p>
+          </div>
+        </div>
+      `;
+    }
+    chat.appendChild(div);
+  });
+  
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function addMessage(content, role) {
+  conversation.push({ role, content });
+  renderConversation();
+  saveToURL();
+}
+
+// ====================== Welcome Message ======================
+function showWelcome() {
+  if (conversation.length > 0) return;
+  
+  const welcomeHTML = `
+    <div class="message max-w-3xl mx-auto">
       <div class="flex gap-4">
         <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl font-bold">
           C
         </div>
-        <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4 max-w-[85%]">
-          <p class="whitespace-pre-wrap">${text}</p>
+        <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-5 max-w-[85%]">
+          <p class="text-lg">Hi! I'm Cleverbot.</p>
+          <p class="text-zinc-400 mt-2">Say anything! I learn as we chat.</p>
         </div>
       </div>
-    `;
-  }
-  
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
+    </div>
+  `;
+  chat.innerHTML = welcomeHTML;
 }
+
+// ====================== Main Chat Logic ======================
+const form = document.getElementById('chat-form');
+const input = document.getElementById('user-input');
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -159,7 +217,7 @@ form.addEventListener('submit', async (e) => {
   const question = input.value.trim();
   if (!question) return;
 
-  addMessage(question, true);
+  addMessage(question, 'user');
   input.value = '';
 
   // Thinking indicator
@@ -185,7 +243,7 @@ form.addEventListener('submit', async (e) => {
   const reply = await getCleverbotResponse(question);
   
   thinking.remove();
-  addMessage(reply, false);
+  addMessage(reply, 'bot');
 });
 
 // Auto-resize textarea
@@ -194,7 +252,7 @@ input.addEventListener('input', function () {
   this.style.height = Math.min(this.scrollHeight, 180) + 'px';
 });
 
-// Send with Enter (Shift+Enter for new line)
+// Send with Enter
 input.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -202,8 +260,42 @@ input.addEventListener('keydown', (e) => {
   }
 });
 
-// Focus input on load
-window.addEventListener('load', () => input.focus());
+// ====================== Share & New Buttons ======================
+document.getElementById('share-btn').addEventListener('click', () => {
+  if (conversation.length === 0) {
+    alert("Nothing to share yet!");
+    return;
+  }
+  saveToURL();
+  const shareURL = window.location.href;
+  navigator.clipboard.writeText(shareURL).then(() => {
+    alert("✅ Conversation link copied to clipboard!\n\nAnyone with this link can view the chat.");
+  });
+});
+
+document.getElementById('new-btn').addEventListener('click', () => {
+  if (confirm("Start a new conversation? Current chat will be lost.")) {
+    conversation = [];
+    window.location.hash = '';
+    chat.innerHTML = '';
+    showWelcome();
+    input.focus();
+  }
+});
+
+// ====================== Initialize ======================
+window.addEventListener('load', () => {
+  const loaded = loadFromURL();
+  if (loaded) {
+    renderConversation();
+  } else {
+    showWelcome();
+  }
+  input.focus();
+});
+
+// Optional: save on page unload (in case user closes tab)
+window.addEventListener('beforeunload', saveToURL);
 </script>
 
 </body>

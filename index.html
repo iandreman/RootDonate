@@ -6,28 +6,37 @@
   <title>Grok - Free Version</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  
   <style>
     body {
       background: linear-gradient(135deg, #0f0f23, #1a1a2e);
       font-family: 'Segoe UI', system-ui, sans-serif;
     }
+    
     .chat-container {
-      max-width: 800px;
+      max-width: 820px;
       margin: 0 auto;
       height: 100vh;
       display: flex;
       flex-direction: column;
     }
+
     .message {
       animation: fadeIn 0.3s ease forwards;
     }
+
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(15px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
     .grok-bubble {
       background: linear-gradient(135deg, #00f5ff, #7209b7);
-      color: white;
+    }
+
+    .textarea {
+      resize: none;
+      scrollbar-width: thin;
     }
   </style>
 </head>
@@ -36,21 +45,21 @@
 <div class="chat-container mx-auto">
 
   <!-- Header -->
-  <div class="bg-zinc-900 border-b border-zinc-800 p-4 flex items-center gap-3">
-    <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-2xl flex items-center justify-center text-2xl font-bold">
+  <div class="bg-zinc-900 border-b border-zinc-800 p-4 flex items-center gap-3 shadow-sm">
+    <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-inner">
       G
     </div>
     <div>
       <h1 class="text-2xl font-bold tracking-tight">Grok</h1>
-      <p class="text-xs text-emerald-400 flex items-center gap-1">
+      <p class="text-xs text-emerald-400 flex items-center gap-1.5">
         <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-        Free Version • Always Ready
+        Free HTML Demo • Always Ready
       </p>
     </div>
   </div>
 
   <!-- Chat Area -->
-  <div id="chat" class="flex-1 overflow-y-auto p-6 space-y-8 bg-zinc-950">
+  <div id="chat" class="flex-1 overflow-y-auto p-6 space-y-8 bg-zinc-950 custom-scroll">
     
     <!-- Welcome Message -->
     <div class="message max-w-3xl mx-auto">
@@ -58,7 +67,7 @@
         <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl font-bold">
           G
         </div>
-        <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4">
+        <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-5 max-w-[85%]">
           <p class="text-lg">Hello! I'm Grok — built by xAI.</p>
           <p class="text-zinc-400 mt-2">How can I help you today? Ask me anything.</p>
         </div>
@@ -74,18 +83,18 @@
         <textarea 
           id="user-input"
           rows="1"
-          class="w-full bg-zinc-800 border border-zinc-700 rounded-3xl px-6 py-4 pr-16 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 resize-none"
+          class="textarea w-full bg-zinc-800 border border-zinc-700 rounded-3xl px-6 py-4 pr-16 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-base"
           placeholder="Ask Grok anything..."></textarea>
         
         <button 
           type="submit"
-          class="absolute right-4 bottom-4 w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-600 hover:from-cyan-500 hover:to-purple-700 rounded-2xl flex items-center justify-center transition-all active:scale-90">
+          class="absolute right-4 bottom-4 w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-600 hover:from-cyan-500 hover:to-purple-700 rounded-2xl flex items-center justify-center transition-all active:scale-95 shadow-lg">
           <i class="fa-solid fa-paper-plane text-white"></i>
         </button>
       </form>
       
-      <p class="text-center text-zinc-500 text-xs mt-3">
-        This is a free HTML demo • No real AI backend connected
+      <p class="text-center text-zinc-500 text-xs mt-4">
+        This is a pure HTML + Tailwind demo • No real AI backend
       </p>
     </div>
   </div>
@@ -104,8 +113,8 @@ function addMessage(text, isUser) {
   if (isUser) {
     messageDiv.innerHTML = `
       <div class="flex justify-end gap-4">
-        <div class="bg-violet-600 text-white rounded-3xl rounded-tr-none px-6 py-4 max-w-[80%]">
-          <p>${text}</p>
+        <div class="bg-violet-600 text-white rounded-3xl rounded-tr-none px-6 py-4 max-w-[85%]">
+          <p class="whitespace-pre-wrap">${text}</p>
         </div>
       </div>
     `;
@@ -115,8 +124,8 @@ function addMessage(text, isUser) {
         <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl font-bold">
           G
         </div>
-        <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4 max-w-[80%]">
-          <p>${text}</p>
+        <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4 max-w-[85%]">
+          <p class="whitespace-pre-wrap">${text}</p>
         </div>
       </div>
     `;
@@ -126,7 +135,16 @@ function addMessage(text, isUser) {
   chat.scrollTop = chat.scrollHeight;
 }
 
-form.addEventListener('submit', async (e) => {
+// Fake responses for demo
+const fakeResponses = [
+  "That's a great question! In a real version, I'd give you a thoughtful answer powered by xAI models.",
+  "Interesting point. Here's what I think about that...",
+  "I love this kind of question. Let me break it down for you.",
+  "Fascinating! My take on this is...",
+  "Good one! Here's my response:"
+];
+
+form.addEventListener('submit', (e) => {
   e.preventDefault();
   
   const question = input.value.trim();
@@ -136,7 +154,7 @@ form.addEventListener('submit', async (e) => {
   addMessage(question, true);
   input.value = '';
 
-  // Simulate Grok thinking
+  // Show "thinking" indicator
   const thinkingDiv = document.createElement('div');
   thinkingDiv.id = 'thinking';
   thinkingDiv.className = 'message max-w-3xl mx-auto';
@@ -146,7 +164,7 @@ form.addEventListener('submit', async (e) => {
         G
       </div>
       <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4">
-        <div class="flex items-center gap-2 text-zinc-400">
+        <div class="flex items-center gap-3 text-zinc-400">
           <i class="fa-solid fa-circle animate-pulse"></i>
           <span>Grok is thinking...</span>
         </div>
@@ -156,35 +174,33 @@ form.addEventListener('submit', async (e) => {
   chat.appendChild(thinkingDiv);
   chat.scrollTop = chat.scrollHeight;
 
-  // Simulate response delay
+  // Simulate AI response
   setTimeout(() => {
     thinkingDiv.remove();
     
-    const responses = [
-      "That's an interesting question! Here's my take...",
-      "Great question. Let me explain...",
-      "I love questions like this. Here's what I think:",
-      "Fascinating! Here's my response:"
-    ];
+    const randomResponse = fakeResponses[Math.floor(Math.random() * fakeResponses.length)];
     
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-    
-    addMessage(`${randomResponse}<br><br>This is a static HTML demo. In the real Grok, this would be a proper AI response from xAI's models.`, false);
-  }, 1200);
+    addMessage(`${randomResponse}<br><br><span class="text-zinc-500 text-sm">This is just a static HTML demo.<br>Real Grok would connect to xAI's actual models here.</span>`, false);
+  }, 1100);
 });
 
 // Auto-resize textarea
 input.addEventListener('input', function () {
   this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 160) + 'px';
+  this.style.height = Math.min(this.scrollHeight, 180) + 'px';
 });
 
-// Allow sending with Enter (but Shift+Enter for new line)
+// Send with Enter (Shift+Enter for new line)
 input.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     form.dispatchEvent(new Event('submit'));
   }
+});
+
+// Optional: Focus input on load
+window.addEventListener('load', () => {
+  input.focus();
 });
 </script>
 

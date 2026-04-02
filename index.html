@@ -28,20 +28,13 @@
     }
 
     @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     .custom-scroll::-webkit-scrollbar {
       width: 6px;
     }
-
     .custom-scroll::-webkit-scrollbar-thumb {
       background-color: #4b5563;
       border-radius: 20px;
@@ -113,7 +106,7 @@
     }
   }
 
-  // Improved: Save conversation to clean URL hash
+  // Save conversation to URL (clean format)
   function saveToURL() {
     if (conversation.length === 0) {
       window.location.hash = '';
@@ -123,25 +116,29 @@
     try {
       const jsonStr = JSON.stringify(conversation);
       const encoded = btoa(encodeURIComponent(jsonStr));
-      // Clean format: #/conversation/BASE64
-      window.location.hash = `/conversation/${encoded}`;
+      // Clean URL format: #/c/BASE64
+      window.location.hash = `/c/${encoded}`;
     } catch (e) {
-      console.error("Failed to save conversation to URL");
+      console.error("Failed to save conversation to URL", e);
     }
   }
 
-  // Improved: Load conversation from URL hash
+  // Load conversation from URL hash
   function loadFromURL() {
     const hash = window.location.hash.substring(1); // remove #
     if (!hash) return false;
 
-    // Support both old format (conv=...) and new clean format
     let encoded = null;
 
-    if (hash.startsWith('conv=')) {
-      encoded = hash.substring(5);
-    } else if (hash.startsWith('/conversation/')) {
+    // Support multiple formats for backward compatibility
+    if (hash.startsWith('/conversation/')) {
       encoded = hash.substring(14);
+    } else if (hash.startsWith('/c/')) {
+      encoded = hash.substring(3);
+    } else if (hash.startsWith('conv=')) {
+      encoded = hash.substring(5);
+    } else if (hash.startsWith('c=')) {
+      encoded = hash.substring(2);
     }
 
     if (!encoded) return false;
@@ -159,7 +156,6 @@
 
   const chat = document.getElementById('chat');
 
-  // Render entire conversation
   function renderConversation() {
     chat.innerHTML = '';
     
@@ -171,7 +167,7 @@
         div.innerHTML = `
           <div class="flex justify-end">
             <div class="bg-violet-600 text-white rounded-3xl rounded-tr-none px-6 py-4 max-w-[85%]">
-              <p>${msg.content}</p>
+              <p>${msg.content.replace(/\n/g, '<br>')}</p>
             </div>
           </div>`;
       } else {
@@ -179,7 +175,7 @@
           <div class="flex gap-4">
             <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold">✨</div>
             <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4 max-w-[85%]">
-              <p>${msg.content}</p>
+              <p>${msg.content.replace(/\n/g, '<br>')}</p>
             </div>
           </div>`;
       }
@@ -189,14 +185,12 @@
     chat.scrollTop = chat.scrollHeight;
   }
 
-  // Add message to conversation
   function addMessage(content, role) {
     conversation.push({ role, content });
     renderConversation();
     saveToURL();
   }
 
-  // Show welcome message
   function showWelcome() {
     if (conversation.length > 0) return;
 
@@ -226,7 +220,6 @@
     addMessage(question, 'user');
     input.value = '';
 
-    // Show thinking indicator
     const thinking = document.createElement('div');
     thinking.className = 'message max-w-3xl mx-auto';
     thinking.innerHTML = `
@@ -254,7 +247,7 @@
     this.style.height = Math.min(this.scrollHeight, 180) + 'px';
   });
 
-  // Enter key support
+  // Enter key support (without Shift)
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -270,11 +263,11 @@
     }
     saveToURL();
     navigator.clipboard.writeText(window.location.href)
-      .then(() => alert("✅ Link copied to clipboard!"))
-      .catch(() => alert("Failed to copy link."));
+      .then(() => alert("✅ Share link copied to clipboard!"))
+      .catch(() => alert("Failed to copy link. Please copy the URL manually."));
   });
 
-  // New conversation button
+  // New conversation
   document.getElementById('new-btn').addEventListener('click', () => {
     if (confirm("Start a fresh conversation?")) {
       conversation = [];
@@ -285,7 +278,7 @@
     }
   });
 
-  // Initialize on load
+  // Initialize
   window.addEventListener('load', () => {
     const loaded = loadFromURL();
     if (!loaded) {
@@ -296,7 +289,7 @@
     input.focus();
   });
 
-  // Save before leaving the page
+  // Save on page unload
   window.addEventListener('beforeunload', saveToURL);
 </script>
 </body>

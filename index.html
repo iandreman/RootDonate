@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=abstract">
-  <title>Cleverbot • Grok Style</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grok Style AI • Real Chat (Guest Friendly)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-  
+  <script src="https://js.puter.com/v2/"></script>
+
   <style>
     body {
       background: linear-gradient(135deg, #0f0f23, #1a1a2e);
@@ -46,13 +47,13 @@
   <!-- Header -->
   <div class="bg-zinc-900 border-b border-zinc-800 p-4 flex items-center gap-3 shadow-sm">
     <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-inner">
-      C
+      ✨
     </div>
     <div>
-      <h1 class="text-2xl font-bold tracking-tight">Cleverbot</h1>
+      <h1 class="text-2xl font-bold tracking-tight">Grok Style AI</h1>
       <p class="text-xs text-emerald-400 flex items-center gap-1.5">
         <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-        Connected • Learning from you
+        Real AI • Works with Guest / Temp Account
       </p>
     </div>
     
@@ -81,7 +82,7 @@
           id="user-input"
           rows="1"
           class="w-full bg-zinc-800 border border-zinc-700 rounded-3xl px-6 py-4 pr-16 text-white placeholder-zinc-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 resize-none text-base"
-          placeholder="Talk to Cleverbot..."></textarea>
+          placeholder="Ask anything... (works with guest mode)"></textarea>
         
         <button 
           type="submit"
@@ -91,7 +92,7 @@
       </form>
       
       <p class="text-center text-zinc-500 text-xs mt-4">
-        Free browser demo • Conversations saved in URL
+        Free real AI • Guest / Temp account supported • Conversations saved in URL
       </p>
     </div>
   </div>
@@ -99,59 +100,28 @@
 </div>
 
 <script>
-  // ====================== Smart Response Handler ======================
-  async function getCleverbotResponse(message) {
-    const fallbacks = [
-      `https://www.cleverbot.com/getreply?input=${encodeURIComponent(message)}`,
-      // Add more if you find working mirrors later
-    ];
+  let conversation = [];
 
-    for (const url of fallbacks) {
-      try {
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.output) return data.output;
-        }
-      } catch (e) {
-        // Continue to next fallback
+  // ====================== Real AI with Puter.js (Guest Optimized) ======================
+  async function getRealAIResponse(message) {
+    try {
+      // Puter often auto-creates temp/guest session on first AI call
+      const response = await puter.ai.chat(message, {
+        model: "gpt-4.1-nano",     // Fast & capable model (change if you want)
+        stream: false,
+        // attempt_temp_user_creation helps encourage guest mode
+      });
+      return response || "Sorry, no response received.";
+    } catch (err) {
+      console.error(err);
+      if (err.message && err.message.includes("auth")) {
+        return "Please try again — Puter is setting up a temporary guest session. If it asks, you can continue as guest.";
       }
+      return "Error connecting to AI. This usually works after the first try with guest mode.";
     }
-
-    // Final fallback: Grok-style simulated response (always works, no CORS)
-    return simulateGrokResponse(message);
-  }
-
-  // Fun, helpful simulated responses when real API fails
-  function simulateGrokResponse(message) {
-    const responses = [
-      "That's an interesting question! As Cleverbot (in Grok mode), I'd say...",
-      "Hmm, let me think like the real Cleverbot... Here's my take:",
-      "You're chatting with a simulated version right now — but it's pretty smart!",
-      "Good one! In the spirit of Cleverbot learning from you:",
-      "Cleverbot would probably reply something like this:"
-    ];
-
-    const base = responses[Math.floor(Math.random() * responses.length)];
-    
-    const wittyReplies = [
-      "The answer is 42... or maybe just 'yes'. What do you think?",
-      "I'm learning from every message you send. Keep talking!",
-      "That's deep. Reminds me of the time I tried to understand humans...",
-      "Absolutely! (or was it no? I get confused sometimes)",
-      "You're fun to talk to. Most people just ask about the weather."
-    ];
-
-    return `${base} ${wittyReplies[Math.floor(Math.random() * wittyReplies.length)]}`;
   }
 
   // ====================== Conversation Management ======================
-  let conversation = [];
-
   function saveToURL() {
     if (conversation.length === 0) {
       history.replaceState(null, '', window.location.pathname);
@@ -165,17 +135,15 @@
   function loadFromURL() {
     const hash = window.location.hash.substring(1);
     if (!hash) return false;
-
     const params = new URLSearchParams(hash);
     const encoded = params.get('conv');
     if (!encoded) return false;
-
     try {
       const decoded = decodeURIComponent(atob(encoded));
       conversation = JSON.parse(decoded);
       return true;
     } catch (e) {
-      console.error("Failed to load conversation from URL");
+      console.error("Failed to load conversation");
       return false;
     }
   }
@@ -185,7 +153,6 @@
 
   function renderConversation() {
     chat.innerHTML = '';
-
     conversation.forEach(msg => {
       const div = document.createElement('div');
       div.className = `message max-w-3xl mx-auto ${msg.role === 'user' ? 'ml-auto' : ''}`;
@@ -202,7 +169,7 @@
         div.innerHTML = `
           <div class="flex gap-4">
             <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl font-bold">
-              C
+              ✨
             </div>
             <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4 max-w-[85%]">
               <p class="whitespace-pre-wrap">${msg.content}</p>
@@ -212,7 +179,6 @@
       }
       chat.appendChild(div);
     });
-    
     chat.scrollTop = chat.scrollHeight;
   }
 
@@ -230,11 +196,12 @@
       <div class="message max-w-3xl mx-auto">
         <div class="flex gap-4">
           <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl font-bold">
-            C
+            ✨
           </div>
           <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-5 max-w-[85%]">
-            <p class="text-lg">Hi! I'm Cleverbot.</p>
-            <p class="text-zinc-400 mt-2">Say anything! I learn as we chat. (Real API may be down — using smart fallback)</p>
+            <p class="text-lg">Hi! I'm a real AI (Grok Style).</p>
+            <p class="text-zinc-400 mt-2">Ask me anything. This works with guest / temporary accounts — no signup required in most cases.</p>
+            <p class="text-xs text-amber-400 mt-3">First response may take a moment while setting up guest access.</p>
           </div>
         </div>
       </div>
@@ -261,12 +228,12 @@
     thinking.innerHTML = `
       <div class="flex gap-4">
         <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl font-bold">
-          C
+          ✨
         </div>
         <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4">
           <div class="flex items-center gap-3 text-zinc-400">
             <i class="fa-solid fa-circle animate-pulse"></i>
-            <span>Cleverbot is thinking...</span>
+            <span>AI is thinking... (setting up guest session if needed)</span>
           </div>
         </div>
       </div>
@@ -274,7 +241,7 @@
     chat.appendChild(thinking);
     chat.scrollTop = chat.scrollHeight;
 
-    const reply = await getCleverbotResponse(question);
+    const reply = await getRealAIResponse(question);
     
     thinking.remove();
     addMessage(reply, 'bot');
@@ -310,7 +277,7 @@
   });
 
   document.getElementById('new-btn').addEventListener('click', () => {
-    if (confirm("Start a new conversation? Current chat will be lost.")) {
+    if (confirm("Start a new conversation?")) {
       conversation = [];
       window.location.hash = '';
       chat.innerHTML = '';

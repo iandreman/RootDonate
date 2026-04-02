@@ -3,70 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grok Style AI • Real Chat (Guest Friendly)</title>
+  <title>Grok Style AI • Real Chat (Guest)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <script src="https://js.puter.com/v2/"></script>
 
   <style>
-    body {
-      background: linear-gradient(135deg, #0f0f23, #1a1a2e);
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    }
-    
-    .chat-container {
-      max-width: 820px;
-      margin: 0 auto;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .message {
-      animation: fadeIn 0.35s ease forwards;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .custom-scroll::-webkit-scrollbar {
-      width: 6px;
-    }
-    .custom-scroll::-webkit-scrollbar-thumb {
-      background-color: #4b5563;
-      border-radius: 20px;
-    }
+    body { background: linear-gradient(135deg, #0f0f23, #1a1a2e); font-family: system-ui, sans-serif; }
+    .chat-container { max-width: 820px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; }
+    .message { animation: fadeIn 0.35s ease forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .custom-scroll::-webkit-scrollbar { width: 6px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background-color: #4b5563; border-radius: 20px; }
   </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen">
 
 <div class="chat-container mx-auto">
-
   <!-- Header -->
-  <div class="bg-zinc-900 border-b border-zinc-800 p-4 flex items-center gap-3 shadow-sm">
-    <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-inner">
-      ✨
-    </div>
+  <div class="bg-zinc-900 border-b border-zinc-800 p-4 flex items-center gap-3">
+    <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold">✨</div>
     <div>
-      <h1 class="text-2xl font-bold tracking-tight">Grok Style AI</h1>
+      <h1 class="text-2xl font-bold">Grok Style AI</h1>
       <p class="text-xs text-emerald-400 flex items-center gap-1.5">
         <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-        Real AI • Works with Guest / Temp Account
+        Real AI • Guest Friendly
       </p>
     </div>
-    
-    <div class="ml-auto flex items-center gap-3">
-      <button id="share-btn"
-        class="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-2xl text-sm font-medium transition-all active:scale-95">
-        <i class="fa-solid fa-share-nodes"></i>
-        <span>Share</span>
+    <div class="ml-auto flex gap-3">
+      <button id="share-btn" class="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-2xl text-sm font-medium">
+        <i class="fa-solid fa-share-nodes"></i> Share
       </button>
-      <button id="new-btn"
-        class="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-2xl text-sm font-medium transition-all active:scale-95">
-        <i class="fa-solid fa-plus"></i>
-        <span>New</span>
+      <button id="new-btn" class="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-2xl text-sm font-medium">
+        <i class="fa-solid fa-plus"></i> New
       </button>
     </div>
   </div>
@@ -74,61 +43,44 @@
   <!-- Chat Area -->
   <div id="chat" class="flex-1 overflow-y-auto p-6 space-y-8 bg-zinc-950 custom-scroll"></div>
 
-  <!-- Input Area -->
+  <!-- Input -->
   <div class="p-6 bg-zinc-900 border-t border-zinc-800">
     <div class="max-w-3xl mx-auto">
       <form id="chat-form" class="relative">
-        <textarea 
-          id="user-input"
-          rows="1"
-          class="w-full bg-zinc-800 border border-zinc-700 rounded-3xl px-6 py-4 pr-16 text-white placeholder-zinc-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 resize-none text-base"
-          placeholder="Ask anything... (works with guest mode)"></textarea>
-        
-        <button 
-          type="submit"
-          class="absolute right-4 bottom-4 w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 hover:brightness-110 rounded-2xl flex items-center justify-center transition-all active:scale-95 shadow-lg">
+        <textarea id="user-input" rows="1"
+          class="w-full bg-zinc-800 border border-zinc-700 rounded-3xl px-6 py-4 pr-16 text-white placeholder-zinc-500 focus:outline-none focus:border-pink-500 resize-none text-base"
+          placeholder="Ask the AI anything..."></textarea>
+        <button type="submit"
+          class="absolute right-4 bottom-4 w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center">
           <i class="fa-solid fa-paper-plane text-white"></i>
         </button>
       </form>
-      
       <p class="text-center text-zinc-500 text-xs mt-4">
-        Free real AI • Guest / Temp account supported • Conversations saved in URL
+        Free real AI • Guest mode supported • Conversations saved in URL
       </p>
     </div>
   </div>
-
 </div>
 
 <script>
   let conversation = [];
 
-  // ====================== Real AI with Puter.js (Guest Optimized) ======================
   async function getRealAIResponse(message) {
     try {
-      // Puter often auto-creates temp/guest session on first AI call
       const response = await puter.ai.chat(message, {
-        model: "gpt-4.1-nano",     // Fast & capable model (change if you want)
-        stream: false,
-        // attempt_temp_user_creation helps encourage guest mode
+        model: "gpt-4.1-nano",
+        stream: false
       });
-      return response || "Sorry, no response received.";
+      return response || "No response received.";
     } catch (err) {
       console.error(err);
-      if (err.message && err.message.includes("auth")) {
-        return "Please try again — Puter is setting up a temporary guest session. If it asks, you can continue as guest.";
-      }
-      return "Error connecting to AI. This usually works after the first try with guest mode.";
+      return "Guest session is being prepared. Please try sending your message again in a few seconds.";
     }
   }
 
-  // ====================== Conversation Management ======================
   function saveToURL() {
-    if (conversation.length === 0) {
-      history.replaceState(null, '', window.location.pathname);
-      return;
-    }
-    const json = JSON.stringify(conversation);
-    const encoded = btoa(encodeURIComponent(json));
+    if (conversation.length === 0) return;
+    const encoded = btoa(encodeURIComponent(JSON.stringify(conversation)));
     window.location.hash = `conv=${encoded}`;
   }
 
@@ -139,16 +91,11 @@
     const encoded = params.get('conv');
     if (!encoded) return false;
     try {
-      const decoded = decodeURIComponent(atob(encoded));
-      conversation = JSON.parse(decoded);
+      conversation = JSON.parse(decodeURIComponent(atob(encoded)));
       return true;
-    } catch (e) {
-      console.error("Failed to load conversation");
-      return false;
-    }
+    } catch (e) { return false; }
   }
 
-  // ====================== Rendering ======================
   const chat = document.getElementById('chat');
 
   function renderConversation() {
@@ -156,26 +103,10 @@
     conversation.forEach(msg => {
       const div = document.createElement('div');
       div.className = `message max-w-3xl mx-auto ${msg.role === 'user' ? 'ml-auto' : ''}`;
-      
       if (msg.role === 'user') {
-        div.innerHTML = `
-          <div class="flex justify-end gap-4">
-            <div class="bg-violet-600 text-white rounded-3xl rounded-tr-none px-6 py-4 max-w-[85%]">
-              <p class="whitespace-pre-wrap">${msg.content}</p>
-            </div>
-          </div>
-        `;
+        div.innerHTML = `<div class="flex justify-end"><div class="bg-violet-600 text-white rounded-3xl rounded-tr-none px-6 py-4 max-w-[85%]"><p>${msg.content}</p></div></div>`;
       } else {
-        div.innerHTML = `
-          <div class="flex gap-4">
-            <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl font-bold">
-              ✨
-            </div>
-            <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4 max-w-[85%]">
-              <p class="whitespace-pre-wrap">${msg.content}</p>
-            </div>
-          </div>
-        `;
+        div.innerHTML = `<div class="flex gap-4"><div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold">✨</div><div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4 max-w-[85%]"><p>${msg.content}</p></div></div>`;
       }
       chat.appendChild(div);
     });
@@ -188,34 +119,27 @@
     saveToURL();
   }
 
-  // ====================== Welcome ======================
   function showWelcome() {
     if (conversation.length > 0) return;
-    
-    const welcomeHTML = `
+    chat.innerHTML = `
       <div class="message max-w-3xl mx-auto">
         <div class="flex gap-4">
-          <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl font-bold">
-            ✨
-          </div>
+          <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold">✨</div>
           <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-5 max-w-[85%]">
-            <p class="text-lg">Hi! I'm a real AI (Grok Style).</p>
-            <p class="text-zinc-400 mt-2">Ask me anything. This works with guest / temporary accounts — no signup required in most cases.</p>
-            <p class="text-xs text-amber-400 mt-3">First response may take a moment while setting up guest access.</p>
+            <p class="text-lg">Hello! I'm a real AI running in Grok style.</p>
+            <p class="text-zinc-400 mt-2">Ask me anything. Guest mode works automatically in most browsers.</p>
+            <p class="text-amber-400 text-xs mt-3">First message may take a moment while the guest session starts.</p>
           </div>
         </div>
       </div>
     `;
-    chat.innerHTML = welcomeHTML;
   }
 
-  // ====================== Chat Logic ======================
   const form = document.getElementById('chat-form');
   const input = document.getElementById('user-input');
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
     const question = input.value.trim();
     if (!question) return;
 
@@ -223,18 +147,12 @@
     input.value = '';
 
     const thinking = document.createElement('div');
-    thinking.id = 'thinking';
     thinking.className = 'message max-w-3xl mx-auto';
     thinking.innerHTML = `
       <div class="flex gap-4">
-        <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl font-bold">
-          ✨
-        </div>
+        <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold">✨</div>
         <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4">
-          <div class="flex items-center gap-3 text-zinc-400">
-            <i class="fa-solid fa-circle animate-pulse"></i>
-            <span>AI is thinking... (setting up guest session if needed)</span>
-          </div>
+          <div class="flex items-center gap-3 text-zinc-400"><i class="fa-solid fa-circle animate-pulse"></i><span>Thinking...</span></div>
         </div>
       </div>
     `;
@@ -242,18 +160,15 @@
     chat.scrollTop = chat.scrollHeight;
 
     const reply = await getRealAIResponse(question);
-    
     thinking.remove();
     addMessage(reply, 'bot');
   });
 
-  // Auto-resize textarea
-  input.addEventListener('input', function () {
+  input.addEventListener('input', function() {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 180) + 'px';
   });
 
-  // Send with Enter
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -261,23 +176,14 @@
     }
   });
 
-  // ====================== Buttons ======================
   document.getElementById('share-btn').addEventListener('click', () => {
-    if (conversation.length === 0) {
-      alert("Nothing to share yet!");
-      return;
-    }
+    if (conversation.length === 0) return alert("Nothing to share yet!");
     saveToURL();
-    const shareURL = window.location.href;
-    navigator.clipboard.writeText(shareURL).then(() => {
-      alert("✅ Conversation link copied!\n\nAnyone with this link can view the chat.");
-    }).catch(() => {
-      alert("Link ready:\n" + shareURL);
-    });
+    navigator.clipboard.writeText(window.location.href).then(() => alert("✅ Link copied!"));
   });
 
   document.getElementById('new-btn').addEventListener('click', () => {
-    if (confirm("Start a new conversation?")) {
+    if (confirm("Start a fresh conversation?")) {
       conversation = [];
       window.location.hash = '';
       chat.innerHTML = '';
@@ -286,19 +192,12 @@
     }
   });
 
-  // ====================== Initialize ======================
   window.addEventListener('load', () => {
-    const loaded = loadFromURL();
-    if (loaded) {
-      renderConversation();
-    } else {
-      showWelcome();
-    }
+    if (!loadFromURL()) showWelcome();
     input.focus();
   });
 
   window.addEventListener('beforeunload', saveToURL);
 </script>
-
 </body>
 </html>

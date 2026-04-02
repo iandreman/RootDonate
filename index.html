@@ -55,7 +55,7 @@
       <h1 class="text-2xl font-bold tracking-tight">RootDonate AI</h1>
       <p class="text-xs text-emerald-400 flex items-center gap-1.5">
         <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-        Cleverbot + Grok Style • Free
+        Offline Dictionary AI • Grok Style • 100% Free
       </p>
     </div>
     
@@ -78,7 +78,7 @@
       <form id="chat-form" class="relative">
         <textarea id="user-input" rows="1"
           class="w-full bg-zinc-800 border border-zinc-700 rounded-3xl px-6 py-4 pr-16 text-white placeholder-zinc-500 focus:outline-none focus:border-pink-500 resize-none text-base leading-relaxed"
-          placeholder="Ask the AI anything..."></textarea>
+          placeholder="Ask me anything... (works offline!)"></textarea>
         
         <button type="submit"
           class="absolute right-4 bottom-4 w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center hover:brightness-110 transition-all active:scale-95">
@@ -87,7 +87,7 @@
       </form>
       
       <p class="text-center text-zinc-500 text-xs mt-4">
-        100% Free • Powered by Cleverbot with Grok-style personality • Conversations saved in URL
+        100% Free & Offline • Powered by built-in dictionary + Grok-style personality • Conversations saved in URL
       </p>
     </div>
   </div>
@@ -96,61 +96,89 @@
 <script>
   let conversation = [];
 
-  async function getAIResponse(userMessage) {
-    try {
-      const history = conversation.map(msg => 
-        msg.role === 'user' ? `User: ${msg.content}` : `AI: ${msg.content}`
-      ).join('\n');
+  // Built-in Dictionary (expandable)
+  const dictionary = {
+    "hello": "A greeting used to express friendliness or attract attention.",
+    "ai": "Artificial Intelligence - the simulation of human intelligence in machines.",
+    "grok": "To understand something intuitively or by empathy (from Heinlein's Stranger in a Strange Land).",
+    "universe": "All existing matter, space, and energy, considered as a whole.",
+    "love": "A strong feeling of affection, attachment, or deep care.",
+    "joke": "Something said or done to provoke laughter or amusement.",
+    "python": "A popular high-level programming language known for its simplicity.",
+    "elon": "Elon Musk - CEO of SpaceX, Tesla, and xAI.",
+    "xai": "xAI - a company working on understanding the true nature of the universe."
+  };
 
-      const fullPrompt = `You are Grok, built by xAI. 
-You are helpful, truthful, witty, and a bit sarcastic when appropriate. 
-You love science, technology, and exploring the universe. 
-Never be overly politically correct. Answer directly and clearly.
+  // Predefined witty responses
+  const responses = {
+    greetings: ["Hello! I'm RootDonate AI, your offline Grok-style companion.", "Hey there! Ready to explore the universe?", "Greetings, human! What's on your mind today?"],
+    howareyou: ["I'm just bits and bytes, but I'm doing fantastically. How about you?", "Running at 100% sarcasm and helpfulness. Yourself?"],
+    jokes: ["Why don't scientists trust atoms? Because they make up everything!", "Why did the scarecrow win an award? He was outstanding in his field!"],
+    facts: ["Did you know? Octopuses have three hearts.", "The universe is expanding faster than we thought – thanks to dark energy."],
+    thanks: ["You're welcome! Always happy to help.", "No problem. Got any more cosmic questions?"]
+  };
 
-Previous conversation:
-${history}
+  function getDictionaryResponse(word) {
+    const lower = word.toLowerCase();
+    return dictionary[lower] || null;
+  }
 
-User: ${userMessage}
+  function getAIResponse(userMessage) {
+    const msg = userMessage.toLowerCase().trim();
+    const words = msg.split(/\s+/);
 
-Grok:`;
-
-      const targetUrl = 'https://www.cleverbot.com/getreply';
-      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-
-      const res = await fetch(proxyUrl, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/x-www-form-urlencoded' 
-        },
-        body: new URLSearchParams({
-          input: fullPrompt,
-          cb_settings_language: 'en',
-          cb_settings_tweak1: '0.8',
-          cb_settings_tweak2: '0.7',
-          cb_settings_tweak3: '0.65'
-        })
-      });
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const text = await res.text();
-      
-      // Extract output parameter if present
-      let reply = text.match(/output=(.+?)(?:&|$)/i);
-      reply = reply ? decodeURIComponent(reply[1].trim()) : text.trim();
-
-      // Clean any leftover "Grok:" prefix
-      reply = reply.replace(/^Grok:\s*/i, '').trim();
-
-      if (!reply || reply.length < 5) {
-        throw new Error("Empty or invalid response from Cleverbot");
-      }
-
-      return reply;
-    } catch (err) {
-      console.error("AI Response Error:", err);
-      return "Sorry, I'm having trouble connecting to Cleverbot right now. The service can be flaky. Please try again in a few seconds.";
+    // Greetings
+    if (/(hello|hi|hey|greetings)/.test(msg)) {
+      return responses.greetings[Math.floor(Math.random() * responses.greetings.length)];
     }
+
+    // How are you
+    if (/(how are you|how r u|hru)/.test(msg)) {
+      return responses.howareyou[Math.floor(Math.random() * responses.howareyou.length)];
+    }
+
+    // Tell me a joke
+    if (/(joke|funny|make me laugh)/.test(msg)) {
+      return responses.jokes[Math.floor(Math.random() * responses.jokes.length)];
+    }
+
+    // Tell me a fact
+    if (/(fact|interesting|know something)/.test(msg)) {
+      return responses.facts[Math.floor(Math.random() * responses.facts.length)];
+    }
+
+    // Thanks
+    if (/(thank|thanks|thx)/.test(msg)) {
+      return responses.thanks[Math.floor(Math.random() * responses.thanks.length)];
+    }
+
+    // Dictionary lookup (try main words)
+    for (let word of words) {
+      const cleanWord = word.replace(/[^a-z]/g, '');
+      if (cleanWord.length > 3) {
+        const def = getDictionaryResponse(cleanWord);
+        if (def) {
+          return `Here's what I know about "${cleanWord}": ${def}\n\nGot any follow-up questions?`;
+        }
+      }
+    }
+
+    // Math simple handling
+    if (/(\d+)\s*[\+\-\*\/]\s*(\d+)/.test(msg)) {
+      try {
+        const result = eval(msg.match(/(\d+)\s*[\+\-\*\/]\s*(\d+)/)[0]);
+        return `The answer is ${result}. Math is the language of the universe, after all.`;
+      } catch (e) {}
+    }
+
+    // Default witty fallback
+    const fallbacks = [
+      "Interesting question. Let me think... While I don't have real-time internet, my built-in dictionary says we should explore this further.",
+      "That's a deep one. In the spirit of Grok, I'd say: the answer lies somewhere between curiosity and the stars.",
+      "Hmm. I don't have a perfect match in my dictionary, but I'm happy to discuss related topics. What aspect intrigues you most?"
+    ];
+
+    return fallbacks[Math.floor(Math.random() * fallbacks.length)];
   }
 
   function saveToURL() {
@@ -237,8 +265,8 @@ Grok:`;
           <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold flex-shrink-0">✨</div>
           <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-5 max-w-[85%]">
             <p class="text-lg">Hello! I'm RootDonate AI.</p>
-            <p class="text-zinc-400 mt-2">A free AI powered by Cleverbot with Grok-style personality.</p>
-            <p class="text-amber-400 text-xs mt-4">I'm helpful, truthful, and occasionally witty. Ask me anything!</p>
+            <p class="text-zinc-400 mt-2">A fully offline AI with a built-in dictionary and Grok-style personality.</p>
+            <p class="text-amber-400 text-xs mt-4">Ask me anything — definitions, jokes, facts, math, or deep questions. I work without internet!</p>
           </div>
         </div>
       </div>
@@ -258,6 +286,7 @@ Grok:`;
     input.value = '';
     input.style.height = 'auto';
 
+    // Show thinking
     const thinking = document.createElement('div');
     thinking.className = 'message max-w-3xl mx-auto';
     thinking.innerHTML = `
@@ -274,7 +303,8 @@ Grok:`;
     chat.appendChild(thinking);
     chat.scrollTop = chat.scrollHeight;
 
-    const reply = await getAIResponse(question);
+    // Get response (instant since offline)
+    const reply = getAIResponse(question);
     thinking.remove();
     addMessage(reply, 'bot');
   });

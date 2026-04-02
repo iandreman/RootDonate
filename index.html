@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RootDonate AI • Real Chat (Guest)</title>
+  <title>RootDonate AI • Real Chat</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
@@ -39,6 +39,11 @@
       background-color: #4b5563;
       border-radius: 20px;
     }
+
+    textarea {
+      scrollbar-width: thin;
+      scrollbar-color: #4b5563 transparent;
+    }
   </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen">
@@ -48,10 +53,10 @@
   <div class="bg-zinc-900 border-b border-zinc-800 p-4 flex items-center gap-3">
     <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold">✨</div>
     <div>
-      <h1 class="text-2xl font-bold">RootDonate AI</h1>
+      <h1 class="text-2xl font-bold tracking-tight">RootDonate AI</h1>
       <p class="text-xs text-emerald-400 flex items-center gap-1.5">
         <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-        Real AI • Guest Friendly
+        Real AI • Guest Mode
       </p>
     </div>
     
@@ -83,7 +88,7 @@
       </form>
       
       <p class="text-center text-zinc-500 text-xs mt-4">
-        Free real AI • Guest mode supported • Conversations saved in URL
+        Free • Real AI • Conversations saved in URL
       </p>
     </div>
   </div>
@@ -92,7 +97,7 @@
 <script>
   let conversation = [];
 
-  // Get AI response using Puter AI
+  // Get AI response
   async function getRealAIResponse(message) {
     try {
       const response = await puter.ai.chat(message, {
@@ -101,12 +106,12 @@
       });
       return response || "Sorry, I didn't receive a response.";
     } catch (err) {
-      console.error("AI Response Error:", err);
-      return "Guest session is being prepared. Please try again in a few seconds.";
+      console.error("AI Error:", err);
+      return "I'm having trouble connecting right now. Please try again in a moment.";
     }
   }
 
-  // Save conversation to URL (clean format)
+  // Save conversation to clean URL
   function saveToURL() {
     if (conversation.length === 0) {
       window.location.hash = '';
@@ -116,30 +121,24 @@
     try {
       const jsonStr = JSON.stringify(conversation);
       const encoded = btoa(encodeURIComponent(jsonStr));
-      // Clean URL format: #/c/BASE64
       window.location.hash = `/c/${encoded}`;
     } catch (e) {
-      console.error("Failed to save conversation to URL", e);
+      console.error("Failed to save to URL:", e);
     }
   }
 
-  // Load conversation from URL hash
+  // Load conversation from URL
   function loadFromURL() {
-    const hash = window.location.hash.substring(1); // remove #
+    const hash = window.location.hash.substring(1);
     if (!hash) return false;
 
     let encoded = null;
 
-    // Support multiple formats for backward compatibility
-    if (hash.startsWith('/conversation/')) {
-      encoded = hash.substring(14);
-    } else if (hash.startsWith('/c/')) {
-      encoded = hash.substring(3);
-    } else if (hash.startsWith('conv=')) {
-      encoded = hash.substring(5);
-    } else if (hash.startsWith('c=')) {
-      encoded = hash.substring(2);
-    }
+    // Support multiple legacy formats
+    if (hash.startsWith('/conversation/')) encoded = hash.substring(14);
+    else if (hash.startsWith('/c/')) encoded = hash.substring(3);
+    else if (hash.startsWith('conv=')) encoded = hash.substring(5);
+    else if (hash.startsWith('c=')) encoded = hash.substring(2);
 
     if (!encoded) return false;
 
@@ -148,8 +147,8 @@
       conversation = JSON.parse(decoded);
       return true;
     } catch (e) {
-      console.error("Failed to load conversation from URL:", e);
-      window.location.hash = ''; // clear invalid hash
+      console.error("Failed to load conversation:", e);
+      window.location.hash = '';
       return false;
     }
   }
@@ -158,7 +157,7 @@
 
   function renderConversation() {
     chat.innerHTML = '';
-    
+
     conversation.forEach(msg => {
       const div = document.createElement('div');
       div.className = `message max-w-3xl mx-auto ${msg.role === 'user' ? 'ml-auto' : ''}`;
@@ -167,15 +166,15 @@
         div.innerHTML = `
           <div class="flex justify-end">
             <div class="bg-violet-600 text-white rounded-3xl rounded-tr-none px-6 py-4 max-w-[85%]">
-              <p>${msg.content.replace(/\n/g, '<br>')}</p>
+              <p class="whitespace-pre-wrap">${msg.content}</p>
             </div>
           </div>`;
       } else {
         div.innerHTML = `
           <div class="flex gap-4">
-            <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold">✨</div>
+            <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold flex-shrink-0">✨</div>
             <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4 max-w-[85%]">
-              <p>${msg.content.replace(/\n/g, '<br>')}</p>
+              <p class="whitespace-pre-wrap">${msg.content}</p>
             </div>
           </div>`;
       }
@@ -186,7 +185,8 @@
   }
 
   function addMessage(content, role) {
-    conversation.push({ role, content });
+    if (!content?.trim()) return;
+    conversation.push({ role, content: content.trim() });
     renderConversation();
     saveToURL();
   }
@@ -197,11 +197,11 @@
     chat.innerHTML = `
       <div class="message max-w-3xl mx-auto">
         <div class="flex gap-4">
-          <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold">✨</div>
+          <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold flex-shrink-0">✨</div>
           <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-5 max-w-[85%]">
-            <p class="text-lg">Hello! I'm a real AI running in Grok style.</p>
-            <p class="text-zinc-400 mt-2">Ask me anything. Guest mode works automatically in most browsers.</p>
-            <p class="text-amber-400 text-xs mt-3">The first message may take a moment while the guest session starts.</p>
+            <p class="text-lg">Hello! I'm RootDonate AI.</p>
+            <p class="text-zinc-400 mt-2">Ask me anything — I'm running in real time.</p>
+            <p class="text-amber-400 text-xs mt-4">First response may take a few seconds while the guest session initializes.</p>
           </div>
         </div>
       </div>
@@ -219,12 +219,14 @@
 
     addMessage(question, 'user');
     input.value = '';
+    input.style.height = 'auto';
 
+    // Thinking indicator
     const thinking = document.createElement('div');
     thinking.className = 'message max-w-3xl mx-auto';
     thinking.innerHTML = `
       <div class="flex gap-4">
-        <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold">✨</div>
+        <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold flex-shrink-0">✨</div>
         <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4">
           <div class="flex items-center gap-3 text-zinc-400">
             <i class="fa-solid fa-circle animate-pulse"></i>
@@ -247,7 +249,7 @@
     this.style.height = Math.min(this.scrollHeight, 180) + 'px';
   });
 
-  // Enter key support (without Shift)
+  // Enter key support
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -258,18 +260,18 @@
   // Share button
   document.getElementById('share-btn').addEventListener('click', () => {
     if (conversation.length === 0) {
-      alert("Nothing to share yet!");
+      alert("Nothing to share yet. Send a message first!");
       return;
     }
     saveToURL();
     navigator.clipboard.writeText(window.location.href)
       .then(() => alert("✅ Share link copied to clipboard!"))
-      .catch(() => alert("Failed to copy link. Please copy the URL manually."));
+      .catch(() => alert("Could not copy link. Please copy the URL from the address bar."));
   });
 
-  // New conversation
+  // New conversation button
   document.getElementById('new-btn').addEventListener('click', () => {
-    if (confirm("Start a fresh conversation?")) {
+    if (confirm("Start a new conversation? Current chat will be cleared.")) {
       conversation = [];
       window.location.hash = '';
       chat.innerHTML = '';
@@ -278,7 +280,7 @@
     }
   });
 
-  // Initialize
+  // Initialize app
   window.addEventListener('load', () => {
     const loaded = loadFromURL();
     if (!loaded) {
@@ -289,7 +291,7 @@
     input.focus();
   });
 
-  // Save on page unload
+  // Save before leaving
   window.addEventListener('beforeunload', saveToURL);
 </script>
 </body>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI • Real Chat (Guest)</title>
+  <title>RootDonate AI • Real Chat (Guest)</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
@@ -55,7 +55,7 @@
   <div class="bg-zinc-900 border-b border-zinc-800 p-4 flex items-center gap-3">
     <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold">✨</div>
     <div>
-      <h1 class="text-2xl font-bold">RootDonate</h1>
+      <h1 class="text-2xl font-bold">RootDonate AI</h1>
       <p class="text-xs text-emerald-400 flex items-center gap-1.5">
         <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
         Real AI • Guest Friendly
@@ -113,27 +113,46 @@
     }
   }
 
-  // Save conversation to URL hash
+  // Improved: Save conversation to clean URL hash
   function saveToURL() {
-    if (conversation.length === 0) return;
-    const encoded = btoa(encodeURIComponent(JSON.stringify(conversation)));
-    window.location.hash = `conv=${encoded}`;
+    if (conversation.length === 0) {
+      window.location.hash = '';
+      return;
+    }
+
+    try {
+      const jsonStr = JSON.stringify(conversation);
+      const encoded = btoa(encodeURIComponent(jsonStr));
+      // Clean format: #/conversation/BASE64
+      window.location.hash = `/conversation/${encoded}`;
+    } catch (e) {
+      console.error("Failed to save conversation to URL");
+    }
   }
 
-  // Load conversation from URL hash
+  // Improved: Load conversation from URL hash
   function loadFromURL() {
-    const hash = window.location.hash.substring(1);
+    const hash = window.location.hash.substring(1); // remove #
     if (!hash) return false;
 
-    const params = new URLSearchParams(hash);
-    const encoded = params.get('conv');
+    // Support both old format (conv=...) and new clean format
+    let encoded = null;
+
+    if (hash.startsWith('conv=')) {
+      encoded = hash.substring(5);
+    } else if (hash.startsWith('/conversation/')) {
+      encoded = hash.substring(14);
+    }
+
     if (!encoded) return false;
 
     try {
-      conversation = JSON.parse(decodeURIComponent(atob(encoded)));
+      const decoded = decodeURIComponent(atob(encoded));
+      conversation = JSON.parse(decoded);
       return true;
     } catch (e) {
-      console.error("Failed to load conversation from URL");
+      console.error("Failed to load conversation from URL:", e);
+      window.location.hash = ''; // clear invalid hash
       return false;
     }
   }
@@ -235,7 +254,7 @@
     this.style.height = Math.min(this.scrollHeight, 180) + 'px';
   });
 
-  // Enter key support (Shift+Enter for new line)
+  // Enter key support
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -268,7 +287,8 @@
 
   // Initialize on load
   window.addEventListener('load', () => {
-    if (!loadFromURL()) {
+    const loaded = loadFromURL();
+    if (!loaded) {
       showWelcome();
     } else {
       renderConversation();
@@ -276,7 +296,7 @@
     input.focus();
   });
 
-  // Save before leaving
+  // Save before leaving the page
   window.addEventListener('beforeunload', saveToURL);
 </script>
 </body>

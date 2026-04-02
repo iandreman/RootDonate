@@ -114,7 +114,6 @@ User: ${userMessage}
 
 Grok:`;
 
-      // Updated reliable proxy (allorigins.win/raw)
       const targetUrl = 'https://www.cleverbot.com/getreply';
       const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
 
@@ -136,7 +135,7 @@ Grok:`;
 
       const text = await res.text();
       
-      // Try to extract output= parameter
+      // Extract output parameter if present
       let reply = text.match(/output=(.+?)(?:&|$)/i);
       reply = reply ? decodeURIComponent(reply[1].trim()) : text.trim();
 
@@ -150,7 +149,7 @@ Grok:`;
       return reply;
     } catch (err) {
       console.error("AI Response Error:", err);
-      return "Sorry, I'm having trouble connecting to Cleverbot right now. The service can be flaky. Please try again in a few seconds, or try a different message.";
+      return "Sorry, I'm having trouble connecting to Cleverbot right now. The service can be flaky. Please try again in a few seconds.";
     }
   }
 
@@ -300,7 +299,7 @@ Grok:`;
     saveToURL();
     navigator.clipboard.writeText(window.location.href)
       .then(() => alert("✅ Share link copied to clipboard!"))
-      .catch(() => alert("Could not copy automatically. Please copy the URL from the address bar."));
+      .catch(() => alert("Could not copy automatically. Please copy the URL manually."));
   });
 
   document.getElementById('new-btn').addEventListener('click', () => {

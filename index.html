@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RootDonate AI • Real Chat</title>
+  <title>RootDonate AI • Online + Offline Dictionary</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
@@ -22,9 +22,7 @@
       flex-direction: column;
     }
 
-    .message {
-      animation: fadeIn 0.35s ease forwards;
-    }
+    .message { animation: fadeIn 0.35s ease forwards; }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
@@ -38,11 +36,6 @@
       background-color: #4b5563;
       border-radius: 20px;
     }
-
-    textarea {
-      scrollbar-width: thin;
-      scrollbar-color: #4b5563 transparent;
-    }
   </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen">
@@ -54,8 +47,8 @@
     <div>
       <h1 class="text-2xl font-bold tracking-tight">RootDonate AI</h1>
       <p class="text-xs text-emerald-400 flex items-center gap-1.5">
-        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-        Offline Dictionary AI • Grok Style • 100% Free
+        <span id="status-dot" class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+        <span id="status-text">Online Dictionary + Offline Fallback</span>
       </p>
     </div>
     
@@ -64,7 +57,7 @@
         <i class="fa-solid fa-share-nodes"></i> Share
       </button>
       <button id="new-btn" class="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-2xl text-sm font-medium transition-colors">
-        <i class="fa-solid fa-plus"></i> New
+        <i class="fa-solid fa-plus"></i> New Chat
       </button>
     </div>
   </div>
@@ -78,7 +71,7 @@
       <form id="chat-form" class="relative">
         <textarea id="user-input" rows="1"
           class="w-full bg-zinc-800 border border-zinc-700 rounded-3xl px-6 py-4 pr-16 text-white placeholder-zinc-500 focus:outline-none focus:border-pink-500 resize-none text-base leading-relaxed"
-          placeholder="Ask me anything... (works offline!)"></textarea>
+          placeholder="Ask anything (definitions, jokes, math...)"></textarea>
         
         <button type="submit"
           class="absolute right-4 bottom-4 w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center hover:brightness-110 transition-all active:scale-95">
@@ -87,7 +80,7 @@
       </form>
       
       <p class="text-center text-zinc-500 text-xs mt-4">
-        100% Free & Offline • Powered by built-in dictionary + Grok-style personality • Conversations saved in URL
+        Online Dictionary API + Offline Fallback • Grok-style personality • Conversations saved in URL
       </p>
     </div>
   </div>
@@ -96,123 +89,136 @@
 <script>
   let conversation = [];
 
-  // Built-in Dictionary (expandable)
-  const dictionary = {
+  // Built-in offline dictionary (fallback)
+  const offlineDictionary = {
     "hello": "A greeting used to express friendliness or attract attention.",
     "ai": "Artificial Intelligence - the simulation of human intelligence in machines.",
     "grok": "To understand something intuitively or by empathy (from Heinlein's Stranger in a Strange Land).",
     "universe": "All existing matter, space, and energy, considered as a whole.",
     "love": "A strong feeling of affection, attachment, or deep care.",
-    "joke": "Something said or done to provoke laughter or amusement.",
-    "python": "A popular high-level programming language known for its simplicity.",
     "elon": "Elon Musk - CEO of SpaceX, Tesla, and xAI.",
-    "xai": "xAI - a company working on understanding the true nature of the universe."
+    "xai": "xAI - a company working on understanding the true nature of the universe.",
+    "quantum": "Relating to quantum mechanics, the physics of very small scales.",
+    // Add more words here if you want
   };
 
-  // Predefined witty responses
-  const responses = {
-    greetings: ["Hello! I'm RootDonate AI, your offline Grok-style companion.", "Hey there! Ready to explore the universe?", "Greetings, human! What's on your mind today?"],
-    howareyou: ["I'm just bits and bytes, but I'm doing fantastically. How about you?", "Running at 100% sarcasm and helpfulness. Yourself?"],
-    jokes: ["Why don't scientists trust atoms? Because they make up everything!", "Why did the scarecrow win an award? He was outstanding in his field!"],
-    facts: ["Did you know? Octopuses have three hearts.", "The universe is expanding faster than we thought – thanks to dark energy."],
-    thanks: ["You're welcome! Always happy to help.", "No problem. Got any more cosmic questions?"]
+  const wittyResponses = {
+    greetings: ["Hello! Ready to explore knowledge together?", "Hey there! What's on your mind today?"],
+    howareyou: ["I'm powered by curiosity and code. How about you?", "Doing great in the digital cosmos!"],
+    jokes: ["Why don't scientists trust atoms? Because they make up everything!"],
+    facts: ["Octopuses have three hearts."],
+    thanks: ["You're welcome! Always here to help."]
   };
 
-  function getDictionaryResponse(word) {
-    const lower = word.toLowerCase();
-    return dictionary[lower] || null;
+  async function fetchOnlineDefinition(word) {
+    try {
+      const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+      if (!response.ok) return null;
+      
+      const data = await response.json();
+      if (!Array.isArray(data) || data.length === 0) return null;
+
+      const entry = data[0];
+      let result = `<strong>${entry.word}</strong>`;
+
+      if (entry.phonetic) result += ` <span class="text-zinc-400">/${entry.phonetic}/</span>`;
+
+      result += `<br><br>`;
+
+      entry.meanings.forEach((meaning, index) => {
+        result += `<span class="text-purple-400">${meaning.partOfSpeech}</span><br>`;
+        meaning.definitions.forEach((def, i) => {
+          result += `${i+1}. ${def.definition}<br>`;
+          if (def.example) result += `<span class="text-amber-300 italic">Example: "${def.example}"</span><br>`;
+        });
+        if (index < entry.meanings.length - 1) result += `<br>`;
+      });
+
+      return result;
+    } catch (e) {
+      return null; // Offline or error
+    }
   }
 
-  function getAIResponse(userMessage) {
+  function getOfflineResponse(word) {
+    const lower = word.toLowerCase();
+    return offlineDictionary[lower] || null;
+  }
+
+  function getWittyResponse(msg) {
+    const lower = msg.toLowerCase();
+    if (/(hello|hi|hey|greetings)/.test(lower)) return wittyResponses.greetings[Math.floor(Math.random() * wittyResponses.greetings.length)];
+    if (/(how are you|how r u|hru)/.test(lower)) return wittyResponses.howareyou[Math.floor(Math.random() * wittyResponses.howareyou.length)];
+    if (/(joke|funny|laugh)/.test(lower)) return wittyResponses.jokes[Math.floor(Math.random() * wittyResponses.jokes.length)];
+    if (/(fact|interesting)/.test(lower)) return wittyResponses.facts[Math.floor(Math.random() * wittyResponses.facts.length)];
+    if (/(thank|thanks|thx)/.test(lower)) return wittyResponses.thanks[Math.floor(Math.random() * wittyResponses.thanks.length)];
+
+    return null;
+  }
+
+  async function getAIResponse(userMessage) {
     const msg = userMessage.toLowerCase().trim();
-    const words = msg.split(/\s+/);
+    const words = msg.split(/\s+/).map(w => w.replace(/[^a-z]/g, ''));
 
-    // Greetings
-    if (/(hello|hi|hey|greetings)/.test(msg)) {
-      return responses.greetings[Math.floor(Math.random() * responses.greetings.length)];
-    }
+    // Check for witty/greeting responses first
+    const witty = getWittyResponse(userMessage);
+    if (witty) return witty;
 
-    // How are you
-    if (/(how are you|how r u|hru)/.test(msg)) {
-      return responses.howareyou[Math.floor(Math.random() * responses.howareyou.length)];
-    }
-
-    // Tell me a joke
-    if (/(joke|funny|make me laugh)/.test(msg)) {
-      return responses.jokes[Math.floor(Math.random() * responses.jokes.length)];
-    }
-
-    // Tell me a fact
-    if (/(fact|interesting|know something)/.test(msg)) {
-      return responses.facts[Math.floor(Math.random() * responses.facts.length)];
-    }
-
-    // Thanks
-    if (/(thank|thanks|thx)/.test(msg)) {
-      return responses.thanks[Math.floor(Math.random() * responses.thanks.length)];
-    }
-
-    // Dictionary lookup (try main words)
-    for (let word of words) {
-      const cleanWord = word.replace(/[^a-z]/g, '');
-      if (cleanWord.length > 3) {
-        const def = getDictionaryResponse(cleanWord);
-        if (def) {
-          return `Here's what I know about "${cleanWord}": ${def}\n\nGot any follow-up questions?`;
-        }
-      }
-    }
-
-    // Math simple handling
-    if (/(\d+)\s*[\+\-\*\/]\s*(\d+)/.test(msg)) {
+    // Simple math
+    if (/(\d+)\s*([+\-*/])\s*(\d+)/.test(userMessage)) {
       try {
-        const result = eval(msg.match(/(\d+)\s*[\+\-\*\/]\s*(\d+)/)[0]);
-        return `The answer is ${result}. Math is the language of the universe, after all.`;
+        const result = eval(userMessage);
+        return `The answer is <strong>${result}</strong>. Math is the language of the universe.`;
       } catch (e) {}
     }
 
-    // Default witty fallback
-    const fallbacks = [
-      "Interesting question. Let me think... While I don't have real-time internet, my built-in dictionary says we should explore this further.",
-      "That's a deep one. In the spirit of Grok, I'd say: the answer lies somewhere between curiosity and the stars.",
-      "Hmm. I don't have a perfect match in my dictionary, but I'm happy to discuss related topics. What aspect intrigues you most?"
-    ];
+    // Try main words for dictionary lookup (prefer longest first)
+    const sortedWords = words.filter(w => w.length > 2).sort((a,b) => b.length - a.length);
 
+    for (let word of sortedWords) {
+      // Try online first
+      const onlineDef = await fetchOnlineDefinition(word);
+      if (onlineDef) {
+        return onlineDef + `<br><br><span class="text-emerald-400 text-xs">✓ Fetched from online dictionary</span>`;
+      }
+
+      // Fallback to offline
+      const offlineDef = getOfflineResponse(word);
+      if (offlineDef) {
+        return `<strong>${word}</strong><br><br>${offlineDef}<br><br><span class="text-amber-400 text-xs">● Using offline dictionary</span>`;
+      }
+    }
+
+    // Default fallback
+    const fallbacks = [
+      "Interesting question. I couldn't find an exact definition, but I'm happy to reason about it with you.",
+      "That's a deep one. Want to explore related concepts or rephrase your question?",
+      "Hmm... My dictionary doesn't have a direct match right now, but curiosity is the best starting point."
+    ];
     return fallbacks[Math.floor(Math.random() * fallbacks.length)];
   }
 
+  // ==================== UI & Conversation Handling (same as before) ====================
   function saveToURL() {
     if (conversation.length === 0) {
       window.location.hash = '';
       return;
     }
     try {
-      const jsonStr = JSON.stringify(conversation);
-      const encoded = btoa(encodeURIComponent(jsonStr));
+      const encoded = btoa(encodeURIComponent(JSON.stringify(conversation)));
       window.location.hash = `/c/${encoded}`;
-    } catch (e) {
-      console.error("Failed to save to URL:", e);
-    }
+    } catch (e) {}
   }
 
   function loadFromURL() {
     const hash = window.location.hash.substring(1);
     if (!hash) return false;
-
-    let encoded = null;
-    if (hash.startsWith('/conversation/')) encoded = hash.substring(14);
-    else if (hash.startsWith('/c/')) encoded = hash.substring(3);
-    else if (hash.startsWith('conv=')) encoded = hash.substring(5);
-    else if (hash.startsWith('c=')) encoded = hash.substring(2);
-
+    let encoded = hash.startsWith('/c/') ? hash.substring(3) : null;
     if (!encoded) return false;
-
     try {
-      const decoded = decodeURIComponent(atob(encoded));
-      conversation = JSON.parse(decoded);
+      conversation = JSON.parse(decodeURIComponent(atob(encoded)));
       return true;
     } catch (e) {
-      console.error("Failed to load conversation:", e);
       window.location.hash = '';
       return false;
     }
@@ -222,18 +228,12 @@
 
   function renderConversation() {
     chat.innerHTML = '';
-
     conversation.forEach(msg => {
       const div = document.createElement('div');
       div.className = `message max-w-3xl mx-auto ${msg.role === 'user' ? 'ml-auto' : ''}`;
 
       if (msg.role === 'user') {
-        div.innerHTML = `
-          <div class="flex justify-end">
-            <div class="bg-violet-600 text-white rounded-3xl rounded-tr-none px-6 py-4 max-w-[85%]">
-              <p class="whitespace-pre-wrap">${msg.content}</p>
-            </div>
-          </div>`;
+        div.innerHTML = `<div class="flex justify-end"><div class="bg-violet-600 text-white rounded-3xl rounded-tr-none px-6 py-4 max-w-[85%]"><p class="whitespace-pre-wrap">${msg.content}</p></div></div>`;
       } else {
         div.innerHTML = `
           <div class="flex gap-4">
@@ -245,28 +245,26 @@
       }
       chat.appendChild(div);
     });
-
     chat.scrollTop = chat.scrollHeight;
   }
 
   function addMessage(content, role) {
     if (!content?.trim()) return;
-    conversation.push({ role, content: content.trim() });
+    conversation.push({ role, content });
     renderConversation();
     saveToURL();
   }
 
   function showWelcome() {
     if (conversation.length > 0) return;
-
     chat.innerHTML = `
       <div class="message max-w-3xl mx-auto">
         <div class="flex gap-4">
           <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold flex-shrink-0">✨</div>
           <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-5 max-w-[85%]">
             <p class="text-lg">Hello! I'm RootDonate AI.</p>
-            <p class="text-zinc-400 mt-2">A fully offline AI with a built-in dictionary and Grok-style personality.</p>
-            <p class="text-amber-400 text-xs mt-4">Ask me anything — definitions, jokes, facts, math, or deep questions. I work without internet!</p>
+            <p class="text-zinc-400 mt-2">I can look up real definitions online using a free dictionary API, and I also work completely offline.</p>
+            <p class="text-amber-400 text-sm mt-4">Try words like: hello, universe, grok, quantum, love...</p>
           </div>
         </div>
       </div>
@@ -286,7 +284,6 @@
     input.value = '';
     input.style.height = 'auto';
 
-    // Show thinking
     const thinking = document.createElement('div');
     thinking.className = 'message max-w-3xl mx-auto';
     thinking.innerHTML = `
@@ -295,7 +292,7 @@
         <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4">
           <div class="flex items-center gap-3 text-zinc-400">
             <i class="fa-solid fa-circle animate-pulse"></i>
-            <span>Thinking in Grok style...</span>
+            <span>Looking up definition...</span>
           </div>
         </div>
       </div>
@@ -303,8 +300,7 @@
     chat.appendChild(thinking);
     chat.scrollTop = chat.scrollHeight;
 
-    // Get response (instant since offline)
-    const reply = getAIResponse(question);
+    const reply = await getAIResponse(question);
     thinking.remove();
     addMessage(reply, 'bot');
   });
@@ -322,14 +318,11 @@
   });
 
   document.getElementById('share-btn').addEventListener('click', () => {
-    if (conversation.length === 0) {
-      alert("Nothing to share yet. Send a message first!");
-      return;
-    }
+    if (conversation.length === 0) return alert("Send a message first!");
     saveToURL();
     navigator.clipboard.writeText(window.location.href)
-      .then(() => alert("✅ Share link copied to clipboard!"))
-      .catch(() => alert("Could not copy automatically. Please copy the URL manually."));
+      .then(() => alert("✅ Share link copied!"))
+      .catch(() => alert("Copy the URL manually."));
   });
 
   document.getElementById('new-btn').addEventListener('click', () => {
@@ -345,11 +338,8 @@
   // Initialize
   window.addEventListener('load', () => {
     const loaded = loadFromURL();
-    if (!loaded) {
-      showWelcome();
-    } else {
-      renderConversation();
-    }
+    if (!loaded) showWelcome();
+    else renderConversation();
     input.focus();
   });
 

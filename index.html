@@ -7,7 +7,6 @@
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-  <script src="https://js.puter.com/v2/"></script>
 
   <style>
     body {
@@ -56,7 +55,7 @@
       <h1 class="text-2xl font-bold tracking-tight">RootDonate AI</h1>
       <p class="text-xs text-emerald-400 flex items-center gap-1.5">
         <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-        Real AI • Guest Mode
+        Cleverbot + Grok Style • Free
       </p>
     </div>
     
@@ -88,7 +87,7 @@
       </form>
       
       <p class="text-center text-zinc-500 text-xs mt-4">
-        Free • Real AI • Conversations saved in URL
+        100% Free • Powered by Cleverbot with Grok-style personality • URL sharing
       </p>
     </div>
   </div>
@@ -97,17 +96,52 @@
 <script>
   let conversation = [];
 
-  // Get AI response
-  async function getRealAIResponse(message) {
+  // Grok-style prompt wrapper for Cleverbot
+  async function getAIResponse(userMessage) {
     try {
-      const response = await puter.ai.chat(message, {
-        model: "gpt-4.1-nano",
-        stream: false
+      // Build conversation history for better context
+      let history = conversation.map(msg => 
+        msg.role === 'user' ? `User: ${msg.content}` : `AI: ${msg.content}`
+      ).join('\n');
+
+      const fullPrompt = `You are Grok, built by xAI. 
+You are helpful, truthful, witty, and a bit sarcastic when appropriate. 
+You love science, technology, and exploring the universe. 
+Never be overly politically correct. Answer directly and clearly.
+
+Previous conversation:
+${history}
+
+User: ${userMessage}
+
+Grok:`;
+
+      // Send to Cleverbot
+      const res = await fetch('https://www.cleverbot.com/getreply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          input: fullPrompt,
+          cb_settings_language: 'en',
+          cb_settings_tweak1: '0.8',
+          cb_settings_tweak2: '0.7',
+          cb_settings_tweak3: '0.65'
+        })
       });
-      return response || "Sorry, I didn't receive a response.";
+
+      if (!res.ok) throw new Error('Network error');
+
+      const text = await res.text();
+      let reply = text.match(/output=(.+?)(?:&|$)/i);
+      reply = reply ? decodeURIComponent(reply[1].trim()) : text.trim();
+
+      // Clean up any leftover prompt leakage
+      reply = reply.replace(/^Grok:\s*/i, '').trim();
+
+      return reply || "Interesting question. Tell me more.";
     } catch (err) {
-      console.error("AI Error:", err);
-      return "I'm having trouble connecting right now. Please try again in a moment.";
+      console.error("Cleverbot Error:", err);
+      return "Sorry, I'm having trouble connecting right now. Please try again in a few seconds.";
     }
   }
 
@@ -117,7 +151,6 @@
       window.location.hash = '';
       return;
     }
-
     try {
       const jsonStr = JSON.stringify(conversation);
       const encoded = btoa(encodeURIComponent(jsonStr));
@@ -133,8 +166,6 @@
     if (!hash) return false;
 
     let encoded = null;
-
-    // Support multiple legacy formats
     if (hash.startsWith('/conversation/')) encoded = hash.substring(14);
     else if (hash.startsWith('/c/')) encoded = hash.substring(3);
     else if (hash.startsWith('conv=')) encoded = hash.substring(5);
@@ -200,8 +231,8 @@
           <div class="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold flex-shrink-0">✨</div>
           <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-5 max-w-[85%]">
             <p class="text-lg">Hello! I'm RootDonate AI.</p>
-            <p class="text-zinc-400 mt-2">Ask me anything — I'm running in real time.</p>
-            <p class="text-amber-400 text-xs mt-4">First response may take a few seconds while the guest session initializes.</p>
+            <p class="text-zinc-400 mt-2">A free AI powered by Cleverbot with Grok-style personality.</p>
+            <p class="text-amber-400 text-xs mt-4">I'm helpful, truthful, and occasionally witty. Ask me anything!</p>
           </div>
         </div>
       </div>
@@ -230,7 +261,7 @@
         <div class="bg-zinc-900 rounded-3xl rounded-tl-none px-6 py-4">
           <div class="flex items-center gap-3 text-zinc-400">
             <i class="fa-solid fa-circle animate-pulse"></i>
-            <span>Thinking...</span>
+            <span>Thinking in Grok style...</span>
           </div>
         </div>
       </div>
@@ -238,7 +269,7 @@
     chat.appendChild(thinking);
     chat.scrollTop = chat.scrollHeight;
 
-    const reply = await getRealAIResponse(question);
+    const reply = await getAIResponse(question);
     thinking.remove();
     addMessage(reply, 'bot');
   });
@@ -266,12 +297,12 @@
     saveToURL();
     navigator.clipboard.writeText(window.location.href)
       .then(() => alert("✅ Share link copied to clipboard!"))
-      .catch(() => alert("Could not copy link. Please copy the URL from the address bar."));
+      .catch(() => alert("Could not copy automatically. Please copy the URL from the address bar."));
   });
 
-  // New conversation button
+  // New conversation
   document.getElementById('new-btn').addEventListener('click', () => {
-    if (confirm("Start a new conversation? Current chat will be cleared.")) {
+    if (confirm("Start a fresh conversation?")) {
       conversation = [];
       window.location.hash = '';
       chat.innerHTML = '';
@@ -280,7 +311,7 @@
     }
   });
 
-  // Initialize app
+  // Initialize
   window.addEventListener('load', () => {
     const loaded = loadFromURL();
     if (!loaded) {
@@ -291,7 +322,6 @@
     input.focus();
   });
 
-  // Save before leaving
   window.addEventListener('beforeunload', saveToURL);
 </script>
 </body>

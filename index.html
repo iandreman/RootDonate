@@ -96,7 +96,6 @@
 <script>
   let conversation = [];
 
-  // Grok-style prompt + Cleverbot via CORS proxy
   async function getAIResponse(userMessage) {
     try {
       const history = conversation.map(msg => 
@@ -115,8 +114,9 @@ User: ${userMessage}
 
 Grok:`;
 
-      // Use corsproxy.io to bypass CORS
-      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://www.cleverbot.com/getreply');
+      // Updated reliable proxy (allorigins.win/raw)
+      const targetUrl = 'https://www.cleverbot.com/getreply';
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
 
       const res = await fetch(proxyUrl, {
         method: 'POST',
@@ -135,20 +135,25 @@ Grok:`;
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const text = await res.text();
+      
+      // Try to extract output= parameter
       let reply = text.match(/output=(.+?)(?:&|$)/i);
       reply = reply ? decodeURIComponent(reply[1].trim()) : text.trim();
 
       // Clean any leftover "Grok:" prefix
       reply = reply.replace(/^Grok:\s*/i, '').trim();
 
-      return reply || "Interesting question. Tell me more.";
+      if (!reply || reply.length < 5) {
+        throw new Error("Empty or invalid response from Cleverbot");
+      }
+
+      return reply;
     } catch (err) {
       console.error("AI Response Error:", err);
-      return "Sorry, I'm having trouble connecting right now. Please try again in a few seconds.";
+      return "Sorry, I'm having trouble connecting to Cleverbot right now. The service can be flaky. Please try again in a few seconds, or try a different message.";
     }
   }
 
-  // Save conversation to URL
   function saveToURL() {
     if (conversation.length === 0) {
       window.location.hash = '';
@@ -163,7 +168,6 @@ Grok:`;
     }
   }
 
-  // Load conversation from URL
   function loadFromURL() {
     const hash = window.location.hash.substring(1);
     if (!hash) return false;

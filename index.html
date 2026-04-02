@@ -87,7 +87,7 @@
       </form>
       
       <p class="text-center text-zinc-500 text-xs mt-4">
-        100% Free • Powered by Cleverbot with Grok-style personality • URL sharing
+        100% Free • Powered by Cleverbot with Grok-style personality • Conversations saved in URL
       </p>
     </div>
   </div>
@@ -96,11 +96,10 @@
 <script>
   let conversation = [];
 
-  // Grok-style prompt wrapper for Cleverbot
+  // Grok-style prompt + Cleverbot via CORS proxy
   async function getAIResponse(userMessage) {
     try {
-      // Build conversation history for better context
-      let history = conversation.map(msg => 
+      const history = conversation.map(msg => 
         msg.role === 'user' ? `User: ${msg.content}` : `AI: ${msg.content}`
       ).join('\n');
 
@@ -116,10 +115,14 @@ User: ${userMessage}
 
 Grok:`;
 
-      // Send to Cleverbot
-      const res = await fetch('https://www.cleverbot.com/getreply', {
+      // Use corsproxy.io to bypass CORS
+      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://www.cleverbot.com/getreply');
+
+      const res = await fetch(proxyUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: { 
+          'Content-Type': 'application/x-www-form-urlencoded' 
+        },
         body: new URLSearchParams({
           input: fullPrompt,
           cb_settings_language: 'en',
@@ -129,23 +132,23 @@ Grok:`;
         })
       });
 
-      if (!res.ok) throw new Error('Network error');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const text = await res.text();
       let reply = text.match(/output=(.+?)(?:&|$)/i);
       reply = reply ? decodeURIComponent(reply[1].trim()) : text.trim();
 
-      // Clean up any leftover prompt leakage
+      // Clean any leftover "Grok:" prefix
       reply = reply.replace(/^Grok:\s*/i, '').trim();
 
       return reply || "Interesting question. Tell me more.";
     } catch (err) {
-      console.error("Cleverbot Error:", err);
+      console.error("AI Response Error:", err);
       return "Sorry, I'm having trouble connecting right now. Please try again in a few seconds.";
     }
   }
 
-  // Save conversation to clean URL
+  // Save conversation to URL
   function saveToURL() {
     if (conversation.length === 0) {
       window.location.hash = '';
@@ -252,7 +255,6 @@ Grok:`;
     input.value = '';
     input.style.height = 'auto';
 
-    // Thinking indicator
     const thinking = document.createElement('div');
     thinking.className = 'message max-w-3xl mx-auto';
     thinking.innerHTML = `
@@ -274,13 +276,11 @@ Grok:`;
     addMessage(reply, 'bot');
   });
 
-  // Auto-resize textarea
   input.addEventListener('input', function () {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 180) + 'px';
   });
 
-  // Enter key support
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -288,7 +288,6 @@ Grok:`;
     }
   });
 
-  // Share button
   document.getElementById('share-btn').addEventListener('click', () => {
     if (conversation.length === 0) {
       alert("Nothing to share yet. Send a message first!");
@@ -300,7 +299,6 @@ Grok:`;
       .catch(() => alert("Could not copy automatically. Please copy the URL from the address bar."));
   });
 
-  // New conversation
   document.getElementById('new-btn').addEventListener('click', () => {
     if (confirm("Start a fresh conversation?")) {
       conversation = [];

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RootDonate AI • Online Dictionary Chat</title>
+  <title>RootDonate AI • Dictionary Chat</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
@@ -22,7 +22,9 @@
       flex-direction: column;
     }
 
-    .message { animation: fadeIn 0.35s ease forwards; }
+    .message {
+      animation: fadeIn 0.35s ease forwards;
+    }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
@@ -37,12 +39,17 @@
       border-radius: 20px;
     }
 
-    .definition p { margin: 8px 0; }
+    .definition p {
+      margin: 8px 0;
+    }
+
     .audio-btn {
       cursor: pointer;
-      transition: color 0.2s;
+      transition: color 0.2s ease;
     }
-    .audio-btn:hover { color: #a5b4fc; }
+    .audio-btn:hover {
+      color: #a5b4fc;
+    }
   </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen">
@@ -87,7 +94,7 @@
       </form>
       
       <p class="text-center text-zinc-500 text-xs mt-4">
-        Real internet dictionary lookup + Grok-style personality • Works offline too
+        Real-time dictionary lookup • Grok-style personality • Works offline too
       </p>
     </div>
   </div>
@@ -144,8 +151,10 @@
       entry.meanings.forEach((meaning, idx) => {
         html += `<span class="text-purple-400 font-medium">${meaning.partOfSpeech}</span><br>`;
         meaning.definitions.forEach((def, i) => {
-          html += `<span class="block">${i+1}. ${def.definition}</span>`;
-          if (def.example) html += `<span class="text-amber-300 italic block pl-4">"${def.example}"</span>`;
+          html += `<span class="block">${i + 1}. ${def.definition}</span>`;
+          if (def.example) {
+            html += `<span class="text-amber-300 italic block pl-4">"${def.example}"</span>`;
+          }
         });
         if (idx < entry.meanings.length - 1) html += `<br>`;
       });
@@ -176,11 +185,21 @@
 
   function getWittyResponse(msg) {
     const lower = msg.toLowerCase();
-    if (/(hello|hi|hey|greetings)/.test(lower)) return wittyResponses.greetings[Math.floor(Math.random() * wittyResponses.greetings.length)];
-    if (/(how are you|hru|how r u)/.test(lower)) return wittyResponses.howareyou[Math.floor(Math.random() * wittyResponses.howareyou.length)];
-    if (/(joke|funny|make me laugh)/.test(lower)) return wittyResponses.jokes[Math.floor(Math.random() * wittyResponses.jokes.length)];
-    if (/(fact|tell me something)/.test(lower)) return wittyResponses.facts[Math.floor(Math.random() * wittyResponses.facts.length)];
-    if (/(thank|thanks|thx)/.test(lower)) return wittyResponses.thanks[Math.floor(Math.random() * wittyResponses.thanks.length)];
+    if (/(hello|hi|hey|greetings)/.test(lower)) {
+      return wittyResponses.greetings[Math.floor(Math.random() * wittyResponses.greetings.length)];
+    }
+    if (/(how are you|hru|how r u)/.test(lower)) {
+      return wittyResponses.howareyou[Math.floor(Math.random() * wittyResponses.howareyou.length)];
+    }
+    if (/(joke|funny|make me laugh)/.test(lower)) {
+      return wittyResponses.jokes[Math.floor(Math.random() * wittyResponses.jokes.length)];
+    }
+    if (/(fact|tell me something)/.test(lower)) {
+      return wittyResponses.facts[Math.floor(Math.random() * wittyResponses.facts.length)];
+    }
+    if (/(thank|thanks|thx)/.test(lower)) {
+      return wittyResponses.thanks[Math.floor(Math.random() * wittyResponses.thanks.length)];
+    }
     return null;
   }
 
@@ -191,14 +210,14 @@
     const witty = getWittyResponse(userMessage);
     if (witty) return witty;
 
-    // Simple math
+    // Simple math support
     if (/^\d+\s*[\+\-\*\/]\s*\d+$/.test(lowerMsg)) {
       try {
         return `The answer is <strong>${eval(lowerMsg)}</strong>. Nice calculation!`;
       } catch (e) {}
     }
 
-    // Try words (longest first)
+    // Try dictionary lookup (longest word first)
     const sortedWords = [...new Set(words)].sort((a, b) => b.length - a.length);
 
     for (let word of sortedWords) {
@@ -213,7 +232,7 @@
       }
     }
 
-    // Final fallback
+    // Final fallback responses
     const fallbacks = [
       "I couldn't find an exact match, but I'm happy to reason with you. What aspect interests you most?",
       "Deep question! Rephrase it or ask about a related word — I'm here to help grok it.",
@@ -363,7 +382,7 @@
     }
   });
 
-  // Init
+  // Initialize
   window.addEventListener('load', () => {
     const loaded = loadFromURL();
     if (!loaded) showWelcome();

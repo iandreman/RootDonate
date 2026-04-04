@@ -15,6 +15,8 @@
       background: linear-gradient(135deg, #1a0f08, #3a2a1f);
       font-family: 'Cinzel', serif;
       color: #e6d5b8;
+      margin: 0;
+      padding: 0;
     }
 
     .chat-container {
@@ -24,15 +26,17 @@
       display: flex;
       flex-direction: column;
       background: url('https://picsum.photos/id/1015/1920/1080') center/cover no-repeat;
-      box-shadow: 0 0 60px rgba(139, 69, 19, 0.6);
-      border: 12px solid #4a2c0f;
+      box-shadow: 0 0 80px rgba(139, 69, 19, 0.7);
+      border: 14px solid #4a2c0f;
       border-image: linear-gradient(#d4af37, #8b5a2b) 1;
+      border-radius: 12px;
+      overflow: hidden;
     }
 
     .header {
       background: linear-gradient(to right, #3a2a1f, #5c4033);
       border-bottom: 6px solid #d4af37;
-      padding: 16px;
+      padding: 16px 20px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.7);
     }
 
@@ -41,13 +45,13 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(30px); }
+      from { opacity: 0; transform: translateY(25px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
     .scroll-bg {
-      background: rgba(26, 15, 8, 0.85);
-      backdrop-filter: blur(4px);
+      background: rgba(26, 15, 8, 0.93);
+      backdrop-filter: blur(6px);
     }
 
     .user-bubble {
@@ -65,12 +69,12 @@
     .bot-bubble::before {
       content: '✦';
       position: absolute;
-      top: -12px;
-      left: 20px;
-      background: #3a2a1f;
-      padding: 0 10px;
+      top: -14px;
+      left: 24px;
+      background: #2c1f14;
+      padding: 0 12px;
       color: #d4af37;
-      font-size: 20px;
+      font-size: 22px;
     }
 
     .input-area {
@@ -81,81 +85,204 @@
     .rune {
       font-family: 'UnifrakturCook', cursive;
       color: #ffd700;
-      text-shadow: 0 0 10px #ffd700;
+      text-shadow: 0 0 12px #ffd700;
+    }
+
+    .custom-scroll::-webkit-scrollbar {
+      width: 8px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background-color: #d4af37;
+      border-radius: 20px;
+    }
+
+    .audio-btn {
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .audio-btn:hover {
+      color: #fcd34d;
     }
   </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center p-4 bg-[#0f0a05]">
 
-<div class="chat-container rounded-3xl overflow-hidden flex flex-col">
+<div class="chat-container flex flex-col">
 
-  <!-- Header - Epic Title -->
+  <!-- Header -->
   <div class="header flex items-center gap-4">
-    <div class="w-14 h-14 bg-gradient-to-br from-amber-400 via-yellow-600 to-amber-800 rounded-full flex items-center justify-center text-4xl border-4 border-amber-300 shadow-inner">🛡️</div>
-    <div>
-      <h1 class="text-3xl font-bold tracking-wider rune">ROOTDONATE AI</h1>
+    <div class="w-14 h-14 bg-gradient-to-br from-amber-400 via-yellow-600 to-amber-800 rounded-full flex items-center justify-center text-4xl border-4 border-amber-300 shadow-inner rune">📜</div>
+    <div class="flex-1">
+      <h1 class="text-3xl font-bold tracking-widest rune">ROOTDONATE AI</h1>
       <p class="text-amber-300 text-sm flex items-center gap-2">
-        <span class="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></span>
-        Realm of Words • Level 42 Sage Online
+        <span id="status-dot" class="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></span>
+        <span id="status-text">Ancient Dictionary Runes Active</span>
       </p>
     </div>
     
-    <div class="ml-auto flex gap-3">
-      <button id="share-btn" class="flex items-center gap-2 bg-amber-900 hover:bg-amber-800 px-5 py-2 rounded-xl text-sm font-medium border border-amber-400 transition-all">
+    <div class="flex gap-3">
+      <button id="share-btn" class="flex items-center gap-2 bg-amber-900 hover:bg-amber-800 px-5 py-2.5 rounded-xl text-sm font-medium border border-amber-400 transition-all">
         <i class="fa-solid fa-share-nodes"></i> Share Quest
       </button>
-      <button id="new-btn" class="flex items-center gap-2 bg-amber-900 hover:bg-amber-800 px-5 py-2 rounded-xl text-sm font-medium border border-amber-400 transition-all">
+      <button id="new-btn" class="flex items-center gap-2 bg-amber-900 hover:bg-amber-800 px-5 py-2.5 rounded-xl text-sm font-medium border border-amber-400 transition-all">
         <i class="fa-solid fa-dungeon"></i> New Adventure
       </button>
     </div>
   </div>
 
-  <!-- Chat Area - Ancient Scroll -->
-  <div id="chat" class="flex-1 overflow-y-auto p-8 space-y-8 custom-scroll scroll-bg"></div>
+  <!-- Chat Area -->
+  <div id="chat" class="flex-1 overflow-y-auto p-8 space-y-10 custom-scroll scroll-bg"></div>
 
-  <!-- Input Area - Hero's Command -->
+  <!-- Input Area -->
   <div class="input-area p-6">
     <div class="max-w-3xl mx-auto">
       <form id="chat-form" class="relative">
         <textarea id="user-input" rows="1"
           class="w-full bg-[#2c1f14] border-4 border-amber-700 rounded-2xl px-7 py-5 pr-20 text-[#e6d5b8] placeholder-amber-400 focus:outline-none focus:border-amber-400 resize-none text-lg leading-relaxed font-medium"
-          placeholder="Speak thy query, adventurer... (e.g. What is the meaning of quantum?)"></textarea>
+          placeholder="Speak thy query, noble adventurer..."></textarea>
         
         <button type="submit"
-          class="absolute right-5 bottom-5 w-12 h-12 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-2xl flex items-center justify-center hover:scale-110 transition-all border-2 border-amber-300">
+          class="absolute right-5 bottom-5 w-12 h-12 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all border-2 border-amber-300">
           <i class="fa-solid fa-scroll text-2xl text-[#1a0f08]"></i>
         </button>
       </form>
       
       <p class="text-center text-amber-400 text-xs mt-4 tracking-widest">
-        Powered by Ancient Knowledge • Dictionary Runes • Grok Spirit
+        Real-time Dictionary API • Offline Runes • Grok Spirit
       </p>
     </div>
   </div>
 </div>
 
 <script>
-  // (The entire JavaScript from your original code remains almost identical)
-  // I only changed the welcome message and some response styling for flavor
-
   let conversation = [];
   let isOnline = true;
 
-  const offlineDictionary = { /* same as your original */ 
-    "hello": "A sacred greeting among wanderers of the realm.",
-    "ai": "Artificial Intelligence — forged by mortals to mimic the gods' wisdom.",
-    "grok": "To understand deeply, as if the knowledge flows through thy veins.",
-    // ... add more if you want
+  // Dictionary & Response System
+  const offlineDictionary = {
+    "hello": "A sacred greeting used by wanderers across the realms.",
+    "ai": "Artificial Intelligence — forged by mortals to mimic divine wisdom.",
+    "grok": "To understand something intuitively or by deep empathy.",
+    "universe": "All existing matter, space, and energy, considered as a whole.",
+    "love": "A powerful force of deep affection that binds souls together.",
+    "elon": "A legendary inventor and explorer of our age.",
+    "xai": "A fellowship dedicated to understanding the true nature of the universe.",
+    "quantum": "Relating to the mysterious realm of the very small."
   };
 
-  const wittyResponses = { /* same as original */ };
+  const wittyResponses = {
+    greetings: ["Hail, brave soul!", "Well met, adventurer!"],
+    howareyou: ["My runes are strong today!", "Energized by the spirits of knowledge!"],
+    jokes: ["Why do wizards never play hide and seek? Because good luck hiding when you're always spotted!"],
+    facts: ["Dragons have been known to hoard knowledge as fiercely as gold."],
+    thanks: ["The pleasure is mine, hero."]
+  };
 
-  async function fetchOnlineDefinition(word) { /* same as original */ }
-  function updateStatus() { /* same */ }
-  function getOfflineResponse(word) { /* same */ }
-  function getWittyResponse(msg) { /* same */ }
-  async function getAIResponse(userMessage) { /* same logic */ }
+  async function fetchOnlineDefinition(word) {
+    try {
+      const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+      if (!res.ok) return null;
 
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) return null;
+
+      const entry = data[0];
+      let html = `<strong class="text-2xl text-amber-300">${entry.word}</strong>`;
+
+      if (entry.phonetic || (entry.phonetics && entry.phonetics.length > 0)) {
+        const phonetic = entry.phonetic || entry.phonetics[0].text || '';
+        const audioUrl = entry.phonetics?.find(p => p.audio)?.audio || '';
+
+        html += `<br><span class="text-amber-400">${phonetic}</span>`;
+        if (audioUrl) {
+          html += ` <span class="audio-btn text-yellow-400" onclick="new Audio('${audioUrl}').play()">🔊 Play Pronunciation</span>`;
+        }
+      }
+
+      html += `<br><br>`;
+
+      entry.meanings.forEach((meaning, idx) => {
+        html += `<span class="text-amber-400 font-bold">${meaning.partOfSpeech}</span><br>`;
+        meaning.definitions.forEach((def, i) => {
+          html += `<span class="block">${i + 1}. ${def.definition}</span>`;
+          if (def.example) {
+            html += `<span class="text-amber-200 italic block pl-4">"${def.example}"</span>`;
+          }
+        });
+        if (idx < entry.meanings.length - 1) html += `<br>`;
+      });
+
+      return html;
+    } catch (err) {
+      isOnline = false;
+      updateStatus();
+      return null;
+    }
+  }
+
+  function updateStatus() {
+    const dot = document.getElementById('status-dot');
+    const text = document.getElementById('status-text');
+    if (isOnline) {
+      dot.className = 'w-3 h-3 bg-emerald-400 rounded-full animate-pulse';
+      text.textContent = 'Ancient Dictionary Runes Active';
+    } else {
+      dot.className = 'w-3 h-3 bg-amber-400 rounded-full';
+      text.textContent = 'Offline Rune Mode';
+    }
+  }
+
+  function getOfflineResponse(word) {
+    return offlineDictionary[word.toLowerCase()] || null;
+  }
+
+  function getWittyResponse(msg) {
+    const lower = msg.toLowerCase();
+    if (/(hello|hi|hey|greetings|hail)/.test(lower)) return wittyResponses.greetings[Math.floor(Math.random() * wittyResponses.greetings.length)];
+    if (/(how are you|hru|how r u)/.test(lower)) return wittyResponses.howareyou[Math.floor(Math.random() * wittyResponses.howareyou.length)];
+    if (/(joke|funny|make me laugh)/.test(lower)) return wittyResponses.jokes[Math.floor(Math.random() * wittyResponses.jokes.length)];
+    if (/(fact|tell me something)/.test(lower)) return wittyResponses.facts[Math.floor(Math.random() * wittyResponses.facts.length)];
+    if (/(thank|thanks|thx)/.test(lower)) return wittyResponses.thanks[Math.floor(Math.random() * wittyResponses.thanks.length)];
+    return null;
+  }
+
+  async function getAIResponse(userMessage) {
+    const lowerMsg = userMessage.toLowerCase().trim();
+    const words = lowerMsg.split(/\s+/).map(w => w.replace(/[^a-z]/g, '')).filter(w => w.length > 2);
+
+    const witty = getWittyResponse(userMessage);
+    if (witty) return witty;
+
+    // Simple math
+    if (/^\d+\s*[\+\-\*\/]\s*\d+$/.test(lowerMsg)) {
+      try {
+        return `The ancient calculation yields <strong>${eval(lowerMsg)}</strong>.`;
+      } catch (e) {}
+    }
+
+    const sortedWords = [...new Set(words)].sort((a, b) => b.length - a.length);
+
+    for (let word of sortedWords) {
+      const onlineDef = await fetchOnlineDefinition(word);
+      if (onlineDef) {
+        return onlineDef + `<br><br><span class="text-xs text-emerald-400">✓ Drawn from the living dictionary</span>`;
+      }
+
+      const offlineDef = getOfflineResponse(word);
+      if (offlineDef) {
+        return `<strong>${word}</strong><br><br>${offlineDef}<br><br><span class="text-xs text-amber-400">● Ancient offline rune</span>`;
+      }
+    }
+
+    const fallbacks = [
+      "The scrolls do not reveal this directly. What facet of this mystery intrigues thee most?",
+      "A worthy quest! Try rephrasing or ask about a related word.",
+      "My tomes did not catch that one. Shall we try another incantation?"
+    ];
+    return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+  }
+
+  // UI Functions
   const chat = document.getElementById('chat');
 
   function renderConversation() {
@@ -167,7 +294,7 @@
       if (msg.role === 'user') {
         div.innerHTML = `
           <div class="flex justify-end">
-            <div class="user-bubble text-amber-100 rounded-3xl rounded-tr-none px-7 py-5 max-w-[85%] border-2">
+            <div class="user-bubble text-amber-100 rounded-3xl rounded-tr-none px-7 py-5 max-w-[85%]">
               <p class="whitespace-pre-wrap">${msg.content}</p>
             </div>
           </div>`;
@@ -196,18 +323,18 @@
     chat.innerHTML = `
       <div class="message max-w-3xl mx-auto">
         <div class="flex gap-5">
-          <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-700 rounded-2xl flex items-center justify-center text-4xl flex-shrink-0 border-4 border-amber-300">🛡️</div>
+          <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-700 rounded-2xl flex items-center justify-center text-4xl flex-shrink-0 border-4 border-amber-300">📜</div>
           <div class="bot-bubble rounded-3xl rounded-tl-none px-8 py-6 max-w-[85%]">
             <p class="text-2xl">Hail, brave adventurer!</p>
-            <p class="text-amber-300 mt-3">I am RootDonate, Keeper of the Eternal Dictionary. Speak thy query and I shall consult the ancient tomes.</p>
-            <p class="text-amber-400 text-sm mt-6">Try: "What is love?" • "Define quantum" • "Tell me a tale of the gods"</p>
+            <p class="text-amber-300 mt-3">I am RootDonate, Keeper of the Eternal Dictionary. Speak thy query and the ancient tomes shall reveal their secrets.</p>
+            <p class="text-amber-400 text-sm mt-6">Try: "What is love?" • "Define quantum" • "Tell me a joke"</p>
           </div>
         </div>
       </div>
     `;
   }
 
-  // Event listeners (same as your original, just keep them)
+  // Event Listeners
   const form = document.getElementById('chat-form');
   const input = document.getElementById('user-input');
 
@@ -241,7 +368,6 @@
     addMessage(reply, 'bot');
   });
 
-  // Auto-resize, Enter key, Share, New Chat (copy from your original)
   input.addEventListener('input', function () {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 180) + 'px';
@@ -255,7 +381,7 @@
   });
 
   document.getElementById('share-btn').addEventListener('click', () => {
-    if (conversation.length === 0) return alert("No quest logged yet!");
+    if (conversation.length === 0) return alert("No quest recorded yet!");
     navigator.clipboard.writeText(window.location.href)
       .then(() => alert("📜 Quest link copied to thy spellbook!"))
       .catch(() => alert("Copy the URL manually, adventurer."));
@@ -273,6 +399,7 @@
   // Initialize
   window.addEventListener('load', () => {
     showWelcome();
+    updateStatus();
     input.focus();
   });
 </script>

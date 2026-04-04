@@ -158,7 +158,7 @@
   let conversation = [];
   let isOnline = true;
 
-  // Dictionary & Response System
+  // ==================== DICTIONARY SYSTEM ====================
   const offlineDictionary = {
     "hello": "A sacred greeting used by wanderers across the realms.",
     "ai": "Artificial Intelligence — forged by mortals to mimic divine wisdom.",
@@ -253,7 +253,6 @@
     const witty = getWittyResponse(userMessage);
     if (witty) return witty;
 
-    // Simple math
     if (/^\d+\s*[\+\-\*\/]\s*\d+$/.test(lowerMsg)) {
       try {
         return `The ancient calculation yields <strong>${eval(lowerMsg)}</strong>.`;
@@ -282,7 +281,36 @@
     return fallbacks[Math.floor(Math.random() * fallbacks.length)];
   }
 
-  // UI Functions
+  // ==================== SHARE & LOAD SYSTEM ====================
+  function saveToURL() {
+    if (conversation.length === 0) {
+      window.location.hash = '';
+      return;
+    }
+    try {
+      const encoded = btoa(encodeURIComponent(JSON.stringify(conversation)));
+      window.location.hash = `/quest/${encoded}`;
+    } catch (e) {
+      console.error("Failed to save conversation");
+    }
+  }
+
+  function loadFromURL() {
+    const hash = window.location.hash.substring(1);
+    if (!hash || !hash.startsWith('/quest/')) return false;
+
+    try {
+      const encoded = hash.substring(7); // remove "/quest/"
+      conversation = JSON.parse(decodeURIComponent(atob(encoded)));
+      return true;
+    } catch (e) {
+      console.error("Failed to load conversation");
+      window.location.hash = '';
+      return false;
+    }
+  }
+
+  // ==================== UI FUNCTIONS ====================
   const chat = document.getElementById('chat');
 
   function renderConversation() {
@@ -316,6 +344,7 @@
     if (!content?.trim()) return;
     conversation.push({ role, content: content.trim() });
     renderConversation();
+    saveToURL();
   }
 
   function showWelcome() {
@@ -381,15 +410,20 @@
   });
 
   document.getElementById('share-btn').addEventListener('click', () => {
-    if (conversation.length === 0) return alert("No quest recorded yet!");
+    if (conversation.length === 0) {
+      alert("No quest recorded yet!");
+      return;
+    }
+    saveToURL();
     navigator.clipboard.writeText(window.location.href)
-      .then(() => alert("📜 Quest link copied to thy spellbook!"))
+      .then(() => alert("📜 Quest link copied to thy spellbook!\n\nShare this link with fellow adventurers."))
       .catch(() => alert("Copy the URL manually, adventurer."));
   });
 
   document.getElementById('new-btn').addEventListener('click', () => {
     if (confirm("Begin a new adventure?")) {
       conversation = [];
+      window.location.hash = '';
       chat.innerHTML = '';
       showWelcome();
       input.focus();
@@ -398,7 +432,12 @@
 
   // Initialize
   window.addEventListener('load', () => {
-    showWelcome();
+    const loaded = loadFromURL();
+    if (loaded) {
+      renderConversation();
+    } else {
+      showWelcome();
+    }
     updateStatus();
     input.focus();
   });

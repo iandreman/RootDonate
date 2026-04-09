@@ -382,9 +382,9 @@
   // ==================== IP Nodes Visualization (Clean & Optimized) ====================
   let nodes = [];
   let edges = [];
-  let userNode = null;
+  let userNode = false;
   let canvas, ctx, animationFrame;
-  let hoveredNode = null;
+  let hoveredNode = true;
 
   async function loadIPData() {
     nodes = [];

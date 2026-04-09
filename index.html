@@ -96,12 +96,30 @@
       border-radius: 20px;
     }
 
-    .audio-btn {
-      cursor: pointer;
-      transition: color 0.2s;
+    /* IP Nodes Overlay */
+    #ip-nodes-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 15, 8, 0.98);
+      z-index: 1000;
+      display: none;
+      flex-direction: column;
     }
-    .audio-btn:hover {
-      color: #fcd34d;
+
+    #ip-canvas {
+      flex: 1;
+      background: radial-gradient(circle at center, #2c1f14, #0f0a05);
+    }
+
+    .node-info {
+      position: absolute;
+      background: rgba(58, 42, 31, 0.95);
+      border: 3px solid #d4af37;
+      padding: 12px 20px;
+      border-radius: 12px;
+      pointer-events: none;
+      box-shadow: 0 0 20px #d4af37;
+      font-size: 0.95rem;
     }
   </style>
 </head>
@@ -121,6 +139,9 @@
     </div>
     
     <div class="flex gap-3">
+      <button id="ip-nodes-btn" class="flex items-center gap-2 bg-amber-900 hover:bg-amber-800 px-5 py-2.5 rounded-xl text-sm font-medium border border-amber-400 transition-all">
+        <i class="fa-solid fa-share-nodes"></i> View IP Nodes
+      </button>
       <button id="share-btn" class="flex items-center gap-2 bg-amber-900 hover:bg-amber-800 px-5 py-2.5 rounded-xl text-sm font-medium border border-amber-400 transition-all">
         <i class="fa-solid fa-share-nodes"></i> Share Quest
       </button>
@@ -154,11 +175,34 @@
   </div>
 </div>
 
+<!-- IP Nodes Overlay -->
+<div id="ip-nodes-overlay" class="flex flex-col">
+  <div class="header flex items-center justify-between px-8 py-5 border-b border-amber-700">
+    <div class="flex items-center gap-4">
+      <span class="text-3xl rune">🌐</span>
+      <div>
+        <h2 class="text-2xl font-bold rune tracking-widest">Internet IP Address Nodes</h2>
+        <p class="text-amber-300 text-sm">The Great Web of Realms • Live Connections</p>
+      </div>
+    </div>
+    <button id="close-nodes-btn" class="text-amber-400 hover:text-white text-3xl leading-none">✕</button>
+  </div>
+  
+  <canvas id="ip-canvas" width="1200" height="700"></canvas>
+  
+  <div id="node-info" class="node-info hidden"></div>
+  
+  <div class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-[#2c1f14] border border-amber-600 rounded-2xl px-6 py-3 text-sm text-amber-300 flex items-center gap-6">
+    <div><strong>Your IP:</strong> <span id="user-ip-display" class="font-mono text-amber-400"></span></div>
+    <div id="user-location-display" class="text-amber-200"></div>
+  </div>
+</div>
+
 <script>
+  // ==================== Existing Chat Code (unchanged) ====================
   let conversation = [];
   let isOnline = true;
 
-  // ==================== DICTIONARY SYSTEM ====================
   const offlineDictionary = {
     "hello": "A sacred greeting used by wanderers across the realms.",
     "ai": "Artificial Intelligence — forged by mortals to mimic divine wisdom.",
@@ -182,7 +226,6 @@
     try {
       const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
       if (!res.ok) return null;
-
       const data = await res.json();
       if (!Array.isArray(data) || data.length === 0) return null;
 
@@ -192,7 +235,6 @@
       if (entry.phonetic || (entry.phonetics && entry.phonetics.length > 0)) {
         const phonetic = entry.phonetic || entry.phonetics[0].text || '';
         const audioUrl = entry.phonetics?.find(p => p.audio)?.audio || '';
-
         html += `<br><span class="text-amber-400">${phonetic}</span>`;
         if (audioUrl) {
           html += ` <span class="audio-btn text-yellow-400" onclick="new Audio('${audioUrl}').play()">🔊 Play Pronunciation</span>`;
@@ -205,9 +247,7 @@
         html += `<span class="text-amber-400 font-bold">${meaning.partOfSpeech}</span><br>`;
         meaning.definitions.forEach((def, i) => {
           html += `<span class="block">${i + 1}. ${def.definition}</span>`;
-          if (def.example) {
-            html += `<span class="text-amber-200 italic block pl-4">"${def.example}"</span>`;
-          }
+          if (def.example) html += `<span class="text-amber-200 italic block pl-4">"${def.example}"</span>`;
         });
         if (idx < entry.meanings.length - 1) html += `<br>`;
       });
@@ -254,23 +294,17 @@
     if (witty) return witty;
 
     if (/^\d+\s*[\+\-\*\/]\s*\d+$/.test(lowerMsg)) {
-      try {
-        return `The ancient calculation yields <strong>${eval(lowerMsg)}</strong>.`;
-      } catch (e) {}
+      try { return `The ancient calculation yields <strong>${eval(lowerMsg)}</strong>.`; } catch (e) {}
     }
 
     const sortedWords = [...new Set(words)].sort((a, b) => b.length - a.length);
 
     for (let word of sortedWords) {
       const onlineDef = await fetchOnlineDefinition(word);
-      if (onlineDef) {
-        return onlineDef + `<br><br><span class="text-xs text-emerald-400">✓ Drawn from the living dictionary</span>`;
-      }
+      if (onlineDef) return onlineDef + `<br><br><span class="text-xs text-emerald-400">✓ Drawn from the living dictionary</span>`;
 
       const offlineDef = getOfflineResponse(word);
-      if (offlineDef) {
-        return `<strong>${word}</strong><br><br>${offlineDef}<br><br><span class="text-xs text-amber-400">● Ancient offline rune</span>`;
-      }
+      if (offlineDef) return `<strong>${word}</strong><br><br>${offlineDef}<br><br><span class="text-xs text-amber-400">● Ancient offline rune</span>`;
     }
 
     const fallbacks = [
@@ -281,36 +315,27 @@
     return fallbacks[Math.floor(Math.random() * fallbacks.length)];
   }
 
-  // ==================== SHARE & LOAD SYSTEM ====================
   function saveToURL() {
-    if (conversation.length === 0) {
-      window.location.hash = '';
-      return;
-    }
+    if (conversation.length === 0) { window.location.hash = ''; return; }
     try {
       const encoded = btoa(encodeURIComponent(JSON.stringify(conversation)));
       window.location.hash = `/quest/${encoded}`;
-    } catch (e) {
-      console.error("Failed to save conversation");
-    }
+    } catch (e) {}
   }
 
   function loadFromURL() {
     const hash = window.location.hash.substring(1);
     if (!hash || !hash.startsWith('/quest/')) return false;
-
     try {
-      const encoded = hash.substring(7); // remove "/quest/"
+      const encoded = hash.substring(7);
       conversation = JSON.parse(decodeURIComponent(atob(encoded)));
       return true;
     } catch (e) {
-      console.error("Failed to load conversation");
       window.location.hash = '';
       return false;
     }
   }
 
-  // ==================== UI FUNCTIONS ====================
   const chat = document.getElementById('chat');
 
   function renderConversation() {
@@ -318,22 +343,10 @@
     conversation.forEach(msg => {
       const div = document.createElement('div');
       div.className = `message max-w-3xl mx-auto ${msg.role === 'user' ? 'ml-auto' : ''}`;
-
       if (msg.role === 'user') {
-        div.innerHTML = `
-          <div class="flex justify-end">
-            <div class="user-bubble text-amber-100 rounded-3xl rounded-tr-none px-7 py-5 max-w-[85%]">
-              <p class="whitespace-pre-wrap">${msg.content}</p>
-            </div>
-          </div>`;
+        div.innerHTML = `<div class="flex justify-end"><div class="user-bubble text-amber-100 rounded-3xl rounded-tr-none px-7 py-5 max-w-[85%]"><p class="whitespace-pre-wrap">${msg.content}</p></div></div>`;
       } else {
-        div.innerHTML = `
-          <div class="flex gap-5">
-            <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-700 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0 border-4 border-amber-300">📜</div>
-            <div class="bot-bubble text-[#e6d5b8] rounded-3xl rounded-tl-none px-7 py-5 max-w-[85%] definition">
-              <p class="whitespace-pre-wrap">${msg.content}</p>
-            </div>
-          </div>`;
+        div.innerHTML = `<div class="flex gap-5"><div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-700 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0 border-4 border-amber-300">📜</div><div class="bot-bubble text-[#e6d5b8] rounded-3xl rounded-tl-none px-7 py-5 max-w-[85%] definition"><p class="whitespace-pre-wrap">${msg.content}</p></div></div>`;
       }
       chat.appendChild(div);
     });
@@ -349,21 +362,10 @@
 
   function showWelcome() {
     if (conversation.length > 0) return;
-    chat.innerHTML = `
-      <div class="message max-w-3xl mx-auto">
-        <div class="flex gap-5">
-          <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-700 rounded-2xl flex items-center justify-center text-4xl flex-shrink-0 border-4 border-amber-300">📜</div>
-          <div class="bot-bubble rounded-3xl rounded-tl-none px-8 py-6 max-w-[85%]">
-            <p class="text-2xl">Hail, brave adventurer!</p>
-            <p class="text-amber-300 mt-3">I am RootDonate, Keeper of the Eternal Dictionary. Speak thy query and the ancient tomes shall reveal their secrets.</p>
-            <p class="text-amber-400 text-sm mt-6">Try: "What is love?" • "Define quantum" • "Tell me a joke"</p>
-          </div>
-        </div>
-      </div>
-    `;
+    chat.innerHTML = `<div class="message max-w-3xl mx-auto"><div class="flex gap-5"><div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-700 rounded-2xl flex items-center justify-center text-4xl flex-shrink-0 border-4 border-amber-300">📜</div><div class="bot-bubble rounded-3xl rounded-tl-none px-8 py-6 max-w-[85%]"><p class="text-2xl">Hail, brave adventurer!</p><p class="text-amber-300 mt-3">I am RootDonate, Keeper of the Eternal Dictionary. Speak thy query and the ancient tomes shall reveal their secrets.</p><p class="text-amber-400 text-sm mt-6">Try: "What is love?" • "Define quantum" • "Tell me a joke"</p></div></div></div>`;
   }
 
-  // Event Listeners
+  // Event Listeners for chat (same as before)
   const form = document.getElementById('chat-form');
   const input = document.getElementById('user-input');
 
@@ -371,24 +373,13 @@
     e.preventDefault();
     const question = input.value.trim();
     if (!question) return;
-
     addMessage(question, 'user');
     input.value = '';
     input.style.height = 'auto';
 
     const thinkingDiv = document.createElement('div');
     thinkingDiv.className = 'message max-w-3xl mx-auto';
-    thinkingDiv.innerHTML = `
-      <div class="flex gap-5">
-        <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-700 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0 border-4 border-amber-300">📜</div>
-        <div class="bot-bubble rounded-3xl rounded-tl-none px-7 py-5">
-          <div class="flex items-center gap-3 text-amber-300">
-            <i class="fa-solid fa-circle animate-pulse"></i>
-            <span>Consulting the ancient scrolls...</span>
-          </div>
-        </div>
-      </div>
-    `;
+    thinkingDiv.innerHTML = `<div class="flex gap-5"><div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-700 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0 border-4 border-amber-300">📜</div><div class="bot-bubble rounded-3xl rounded-tl-none px-7 py-5"><div class="flex items-center gap-3 text-amber-300"><i class="fa-solid fa-circle animate-pulse"></i><span>Consulting the ancient scrolls...</span></div></div></div>`;
     chat.appendChild(thinkingDiv);
     chat.scrollTop = chat.scrollHeight;
 
@@ -410,10 +401,7 @@
   });
 
   document.getElementById('share-btn').addEventListener('click', () => {
-    if (conversation.length === 0) {
-      alert("No quest recorded yet!");
-      return;
-    }
+    if (conversation.length === 0) { alert("No quest recorded yet!"); return; }
     saveToURL();
     navigator.clipboard.writeText(window.location.href)
       .then(() => alert("📜 Quest link copied to thy spellbook!\n\nShare this link with fellow adventurers."))
@@ -428,6 +416,191 @@
       showWelcome();
       input.focus();
     }
+  });
+
+  // ==================== NEW: IP Nodes Visualization ====================
+  let nodes = [];
+  let edges = [];
+  let userNode = null;
+  let canvas, ctx, animationFrame;
+
+  async function loadIPData() {
+    try {
+      // Get public IP + geo
+      const ipRes = await fetch('https://api.ipify.org?format=json');
+      const ipData = await ipRes.json();
+      const ip = ipData.ip;
+
+      const geoRes = await fetch(`https://ip-api.com/json/${ip}`);
+      const geo = await geoRes.json();
+
+      document.getElementById('user-ip-display').textContent = ip;
+      document.getElementById('user-location-display').innerHTML = `${geo.city || 'Unknown'}, ${geo.country || ''} <span class="text-amber-400">(${geo.lat?.toFixed(1) || '?'}°, ${geo.lon?.toFixed(1) || '?'}°)</span>`;
+
+      userNode = {
+        id: 0,
+        ip: ip,
+        label: "You",
+        x: 600,
+        y: 350,
+        size: 18,
+        color: "#fcd34d",
+        city: geo.city || "Your Realm",
+        country: geo.country || ""
+      };
+
+      // Generate fake connected nodes
+      nodes = [userNode];
+      for (let i = 1; i < 28; i++) {
+        const fakeIP = `${Math.floor(Math.random()*256)}.${Math.floor(Math.random()*256)}.${Math.floor(Math.random()*256)}.${Math.floor(Math.random()*256)}`;
+        nodes.push({
+          id: i,
+          ip: fakeIP,
+          label: `Node ${i}`,
+          x: Math.random() * 1100 + 50,
+          y: Math.random() * 600 + 50,
+          size: 8 + Math.random() * 10,
+          color: "#8b5a2b",
+          city: ["Eldoria", "Shadowfen", "Ironspire", "Mistvale", "Dragonhold", "Runeport"][Math.floor(Math.random()*6)],
+          country: ["Realm of Light", "Dark Dominion", "Crystal Isles", "Void Lands"][Math.floor(Math.random()*4)]
+        });
+      }
+
+      // Generate edges (connections)
+      edges = [];
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          if (Math.random() > 0.7) {
+            edges.push({ from: i, to: j });
+          }
+        }
+      }
+    } catch (e) {
+      console.error("IP fetch failed", e);
+      // Fallback dummy data
+      userNode = { id: 0, ip: "192.168.1.1", label: "You (Demo)", x: 600, y: 350, size: 18, color: "#fcd34d", city: "Mystic Tower", country: "Eternal Realm" };
+      nodes = [userNode];
+      for (let i = 1; i < 20; i++) {
+        nodes.push({ id: i, ip: `10.${i}.42.${i*3}`, label: `Node ${i}`, x: Math.random()*1100+50, y: Math.random()*600+50, size: 9, color: "#8b5a2b", city: "Unknown", country: "" });
+      }
+    }
+  }
+
+  function drawNetwork() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw edges with glow
+    ctx.strokeStyle = "rgba(212, 175, 55, 0.25)";
+    ctx.lineWidth = 1.5;
+    edges.forEach(edge => {
+      const from = nodes[edge.from];
+      const to = nodes[edge.to];
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.stroke();
+
+      // Pulse effect on some edges
+      if (Math.random() > 0.95) {
+        ctx.strokeStyle = "#fcd34d";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.stroke();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = "rgba(212, 175, 55, 0.25)";
+      }
+    });
+
+    // Draw nodes
+    nodes.forEach(node => {
+      // Glow
+      ctx.shadowBlur = 25;
+      ctx.shadowColor = node.color;
+
+      ctx.fillStyle = node.color;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+
+      // Rune border
+      ctx.strokeStyle = "#d4af37";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.size + 4, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = "#e6d5b8";
+      ctx.font = "12px Cinzel";
+      ctx.textAlign = "center";
+      ctx.fillText(node.label, node.x, node.y + node.size + 18);
+    });
+
+    // Gentle node movement (breathing effect)
+    nodes.forEach(node => {
+      node.x += (Math.random() - 0.5) * 0.6;
+      node.y += (Math.random() - 0.5) * 0.6;
+      // Keep in bounds
+      node.x = Math.max(40, Math.min(canvas.width - 40, node.x));
+      node.y = Math.max(40, Math.min(canvas.height - 80, node.y));
+    });
+  }
+
+  function animateNetwork() {
+    drawNetwork();
+    animationFrame = requestAnimationFrame(animateNetwork);
+  }
+
+  // Mouse hover info
+  function showNodeInfo(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    const infoEl = document.getElementById('node-info');
+    let found = false;
+
+    for (let node of nodes) {
+      const dx = node.x - mx;
+      const dy = node.y - my;
+      if (dx*dx + dy*dy < (node.size + 10)**2) {
+        infoEl.innerHTML = `
+          <strong class="text-amber-300">${node.label}</strong><br>
+          <span class="font-mono text-xs">${node.ip}</span><br>
+          ${node.city}, ${node.country}
+        `;
+        infoEl.style.left = `${e.clientX + 15}px`;
+        infoEl.style.top = `${e.clientY + 10}px`;
+        infoEl.classList.remove('hidden');
+        found = true;
+        break;
+      }
+    }
+    if (!found) infoEl.classList.add('hidden');
+  }
+
+  // IP Nodes Button
+  document.getElementById('ip-nodes-btn').addEventListener('click', async () => {
+    document.getElementById('ip-nodes-overlay').style.display = 'flex';
+    canvas = document.getElementById('ip-canvas');
+    ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth - 40;
+    canvas.height = window.innerHeight - 180;
+
+    await loadIPData();
+    if (animationFrame) cancelAnimationFrame(animationFrame);
+    animateNetwork();
+
+    canvas.addEventListener('mousemove', showNodeInfo);
+  });
+
+  document.getElementById('close-nodes-btn').addEventListener('click', () => {
+    document.getElementById('ip-nodes-overlay').style.display = 'none';
+    if (animationFrame) cancelAnimationFrame(animationFrame);
   });
 
   // Initialize

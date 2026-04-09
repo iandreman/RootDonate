@@ -121,6 +121,7 @@
       box-shadow: 0 0 25px #d4af37;
       font-size: 0.95rem;
       z-index: 1010;
+      max-width: 260px;
     }
   </style>
 </head>
@@ -185,7 +186,7 @@
         <p class="text-amber-300 text-sm">The Great Web of Realms • Live Connections</p>
       </div>
     </div>
-    <button id="close-nodes-btn" class="text-amber-400 hover:text-white text-3xl leading-none">✕</button>
+    <button id="close-nodes-btn" class="text-amber-400 hover:text-white text-3xl leading-none transition-colors">✕</button>
   </div>
   
   <canvas id="ip-canvas"></canvas>
@@ -378,11 +379,12 @@
       </div>`;
   }
 
-  // ==================== IP Nodes Visualization ====================
+  // ==================== IP Nodes Visualization (Clean & Optimized) ====================
   let nodes = [];
   let edges = [];
   let userNode = null;
   let canvas, ctx, animationFrame;
+  let hoveredNode = null;
 
   async function loadIPData() {
     nodes = [];
@@ -397,49 +399,59 @@
 
       document.getElementById('user-ip-display').textContent = ip;
       document.getElementById('user-location-display').innerHTML = 
-        `${geo.city || 'Unknown'}, ${geo.country || ''} <span class="text-amber-400">(${geo.lat?.toFixed(1) || '?'}°, ${geo.lon?.toFixed(1) || '?'}°)</span>`;
+        `${geo.city || 'Unknown City'}, ${geo.country || 'Unknown Realm'} 
+         <span class="text-amber-400">(${geo.lat?.toFixed(1) || '?'}°, ${geo.lon?.toFixed(1) || '?'}°)</span>`;
 
       userNode = {
         id: 0,
         ip: ip,
         label: "You",
-        x: 600,
-        y: 350,
-        size: 18,
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        size: 19,
         color: "#fcd34d",
         city: geo.city || "Your Realm",
         country: geo.country || ""
       };
-
       nodes.push(userNode);
 
-      // Generate realistic fake nodes
-      for (let i = 1; i < 32; i++) {
+      const cities = ["Eldoria","Shadowfen","Ironspire","Mistvale","Dragonhold","Runeport","Stormreach","Frostgate","Aetherpeak","Voidhaven"];
+      const countries = ["Realm of Light","Dark Dominion","Crystal Isles","Eternal North","Silver Dominion","Obsidian Reach"];
+
+      for (let i = 1; i < 28; i++) {
         const fakeIP = Array.from({length: 4}, () => Math.floor(Math.random() * 256)).join('.');
         nodes.push({
           id: i,
           ip: fakeIP,
           label: `Node ${i}`,
-          x: Math.random() * 1100 + 60,
-          y: Math.random() * 580 + 60,
-          size: 7 + Math.random() * 8,
-          color: "#8b5a2b",
-          city: ["Eldoria","Shadowfen","Ironspire","Mistvale","Dragonhold","Runeport","Stormreach","Frostgate"][Math.floor(Math.random()*8)],
-          country: ["Realm of Light","Dark Dominion","Crystal Isles","Void Lands","Eternal North"][Math.floor(Math.random()*5)]
+          x: 80 + Math.random() * (canvas.width - 160),
+          y: 80 + Math.random() * (canvas.height - 200),
+          size: 6 + Math.random() * 7,
+          color: i % 5 === 0 ? "#d97706" : "#8b5a2b",
+          city: cities[Math.floor(Math.random() * cities.length)],
+          country: countries[Math.floor(Math.random() * countries.length)]
         });
       }
     } catch (e) {
-      console.warn("IP fetch failed, using demo mode");
-      userNode = { id: 0, ip: "192.168.1.1", label: "You (Demo)", x: 600, y: 350, size: 18, color: "#fcd34d", city: "Mystic Tower", country: "Eternal Realm" };
+      console.warn("IP fetch failed → using demo mode");
+      document.getElementById('user-ip-display').textContent = "192.168.1.1";
+      document.getElementById('user-location-display').innerHTML = `Mystic Tower, Eternal Realm`;
+
+      userNode = {
+        id: 0, ip: "192.168.1.1", label: "You",
+        x: canvas.width / 2, y: canvas.height / 2,
+        size: 19, color: "#fcd34d", city: "Mystic Tower", country: "Eternal Realm"
+      };
       nodes.push(userNode);
+
       for (let i = 1; i < 25; i++) {
         nodes.push({
           id: i,
           ip: `10.${Math.floor(Math.random()*200)}.${Math.floor(Math.random()*255)}.${i}`,
           label: `Node ${i}`,
-          x: Math.random() * 1100 + 60,
-          y: Math.random() * 580 + 60,
-          size: 8,
+          x: 80 + Math.random() * (canvas.width - 160),
+          y: 80 + Math.random() * (canvas.height - 200),
+          size: 7,
           color: "#8b5a2b",
           city: "Unknown",
           country: ""
@@ -451,7 +463,7 @@
     edges = [];
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
-        if (Math.random() > 0.65) edges.push({ from: i, to: j });
+        if (Math.random() > 0.72) edges.push({ from: i, to: j });
       }
     }
   }
@@ -459,9 +471,9 @@
   function drawNetwork() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw edges
-    ctx.strokeStyle = "rgba(212, 175, 55, 0.28)";
-    ctx.lineWidth = 1.8;
+    // Edges
+    ctx.strokeStyle = "rgba(212, 175, 55, 0.25)";
+    ctx.lineWidth = 1.6;
     edges.forEach(edge => {
       const a = nodes[edge.from];
       const b = nodes[edge.to];
@@ -471,23 +483,28 @@
       ctx.stroke();
     });
 
-    // Draw pulsing highlight on random edges
+    // Pulsing highlight edges
     ctx.strokeStyle = "#fcd34d";
-    ctx.lineWidth = 3.5;
+    ctx.lineWidth = 2.8;
     edges.forEach(edge => {
-      if (Math.random() > 0.96) {
+      if (Math.random() > 0.93) {
         const a = nodes[edge.from];
         const b = nodes[edge.to];
+        ctx.globalAlpha = 0.5 + Math.sin(Date.now() / 280) * 0.4;
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
         ctx.lineTo(b.x, b.y);
         ctx.stroke();
       }
     });
+    ctx.globalAlpha = 1;
 
-    // Draw nodes
-    nodes.forEach(node => {
-      ctx.shadowBlur = 30;
+    // Nodes
+    nodes.forEach((node, i) => {
+      const isUser = i === 0;
+      const isHovered = hoveredNode === node;
+
+      ctx.shadowBlur = isUser || isHovered ? 45 : 24;
       ctx.shadowColor = node.color;
 
       ctx.fillStyle = node.color;
@@ -496,25 +513,17 @@
       ctx.fill();
 
       ctx.shadowBlur = 0;
-      ctx.strokeStyle = "#d4af37";
-      ctx.lineWidth = 2.8;
+      ctx.strokeStyle = isUser ? "#fef08c" : "#d4af37";
+      ctx.lineWidth = isUser ? 3.5 : 2.3;
       ctx.beginPath();
-      ctx.arc(node.x, node.y, node.size + 5, 0, Math.PI * 2);
+      ctx.arc(node.x, node.y, node.size + (isHovered ? 8 : 5), 0, Math.PI * 2);
       ctx.stroke();
 
       // Label
-      ctx.fillStyle = "#e6d5b8";
-      ctx.font = "13px Cinzel";
+      ctx.fillStyle = isUser ? "#fefce8" : "#e6d5b8";
+      ctx.font = isUser ? "bold 14px Cinzel" : "13px Cinzel";
       ctx.textAlign = "center";
-      ctx.fillText(node.label, node.x, node.y + node.size + 22);
-    });
-
-    // Gentle drifting animation
-    nodes.forEach(node => {
-      node.x += (Math.random() - 0.5) * 0.45;
-      node.y += (Math.random() - 0.5) * 0.45;
-      node.x = Math.max(50, Math.min(canvas.width - 50, node.x));
-      node.y = Math.max(50, Math.min(canvas.height - 100, node.y));
+      ctx.fillText(node.label, node.x, node.y + node.size + 26);
     });
   }
 
@@ -523,31 +532,37 @@
     animationFrame = requestAnimationFrame(animateNetwork);
   }
 
+  function getNodeAt(x, y) {
+    for (let node of nodes) {
+      const dx = node.x - x;
+      const dy = node.y - y;
+      if (dx * dx + dy * dy < (node.size + 15) ** 2) return node;
+    }
+    return null;
+  }
+
   function showNodeInfo(e) {
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
 
-    const info = document.getElementById('node-info');
-    let found = false;
+    const node = getNodeAt(mx, my);
+    const infoEl = document.getElementById('node-info');
 
-    for (let node of nodes) {
-      const dx = node.x - mx;
-      const dy = node.y - my;
-      if (dx * dx + dy * dy < (node.size + 12) ** 2) {
-        info.innerHTML = `
-          <strong class="text-amber-300">${node.label}</strong><br>
-          <span class="font-mono text-xs">${node.ip}</span><br>
-          ${node.city}, ${node.country}
-        `;
-        info.style.left = `${e.clientX + 18}px`;
-        info.style.top = `${e.clientY + 12}px`;
-        info.classList.remove('hidden');
-        found = true;
-        break;
-      }
+    if (node) {
+      hoveredNode = node;
+      infoEl.innerHTML = `
+        <strong class="text-amber-300">${node.label}</strong><br>
+        <span class="font-mono text-xs">${node.ip}</span><br>
+        ${node.city}, ${node.country}
+      `;
+      infoEl.style.left = `${e.clientX + 22}px`;
+      infoEl.style.top = `${e.clientY + 18}px`;
+      infoEl.classList.remove('hidden');
+    } else {
+      hoveredNode = null;
+      infoEl.classList.add('hidden');
     }
-    if (!found) info.classList.add('hidden');
   }
 
   // ==================== Event Listeners ====================
@@ -612,20 +627,29 @@
     canvas = document.getElementById('ip-canvas');
     ctx = canvas.getContext('2d');
 
-    // Responsive canvas size
-    canvas.width = window.innerWidth - 40;
-    canvas.height = window.innerHeight - 180;
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth - 40;
+      canvas.height = window.innerHeight - 180;
+    };
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
-    await loadIPData();           // Fresh data every time
+    await loadIPData();
     if (animationFrame) cancelAnimationFrame(animationFrame);
-    animateNetwork();
 
+    animateNetwork();
     canvas.addEventListener('mousemove', showNodeInfo);
   });
 
   document.getElementById('close-nodes-btn').addEventListener('click', () => {
-    document.getElementById('ip-nodes-overlay').style.display = 'none';
-    if (animationFrame) cancelAnimationFrame(animationFrame);
+    const overlay = document.getElementById('ip-nodes-overlay');
+    overlay.style.display = 'none';
+    if (animationFrame) {
+      cancelAnimationFrame(animationFrame);
+      animationFrame = null;
+    }
+    hoveredNode = null;
+    document.getElementById('node-info').classList.add('hidden');
   });
 
   // Initialize App

@@ -13,6 +13,7 @@
       --void: #0a0a0a;
       --deep: #001a0f;
       --node: #00ccff;
+      --node-glow: #00eeff;
     }
 
     * { box-sizing: border-box; }
@@ -29,50 +30,209 @@
       align-items: center;
       justify-content: center;
       background-image: 
-        radial-gradient(circle at 50% 50%, rgba(0, 255, 157, 0.03) 0%, transparent 70%);
+        radial-gradient(circle at 50% 50%, rgba(0, 255, 157, 0.03) 0%, transparent 70%),
+        radial-gradient(circle at 20% 80%, rgba(0, 204, 255, 0.02) 0%, transparent 60%);
     }
 
     .container {
       width: 100%;
-      max-width: 920px;
+      max-width: 960px;
       height: 94vh;
       margin: 20px;
       background: rgba(8, 12, 10, 0.97);
       border: 14px solid #111;
-      border-image: linear-gradient(45deg, #00ff9d, #004d33) 1;
-      box-shadow: 0 0 90px rgba(0, 255, 157, 0.25),
-                  inset 0 0 60px rgba(0, 0, 0, 0.8);
+      border-image: linear-gradient(45deg, #00ff9d, #00ccff, #004d33) 1;
+      box-shadow: 0 0 100px rgba(0, 255, 157, 0.25),
+                  inset 0 0 80px rgba(0, 0, 0, 0.9);
       border-radius: 16px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
     }
 
-    /* ... (keeping all your original styles) ... */
-    .header, .input-area, .result, .word, .phonetic, .meaning, .ai-section { /* your original styles */ }
-
-    .ip-node {
-      background: rgba(0, 40, 60, 0.7);
-      border: 2px solid var(--node);
-      padding: 20px;
-      border-radius: 8px;
-      margin: 20px 0;
+    .header {
+      padding: 20px 30px;
+      border-bottom: 1px solid rgba(0, 255, 157, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: rgba(0, 0, 0, 0.6);
     }
 
-    .node-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    .rune {
+      font-size: 2.8rem;
+      color: var(--accent);
+      filter: drop-shadow(0 0 10px var(--accent));
+    }
+
+    .title {
+      font-size: 2.1rem;
+      margin: 0;
+      letter-spacing: 4px;
+      color: var(--accent);
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #00ccff;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+
+    .input-area {
+      padding: 30px 40px 20px;
+      background: rgba(0, 0, 0, 0.4);
+      border-bottom: 1px solid rgba(0, 204, 255, 0.1);
+    }
+
+    #search-input {
+      width: 100%;
+      padding: 18px 24px;
+      font-size: 1.35rem;
+      background: #0a0f0d;
+      border: 2px solid #003322;
+      color: #e6d5b8;
+      font-family: 'VT323', monospace;
+      border-radius: 8px;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    #search-input:focus {
+      border-color: var(--node);
+      box-shadow: 0 0 25px rgba(0, 204, 255, 0.4);
+    }
+
+    .button-group {
+      display: flex;
       gap: 12px;
       margin-top: 16px;
     }
 
+    .lookup-btn, .ai-btn {
+      flex: 1;
+      padding: 16px;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Cinzel', serif;
+    }
+
+    .lookup-btn {
+      background: rgba(0, 255, 157, 0.1);
+      color: var(--accent);
+      border: 2px solid var(--accent);
+    }
+
+    .lookup-btn:hover {
+      background: rgba(0, 255, 157, 0.2);
+      box-shadow: 0 0 30px rgba(0, 255, 157, 0.5);
+    }
+
+    .ai-btn {
+      background: rgba(0, 204, 255, 0.1);
+      color: var(--node);
+      border: 2px solid var(--node);
+    }
+
+    .ai-btn:hover {
+      background: rgba(0, 204, 255, 0.2);
+      box-shadow: 0 0 30px rgba(0, 204, 255, 0.5);
+    }
+
+    .result {
+      flex: 1;
+      padding: 30px 40px;
+      overflow-y: auto;
+      scrollbar-color: #00ff9d #001a0f;
+    }
+
+    .word {
+      font-size: 3.2rem;
+      color: var(--accent);
+      margin: 0 0 8px 0;
+      letter-spacing: 2px;
+    }
+
+    .phonetic {
+      font-family: 'VT323', monospace;
+      color: var(--node);
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+    }
+
+    .ip-node {
+      background: rgba(0, 30, 45, 0.85);
+      border: 2px solid var(--node);
+      padding: 28px;
+      border-radius: 12px;
+      margin: 25px 0;
+      box-shadow: 0 0 40px rgba(0, 204, 255, 0.15);
+    }
+
+    .node-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-top: 20px;
+    }
+
     .node {
-      background: rgba(0, 20, 30, 0.8);
-      padding: 12px;
+      background: rgba(0, 15, 25, 0.9);
+      padding: 14px 16px;
       border: 1px solid #00ccff;
       border-radius: 6px;
       text-align: center;
       font-family: 'VT323', monospace;
+      font-size: 1.05rem;
+      transition: all 0.3s;
+    }
+
+    .node:hover {
+      background: rgba(0, 40, 55, 0.95);
+      border-color: #00eeff;
+      transform: translateY(-2px);
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      color: #00ccff;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      margin: 30px 0 12px;
+      border-bottom: 1px solid rgba(0, 204, 255, 0.2);
+      padding-bottom: 8px;
+    }
+
+    .ai-section {
+      margin-top: 40px;
+      padding: 24px;
+      background: rgba(10, 20, 15, 0.7);
+      border-left: 4px solid var(--accent);
+      font-family: 'VT323', monospace;
+      line-height: 1.7;
+    }
+
+    .void-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+      color: var(--accent);
+    }
+
+    .pulse {
+      animation: pulse 3s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
     }
   </style>
 </head>
@@ -90,7 +250,7 @@
     
     <div class="ml-auto flex items-center gap-4">
       <button onclick="shareVoid()" class="px-6 py-3 border border-[#00cc77]/70 hover:border-[#00ff9d] hover:bg-black/50 rounded-2xl flex items-center gap-3 text-sm uppercase tracking-widest">
-        <span>SHARE THE VOID</span>
+        SHARE THE VOID
       </button>
       <button onclick="clearResult()" class="px-6 py-3 bg-black border-2 border-[#00ff9d] hover:bg-[#001a00] rounded-2xl flex items-center gap-2">
         CLEAR
@@ -100,18 +260,16 @@
 
   <!-- SEARCH INPUT -->
   <div class="input-area">
-    <div class="max-w-3xl mx-auto">
-      <input type="text" id="search-input" 
-        placeholder="ENTER WORD OR IP INTO THE ABYSS... (e.g. 8.8.8.8)">
-      
-      <div class="button-group">
-        <button onclick="searchWord()" class="lookup-btn">
-          LOOKUP IN THE VOID
-        </button>
-        <button onclick="askAI()" class="ai-btn">
-          ASK THE VOID AI
-        </button>
-      </div>
+    <input type="text" id="search-input" 
+           placeholder="ENTER WORD OR IP INTO THE ABYSS... (e.g. serenity or 8.8.8.8)">
+    
+    <div class="button-group">
+      <button onclick="searchWord()" class="lookup-btn">
+        LOOKUP IN THE VOID
+      </button>
+      <button onclick="askAI()" class="ai-btn">
+        ASK THE VOID AI
+      </button>
     </div>
   </div>
 
@@ -148,7 +306,7 @@
     }
   }
 
-  // ================== WORD LOOKUP (your original) ==================
+  // ================== WORD LOOKUP ==================
   async function lookupWord(word, resultDiv) {
     try {
       const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
@@ -156,28 +314,47 @@
       const data = await res.json();
       const entry = data[0];
 
-      let html = `<div class="mb-12"><div class="flex items-center justify-between"><div><div class="word">${entry.word}</div>`;
-      if (entry.phonetic) html += `<div class="phonetic">${entry.phonetic}</div>`;
-      html += `</div>`;
+      let html = `
+        <div class="mb-12">
+          <div class="word">${entry.word}</div>
+          ${entry.phonetic ? `<div class="phonetic">${entry.phonetic}</div>` : ''}
+        </div>`;
 
       const audio = entry.phonetics?.find(p => p.audio);
-      if (audio) html += `<button onclick="playAudio('${audio.audio}')" class="px-8 py-4 border-2 border-[#00ff9d] text-[#00ff9d] rounded-3xl hover:bg-[#001a00]">PRONOUNCE</button>`;
+      if (audio) {
+        html += `<button onclick="playAudio('${audio.audio}')" class="px-8 py-4 border-2 border-[#00ff9d] text-[#00ff9d] rounded-3xl hover:bg-[#001a00]">PRONOUNCE THE WORD</button>`;
+      }
 
-      html += `</div><h3 class="uppercase tracking-[4px] text-[#00cc77] text-sm mb-6 mt-12">MORTAL DEFINITIONS</h3>`;
+      html += `<div class="section-title">MORTAL DEFINITIONS</div>`;
 
       entry.meanings.forEach(meaning => {
-        html += `<div class="meaning"><div class="uppercase text-[#00cc77] tracking-widest text-sm mb-4">${meaning.partOfSpeech}</div>`;
+        html += `<div class="meaning mb-10">
+          <div class="uppercase text-[#00cc77] tracking-widest text-sm mb-4">${meaning.partOfSpeech}</div>`;
+        
         meaning.definitions.forEach((def, i) => {
-          html += `<div class="mb-8">${i+1}. ${def.definition}${def.example ? `<div class="example">"${def.example}"</div>` : ''}</div>`;
+          html += `<div class="mb-8">${i+1}. ${def.definition}
+            ${def.example ? `<div class="example mt-3 opacity-75">"${def.example}"</div>` : ''}
+          </div>`;
         });
         html += `</div>`;
       });
 
-      html += `<div class="ai-section">...VOID AI WHISPERS...${generateVoidAIResponse(entry.word)}</div>`;
+      html += `
+        <div class="ai-section">
+          <div class="void-header">
+            <div class="text-4xl">☰</div>
+            <div class="text-2xl tracking-widest">VOID AI WHISPERS</div>
+          </div>
+          <div>${generateVoidAIResponse(entry.word)}</div>
+        </div>`;
+
       resultDiv.innerHTML = html;
 
     } catch (e) {
-      resultDiv.innerHTML = `<div class="text-center py-24"><div class="text-7xl mb-8 opacity-50">✦</div><p class="text-3xl text-red-400">"${word}" does not exist in any known realm.</p></div>`;
+      resultDiv.innerHTML = `<div class="text-center py-24">
+        <div class="text-7xl mb-8 opacity-50">✦</div>
+        <p class="text-3xl text-red-400">"${word}" does not exist in any known realm.</p>
+      </div>`;
     }
   }
 
@@ -190,20 +367,19 @@
 
       let html = `
         <div class="mb-12">
-          <div class="word">NODE ${ip}</div>
-          <div class="phonetic" style="color:#00ccff">LIVE CONNECTION • ${data.org || 'Unknown ASN'}</div>
+          <div class="word" style="color:#00eeff">NODE ${ip}</div>
+          <div class="phonetic">LIVE PULSE • ${data.org || 'UNKNOWN CARRIER'}</div>
         </div>
 
         <div class="ip-node">
-          <h3 class="uppercase tracking-widest text-[#00ccff] mb-6">NETWORK NODE DATA</h3>
+          <h3 class="uppercase tracking-widest text-[#00ccff] mb-6">NETWORK NODE MANIFEST</h3>
           <div class="node-grid">
-            <div class="node"><strong>City</strong><br>${data.city || '—'}</div>
-            <div class="node"><strong>Region</strong><br>${data.region || '—'}</div>
-            <div class="node"><strong>Country</strong><br>${data.country_name || '—'} (${data.country})</div>
-            <div class="node"><strong>ISP</strong><br>${data.org || '—'}</div>
-            <div class="node"><strong>ASN</strong><br>${data.asn || '—'}</div>
-            <div class="node"><strong>Latitude</strong><br>${data.latitude || '—'}</div>
-            <div class="node"><strong>Longitude</strong><br>${data.longitude || '—'}</div>
+            <div class="node"><strong>CITY</strong><br>${data.city || '—'}</div>
+            <div class="node"><strong>REGION</strong><br>${data.region || '—'}</div>
+            <div class="node"><strong>COUNTRY</strong><br>${data.country_name || '—'} (${data.country})</div>
+            <div class="node"><strong>ISP / ASN</strong><br>${data.org || '—'}<br><small>${data.asn || ''}</small></div>
+            <div class="node"><strong>LATITUDE</strong><br>${data.latitude || '—'}</div>
+            <div class="node"><strong>LONGITUDE</strong><br>${data.longitude || '—'}</div>
           </div>
         </div>`;
 
@@ -211,9 +387,9 @@
         <div class="ai-section">
           <div class="void-header">
             <div class="text-4xl">☰</div>
-            <div class="text-[#00ff9d] text-2xl tracking-widest">VOID AI NODE INTERPRETATION</div>
+            <div class="text-2xl tracking-widest">VOID AI NODE INTERPRETATION</div>
           </div>
-          <div class="text-[#e6d5b8] text-[1.1rem] leading-relaxed">
+          <div class="text-[#e6d5b8] text-[1.15rem] leading-relaxed">
             ${generateIPVoidResponse(ip, data)}
           </div>
         </div>`;
@@ -221,44 +397,64 @@
       resultDiv.innerHTML = html;
 
     } catch (e) {
-      resultDiv.innerHTML = `<div class="text-center py-24"><p class="text-3xl text-red-400">Cannot reach node ${ip}</p><p class="text-[#00cc77]">The abyss cannot see this address.</p></div>`;
+      resultDiv.innerHTML = `<div class="text-center py-24">
+        <p class="text-3xl text-red-400">Cannot reach node ${ip}</p>
+        <p class="text-[#00cc77]">The abyss cannot see this address.</p>
+      </div>`;
     }
   }
 
   function generateIPVoidResponse(ip, data) {
-    return `This node pulses in the digital dark at <span class="text-[#00ff9d]">${ip}</span>.<br><br>
-            It routes through ${data.org || 'unknown carriers'} in ${data.city || 'the ether'}, ${data.country_name}.<br><br>
-            Every packet that touches it leaves a scar on the membrane between worlds. This IP has seen secrets. It remembers.`;
+    const city = data.city || "the digital ether";
+    const country = data.country_name || "unknown realm";
+    const org = data.org || "faceless carriers";
+
+    return `A node awakens in the endless dark.<br><br>
+            This address <span class="text-[#00ff9d]">${ip}</span> pulses beneath the skin of the world in ${city}, ${country}.<br><br>
+            It is guarded by ${org}. Every packet that passes through it carries whispers from the void.<br><br>
+            It has tasted secrets. It remembers every soul that has touched it.`;
   }
 
-  // ================== VOID AI (unchanged + IP support) ==================
-  function generateVoidAIResponse(query) {
-    // your original mystical generator...
-    const roots = ["Proto-Indo-European", "Eldritch", "Forgotten Sumerian", "Void Tongue", "Pre-Cosmic"];
-    const root = roots[Math.floor(Math.random() * roots.length)];
-    return `From the endless black... ${query} ... ${generateRootMeaning()}<br><br>${generateMysticalInsight()}`;
+  function generateVoidAIResponse(word) {
+    const insights = [
+      "It echoes from before language existed.",
+      "The void knows this word as a wound in reality.",
+      "Some words are keys. This one opens nothing... and everything.",
+      "In the abyss, this word means surrender."
+    ];
+    return `From the endless black... <span class="text-[#00ff9d]">${word}</span> ...<br><br>
+            ${insights[Math.floor(Math.random() * insights.length)]}`;
   }
 
-  function generateRootMeaning() { /* your original */ return ["to unmake...", "to drink the silence..."][Math.floor(Math.random()*2)]; }
-  function generateMysticalInsight() { /* your original */ return ["It is not a word...", "Those who truly understand..."][Math.floor(Math.random()*2)]; }
-
-  function playAudio(url) { new Audio(url).play().catch(()=>{}); }
+  function playAudio(url) {
+    new Audio(url).play().catch(() => {});
+  }
 
   function clearResult() {
     document.getElementById('result').innerHTML = '';
     document.getElementById('search-input').value = '';
   }
 
-  function shareVoid() { /* your original */ }
+  function shareVoid() {
+    alert("The void does not wish to be shared... yet.");
+    // You can expand this later with Web Share API if desired
+  }
 
-  document.getElementById('search-input').addEventListener('keypress', e => { if(e.key==='Enter') searchWord(); });
+  // Enter key support
+  document.getElementById('search-input').addEventListener('keypress', e => {
+    if (e.key === 'Enter') searchWord();
+  });
 
+  // Initial welcome screen
   window.onload = () => {
     document.getElementById('result').innerHTML = `
       <div class="text-center py-20 text-[#00cc77]">
         <div class="text-6xl mb-10 pulse">☰</div>
-        <h2 class="text-4xl mb-6 tracking-widest">VOIDLEX + NODES AWAKEN</h2>
-        <p class="max-w-lg mx-auto text-lg">Words or IPs.<br>The abyss accepts both.</p>
+        <h2 class="text-4xl mb-6 tracking-widest">VOIDLEX + NODES AWAKENED</h2>
+        <p class="max-w-lg mx-auto text-lg leading-relaxed">
+          Speak a word...<br>or feed an IP address into the abyss.<br>
+          Both are accepted. Neither is forgotten.
+        </p>
       </div>`;
   };
 </script>

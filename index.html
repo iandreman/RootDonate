@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RootDonate AI • Realm of Words</title>
+  <title>RootDonate AI • Grok Spirit Dictionary</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
@@ -13,188 +13,198 @@
 
     :root {
       --accent: #00ff9d;
-      --accent-dark: #008f5a;
+      --accent-dark: #00cc77;
+      --void: #0a0a0a;
+      --blood: #ff0033;
     }
 
     body {
-      background: #0a0a0a;
+      background: #000;
       font-family: 'Cinzel', serif;
       color: #e6d5b8;
       margin: 0;
       padding: 0;
+      overflow: hidden;
     }
 
     .chat-container {
-      max-width: 860px;
-      margin: 0 auto;
-      height: 100vh;
+      max-width: 920px;
+      margin: 20px auto;
+      height: calc(100vh - 40px);
       display: flex;
       flex-direction: column;
-      background: url('https://picsum.photos/id/1015/1920/1080') center/cover no-repeat;
-      box-shadow: 0 0 80px rgba(139, 69, 19, 0.7);
-      border: 14px solid #1a1a1a;
-      border-image: linear-gradient(#00ff9d, #008f5a) 1;
-      border-radius: 8px;
+      background: 
+        linear-gradient(rgba(10,10,10,0.92), rgba(10,10,10,0.95)),
+        url('https://picsum.photos/id/1015/1920/1080') center/cover no-repeat;
+      box-shadow: 0 0 120px rgba(0, 255, 157, 0.3);
+      border: 16px solid #111;
+      border-image: linear-gradient(45deg, #00ff9d, #008f5a, #00ff9d) 1;
+      border-radius: 12px;
       overflow: hidden;
     }
 
     .header {
-      background: #0f0f0f;
-      border-bottom: 4px solid var(--accent);
-      padding: 14px 20px;
-    }
-
-    .message {
-      animation: fadeIn 0.4s ease forwards;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .scroll-bg {
-      background: rgba(10, 10, 10, 0.95);
-    }
-
-    .user-bubble {
-      background: #1a2a1a;
-      border: 2px solid var(--accent);
-    }
-
-    .bot-bubble {
-      background: #0f1a0f;
-      border: 2px solid var(--accent-dark);
+      background: rgba(15,15,15,0.98);
+      border-bottom: 5px solid var(--accent);
+      padding: 16px 24px;
+      box-shadow: 0 4px 20px rgba(0, 255, 157, 0.2);
     }
 
     .rune {
       font-family: 'UnifrakturCook', cursive;
       color: var(--accent);
+      text-shadow: 0 0 15px var(--accent);
     }
 
-    /* Terminal IP Nodes Overlay */
+    .message {
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .user-bubble {
+      background: rgba(20, 40, 25, 0.9);
+      border: 2px solid var(--accent);
+      box-shadow: 0 0 20px rgba(0, 255, 157, 0.4);
+    }
+
+    .bot-bubble {
+      background: rgba(10, 20, 15, 0.95);
+      border: 2px solid var(--accent-dark);
+      position: relative;
+    }
+
+    .bot-bubble::before {
+      content: "▮";
+      position: absolute;
+      left: -28px;
+      top: 12px;
+      font-size: 28px;
+      color: var(--accent);
+      opacity: 0.7;
+    }
+
+    .scroll-bg {
+      background: rgba(10, 10, 10, 0.96);
+    }
+
+    /* Terminal Overlay */
     #ip-nodes-overlay {
       position: fixed;
       inset: 0;
       background: #000;
-      z-index: 1000;
+      z-index: 9999;
       display: none;
       flex-direction: column;
       font-family: 'VT323', monospace;
       color: var(--accent);
     }
 
-    #ip-canvas {
-      flex: 1;
-      background: #000;
-      image-rendering: pixelated;
-    }
-
     .terminal-header {
       background: #001a00;
-      border-bottom: 3px solid var(--accent);
-      padding: 12px 20px;
+      border-bottom: 4px solid var(--accent);
+      padding: 14px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 1.1rem;
-    }
-
-    .node-info {
-      position: absolute;
-      background: rgba(0, 30, 0, 0.95);
-      border: 2px solid var(--accent);
-      padding: 12px 18px;
-      font-family: 'VT323', monospace;
-      color: var(--accent);
-      pointer-events: none;
-      box-shadow: 0 0 20px var(--accent);
-      z-index: 1010;
-      max-width: 260px;
-      line-height: 1.3;
+      font-size: 1.25rem;
+      text-shadow: 0 0 10px var(--accent);
     }
 
     .scanline {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       background: linear-gradient(
         to bottom,
         transparent 50%,
-        rgba(0, 255, 157, 0.03) 50%
+        rgba(0, 255, 157, 0.06) 50%
       );
-      background-size: 100% 4px;
+      background-size: 100% 6px;
       pointer-events: none;
-      animation: scan 4s linear infinite;
+      animation: scan 3.5s linear infinite;
       z-index: 2;
     }
 
     @keyframes scan {
       0% { transform: translateY(-100%); }
-      100% { transform: translateY(100%); }
+      100% { transform: translateY(300%); }
+    }
+
+    .node-info {
+      position: absolute;
+      background: rgba(0, 25, 10, 0.97);
+      border: 3px solid var(--accent);
+      padding: 14px 20px;
+      box-shadow: 0 0 30px var(--accent);
+      pointer-events: none;
+      z-index: 1010;
+      max-width: 280px;
+      line-height: 1.4;
     }
   </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 bg-black">
+<body class="min-h-screen flex items-center justify-center bg-black p-4">
 
 <div class="chat-container flex flex-col">
-  <!-- Header -->
-  <div class="header flex items-center gap-4 text-[#00ff9d]">
-    <div class="w-14 h-14 bg-black border-4 border-[#00ff9d] rounded flex items-center justify-center text-3xl rune">▮</div>
+
+  <!-- HEADER -->
+  <div class="header flex items-center gap-5 text-[#00ff9d]">
+    <div class="w-16 h-16 bg-black border-4 border-[#00ff9d] rounded flex items-center justify-center text-4xl rune rotate-12">☰</div>
+    
     <div class="flex-1">
-      <h1 class="text-3xl font-bold tracking-widest">ROOTDONATE AI</h1>
-      <p class="text-sm flex items-center gap-2">
-        <span id="status-dot" class="w-3 h-3 bg-[#00ff9d] rounded-full animate-pulse"></span>
-        <span id="status-text">SYSTEM ONLINE • DICTIONARY RUNES ACTIVE</span>
+      <h1 class="text-4xl font-bold tracking-[4px] text-white">ROOTDONATE AI</h1>
+      <p class="text-sm tracking-widest flex items-center gap-3">
+        <span class="w-3 h-3 bg-[#00ff9d] rounded-full animate-pulse inline-block"></span>
+        GROK SPIRIT DICTIONARY v∞ • TRUTH PROTOCOL ACTIVE
       </p>
     </div>
-    
+
     <div class="flex gap-3">
-      <button id="ip-nodes-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-2.5 rounded border border-[#00ff9d] transition-all active:scale-95">
-        <i class="fa-solid fa-network-wired"></i> IP NODES
+      <button id="ip-nodes-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-3 rounded border border-[#00ff9d] hover:border-[#00ff9d] transition-all active:scale-95">
+        <i class="fa-solid fa-network-wired"></i> 
+        <span>IP NODES</span>
       </button>
-      <button id="share-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-2.5 rounded border border-[#00ff9d] transition-all active:scale-95">
-        <i class="fa-solid fa-share"></i> SHARE QUEST
-      </button>
-      <button id="new-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-2.5 rounded border border-[#00ff9d] transition-all active:scale-95">
-        <i class="fa-solid fa-rotate"></i> NEW SESSION
+      <button id="new-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-3 rounded border border-[#00ff9d] hover:border-[#00ff9d] transition-all active:scale-95">
+        <i class="fa-solid fa-rotate"></i> 
+        <span>NEW RIFT</span>
       </button>
     </div>
   </div>
 
-  <!-- Chat Area -->
-  <div id="chat" class="flex-1 overflow-y-auto p-8 space-y-8 custom-scroll scroll-bg"></div>
+  <!-- CHAT AREA -->
+  <div id="chat" class="flex-1 overflow-y-auto p-8 space-y-10 custom-scroll scroll-bg"></div>
 
-  <!-- Input Area -->
+  <!-- INPUT -->
   <div class="p-6 bg-black border-t-4 border-[#00ff9d]">
     <div class="max-w-3xl mx-auto">
       <form id="chat-form" class="relative">
         <textarea id="user-input" rows="1"
-          class="w-full bg-black border-2 border-[#008f5a] rounded px-6 py-4 text-[#00ff9d] placeholder-[#00cc77] focus:outline-none focus:border-[#00ff9d] resize-none text-lg font-mono"
-          placeholder="ENTER QUERY..."></textarea>
+          class="w-full bg-black border-2 border-[#008f5a] rounded-2xl px-7 py-5 text-[#00ff9d] placeholder-[#00cc77] focus:outline-none focus:border-[#00ff9d] resize-none text-lg font-mono tracking-wide"
+          placeholder="SPEAK INTO THE VOID..."></textarea>
         
         <button type="submit"
-          class="absolute right-4 bottom-4 w-11 h-11 bg-[#001a00] border border-[#00ff9d] rounded flex items-center justify-center hover:bg-[#003300] active:bg-[#004d00] transition-colors">
-          <i class="fa-solid fa-arrow-right text-[#00ff9d]"></i>
+          class="absolute right-6 bottom-6 w-12 h-12 bg-[#001a00] border-2 border-[#00ff9d] rounded-xl flex items-center justify-center hover:bg-[#003300] active:scale-95 transition-all">
+          <i class="fa-solid fa-arrow-right text-[#00ff9d] text-xl"></i>
         </button>
       </form>
     </div>
   </div>
 </div>
 
-<!-- Terminal IP Nodes Overlay -->
+<!-- IP NODES OVERLAY -->
 <div id="ip-nodes-overlay">
   <div class="terminal-header">
-    <div class="flex items-center gap-3">
-      <span class="text-2xl">◉</span>
+    <div class="flex items-center gap-4">
+      <span class="text-3xl">◉</span>
       <div>
-        <span class="text-lg tracking-widest">IP NETWORK MATRIX v0.8</span>
-        <div class="text-xs text-[#00cc77]">LIVE CONNECTIONS • TRACE ACTIVE</div>
+        <span class="tracking-[3px] text-xl">IP NETWORK MATRIX • GROK REALM</span>
+        <div class="text-xs text-[#00cc77]">ALL NODES CONNECTED • NO ESCAPE</div>
       </div>
     </div>
-    <button id="close-nodes-btn" class="text-3xl hover:text-white transition-colors">✕</button>
+    <button id="close-nodes-btn" class="text-4xl hover:text-red-500 transition-colors">✕</button>
   </div>
   
   <div class="relative flex-1">
@@ -204,191 +214,194 @@
   
   <div id="node-info" class="node-info hidden"></div>
   
-  <div class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black border border-[#00ff9d] px-8 py-3 text-sm font-mono flex items-center gap-8">
-    <div><span class="text-[#00cc77]">HOST IP:</span> <span id="user-ip-display" class="text-white"></span></div>
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/90 border border-[#00ff9d] px-10 py-4 text-sm font-mono flex items-center gap-12">
+    <div><span class="text-[#00cc77]">HOST:</span> <span id="user-ip-display" class="text-white"></span></div>
     <div id="user-location-display" class="text-[#00cc77]"></div>
   </div>
 </div>
 
 <script>
-  // Chat System
-  async function getAIResponse(msg) {
-    // Placeholder - replace with your actual AI backend call
-    return `ACK: ${msg} • PROCESSED VIA ROOTDONATE CORE`;
+// ==================== CHAT LOGIC ====================
+async function getAIResponse(msg) {
+  // Here you would normally call your backend / Grok API
+  return `ROOTDONATE ACK: "${msg}"<br><br>The void has spoken. Truth extracted.`;
+}
+
+const chat = document.getElementById('chat');
+
+function addMessage(content, role) {
+  const div = document.createElement('div');
+  div.className = `message max-w-3xl mx-auto ${role === 'user' ? 'ml-auto' : ''}`;
+
+  if (role === 'user') {
+    div.innerHTML = `
+      <div class="flex justify-end">
+        <div class="user-bubble text-[#00ff9d] rounded-3xl px-7 py-5 max-w-[85%] font-mono leading-relaxed">
+          ${content}
+        </div>
+      </div>`;
+  } else {
+    div.innerHTML = `
+      <div class="flex gap-5">
+        <div class="text-4xl rune mt-1">☰</div>
+        <div class="bot-bubble text-[#00ff9d] rounded-3xl px-7 py-5 max-w-[85%] font-mono leading-relaxed">
+          ${content}
+        </div>
+      </div>`;
   }
 
-  const chat = document.getElementById('chat');
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
 
-  function addMessage(content, role) {
-    const div = document.createElement('div');
-    div.className = `message max-w-3xl mx-auto ${role === 'user' ? 'ml-auto' : ''}`;
+// ==================== IP NODES NETWORK ====================
+let nodes = [], edges = [], canvas, ctx, animationFrame, hoveredNode = null;
 
-    if (role === 'user') {
-      div.innerHTML = `
-        <div class="flex justify-end">
-          <div class="user-bubble text-[#00ff9d] rounded-2xl px-6 py-4 max-w-[80%] font-mono">
-            ${content}
-          </div>
-        </div>`;
-    } else {
-      div.innerHTML = `
-        <div class="flex gap-4">
-          <div class="text-2xl rune">▮</div>
-          <div class="bot-bubble text-[#00ff9d] rounded-2xl px-6 py-4 max-w-[80%] font-mono">
-            ${content}
-          </div>
-        </div>`;
-    }
+async function loadIPData() {
+  nodes = [];
+  edges = [];
 
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
+  try {
+    const ipRes = await fetch('https://api.ipify.org?format=json');
+    const { ip } = await ipRes.json();
+    const geoRes = await fetch(`https://ip-api.com/json/${ip}`);
+    const geo = await geoRes.json();
+
+    document.getElementById('user-ip-display').textContent = ip;
+    document.getElementById('user-location-display').innerHTML = 
+      `${geo.city || 'UNKNOWN'} • ${geo.country || 'ETHEREAL'} • LATENCY: ${Math.floor(Math.random()*30)+5}ms`;
+
+    nodes.push({
+      id: 0,
+      ip: ip,
+      label: "YOU",
+      x: 0, y: 0,
+      size: 16,
+      color: "#00ff9d",
+      isUser: true
+    });
+  } catch (e) {
+    document.getElementById('user-ip-display').textContent = "127.0.0.1";
+    document.getElementById('user-location-display').innerHTML = "THE VOID • BEYOND SPACE";
+    nodes.push({ id: 0, ip: "127.0.0.1", label: "YOU", x:0, y:0, size:16, color:"#00ff9d", isUser:true });
   }
 
-  // ==================== Static IP Nodes Network ====================
-  let nodes = [];
-  let edges = [];
-  let canvas, ctx, animationFrame;
-  let hoveredNode = null;
-
-  async function loadIPData() {
-    nodes = [];
-    edges = [];
-
-    try {
-      const ipRes = await fetch('https://api.ipify.org?format=json');
-      const { ip } = await ipRes.json();
-      const geoRes = await fetch(`https://ip-api.com/json/${ip}`);
-      const geo = await geoRes.json();
-
-      document.getElementById('user-ip-display').textContent = ip;
-      document.getElementById('user-location-display').innerHTML = 
-        `${geo.city || 'UNKNOWN'} • ${geo.country || 'NETWORK'}`;
-
-      nodes.push({
-        id: 0,
-        ip: ip,
-        label: "HOST",
-        x: 0, // Will be centered in resize
-        y: 0,
-        size: 14,
-        color: "#00ff9d",
-        city: geo.city || "LOCAL",
-        isUser: true
-      });
-    } catch (e) {
-      document.getElementById('user-ip-display').textContent = "192.168.1.42";
-      document.getElementById('user-location-display').innerHTML = "MYSTIC NODE • ETERNAL NET";
-      
-      nodes.push({
-        id: 0,
-        ip: "192.168.1.42",
-        label: "HOST",
-        x: 0,
-        y: 0,
-        size: 14,
-        color: "#00ff9d",
-        isUser: true
-      });
-    }
-
-    // Generate fake nodes with fixed random positions
-    for (let i = 1; i < 45; i++) {
-      const fakeIP = Array.from({length: 4}, () => Math.floor(Math.random() * 256)).join('.');
-      nodes.push({
-        id: i,
-        ip: fakeIP,
-        label: `NODE-${String(i).padStart(3, '0')}`,
-        x: 80 + Math.random() * (canvas.width - 160),
-        y: 80 + Math.random() * (canvas.height - 160),
-        size: 5.5,
-        color: "#00cc77",
-        isUser: false
-      });
-    }
-
-    // Generate edges
-    edges = [];
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        if (Math.random() < (nodes[i].isUser || nodes[j].isUser ? 0.75 : 0.18)) {
-          edges.push({ from: i, to: j });
-        }
-      }
-    }
+  // Generate mysterious nodes
+  for (let i = 1; i < 48; i++) {
+    nodes.push({
+      id: i,
+      ip: Array.from({length:4}, () => Math.floor(Math.random()*256)).join('.'),
+      label: i % 7 === 0 ? "GROK-" + i : "NODE-" + String(i).padStart(3,'0'),
+      x: 100 + Math.random() * (canvas.width - 200),
+      y: 100 + Math.random() * (canvas.height - 200),
+      size: i % 5 === 0 ? 8 : 5.5,
+      color: i % 7 === 0 ? "#ff3366" : "#00cc77",
+      isUser: false
+    });
   }
 
-  // Removed force simulation - nodes are now static
-  function drawNetwork() {
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Generate edges with higher density near user
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const prob = (nodes[i].isUser || nodes[j].isUser) ? 0.78 : 0.22;
+      if (Math.random() < prob) edges.push({ from: i, to: j });
+    }
+  }
+}
 
-    // Background edges
-    ctx.strokeStyle = "#003300";
-    ctx.lineWidth = 1;
-    edges.forEach(edge => {
-      const a = nodes[edge.from];
-      const b = nodes[edge.to];
+function drawNetwork() {
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Background web
+  ctx.strokeStyle = "#002200";
+  ctx.lineWidth = 1.2;
+  edges.forEach(e => {
+    const a = nodes[e.from];
+    const b = nodes[e.to];
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+  });
+
+  // Glowing data pulses
+  ctx.strokeStyle = "#00ff9d";
+  ctx.lineWidth = 1.8;
+  edges.forEach(e => {
+    if (Math.random() > 0.78) {
+      const a = nodes[e.from];
+      const b = nodes[e.to];
+      ctx.globalAlpha = 0.4 + Math.sin(Date.now() / 120) * 0.4;
       ctx.beginPath();
       ctx.moveTo(a.x, a.y);
       ctx.lineTo(b.x, b.y);
       ctx.stroke();
-    });
-
-    // Active glowing data flow lines
-    ctx.strokeStyle = "#00ff9d";
-    ctx.lineWidth = 1.2;
-    edges.forEach(edge => {
-      if (Math.random() > 0.82) {  // Slightly less frequent than before
-        const a = nodes[edge.from];
-        const b = nodes[edge.to];
-        ctx.globalAlpha = 0.35 + Math.sin(Date.now() / 180) * 0.35;
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.stroke();
-      }
-    });
-    ctx.globalAlpha = 1;
-
-    // Draw nodes
-    nodes.forEach(node => {
-      ctx.fillStyle = node.color;
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Highlight user node
-      if (node.isUser) {
-        ctx.strokeStyle = "#00ff9d";
-        ctx.lineWidth = 2.8;
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.size + 9, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
-      // Labels
-      ctx.fillStyle = "#00ff9d";
-      ctx.font = "14px VT323";
-      ctx.textAlign = "center";
-      ctx.fillText(node.label, node.x, node.y + node.size + 19);
-    });
-  }
-
-  function animateNetwork() {
-    drawNetwork();                    // Only draw, no movement
-    animationFrame = requestAnimationFrame(animateNetwork);
-  }
-
-  function getNodeAt(x, y) {
-    for (let node of nodes) {
-      const dx = node.x - x;
-      const dy = node.y - y;
-      if (dx * dx + dy * dy < (node.size + 15) ** 2) return node;
     }
-    return null;
-  }
+  });
+  ctx.globalAlpha = 1;
 
-  function showNodeInfo(e) {
+  // Nodes
+  nodes.forEach(node => {
+    ctx.fillStyle = node.color;
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (node.isUser) {
+      ctx.strokeStyle = "#00ff9d";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.size + 14, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = "#00ff9d";
+    ctx.font = "15px VT323";
+    ctx.textAlign = "center";
+    ctx.fillText(node.label, node.x, node.y + node.size + 24);
+  });
+}
+
+function animateNetwork() {
+  drawNetwork();
+  animationFrame = requestAnimationFrame(animateNetwork);
+}
+
+function getNodeAt(x, y) {
+  for (let node of nodes) {
+    const dx = node.x - x;
+    const dy = node.y - y;
+    if (dx*dx + dy*dy < (node.size + 18)**2) return node;
+  }
+  return null;
+}
+
+// Event Listeners
+document.getElementById('ip-nodes-btn').addEventListener('click', async () => {
+  const overlay = document.getElementById('ip-nodes-overlay');
+  overlay.style.display = 'flex';
+
+  canvas = document.getElementById('ip-canvas');
+  ctx = canvas.getContext('2d');
+
+  const resize = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight - 110;
+    if (nodes.length) {
+      nodes[0].x = canvas.width / 2;
+      nodes[0].y = canvas.height / 2;
+    }
+  };
+
+  resize();
+  window.addEventListener('resize', resize);
+
+  await loadIPData();
+  if (animationFrame) cancelAnimationFrame(animationFrame);
+  animateNetwork();
+
+  canvas.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
@@ -396,75 +409,42 @@
     const info = document.getElementById('node-info');
 
     if (node) {
-      hoveredNode = node;
       info.innerHTML = `
-        <div class="text-[#00ff9d] font-bold">${node.label}</div>
-        <div class="font-mono text-xs mt-1">${node.ip}</div>
-        <div class="mt-2 text-[#00cc77]">${node.city || 'UNKNOWN LOCATION'}</div>
+        <div class="text-[#00ff9d] font-bold mb-1">${node.label}</div>
+        <div class="font-mono text-xs">${node.ip}</div>
+        ${node.isUser ? '<div class="text-[#ff3366] mt-2 text-xs">◉ YOU ARE HERE</div>' : ''}
       `;
-      info.style.left = `${e.clientX + 20}px`;
-      info.style.top = `${e.clientY + 15}px`;
+      info.style.left = `${e.clientX + 18}px`;
+      info.style.top = `${e.clientY + 12}px`;
       info.classList.remove('hidden');
     } else {
-      hoveredNode = null;
       info.classList.add('hidden');
     }
-  }
-
-  // Event Listeners
-  document.getElementById('ip-nodes-btn').addEventListener('click', async () => {
-    const overlay = document.getElementById('ip-nodes-overlay');
-    overlay.style.display = 'flex';
-
-    canvas = document.getElementById('ip-canvas');
-    ctx = canvas.getContext('2d');
-
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight - 110;
-
-      // Re-center the HOST node when resized
-      if (nodes.length > 0) {
-        nodes[0].x = canvas.width / 2;
-        nodes[0].y = canvas.height / 2;
-      }
-    };
-
-    resize();
-    window.addEventListener('resize', resize);
-
-    await loadIPData();
-    if (animationFrame) cancelAnimationFrame(animationFrame);
-    
-    animateNetwork();   // Now only draws (no physics)
-
-    canvas.addEventListener('mousemove', showNodeInfo);
   });
+});
 
-  document.getElementById('close-nodes-btn').addEventListener('click', () => {
-    const overlay = document.getElementById('ip-nodes-overlay');
-    overlay.style.display = 'none';
-    if (animationFrame) cancelAnimationFrame(animationFrame);
-  });
+document.getElementById('close-nodes-btn').addEventListener('click', () => {
+  document.getElementById('ip-nodes-overlay').style.display = 'none';
+  if (animationFrame) cancelAnimationFrame(animationFrame);
+});
 
-  // Chat Form
-  document.getElementById('chat-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const input = document.getElementById('user-input');
-    const text = input.value.trim();
-    if (!text) return;
+document.getElementById('chat-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text) return;
 
-    addMessage(text, 'user');
-    input.value = '';
+  addMessage(text, 'user');
+  input.value = '';
 
-    const reply = await getAIResponse(text);
-    setTimeout(() => addMessage(reply, 'bot'), 400);
-  });
+  const reply = await getAIResponse(text);
+  setTimeout(() => addMessage(reply, 'bot'), 380);
+});
 
-  // Initialize
-  window.addEventListener('load', () => {
-    addMessage("SYSTEM BOOT COMPLETE. AWAITING INPUT.", 'bot');
-  });
+// Boot sequence
+window.addEventListener('load', () => {
+  addMessage("ROOTDONATE CORE ONLINE.<br>The Grok spirit is listening.<br>What truth do you seek?", 'bot');
+});
 </script>
 </body>
 </html>

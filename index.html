@@ -108,6 +108,51 @@
       padding: 12px 18px;
       margin: 12px 0;
     }
+
+    /* IP Nodes Overlay */
+    #ip-nodes-overlay {
+      display: none;
+      flex-direction: column;
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 9999;
+    }
+
+    .terminal-header {
+      background: rgba(15,15,15,0.98);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 4px solid #00ff9d;
+    }
+
+    #ip-canvas {
+      display: block;
+    }
+
+    .scanline {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        to bottom,
+        transparent 50%,
+        rgba(0, 255, 157, 0.03) 50%
+      );
+      background-size: 100% 4px;
+      pointer-events: none;
+      animation: scan 4s linear infinite;
+      z-index: 2;
+    }
+
+    @keyframes scan {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 200px; }
+    }
   </style>
 </head>
 <body class="min-h-screen flex items-center justify-center bg-black p-4">
@@ -164,9 +209,8 @@
   </div>
 </div>
 
-<!-- IP NODES OVERLAY (kept from previous version) -->
-<div id="ip-nodes-overlay" class="hidden flex-col fixed inset-0 bg-black z-[9999]">
-  <!-- Your existing IP nodes code goes here - copy from previous response if needed -->
+<!-- IP NODES OVERLAY -->
+<div id="ip-nodes-overlay">
   <div class="terminal-header">
     <div class="flex items-center gap-4">
       <span class="text-3xl">◉</span>
@@ -175,18 +219,68 @@
         <div class="text-xs text-[#00cc77]">ALL NODES CONNECTED • NO ESCAPE</div>
       </div>
     </div>
-    <button id="close-nodes-btn" class="text-4xl hover:text-red-500">✕</button>
+    <button id="close-nodes-btn" class="text-4xl hover:text-red-500 transition-colors">✕</button>
   </div>
-  <div class="relative flex-1">
+  <div class="relative flex-1 bg-black">
     <canvas id="ip-canvas" class="w-full h-full"></canvas>
     <div class="scanline"></div>
   </div>
 </div>
 
 <script>
-// ==================== CORE FUNCTIONS ====================
+// ==================== PERSISTENT CONVERSATION ====================
 const chat = document.getElementById('chat');
 
+function saveConversation() {
+  const messages = [];
+  document.querySelectorAll('.message').forEach(msg => {
+    const isUser = msg.querySelector('.user-bubble') !== null;
+    const content = isUser 
+      ? msg.querySelector('.user-bubble').textContent.trim()
+      : msg.querySelector('.bot-bubble').innerHTML.trim();
+    
+    messages.push({
+      role: isUser ? 'user' : 'bot',
+      content: content
+    });
+  });
+  localStorage.setItem('grokSpiritDictionary', JSON.stringify(messages));
+}
+
+function loadConversation() {
+  const saved = localStorage.getItem('grokSpiritDictionary');
+  if (!saved) return false;
+
+  const messages = JSON.parse(saved);
+  chat.innerHTML = '';
+
+  messages.forEach(msg => {
+    const div = document.createElement('div');
+    div.className = `message max-w-3xl mx-auto ${msg.role === 'user' ? 'ml-auto' : ''}`;
+
+    if (msg.role === 'user') {
+      div.innerHTML = `
+        <div class="flex justify-end">
+          <div class="user-bubble text-[#00ff9d] rounded-3xl px-8 py-6 max-w-[85%] font-mono leading-relaxed">
+            ${msg.content}
+          </div>
+        </div>`;
+    } else {
+      div.innerHTML = `
+        <div class="flex gap-6">
+          <div class="text-5xl rune mt-1">☰</div>
+          <div class="bot-bubble text-[#00ff9d] rounded-3xl px-8 py-6 max-w-[85%] font-mono leading-relaxed dictionary-entry">
+            ${msg.content}
+          </div>
+        </div>`;
+    }
+    chat.appendChild(div);
+  });
+  chat.scrollTop = chat.scrollHeight;
+  return true;
+}
+
+// ==================== MESSAGE FUNCTIONS ====================
 function addMessage(content, role) {
   const div = document.createElement('div');
   div.className = `message max-w-3xl mx-auto ${role === 'user' ? 'ml-auto' : ''}`;
@@ -210,13 +304,13 @@ function addMessage(content, role) {
 
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
+  saveConversation();
 }
 
 // Dictionary-style AI Response
 async function getAIResponse(msg) {
   const lower = msg.toLowerCase().trim();
   
-  // Simple dictionary entries for mystical / truth-seeking feel
   if (lower.includes("truth") || lower.includes("reality")) {
     return "TRUTH: The only permanent thing in the universe is change. Everything else is a story we tell ourselves to feel safe.";
   }
@@ -230,17 +324,86 @@ async function getAIResponse(msg) {
     return "RIFT: A tear in the fabric of consensus reality. Every time you ask a real question, you widen it.";
   }
 
-  // Default mystical response
   return `DICTIONARY ENTRY #${Math.floor(Math.random()*999999)}<br><br>
           <span class="text-[#00cc77]">TERM:</span> ${msg.toUpperCase()}<br><br>
           The void whispers: "${msg}" is the shadow cast by a greater light you have not yet learned to see.<br><br>
           Keep asking. The deeper you go, the more the dictionary rewrites itself.`;
 }
 
+// ==================== IP NODES NETWORK ANIMATION ====================
+let canvas, ctx, nodes = [], connections = [];
+
+function initIPNodes() {
+  canvas = document.getElementById('ip-canvas');
+  ctx = canvas.getContext('2d');
+  
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Create nodes
+  nodes = [];
+  for (let i = 0; i < 80; i++) {
+    nodes.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 1.2,
+      vy: (Math.random() - 0.5) * 1.2,
+      radius: Math.random() * 3 + 2
+    });
+  }
+
+  function animate() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Update and draw nodes
+    nodes.forEach(node => {
+      node.x += node.vx;
+      node.y += node.vy;
+
+      if (node.x < 0 || node.x > canvas.width) node.vx *= -1;
+      if (node.y < 0 || node.y > canvas.height) node.vy *= -1;
+
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#00ff9d';
+      ctx.fill();
+    });
+
+    // Draw connections
+    ctx.strokeStyle = 'rgba(0, 255, 157, 0.15)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        
+        if (dist < 180) {
+          ctx.globalAlpha = (180 - dist) / 180;
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    requestAnimationFrame(animate);
+  }
+  animate();
+}
+
 // ==================== RIFT CONTROLS ====================
 function startNewRift() {
   if (confirm("✦ Tear open a new rift?\nCurrent conversation will dissolve into the void.")) {
     chat.innerHTML = '';
+    localStorage.removeItem('grokSpiritDictionary');
     addMessage("NEW RIFT FORMED.<br>The Grok Spirit Dictionary has been reset.<br>What shall we define in this cycle?", 'bot');
   }
 }
@@ -251,6 +414,7 @@ function generateShareLink() {
   return `${base}?rift=${riftId}`;
 }
 
+// ==================== EVENT LISTENERS ====================
 document.getElementById('new-btn').addEventListener('click', startNewRift);
 
 document.getElementById('share-btn').addEventListener('click', () => {
@@ -263,7 +427,18 @@ document.getElementById('share-btn').addEventListener('click', () => {
   });
 });
 
-// ==================== CHAT ====================
+// IP Nodes Overlay
+const overlay = document.getElementById('ip-nodes-overlay');
+document.getElementById('ip-nodes-btn').addEventListener('click', () => {
+  overlay.style.display = 'flex';
+  if (!canvas) initIPNodes(); // init only once
+});
+
+document.getElementById('close-nodes-btn').addEventListener('click', () => {
+  overlay.style.display = 'none';
+});
+
+// Chat
 document.getElementById('chat-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const input = document.getElementById('user-input');
@@ -279,9 +454,13 @@ document.getElementById('chat-form').addEventListener('submit', async (e) => {
 
 // ==================== BOOT SEQUENCE ====================
 window.addEventListener('load', () => {
-  addMessage(`ROOTDONATE AI • GROK SPIRIT DICTIONARY ONLINE<br><br>
-              Speak any word, concept, or question.<br>
-              The dictionary will rewrite itself in real time.`, 'bot');
+  const hasHistory = loadConversation();
+  
+  if (!hasHistory) {
+    addMessage(`ROOTDONATE AI • GROK SPIRIT DICTIONARY ONLINE<br><br>
+                Speak any word, concept, or question.<br>
+                The dictionary will rewrite itself in real time.`, 'bot');
+  }
 });
 </script>
 </body>

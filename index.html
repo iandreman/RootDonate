@@ -48,6 +48,9 @@
       border-bottom: 5px solid var(--accent);
       padding: 16px 24px;
       box-shadow: 0 4px 20px rgba(0, 255, 157, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 16px;
     }
 
     .rune {
@@ -144,6 +147,14 @@
       max-width: 280px;
       line-height: 1.4;
     }
+
+    .share-btn {
+      transition: all 0.2s ease;
+    }
+    .share-btn:hover {
+      color: #00ff9d;
+      transform: scale(1.1);
+    }
   </style>
 </head>
 <body class="min-h-screen flex items-center justify-center bg-black p-4">
@@ -151,7 +162,7 @@
 <div class="chat-container flex flex-col">
 
   <!-- HEADER -->
-  <div class="header flex items-center gap-5 text-[#00ff9d]">
+  <div class="header">
     <div class="w-16 h-16 bg-black border-4 border-[#00ff9d] rounded flex items-center justify-center text-4xl rune rotate-12">☰</div>
     
     <div class="flex-1">
@@ -167,6 +178,12 @@
         <i class="fa-solid fa-network-wired"></i> 
         <span>IP NODES</span>
       </button>
+
+      <button id="share-btn" class="share-btn flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-3 rounded border border-[#00ff9d] hover:border-[#00ff9d] transition-all active:scale-95">
+        <i class="fa-solid fa-share-alt"></i> 
+        <span>SHARE RIFT</span>
+      </button>
+
       <button id="new-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-3 rounded border border-[#00ff9d] hover:border-[#00ff9d] transition-all active:scale-95">
         <i class="fa-solid fa-rotate"></i> 
         <span>NEW RIFT</span>
@@ -223,7 +240,7 @@
 <script>
 // ==================== CHAT LOGIC ====================
 async function getAIResponse(msg) {
-  // Replace with actual backend or Grok API call when ready
+  // Replace with actual Grok API or backend call when ready
   return `ROOTDONATE ACK: "${msg}"<br><br>The void has spoken. Truth extracted.`;
 }
 
@@ -253,6 +270,31 @@ function addMessage(content, role) {
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
 }
+
+// ==================== SHARE LINK ====================
+function generateShareLink() {
+  const baseUrl = window.location.href.split('?')[0];
+  const params = new URLSearchParams({
+    rift: Date.now().toString(36) + Math.random().toString(36).substring(2)
+  });
+  return `${baseUrl}?${params.toString()}`;
+}
+
+document.getElementById('share-btn').addEventListener('click', () => {
+  const shareUrl = generateShareLink();
+  
+  navigator.clipboard.writeText(shareUrl).then(() => {
+    const originalText = document.getElementById('share-btn').innerHTML;
+    document.getElementById('share-btn').innerHTML = `
+      <i class="fa-solid fa-check"></i> 
+      <span>COPIED TO VOID</span>
+    `;
+    
+    setTimeout(() => {
+      document.getElementById('share-btn').innerHTML = originalText;
+    }, 2200);
+  });
+});
 
 // ==================== IP NODES NETWORK ====================
 let nodes = [], edges = [], canvas, ctx, animationFrame, hoveredNode = null;
@@ -294,7 +336,6 @@ async function loadIPData() {
     });
   }
 
-  // Generate mysterious nodes
   for (let i = 1; i < 48; i++) {
     nodes.push({
       id: i,
@@ -308,7 +349,6 @@ async function loadIPData() {
     });
   }
 
-  // Generate edges
   for (let i = 0; i < nodes.length; i++) {
     for (let j = i + 1; j < nodes.length; j++) {
       const prob = (nodes[i].isUser || nodes[j].isUser) ? 0.78 : 0.22;
@@ -323,7 +363,6 @@ function drawNetwork() {
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Background web
   ctx.strokeStyle = "#002200";
   ctx.lineWidth = 1.2;
   edges.forEach(e => {
@@ -335,7 +374,6 @@ function drawNetwork() {
     ctx.stroke();
   });
 
-  // Glowing data pulses
   ctx.strokeStyle = "#00ff9d";
   ctx.lineWidth = 1.8;
   edges.forEach(e => {
@@ -351,7 +389,6 @@ function drawNetwork() {
   });
   ctx.globalAlpha = 1;
 
-  // Nodes
   nodes.forEach(node => {
     ctx.fillStyle = node.color;
     ctx.beginPath();
@@ -387,7 +424,7 @@ function getNodeAt(x, y) {
   return null;
 }
 
-// Event Listeners
+// ==================== EVENT LISTENERS ====================
 document.getElementById('ip-nodes-btn').addEventListener('click', async () => {
   const overlay = document.getElementById('ip-nodes-overlay');
   overlay.style.display = 'flex';

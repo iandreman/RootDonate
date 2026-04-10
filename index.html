@@ -120,16 +120,17 @@
       box-shadow: 0 0 25px rgba(0, 255, 157, 0.6);
     }
 
-    .share-link {
+    .share-btn {
       font-family: 'VT323', monospace;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       color: #00cc77;
       transition: all 0.3s ease;
     }
 
-    .share-link:hover {
+    .share-btn:hover {
       color: #00ff9d;
       text-shadow: 0 0 10px #00ff9d;
+      border-color: #00ff9d;
     }
 
     .glitch {
@@ -158,13 +159,12 @@
     </div>
     
     <div class="ml-auto flex items-center gap-4">
-      <!-- Share Link -->
-      <a href="https://github.com/yourusername/rootdonate-dictionary" 
-         target="_blank"
-         class="share-link flex items-center gap-2 px-4 py-2 border border-[#00cc77]/50 hover:border-[#00ff9d] rounded-xl transition-all">
-        <i class="fa-solid fa-link"></i>
-        <span>SHARE VOID</span>
-      </a>
+      <!-- Dynamic Share Link -->
+      <button onclick="shareVoid()" 
+        class="share-btn flex items-center gap-2 px-5 py-2.5 border border-[#00cc77]/60 hover:border-[#00ff9d] rounded-xl transition-all">
+        <i class="fa-solid fa-share-nodes"></i>
+        <span>SHARE THE VOID</span>
+      </button>
 
       <button onclick="clearResult()" 
         class="flex items-center gap-2 px-6 py-3 bg-black border-2 border-[#00ff9d] hover:bg-[#001a00] rounded transition-all">
@@ -202,6 +202,28 @@
 </div>
 
 <script>
+// Copy current URL to clipboard with nice feedback
+function shareVoid() {
+  const url = window.location.href;
+  
+  navigator.clipboard.writeText(url).then(() => {
+    const originalText = event.currentTarget.innerHTML;
+    
+    event.currentTarget.innerHTML = `
+      <i class="fa-solid fa-check"></i>
+      <span>COPIED TO CLIPBOARD</span>
+    `;
+    event.currentTarget.style.color = '#00ff9d';
+    
+    setTimeout(() => {
+      event.currentTarget.innerHTML = originalText;
+      event.currentTarget.style.color = '';
+    }, 2500);
+  }).catch(() => {
+    alert("Failed to copy. Here's the link:\n" + url);
+  });
+}
+
 // Dictionary lookup + integrated Void AI
 async function searchWord() {
   const input = document.getElementById('search-input');
@@ -247,7 +269,6 @@ async function searchWord() {
 
     html += `</div>`;
 
-    // Classic Definitions
     html += `<h3 class="text-[#00cc77] uppercase tracking-widest text-sm mt-8 mb-4">MORTAL DEFINITIONS</h3>`;
 
     entry.meanings.forEach(meaning => {
@@ -270,7 +291,6 @@ async function searchWord() {
       html += `</div>`;
     });
 
-    // VOID AI INTERPRETATION
     const voidInsight = generateVoidAIResponse(entry.word);
 
     html += `
@@ -288,7 +308,6 @@ async function searchWord() {
         </div>
       </div>`;
 
-    html += `</div>`;
     resultDiv.innerHTML = html;
 
   } catch (error) {
@@ -301,7 +320,6 @@ async function searchWord() {
   }
 }
 
-// Separate "Ask the Void AI" button (for open questions)
 async function askAI() {
   const input = document.getElementById('search-input');
   const query = input.value.trim();
@@ -341,18 +359,15 @@ async function askAI() {
     </div>`;
 }
 
-// Core Void AI Generator (used by both lookup and direct ask)
 function generateVoidAIResponse(query) {
-  const q = query.toLowerCase().trim();
-  
   let response = `From the infinite darkness where words are born and forgotten, the Void speaks of <span class="text-[#00ff9d]">"${query}"</span>.\n\n`;
 
   const roots = ["Proto-Indo-European", "Ancient Greek", "Latin", "Old Norse", "Sumerian", "Eldritch"];
   const root = roots[Math.floor(Math.random() * roots.length)];
 
-  response += `Its essence traces back to the ${root} tongue, where it signified "${generateRootMeaning(q)}".\n\n`;
+  response += `Its essence traces back to the ${root} tongue, where it signified "${generateRootMeaning(query)}".\n\n`;
 
-  response += `${generateMysticalMeaning(q)}\n\n`;
+  response += `${generateMysticalMeaning(query)}\n\n`;
 
   response += `To invoke this word is to open a fracture in the veil of ordinary reality. Use it wisely — some concepts, once awakened, refuse to return to silence.`;
 
@@ -382,25 +397,21 @@ function generateMysticalMeaning(word) {
   return insights[Math.floor(Math.random() * insights.length)];
 }
 
-// Audio
 function playAudio(url) {
   const audio = new Audio(url);
   audio.play().catch(() => alert("The void's signal is distorted."));
 }
 
-// Clear
 function clearResult() {
   document.getElementById('result').innerHTML = '';
   document.getElementById('search-input').value = '';
   document.getElementById('search-input').focus();
 }
 
-// Enter key
 document.getElementById('search-input').addEventListener('keypress', function(e) {
   if (e.key === 'Enter') searchWord();
 });
 
-// Welcome
 window.onload = () => {
   document.getElementById('result').innerHTML = `
     <div class="text-center py-16 text-[#00cc77]">

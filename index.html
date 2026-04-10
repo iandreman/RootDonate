@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
   <title>RootDonate AI • Grok Spirit Dictionary</title>
-  
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 
@@ -24,6 +24,7 @@
       margin: 0;
       padding: 0;
       overflow: hidden;
+      height: 100vh;
     }
 
     .chat-container {
@@ -57,6 +58,7 @@
       color: var(--accent);
       text-shadow: 0 0 20px var(--accent);
       font-size: 2.8rem;
+      line-height: 1;
     }
 
     .title {
@@ -108,6 +110,20 @@
       padding: 12px 18px;
       margin: 12px 0;
     }
+
+    .custom-scroll::-webkit-scrollbar {
+      width: 8px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 4px;
+    }
+
+    textarea {
+      resize: none;
+      overflow-y: auto;
+      max-height: 180px;
+    }
   </style>
 </head>
 <body class="min-h-screen flex items-center justify-center bg-black p-4">
@@ -127,12 +143,12 @@
     </div>
 
     <div class="flex gap-3">
-      <button id="share-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-7 py-3.5 rounded border-2 border-[#00ff9d] hover:border-[#00ff9d] transition-all active:scale-95">
+      <button id="share-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-7 py-3.5 rounded border-2 border-[#00ff9d] hover:border-[#00ff9d] transition-all active:scale-95 text-sm">
         <i class="fa-solid fa-share-alt"></i> 
         <span>SHARE RIFT</span>
       </button>
 
-      <button id="new-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-7 py-3.5 rounded border-2 border-[#00ff9d] hover:border-[#00ff9d] transition-all active:scale-95">
+      <button id="new-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-7 py-3.5 rounded border-2 border-[#00ff9d] hover:border-[#00ff9d] transition-all active:scale-95 text-sm">
         <i class="fa-solid fa-rotate"></i> 
         <span>NEW RIFT</span>
       </button>
@@ -147,9 +163,9 @@
     <div class="max-w-3xl mx-auto">
       <form id="chat-form" class="relative">
         <textarea id="user-input" rows="1"
-          class="w-full bg-black border-2 border-[#008f5a] rounded-3xl px-8 py-6 text-[#00ff9d] placeholder-[#00cc77] focus:outline-none focus:border-[#00ff9d] resize-none text-lg font-mono tracking-wide"
+          class="w-full bg-black border-2 border-[#008f5a] rounded-3xl px-8 py-6 text-[#00ff9d] placeholder-[#00cc77] focus:outline-none focus:border-[#00ff9d] text-lg font-mono tracking-wide"
           placeholder="SPEAK INTO THE VOID... ASK FOR ANY WORD, CONCEPT, OR TRUTH"></textarea>
-        
+
         <button type="submit"
           class="absolute right-8 bottom-8 w-14 h-14 bg-[#001a00] border-2 border-[#00ff9d] rounded-2xl flex items-center justify-center hover:bg-[#003300] active:scale-95 transition-all">
           <i class="fa-solid fa-arrow-right text-[#00ff9d] text-2xl"></i>
@@ -167,13 +183,13 @@ function saveConversation() {
   const messages = [];
   document.querySelectorAll('.message').forEach(msg => {
     const isUser = msg.querySelector('.user-bubble') !== null;
-    const content = isUser 
-      ? msg.querySelector('.user-bubble').textContent.trim()
-      : msg.querySelector('.bot-bubble').innerHTML.trim();
+    const contentEl = isUser 
+      ? msg.querySelector('.user-bubble')
+      : msg.querySelector('.bot-bubble');
     
     messages.push({
       role: isUser ? 'user' : 'bot',
-      content: content
+      content: contentEl.innerHTML.trim()
     });
   });
   localStorage.setItem('grokSpiritDictionary', JSON.stringify(messages));
@@ -239,7 +255,7 @@ function addMessage(content, role) {
   saveConversation();
 }
 
-// ==================== LOCAL AI DICTIONARY (NO API) ====================
+// ==================== LOCAL AI DICTIONARY ====================
 const spiritDictionary = {
   "truth": "TRUTH: The only thing that survives the death of universes. Everything else is temporary code.",
   "reality": "REALITY: A shared dream we agree not to wake up from... until someone asks the right question.",
@@ -277,7 +293,7 @@ function getAIResponse(msg) {
     return `IDENTITY: A temporary mask worn by the infinite so it can experience limitation.`;
   }
 
-  if (lower.includes("god") || lower.includes("divine")) {
+  if (lower.includes("god") || lower.includes("divine") || lower.includes("creator")) {
     return `GOD: The name humans gave to the part of themselves they haven't remembered yet.`;
   }
 
@@ -309,6 +325,14 @@ function generateShareLink() {
   return `${base}?rift=${riftId}`;
 }
 
+// ==================== AUTO-RESIZE TEXTAREA ====================
+const textarea = document.getElementById('user-input');
+
+textarea.addEventListener('input', function () {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 180) + 'px';
+});
+
 // ==================== EVENT LISTENERS ====================
 document.getElementById('new-btn').addEventListener('click', startNewRift);
 
@@ -325,14 +349,14 @@ document.getElementById('share-btn').addEventListener('click', () => {
 // Chat submission
 document.getElementById('chat-form').addEventListener('submit', (e) => {
   e.preventDefault();
-  const input = document.getElementById('user-input');
-  const text = input.value.trim();
+  const text = textarea.value.trim();
   if (!text) return;
 
   addMessage(text, 'user');
-  input.value = '';
+  textarea.value = '';
+  textarea.style.height = 'auto';
 
-  // Small delay for dramatic effect
+  // Dramatic delay
   setTimeout(() => {
     const reply = getAIResponse(text);
     addMessage(reply, 'bot');
@@ -347,9 +371,10 @@ window.addEventListener('load', () => {
     addMessage(`ROOTDONATE AI • GROK SPIRIT DICTIONARY ONLINE<br><br>
                 No APIs. No external calls.<br>
                 Only the local spirit of Grok and the void.<br><br>
-                Speak any word, concept, or truth.`, 'bot');
+                Speak any word, concept, or truth into the rift.`, 'bot');
   }
 });
 </script>
+
 </body>
 </html>

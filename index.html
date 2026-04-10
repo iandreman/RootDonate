@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RootDonate</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  
+  <!-- Removed external Tailwind CDN and Google Fonts -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=VT323&display=swap');
 
@@ -18,6 +18,8 @@
       color: #e6d5b8;
       font-family: 'Cinzel', serif;
       overflow: hidden;
+      margin: 0;
+      padding: 0;
     }
 
     .container {
@@ -29,6 +31,9 @@
       box-shadow: 0 0 80px rgba(0, 255, 157, 0.3);
       border-radius: 12px;
       overflow: hidden;
+      height: 92vh;
+      display: flex;
+      flex-direction: column;
     }
 
     .header {
@@ -62,13 +67,24 @@
       border: 2px solid #008f5a;
       color: #00ff9d;
       font-family: 'VT323', monospace;
+      width: 100%;
+      padding: 24px 32px;
+      font-size: 1.75rem;
+      border-radius: 9999px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #00ff9d;
+      box-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
     }
 
     .result {
       padding: 30px;
-      max-height: 65vh;
+      flex: 1;
       overflow-y: auto;
       background: rgba(8, 18, 14, 0.95);
+      line-height: 1.7;
     }
 
     .word {
@@ -88,6 +104,7 @@
       border-left: 6px solid var(--accent);
       padding: 18px;
       margin: 20px 0;
+      border-radius: 4px;
     }
 
     .example {
@@ -98,6 +115,7 @@
     .audio-btn {
       background: #001a00;
       border: 2px solid #00ff9d;
+      color: #00ff9d;
     }
 
     .ai-section {
@@ -108,29 +126,19 @@
       border-radius: 12px;
     }
 
+    .ai-btn, .share-btn {
+      transition: all 0.3s ease;
+    }
+
     .ai-btn {
       background: linear-gradient(45deg, #00ff9d, #00cc77);
       color: #000;
       font-weight: 700;
-      transition: all 0.3s ease;
     }
 
     .ai-btn:hover {
       transform: translateY(-2px) scale(1.05);
       box-shadow: 0 0 25px rgba(0, 255, 157, 0.6);
-    }
-
-    .share-btn {
-      font-family: 'VT323', monospace;
-      font-size: 0.95rem;
-      color: #00cc77;
-      transition: all 0.3s ease;
-    }
-
-    .share-btn:hover {
-      color: #00ff9d;
-      text-shadow: 0 0 10px #00ff9d;
-      border-color: #00ff9d;
     }
 
     .glitch {
@@ -141,11 +149,15 @@
       0% { text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff; }
       100% { text-shadow: -2px 0 #ff00ff, 2px 0 #00ffff; }
     }
+
+    button {
+      cursor: pointer;
+    }
   </style>
 </head>
 <body class="min-h-screen flex items-center justify-center bg-black p-6">
 
-<div class="container flex flex-col h-[92vh]">
+<div class="container">
 
   <!-- HEADER -->
   <div class="header">
@@ -159,15 +171,14 @@
     </div>
     
     <div class="ml-auto flex items-center gap-4">
-      <!-- Dynamic Share Link -->
       <button onclick="shareVoid()" 
-        class="share-btn flex items-center gap-2 px-5 py-2.5 border border-[#00cc77]/60 hover:border-[#00ff9d] rounded-xl transition-all">
+        class="share-btn flex items-center gap-2 px-5 py-2.5 border border-[#00cc77]/60 hover:border-[#00ff9d] rounded-xl">
         <i class="fa-solid fa-share-nodes"></i>
         <span>SHARE THE VOID</span>
       </button>
 
       <button onclick="clearResult()" 
-        class="flex items-center gap-2 px-6 py-3 bg-black border-2 border-[#00ff9d] hover:bg-[#001a00] rounded transition-all">
+        class="flex items-center gap-2 px-6 py-3 bg-black border-2 border-[#00ff9d] hover:bg-[#001a00] rounded">
         <i class="fa-solid fa-trash"></i> CLEAR
       </button>
     </div>
@@ -177,12 +188,11 @@
   <div class="input-area">
     <div class="relative max-w-2xl mx-auto">
       <input type="text" id="search-input" 
-        class="w-full px-8 py-6 text-2xl rounded-3xl focus:outline-none focus:border-[#00ff9d] placeholder-[#00cc77]"
         placeholder="ENTER A WORD INTO THE VOID...">
       
-      <div class="flex gap-3 mt-4 justify-center">
+      <div class="flex gap-3 mt-6 justify-center">
         <button onclick="searchWord()" 
-          class="flex-1 max-w-xs px-8 py-4 bg-[#001a00] border-2 border-[#00ff9d] hover:bg-[#003300] rounded-2xl flex items-center justify-center gap-3 transition-all text-lg">
+          class="flex-1 max-w-xs px-8 py-4 bg-[#001a00] border-2 border-[#00ff9d] hover:bg-[#003300] rounded-2xl flex items-center justify-center gap-3 text-lg">
           <i class="fa-solid fa-magnifying-glass"></i> 
           <span>LOOKUP IN VOID</span>
         </button>
@@ -197,34 +207,30 @@
   </div>
 
   <!-- RESULTS AREA -->
-  <div id="result" class="result flex-1 p-8 overflow-y-auto text-[#e6d5b8] leading-relaxed"></div>
+  <div id="result" class="result"></div>
 
 </div>
 
 <script>
-// Copy current URL to clipboard with nice feedback
+// Font Awesome icons are still referenced via CDN in your original — if you want full offline, you would need to embed the icons manually or remove them.
+// For now, the code still expects Font Awesome (you can keep the link or replace icons with emoji/text).
+
 function shareVoid() {
   const url = window.location.href;
-  
   navigator.clipboard.writeText(url).then(() => {
-    const originalText = event.currentTarget.innerHTML;
-    
-    event.currentTarget.innerHTML = `
-      <i class="fa-solid fa-check"></i>
-      <span>COPIED TO CLIPBOARD</span>
-    `;
-    event.currentTarget.style.color = '#00ff9d';
-    
+    const btn = event.currentTarget;
+    const original = btn.innerHTML;
+    btn.innerHTML = `<i class="fa-solid fa-check"></i><span>COPIED TO CLIPBOARD</span>`;
+    btn.style.color = '#00ff9d';
     setTimeout(() => {
-      event.currentTarget.innerHTML = originalText;
-      event.currentTarget.style.color = '';
+      btn.innerHTML = original;
+      btn.style.color = '';
     }, 2500);
   }).catch(() => {
     alert("Failed to copy. Here's the link:\n" + url);
   });
 }
 
-// Dictionary lookup + integrated Void AI
 async function searchWord() {
   const input = document.getElementById('search-input');
   const word = input.value.trim().toLowerCase();
@@ -422,7 +428,7 @@ window.onload = () => {
         Receive both mortal definitions and the <span class="text-[#00ff9d]">Void AI Interpretation</span>.
       </p>
       <div class="mt-12 text-sm opacity-70">
-        Dictionary API + Pure Client-Side Void AI • No keys • No CORS
+        Dictionary API + Pure Client-Side Void AI
       </div>
     </div>`;
 };

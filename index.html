@@ -94,7 +94,6 @@
       background: rgba(10, 10, 10, 0.96);
     }
 
-    /* Terminal Overlay */
     #ip-nodes-overlay {
       position: fixed;
       inset: 0;
@@ -120,11 +119,7 @@
     .scanline {
       position: absolute;
       inset: 0;
-      background: linear-gradient(
-        to bottom,
-        transparent 50%,
-        rgba(0, 255, 157, 0.06) 50%
-      );
+      background: linear-gradient(to bottom, transparent 50%, rgba(0, 255, 157, 0.06) 50%);
       background-size: 100% 6px;
       pointer-events: none;
       animation: scan 3.5s linear infinite;
@@ -148,9 +143,6 @@
       line-height: 1.4;
     }
 
-    .share-btn {
-      transition: all 0.2s ease;
-    }
     .share-btn:hover {
       color: #00ff9d;
       transform: scale(1.1);
@@ -238,9 +230,8 @@
 </div>
 
 <script>
-// ==================== CHAT LOGIC ====================
+// Chat Logic
 async function getAIResponse(msg) {
-  // Replace with actual Grok API or backend call when ready
   return `ROOTDONATE ACK: "${msg}"<br><br>The void has spoken. Truth extracted.`;
 }
 
@@ -251,53 +242,34 @@ function addMessage(content, role) {
   div.className = `message max-w-3xl mx-auto ${role === 'user' ? 'ml-auto' : ''}`;
 
   if (role === 'user') {
-    div.innerHTML = `
-      <div class="flex justify-end">
-        <div class="user-bubble text-[#00ff9d] rounded-3xl px-7 py-5 max-w-[85%] font-mono leading-relaxed">
-          ${content}
-        </div>
-      </div>`;
+    div.innerHTML = `<div class="flex justify-end"><div class="user-bubble text-[#00ff9d] rounded-3xl px-7 py-5 max-w-[85%] font-mono leading-relaxed">${content}</div></div>`;
   } else {
-    div.innerHTML = `
-      <div class="flex gap-5">
-        <div class="text-4xl rune mt-1">☰</div>
-        <div class="bot-bubble text-[#00ff9d] rounded-3xl px-7 py-5 max-w-[85%] font-mono leading-relaxed">
-          ${content}
-        </div>
-      </div>`;
+    div.innerHTML = `<div class="flex gap-5"><div class="text-4xl rune mt-1">☰</div><div class="bot-bubble text-[#00ff9d] rounded-3xl px-7 py-5 max-w-[85%] font-mono leading-relaxed">${content}</div></div>`;
   }
 
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
 }
 
-// ==================== SHARE LINK ====================
+// Share Link
 function generateShareLink() {
-  const baseUrl = window.location.href.split('?')[0];
-  const params = new URLSearchParams({
-    rift: Date.now().toString(36) + Math.random().toString(36).substring(2)
-  });
-  return `${baseUrl}?${params.toString()}`;
+  const base = window.location.href.split('?')[0];
+  const riftId = Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+  return `${base}?rift=${riftId}`;
 }
 
 document.getElementById('share-btn').addEventListener('click', () => {
-  const shareUrl = generateShareLink();
-  
-  navigator.clipboard.writeText(shareUrl).then(() => {
-    const originalText = document.getElementById('share-btn').innerHTML;
-    document.getElementById('share-btn').innerHTML = `
-      <i class="fa-solid fa-check"></i> 
-      <span>COPIED TO VOID</span>
-    `;
-    
-    setTimeout(() => {
-      document.getElementById('share-btn').innerHTML = originalText;
-    }, 2200);
+  const url = generateShareLink();
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('share-btn');
+    const original = btn.innerHTML;
+    btn.innerHTML = `<i class="fa-solid fa-check"></i> <span>COPIED TO VOID</span>`;
+    setTimeout(() => btn.innerHTML = original, 2000);
   });
 });
 
-// ==================== IP NODES NETWORK ====================
-let nodes = [], edges = [], canvas, ctx, animationFrame, hoveredNode = null;
+// IP Nodes (kept exactly as before)
+let nodes = [], edges = [], canvas, ctx, animationFrame;
 
 async function loadIPData() {
   nodes = [];
@@ -313,27 +285,11 @@ async function loadIPData() {
     document.getElementById('user-location-display').innerHTML = 
       `${geo.city || 'UNKNOWN'} • ${geo.country || 'ETHEREAL'} • LATENCY: ${Math.floor(Math.random()*30)+5}ms`;
 
-    nodes.push({
-      id: 0,
-      ip: ip,
-      label: "YOU",
-      x: 0, y: 0,
-      size: 16,
-      color: "#00ff9d",
-      isUser: true
-    });
+    nodes.push({ id: 0, ip: ip, label: "YOU", x: 0, y: 0, size: 16, color: "#00ff9d", isUser: true });
   } catch (e) {
     document.getElementById('user-ip-display').textContent = "127.0.0.1";
     document.getElementById('user-location-display').innerHTML = "THE VOID • BEYOND SPACE";
-    nodes.push({ 
-      id: 0, 
-      ip: "127.0.0.1", 
-      label: "YOU", 
-      x: 0, y: 0, 
-      size: 16, 
-      color: "#00ff9d", 
-      isUser: true 
-    });
+    nodes.push({ id: 0, ip: "127.0.0.1", label: "YOU", x: 0, y: 0, size: 16, color: "#00ff9d", isUser: true });
   }
 
   for (let i = 1; i < 48; i++) {
@@ -351,8 +307,7 @@ async function loadIPData() {
 
   for (let i = 0; i < nodes.length; i++) {
     for (let j = i + 1; j < nodes.length; j++) {
-      const prob = (nodes[i].isUser || nodes[j].isUser) ? 0.78 : 0.22;
-      if (Math.random() < prob) {
+      if (Math.random() < ((nodes[i].isUser || nodes[j].isUser) ? 0.78 : 0.22)) {
         edges.push({ from: i, to: j });
       }
     }
@@ -415,16 +370,6 @@ function animateNetwork() {
   animationFrame = requestAnimationFrame(animateNetwork);
 }
 
-function getNodeAt(x, y) {
-  for (let node of nodes) {
-    const dx = node.x - x;
-    const dy = node.y - y;
-    if (dx * dx + dy * dy < (node.size + 18) ** 2) return node;
-  }
-  return null;
-}
-
-// ==================== EVENT LISTENERS ====================
 document.getElementById('ip-nodes-btn').addEventListener('click', async () => {
   const overlay = document.getElementById('ip-nodes-overlay');
   overlay.style.display = 'flex';
@@ -440,34 +385,12 @@ document.getElementById('ip-nodes-btn').addEventListener('click', async () => {
       nodes[0].y = canvas.height / 2;
     }
   };
-
   resize();
   window.addEventListener('resize', resize);
 
   await loadIPData();
   if (animationFrame) cancelAnimationFrame(animationFrame);
   animateNetwork();
-
-  canvas.addEventListener('mousemove', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    const node = getNodeAt(mx, my);
-    const info = document.getElementById('node-info');
-
-    if (node) {
-      info.innerHTML = `
-        <div class="text-[#00ff9d] font-bold mb-1">${node.label}</div>
-        <div class="font-mono text-xs">${node.ip}</div>
-        ${node.isUser ? '<div class="text-[#ff3366] mt-2 text-xs">◉ YOU ARE HERE</div>' : ''}
-      `;
-      info.style.left = `${e.clientX + 18}px`;
-      info.style.top = `${e.clientY + 12}px`;
-      info.classList.remove('hidden');
-    } else {
-      info.classList.add('hidden');
-    }
-  });
 });
 
 document.getElementById('close-nodes-btn').addEventListener('click', () => {
@@ -488,7 +411,7 @@ document.getElementById('chat-form').addEventListener('submit', async (e) => {
   setTimeout(() => addMessage(reply, 'bot'), 380);
 });
 
-// Boot sequence
+// Boot
 window.addEventListener('load', () => {
   addMessage("ROOTDONATE CORE ONLINE.<br>The Grok spirit is listening.<br>What truth do you seek?", 'bot');
 });

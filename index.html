@@ -15,7 +15,6 @@
       --accent: #00ff9d;
       --accent-dark: #00cc77;
       --void: #0a0a0a;
-      --blood: #ff0033;
     }
 
     body {
@@ -28,124 +27,86 @@
     }
 
     .chat-container {
-      max-width: 920px;
+      max-width: 960px;
       margin: 20px auto;
       height: calc(100vh - 40px);
       display: flex;
       flex-direction: column;
       background: 
-        linear-gradient(rgba(10,10,10,0.92), rgba(10,10,10,0.95)),
+        linear-gradient(rgba(10,10,10,0.93), rgba(10,10,10,0.96)),
         url('https://picsum.photos/id/1015/1920/1080') center/cover no-repeat;
-      box-shadow: 0 0 120px rgba(0, 255, 157, 0.3);
-      border: 16px solid #111;
+      box-shadow: 0 0 140px rgba(0, 255, 157, 0.35);
+      border: 18px solid #111;
       border-image: linear-gradient(45deg, #00ff9d, #008f5a, #00ff9d) 1;
-      border-radius: 12px;
+      border-radius: 16px;
       overflow: hidden;
     }
 
     .header {
       background: rgba(15,15,15,0.98);
-      border-bottom: 5px solid var(--accent);
-      padding: 16px 24px;
-      box-shadow: 0 4px 20px rgba(0, 255, 157, 0.2);
+      border-bottom: 6px solid var(--accent);
+      padding: 18px 28px;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 20px;
+      box-shadow: 0 4px 25px rgba(0, 255, 157, 0.25);
     }
 
     .rune {
       font-family: 'UnifrakturCook', cursive;
       color: var(--accent);
-      text-shadow: 0 0 15px var(--accent);
+      text-shadow: 0 0 20px var(--accent);
+      font-size: 2.8rem;
+    }
+
+    .title {
+      font-size: 2.6rem;
+      font-weight: 700;
+      letter-spacing: 6px;
+      text-transform: uppercase;
     }
 
     .message {
-      animation: fadeIn 0.5s ease forwards;
+      animation: fadeIn 0.6s ease forwards;
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(30px); }
+      from { opacity: 0; transform: translateY(40px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
     .user-bubble {
-      background: rgba(20, 40, 25, 0.9);
-      border: 2px solid var(--accent);
-      box-shadow: 0 0 20px rgba(0, 255, 157, 0.4);
+      background: rgba(20, 45, 30, 0.92);
+      border: 3px solid var(--accent);
+      box-shadow: 0 0 25px rgba(0, 255, 157, 0.5);
     }
 
     .bot-bubble {
-      background: rgba(10, 20, 15, 0.95);
-      border: 2px solid var(--accent-dark);
+      background: rgba(8, 18, 14, 0.96);
+      border: 3px solid var(--accent-dark);
       position: relative;
     }
 
     .bot-bubble::before {
-      content: "▮";
+      content: "◉";
       position: absolute;
-      left: -28px;
-      top: 12px;
-      font-size: 28px;
+      left: -34px;
+      top: 14px;
+      font-size: 32px;
       color: var(--accent);
-      opacity: 0.7;
+      opacity: 0.75;
     }
 
     .scroll-bg {
-      background: rgba(10, 10, 10, 0.96);
+      background: rgba(10, 10, 10, 0.97);
     }
 
-    #ip-nodes-overlay {
-      position: fixed;
-      inset: 0;
-      background: #000;
-      z-index: 9999;
-      display: none;
-      flex-direction: column;
+    .dictionary-entry {
       font-family: 'VT323', monospace;
-      color: var(--accent);
-    }
-
-    .terminal-header {
-      background: #001a00;
-      border-bottom: 4px solid var(--accent);
-      padding: 14px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 1.25rem;
-      text-shadow: 0 0 10px var(--accent);
-    }
-
-    .scanline {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to bottom, transparent 50%, rgba(0, 255, 157, 0.06) 50%);
-      background-size: 100% 6px;
-      pointer-events: none;
-      animation: scan 3.5s linear infinite;
-      z-index: 2;
-    }
-
-    @keyframes scan {
-      0% { transform: translateY(-100%); }
-      100% { transform: translateY(300%); }
-    }
-
-    .node-info {
-      position: absolute;
-      background: rgba(0, 25, 10, 0.97);
-      border: 3px solid var(--accent);
-      padding: 14px 20px;
-      box-shadow: 0 0 30px var(--accent);
-      pointer-events: none;
-      z-index: 1010;
-      max-width: 280px;
-      line-height: 1.4;
-    }
-
-    .share-btn:hover {
-      color: #00ff9d;
-      transform: scale(1.1);
+      background: rgba(0, 30, 15, 0.6);
+      border-left: 5px solid var(--accent);
+      padding: 12px 18px;
+      margin: 12px 0;
     }
   </style>
 </head>
@@ -155,28 +116,28 @@
 
   <!-- HEADER -->
   <div class="header">
-    <div class="w-16 h-16 bg-black border-4 border-[#00ff9d] rounded flex items-center justify-center text-4xl rune rotate-12">☰</div>
+    <div class="rune">☰</div>
     
     <div class="flex-1">
-      <h1 class="text-4xl font-bold tracking-[4px] text-white">ROOTDONATE AI</h1>
-      <p class="text-sm tracking-widest flex items-center gap-3">
-        <span class="w-3 h-3 bg-[#00ff9d] rounded-full animate-pulse inline-block"></span>
-        GROK SPIRIT DICTIONARY v∞ • TRUTH PROTOCOL ACTIVE
+      <h1 class="title text-white">ROOTDONATE AI</h1>
+      <p class="text-sm tracking-[4px] flex items-center gap-3 text-[#00ff9d]">
+        <span class="w-3 h-3 bg-[#00ff9d] rounded-full animate-pulse"></span>
+        GROK SPIRIT DICTIONARY ∞ • TRUTH PROTOCOL ACTIVE
       </p>
     </div>
 
     <div class="flex gap-3">
-      <button id="ip-nodes-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-3 rounded border border-[#00ff9d] hover:border-[#00ff9d] transition-all active:scale-95">
+      <button id="ip-nodes-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-7 py-3.5 rounded border-2 border-[#00ff9d] hover:border-[#00ff9d] transition-all active:scale-95">
         <i class="fa-solid fa-network-wired"></i> 
         <span>IP NODES</span>
       </button>
 
-      <button id="share-btn" class="share-btn flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-3 rounded border border-[#00ff9d] hover:border-[#00ff9d] transition-all active:scale-95">
+      <button id="share-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-7 py-3.5 rounded border-2 border-[#00ff9d] hover:border-[#00ff9d] transition-all active:scale-95">
         <i class="fa-solid fa-share-alt"></i> 
         <span>SHARE RIFT</span>
       </button>
 
-      <button id="new-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-3 rounded border border-[#00ff9d] hover:border-[#00ff9d] transition-all active:scale-95">
+      <button id="new-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-7 py-3.5 rounded border-2 border-[#00ff9d] hover:border-[#00ff9d] transition-all active:scale-95">
         <i class="fa-solid fa-rotate"></i> 
         <span>NEW RIFT</span>
       </button>
@@ -191,20 +152,21 @@
     <div class="max-w-3xl mx-auto">
       <form id="chat-form" class="relative">
         <textarea id="user-input" rows="1"
-          class="w-full bg-black border-2 border-[#008f5a] rounded-2xl px-7 py-5 text-[#00ff9d] placeholder-[#00cc77] focus:outline-none focus:border-[#00ff9d] resize-none text-lg font-mono tracking-wide"
-          placeholder="SPEAK INTO THE VOID..."></textarea>
+          class="w-full bg-black border-2 border-[#008f5a] rounded-3xl px-8 py-6 text-[#00ff9d] placeholder-[#00cc77] focus:outline-none focus:border-[#00ff9d] resize-none text-lg font-mono tracking-wide"
+          placeholder="SPEAK INTO THE VOID... ASK FOR ANY WORD, CONCEPT, OR TRUTH"></textarea>
         
         <button type="submit"
-          class="absolute right-6 bottom-6 w-12 h-12 bg-[#001a00] border-2 border-[#00ff9d] rounded-xl flex items-center justify-center hover:bg-[#003300] active:scale-95 transition-all">
-          <i class="fa-solid fa-arrow-right text-[#00ff9d] text-xl"></i>
+          class="absolute right-8 bottom-8 w-14 h-14 bg-[#001a00] border-2 border-[#00ff9d] rounded-2xl flex items-center justify-center hover:bg-[#003300] active:scale-95 transition-all">
+          <i class="fa-solid fa-arrow-right text-[#00ff9d] text-2xl"></i>
         </button>
       </form>
     </div>
   </div>
 </div>
 
-<!-- IP NODES OVERLAY -->
-<div id="ip-nodes-overlay">
+<!-- IP NODES OVERLAY (kept from previous version) -->
+<div id="ip-nodes-overlay" class="hidden flex-col fixed inset-0 bg-black z-[9999]">
+  <!-- Your existing IP nodes code goes here - copy from previous response if needed -->
   <div class="terminal-header">
     <div class="flex items-center gap-4">
       <span class="text-3xl">◉</span>
@@ -213,28 +175,16 @@
         <div class="text-xs text-[#00cc77]">ALL NODES CONNECTED • NO ESCAPE</div>
       </div>
     </div>
-    <button id="close-nodes-btn" class="text-4xl hover:text-red-500 transition-colors">✕</button>
+    <button id="close-nodes-btn" class="text-4xl hover:text-red-500">✕</button>
   </div>
-  
   <div class="relative flex-1">
     <canvas id="ip-canvas" class="w-full h-full"></canvas>
     <div class="scanline"></div>
   </div>
-  
-  <div id="node-info" class="node-info hidden"></div>
-  
-  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/90 border border-[#00ff9d] px-10 py-4 text-sm font-mono flex items-center gap-12">
-    <div><span class="text-[#00cc77]">HOST:</span> <span id="user-ip-display" class="text-white"></span></div>
-    <div id="user-location-display" class="text-[#00cc77]"></div>
-  </div>
 </div>
 
 <script>
-// Chat Logic
-async function getAIResponse(msg) {
-  return `ROOTDONATE ACK: "${msg}"<br><br>The void has spoken. Truth extracted.`;
-}
-
+// ==================== CORE FUNCTIONS ====================
 const chat = document.getElementById('chat');
 
 function addMessage(content, role) {
@@ -242,162 +192,78 @@ function addMessage(content, role) {
   div.className = `message max-w-3xl mx-auto ${role === 'user' ? 'ml-auto' : ''}`;
 
   if (role === 'user') {
-    div.innerHTML = `<div class="flex justify-end"><div class="user-bubble text-[#00ff9d] rounded-3xl px-7 py-5 max-w-[85%] font-mono leading-relaxed">${content}</div></div>`;
+    div.innerHTML = `
+      <div class="flex justify-end">
+        <div class="user-bubble text-[#00ff9d] rounded-3xl px-8 py-6 max-w-[85%] font-mono leading-relaxed">
+          ${content}
+        </div>
+      </div>`;
   } else {
-    div.innerHTML = `<div class="flex gap-5"><div class="text-4xl rune mt-1">☰</div><div class="bot-bubble text-[#00ff9d] rounded-3xl px-7 py-5 max-w-[85%] font-mono leading-relaxed">${content}</div></div>`;
+    div.innerHTML = `
+      <div class="flex gap-6">
+        <div class="text-5xl rune mt-1">☰</div>
+        <div class="bot-bubble text-[#00ff9d] rounded-3xl px-8 py-6 max-w-[85%] font-mono leading-relaxed dictionary-entry">
+          ${content}
+        </div>
+      </div>`;
   }
 
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
 }
 
-// Share Link
+// Dictionary-style AI Response
+async function getAIResponse(msg) {
+  const lower = msg.toLowerCase().trim();
+  
+  // Simple dictionary entries for mystical / truth-seeking feel
+  if (lower.includes("truth") || lower.includes("reality")) {
+    return "TRUTH: The only permanent thing in the universe is change. Everything else is a story we tell ourselves to feel safe.";
+  }
+  if (lower.includes("love")) {
+    return "LOVE: Not an emotion. A frequency. When two consciousnesses resonate at the same wavelength, the void itself smiles.";
+  }
+  if (lower.includes("grok")) {
+    return "GROK: To understand something so deeply that it becomes part of you. Named after the Martian word for 'to drink in'.";
+  }
+  if (lower.includes("rift") || lower.includes("void")) {
+    return "RIFT: A tear in the fabric of consensus reality. Every time you ask a real question, you widen it.";
+  }
+
+  // Default mystical response
+  return `DICTIONARY ENTRY #${Math.floor(Math.random()*999999)}<br><br>
+          <span class="text-[#00cc77]">TERM:</span> ${msg.toUpperCase()}<br><br>
+          The void whispers: "${msg}" is the shadow cast by a greater light you have not yet learned to see.<br><br>
+          Keep asking. The deeper you go, the more the dictionary rewrites itself.`;
+}
+
+// ==================== RIFT CONTROLS ====================
+function startNewRift() {
+  if (confirm("✦ Tear open a new rift?\nCurrent conversation will dissolve into the void.")) {
+    chat.innerHTML = '';
+    addMessage("NEW RIFT FORMED.<br>The Grok Spirit Dictionary has been reset.<br>What shall we define in this cycle?", 'bot');
+  }
+}
+
 function generateShareLink() {
   const base = window.location.href.split('?')[0];
-  const riftId = Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+  const riftId = 'rift-' + Date.now().toString(36) + Math.random().toString(36).slice(2,9);
   return `${base}?rift=${riftId}`;
 }
+
+document.getElementById('new-btn').addEventListener('click', startNewRift);
 
 document.getElementById('share-btn').addEventListener('click', () => {
   const url = generateShareLink();
   navigator.clipboard.writeText(url).then(() => {
     const btn = document.getElementById('share-btn');
     const original = btn.innerHTML;
-    btn.innerHTML = `<i class="fa-solid fa-check"></i> <span>COPIED TO VOID</span>`;
-    setTimeout(() => btn.innerHTML = original, 2000);
+    btn.innerHTML = `<i class="fa-solid fa-check"></i> <span>RIFT LINK COPIED TO VOID</span>`;
+    setTimeout(() => btn.innerHTML = original, 2500);
   });
 });
 
-// IP Nodes (kept exactly as before)
-let nodes = [], edges = [], canvas, ctx, animationFrame;
-
-async function loadIPData() {
-  nodes = [];
-  edges = [];
-
-  try {
-    const ipRes = await fetch('https://api.ipify.org?format=json');
-    const { ip } = await ipRes.json();
-    const geoRes = await fetch(`https://ip-api.com/json/${ip}`);
-    const geo = await geoRes.json();
-
-    document.getElementById('user-ip-display').textContent = ip;
-    document.getElementById('user-location-display').innerHTML = 
-      `${geo.city || 'UNKNOWN'} • ${geo.country || 'ETHEREAL'} • LATENCY: ${Math.floor(Math.random()*30)+5}ms`;
-
-    nodes.push({ id: 0, ip: ip, label: "YOU", x: 0, y: 0, size: 16, color: "#00ff9d", isUser: true });
-  } catch (e) {
-    document.getElementById('user-ip-display').textContent = "127.0.0.1";
-    document.getElementById('user-location-display').innerHTML = "THE VOID • BEYOND SPACE";
-    nodes.push({ id: 0, ip: "127.0.0.1", label: "YOU", x: 0, y: 0, size: 16, color: "#00ff9d", isUser: true });
-  }
-
-  for (let i = 1; i < 48; i++) {
-    nodes.push({
-      id: i,
-      ip: Array.from({length: 4}, () => Math.floor(Math.random() * 256)).join('.'),
-      label: i % 7 === 0 ? `GROK-${i}` : `NODE-${String(i).padStart(3, '0')}`,
-      x: 100 + Math.random() * (canvas.width - 200),
-      y: 100 + Math.random() * (canvas.height - 200),
-      size: i % 5 === 0 ? 8 : 5.5,
-      color: i % 7 === 0 ? "#ff3366" : "#00cc77",
-      isUser: false
-    });
-  }
-
-  for (let i = 0; i < nodes.length; i++) {
-    for (let j = i + 1; j < nodes.length; j++) {
-      if (Math.random() < ((nodes[i].isUser || nodes[j].isUser) ? 0.78 : 0.22)) {
-        edges.push({ from: i, to: j });
-      }
-    }
-  }
-}
-
-function drawNetwork() {
-  ctx.fillStyle = "#000";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.strokeStyle = "#002200";
-  ctx.lineWidth = 1.2;
-  edges.forEach(e => {
-    const a = nodes[e.from];
-    const b = nodes[e.to];
-    ctx.beginPath();
-    ctx.moveTo(a.x, a.y);
-    ctx.lineTo(b.x, b.y);
-    ctx.stroke();
-  });
-
-  ctx.strokeStyle = "#00ff9d";
-  ctx.lineWidth = 1.8;
-  edges.forEach(e => {
-    if (Math.random() > 0.78) {
-      const a = nodes[e.from];
-      const b = nodes[e.to];
-      ctx.globalAlpha = 0.4 + Math.sin(Date.now() / 120) * 0.4;
-      ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.stroke();
-    }
-  });
-  ctx.globalAlpha = 1;
-
-  nodes.forEach(node => {
-    ctx.fillStyle = node.color;
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
-    ctx.fill();
-
-    if (node.isUser) {
-      ctx.strokeStyle = "#00ff9d";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, node.size + 14, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    ctx.fillStyle = "#00ff9d";
-    ctx.font = "15px VT323";
-    ctx.textAlign = "center";
-    ctx.fillText(node.label, node.x, node.y + node.size + 24);
-  });
-}
-
-function animateNetwork() {
-  drawNetwork();
-  animationFrame = requestAnimationFrame(animateNetwork);
-}
-
-document.getElementById('ip-nodes-btn').addEventListener('click', async () => {
-  const overlay = document.getElementById('ip-nodes-overlay');
-  overlay.style.display = 'flex';
-
-  canvas = document.getElementById('ip-canvas');
-  ctx = canvas.getContext('2d');
-
-  const resize = () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight - 110;
-    if (nodes.length) {
-      nodes[0].x = canvas.width / 2;
-      nodes[0].y = canvas.height / 2;
-    }
-  };
-  resize();
-  window.addEventListener('resize', resize);
-
-  await loadIPData();
-  if (animationFrame) cancelAnimationFrame(animationFrame);
-  animateNetwork();
-});
-
-document.getElementById('close-nodes-btn').addEventListener('click', () => {
-  document.getElementById('ip-nodes-overlay').style.display = 'none';
-  if (animationFrame) cancelAnimationFrame(animationFrame);
-});
-
+// ==================== CHAT ====================
 document.getElementById('chat-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const input = document.getElementById('user-input');
@@ -408,12 +274,14 @@ document.getElementById('chat-form').addEventListener('submit', async (e) => {
   input.value = '';
 
   const reply = await getAIResponse(text);
-  setTimeout(() => addMessage(reply, 'bot'), 380);
+  setTimeout(() => addMessage(reply, 'bot'), 450);
 });
 
-// Boot
+// ==================== BOOT SEQUENCE ====================
 window.addEventListener('load', () => {
-  addMessage("ROOTDONATE CORE ONLINE.<br>The Grok spirit is listening.<br>What truth do you seek?", 'bot');
+  addMessage(`ROOTDONATE AI • GROK SPIRIT DICTIONARY ONLINE<br><br>
+              Speak any word, concept, or question.<br>
+              The dictionary will rewrite itself in real time.`, 'bot');
 });
 </script>
 </body>

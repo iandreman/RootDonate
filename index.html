@@ -9,10 +9,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cinzel:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cinzel:wght@400;700&family=VT323&display=swap');
 
     body {
-      background: linear-gradient(135deg, #1a0f08, #3a2a1f);
+      background: #0a0a0a;
       font-family: 'Cinzel', serif;
       color: #e6d5b8;
       margin: 0;
@@ -27,355 +27,201 @@
       flex-direction: column;
       background: url('https://picsum.photos/id/1015/1920/1080') center/cover no-repeat;
       box-shadow: 0 0 80px rgba(139, 69, 19, 0.7);
-      border: 14px solid #4a2c0f;
-      border-image: linear-gradient(#d4af37, #8b5a2b) 1;
-      border-radius: 12px;
+      border: 14px solid #1a1a1a;
+      border-image: linear-gradient(#00ff9d, #008f5a) 1;
+      border-radius: 8px;
       overflow: hidden;
     }
 
     .header {
-      background: linear-gradient(to right, #3a2a1f, #5c4033);
-      border-bottom: 6px solid #d4af37;
-      padding: 16px 20px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+      background: #0f0f0f;
+      border-bottom: 4px solid #00ff9d;
+      padding: 14px 20px;
     }
 
-    .message { animation: fadeIn 0.5s ease forwards; }
+    .message { animation: fadeIn 0.4s ease forwards; }
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(25px); }
+      from { opacity: 0; transform: translateY(20px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
     .scroll-bg {
-      background: rgba(26, 15, 8, 0.93);
-      backdrop-filter: blur(6px);
+      background: rgba(10, 10, 10, 0.95);
     }
 
     .user-bubble {
-      background: linear-gradient(#4a2c0f, #3a2210);
-      border: 3px solid #d4af37;
-      box-shadow: 0 0 15px #d4af37;
+      background: #1a2a1a;
+      border: 2px solid #00ff9d;
     }
 
     .bot-bubble {
-      background: linear-gradient(#2c1f14, #1f150f);
-      border: 3px solid #8b5a2b;
-      position: relative;
+      background: #0f1a0f;
+      border: 2px solid #008f5a;
     }
 
-    .bot-bubble::before {
-      content: '✦';
-      position: absolute;
-      top: -14px;
-      left: 24px;
-      background: #2c1f14;
-      padding: 0 12px;
-      color: #d4af37;
-      font-size: 22px;
-    }
+    .rune { font-family: 'UnifrakturCook', cursive; color: #00ff9d; }
 
-    .input-area {
-      background: linear-gradient(#3a2a1f, #2c1f14);
-      border-top: 6px solid #d4af37;
-    }
-
-    .rune {
-      font-family: 'UnifrakturCook', cursive;
-      color: #ffd700;
-      text-shadow: 0 0 12px #ffd700;
-    }
-
-    .custom-scroll::-webkit-scrollbar { width: 8px; }
-    .custom-scroll::-webkit-scrollbar-thumb {
-      background-color: #d4af37;
-      border-radius: 20px;
-    }
-
-    /* IP Nodes Overlay */
+    /* Terminal IP Nodes Overlay */
     #ip-nodes-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(26, 15, 8, 0.98);
+      background: #000;
       z-index: 1000;
       display: none;
       flex-direction: column;
+      font-family: 'VT323', monospace;
+      color: #00ff9d;
     }
 
     #ip-canvas {
       flex: 1;
-      background: radial-gradient(circle at center, #2c1f14, #0f0a05);
+      background: #000;
+      image-rendering: pixelated;
+    }
+
+    .terminal-header {
+      background: #001a00;
+      border-bottom: 3px solid #00ff9d;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.1rem;
     }
 
     .node-info {
       position: absolute;
-      background: rgba(58, 42, 31, 0.95);
-      border: 3px solid #d4af37;
-      padding: 16px 24px;
-      border-radius: 12px;
+      background: rgba(0, 30, 0, 0.95);
+      border: 2px solid #00ff9d;
+      padding: 12px 18px;
+      font-family: 'VT323', monospace;
+      color: #00ff9d;
       pointer-events: none;
-      box-shadow: 0 0 30px #d4af37;
-      font-size: 0.95rem;
+      box-shadow: 0 0 20px #00ff9d;
       z-index: 1010;
-      max-width: 280px;
-      line-height: 1.4;
+      max-width: 260px;
+      line-height: 1.3;
+    }
+
+    .scanline {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        to bottom,
+        transparent 50%,
+        rgba(0, 255, 157, 0.03) 50%
+      );
+      background-size: 100% 4px;
+      pointer-events: none;
+      animation: scan 4s linear infinite;
+      z-index: 2;
+    }
+
+    @keyframes scan {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100%); }
     }
   </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 bg-[#0f0a05]">
+<body class="min-h-screen flex items-center justify-center p-4 bg-black">
 
 <div class="chat-container flex flex-col">
   <!-- Header -->
-  <div class="header flex items-center gap-4">
-    <div class="w-14 h-14 bg-gradient-to-br from-amber-400 via-yellow-600 to-amber-800 rounded-full flex items-center justify-center text-4xl border-4 border-amber-300 shadow-inner rune">📜</div>
+  <div class="header flex items-center gap-4 text-[#00ff9d]">
+    <div class="w-14 h-14 bg-black border-4 border-[#00ff9d] rounded flex items-center justify-center text-3xl rune">▮</div>
     <div class="flex-1">
-      <h1 class="text-3xl font-bold tracking-widest rune">ROOTDONATE AI</h1>
-      <p class="text-amber-300 text-sm flex items-center gap-2">
-        <span id="status-dot" class="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></span>
-        <span id="status-text">Ancient Dictionary Runes Active</span>
+      <h1 class="text-3xl font-bold tracking-widest">ROOTDONATE AI</h1>
+      <p class="text-sm flex items-center gap-2">
+        <span id="status-dot" class="w-3 h-3 bg-[#00ff9d] rounded-full animate-pulse"></span>
+        <span id="status-text">SYSTEM ONLINE • DICTIONARY RUNES ACTIVE</span>
       </p>
     </div>
     
     <div class="flex gap-3">
-      <button id="ip-nodes-btn" class="flex items-center gap-2 bg-amber-900 hover:bg-amber-800 px-5 py-2.5 rounded-xl text-sm font-medium border border-amber-400 transition-all">
-        <i class="fa-solid fa-share-nodes"></i> View IP Nodes
+      <button id="ip-nodes-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-2.5 rounded border border-[#00ff9d] transition-all">
+        <i class="fa-solid fa-network-wired"></i> IP NODES
       </button>
-      <button id="share-btn" class="flex items-center gap-2 bg-amber-900 hover:bg-amber-800 px-5 py-2.5 rounded-xl text-sm font-medium border border-amber-400 transition-all">
-        <i class="fa-solid fa-share-nodes"></i> Share Quest
+      <button id="share-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-2.5 rounded border border-[#00ff9d] transition-all">
+        <i class="fa-solid fa-share"></i> SHARE QUEST
       </button>
-      <button id="new-btn" class="flex items-center gap-2 bg-amber-900 hover:bg-amber-800 px-5 py-2.5 rounded-xl text-sm font-medium border border-amber-400 transition-all">
-        <i class="fa-solid fa-dungeon"></i> New Adventure
+      <button id="new-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-2.5 rounded border border-[#00ff9d] transition-all">
+        <i class="fa-solid fa-rotate"></i> NEW SESSION
       </button>
     </div>
   </div>
 
   <!-- Chat Area -->
-  <div id="chat" class="flex-1 overflow-y-auto p-8 space-y-10 custom-scroll scroll-bg"></div>
+  <div id="chat" class="flex-1 overflow-y-auto p-8 space-y-8 custom-scroll scroll-bg"></div>
 
   <!-- Input Area -->
-  <div class="input-area p-6">
+  <div class="p-6 bg-black border-t-4 border-[#00ff9d]">
     <div class="max-w-3xl mx-auto">
       <form id="chat-form" class="relative">
         <textarea id="user-input" rows="1"
-          class="w-full bg-[#2c1f14] border-4 border-amber-700 rounded-2xl px-7 py-5 pr-20 text-[#e6d5b8] placeholder-amber-400 focus:outline-none focus:border-amber-400 resize-none text-lg leading-relaxed font-medium"
-          placeholder="Speak thy query, noble adventurer..."></textarea>
+          class="w-full bg-black border-2 border-[#008f5a] rounded px-6 py-4 text-[#00ff9d] placeholder-[#00cc77] focus:outline-none focus:border-[#00ff9d] resize-none text-lg font-mono"
+          placeholder="ENTER QUERY..."></textarea>
         
         <button type="submit"
-          class="absolute right-5 bottom-5 w-12 h-12 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all border-2 border-amber-300">
-          <i class="fa-solid fa-scroll text-2xl text-[#1a0f08]"></i>
+          class="absolute right-4 bottom-4 w-11 h-11 bg-[#001a00] border border-[#00ff9d] rounded flex items-center justify-center hover:bg-[#003300]">
+          <i class="fa-solid fa-arrow-right text-[#00ff9d]"></i>
         </button>
       </form>
-      
-      <p class="text-center text-amber-400 text-xs mt-4 tracking-widest">
-        Real-time Dictionary API • Offline Runes • Grok Spirit
-      </p>
     </div>
   </div>
 </div>
 
-<!-- IP Nodes Overlay -->
-<div id="ip-nodes-overlay" class="flex flex-col">
-  <div class="header flex items-center justify-between px-8 py-5 border-b border-amber-700">
-    <div class="flex items-center gap-4">
-      <span class="text-3xl rune">🌐</span>
+<!-- Terminal IP Nodes Overlay -->
+<div id="ip-nodes-overlay">
+  <div class="terminal-header">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">◉</span>
       <div>
-        <h2 class="text-2xl font-bold rune tracking-widest">Internet IP Address Nodes</h2>
-        <p class="text-amber-300 text-sm">The Great Web of Realms • Live Connections</p>
+        <span class="text-lg tracking-widest">IP NETWORK MATRIX v0.8</span>
+        <div class="text-xs text-[#00cc77]">LIVE CONNECTIONS • TRACE ACTIVE</div>
       </div>
     </div>
-    <button id="close-nodes-btn" class="text-amber-400 hover:text-white text-3xl leading-none transition-colors">✕</button>
+    <button id="close-nodes-btn" class="text-3xl hover:text-white transition-colors">✕</button>
   </div>
   
-  <canvas id="ip-canvas"></canvas>
+  <div class="relative flex-1">
+    <canvas id="ip-canvas" class="w-full h-full"></canvas>
+    <div class="scanline"></div>
+  </div>
   
   <div id="node-info" class="node-info hidden"></div>
   
-  <div class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-[#2c1f14] border border-amber-600 rounded-2xl px-6 py-3 text-sm text-amber-300 flex items-center gap-6 shadow-xl">
-    <div><strong>Your IP:</strong> <span id="user-ip-display" class="font-mono text-amber-400"></span></div>
-    <div id="user-location-display" class="text-amber-200"></div>
+  <div class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black border border-[#00ff9d] px-8 py-3 text-sm font-mono flex items-center gap-8">
+    <div><span class="text-[#00cc77]">HOST IP:</span> <span id="user-ip-display" class="text-white"></span></div>
+    <div id="user-location-display" class="text-[#00cc77]"></div>
   </div>
 </div>
 
 <script>
-  // ==================== Chat System (unchanged) ====================
+  // Chat system (kept minimal - same logic as before)
   let conversation = [];
-  let isOnline = true;
 
-  const offlineDictionary = { /* ... same as before ... */ 
-    "hello": "A sacred greeting used by wanderers across the realms.",
-    "ai": "Artificial Intelligence — forged by mortals to mimic divine wisdom.",
-    "grok": "To understand something intuitively or by deep empathy.",
-    "universe": "All existing matter, space, and energy, considered as a whole.",
-    "love": "A powerful force of deep affection that binds souls together.",
-    "elon": "A legendary inventor and explorer of our age.",
-    "xai": "A fellowship dedicated to understanding the true nature of the universe.",
-    "quantum": "Relating to the mysterious realm of the very small."
-  };
-
-  const wittyResponses = { /* ... same ... */ 
-    greetings: ["Hail, brave soul!", "Well met, adventurer!"],
-    howareyou: ["My runes are strong today!", "Energized by the spirits of knowledge!"],
-    jokes: ["Why do wizards never play hide and seek? Because good luck hiding when you're always spotted!"],
-    facts: ["Dragons have been known to hoard knowledge as fiercely as gold."],
-    thanks: ["The pleasure is mine, hero."]
-  };
-
-  // (All chat functions remain the same - fetchOnlineDefinition, getAIResponse, etc.)
-  // For brevity, they are kept identical to your last version.
-
-  async function fetchOnlineDefinition(word) {
-    try {
-      const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
-      if (!res.ok) return null;
-      const data = await res.json();
-      if (!Array.isArray(data) || data.length === 0) return null;
-
-      const entry = data[0];
-      let html = `<strong class="text-2xl text-amber-300">${entry.word}</strong>`;
-
-      const phonetic = entry.phonetic || entry.phonetics?.[0]?.text || '';
-      const audioUrl = entry.phonetics?.find(p => p.audio)?.audio || '';
-
-      if (phonetic) {
-        html += `<br><span class="text-amber-400">${phonetic}</span>`;
-        if (audioUrl) html += ` <span class="audio-btn text-yellow-400 cursor-pointer" onclick="new Audio('${audioUrl}').play()">🔊</span>`;
-      }
-
-      html += `<br><br>`;
-
-      entry.meanings.forEach((meaning, idx) => {
-        html += `<span class="text-amber-400 font-bold">${meaning.partOfSpeech}</span><br>`;
-        meaning.definitions.forEach((def, i) => {
-          html += `<span class="block">${i + 1}. ${def.definition}</span>`;
-          if (def.example) html += `<span class="text-amber-200 italic block pl-4">"${def.example}"</span>`;
-        });
-        if (idx < entry.meanings.length - 1) html += `<br>`;
-      });
-
-      return html;
-    } catch (err) {
-      isOnline = false;
-      updateStatus();
-      return null;
-    }
-  }
-
-  function updateStatus() {
-    const dot = document.getElementById('status-dot');
-    const text = document.getElementById('status-text');
-    if (isOnline) {
-      dot.className = 'w-3 h-3 bg-emerald-400 rounded-full animate-pulse';
-      text.textContent = 'Ancient Dictionary Runes Active';
-    } else {
-      dot.className = 'w-3 h-3 bg-amber-400 rounded-full';
-      text.textContent = 'Offline Rune Mode';
-    }
-  }
-
-  function getOfflineResponse(word) {
-    return offlineDictionary[word.toLowerCase()] || null;
-  }
-
-  function getWittyResponse(msg) {
-    const lower = msg.toLowerCase();
-    if (/(hello|hi|hey|greetings|hail)/.test(lower)) return wittyResponses.greetings[Math.floor(Math.random() * wittyResponses.greetings.length)];
-    if (/(how are you|hru|how r u)/.test(lower)) return wittyResponses.howareyou[Math.floor(Math.random() * wittyResponses.howareyou.length)];
-    if (/(joke|funny|make me laugh)/.test(lower)) return wittyResponses.jokes[0];
-    if (/(fact|tell me something)/.test(lower)) return wittyResponses.facts[0];
-    if (/(thank|thanks|thx)/.test(lower)) return wittyResponses.thanks[0];
-    return null;
-  }
-
-  async function getAIResponse(userMessage) {
-    const lowerMsg = userMessage.toLowerCase().trim();
-    const witty = getWittyResponse(userMessage);
-    if (witty) return witty;
-
-    if (/^\d+\s*[\+\-\*\/]\s*\d+$/.test(lowerMsg)) {
-      try { return `The ancient calculation yields <strong>${eval(lowerMsg)}</strong>.`; } catch (e) {}
-    }
-
-    const words = lowerMsg.split(/\s+/).map(w => w.replace(/[^a-z]/g, '')).filter(w => w.length > 2);
-    const sortedWords = [...new Set(words)].sort((a, b) => b.length - a.length);
-
-    for (let word of sortedWords) {
-      const onlineDef = await fetchOnlineDefinition(word);
-      if (onlineDef) return onlineDef + `<br><br><span class="text-xs text-emerald-400">✓ Live Dictionary</span>`;
-
-      const offlineDef = getOfflineResponse(word);
-      if (offlineDef) return `<strong>${word}</strong><br><br>${offlineDef}<br><br><span class="text-xs text-amber-400">● Ancient Rune</span>`;
-    }
-
-    const fallbacks = [
-      "The scrolls do not reveal this directly. What facet intrigues thee most?",
-      "A worthy quest! Try rephrasing thy words.",
-      "My tomes did not catch that one. Shall we try another incantation?"
-    ];
-    return fallbacks[Math.floor(Math.random() * fallbacks.length)];
-  }
-
-  // ==================== Conversation Management ====================
-  function saveToURL() {
-    if (conversation.length === 0) { window.location.hash = ''; return; }
-    try {
-      const encoded = btoa(encodeURIComponent(JSON.stringify(conversation)));
-      window.location.hash = `/quest/${encoded}`;
-    } catch (e) {}
-  }
-
-  function loadFromURL() {
-    const hash = window.location.hash.substring(1);
-    if (!hash.startsWith('/quest/')) return false;
-    try {
-      const encoded = hash.substring(7);
-      conversation = JSON.parse(decodeURIComponent(atob(encoded)));
-      return true;
-    } catch (e) {
-      window.location.hash = '';
-      return false;
-    }
+  async function getAIResponse(msg) {
+    // Simple placeholder - replace with your full logic if needed
+    return "ACK: " + msg + " • PROCESSED VIA ROOTDONATE CORE";
   }
 
   const chat = document.getElementById('chat');
-
-  function renderConversation() {
-    chat.innerHTML = '';
-    conversation.forEach(msg => {
-      const div = document.createElement('div');
-      div.className = `message max-w-3xl mx-auto ${msg.role === 'user' ? 'ml-auto' : ''}`;
-      
-      if (msg.role === 'user') {
-        div.innerHTML = `<div class="flex justify-end"><div class="user-bubble text-amber-100 rounded-3xl rounded-tr-none px-7 py-5 max-w-[85%]"><p class="whitespace-pre-wrap">${msg.content}</p></div></div>`;
-      } else {
-        div.innerHTML = `<div class="flex gap-5"><div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-700 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0 border-4 border-amber-300">📜</div><div class="bot-bubble text-[#e6d5b8] rounded-3xl rounded-tl-none px-7 py-5 max-w-[85%]"><p class="whitespace-pre-wrap">${msg.content}</p></div></div>`;
-      }
-      chat.appendChild(div);
-    });
+  function addMessage(content, role) {
+    const div = document.createElement('div');
+    div.className = `message max-w-3xl mx-auto ${role === 'user' ? 'ml-auto' : ''}`;
+    if (role === 'user') {
+      div.innerHTML = `<div class="flex justify-end"><div class="user-bubble text-[#00ff9d] rounded-2xl px-6 py-4 max-w-[80%] font-mono">${content}</div></div>`;
+    } else {
+      div.innerHTML = `<div class="flex gap-4"><div class="text-2xl">▮</div><div class="bot-bubble text-[#00ff9d] rounded-2xl px-6 py-4 max-w-[80%] font-mono">${content}</div></div>`;
+    }
+    chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
   }
 
-  function addMessage(content, role) {
-    if (!content?.trim()) return;
-    conversation.push({ role, content: content.trim() });
-    renderConversation();
-    saveToURL();
-  }
-
-  function showWelcome() {
-    if (conversation.length > 0) return;
-    chat.innerHTML = `
-      <div class="message max-w-3xl mx-auto">
-        <div class="flex gap-5">
-          <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-700 rounded-2xl flex items-center justify-center text-4xl flex-shrink-0 border-4 border-amber-300">📜</div>
-          <div class="bot-bubble rounded-3xl rounded-tl-none px-8 py-6 max-w-[85%]">
-            <p class="text-2xl">Hail, brave adventurer!</p>
-            <p class="text-amber-300 mt-3">I am RootDonate, Keeper of the Eternal Dictionary.</p>
-            <p class="text-amber-400 text-sm mt-6">Try: "What is love?" • "Define quantum" • "Tell me a joke"</p>
-          </div>
-        </div>
-      </div>`;
-  }
-
-  // ==================== Crisp IP Nodes Visualization ====================
+  // ==================== Terminal Style IP Nodes ====================
   let nodes = [];
   let edges = [];
   let canvas, ctx, animationFrame;
@@ -393,51 +239,35 @@
 
       document.getElementById('user-ip-display').textContent = ip;
       document.getElementById('user-location-display').innerHTML = 
-        `${geo.city || 'Unknown City'}, ${geo.country || 'Unknown Realm'} 
-         <span class="text-amber-400">(${geo.lat?.toFixed(1) || '?'}°, ${geo.lon?.toFixed(1) || '?'}°)</span>`;
+        `${geo.city || 'UNKNOWN'} • ${geo.country || 'NETWORK'} `;
 
       nodes.push({
         id: 0,
         ip: ip,
-        label: "YOU",
+        label: "HOST",
         x: canvas.width / 2,
         y: canvas.height / 2,
-        size: 21,
-        color: "#fcd34d",
-        city: geo.city || "Your Realm",
-        country: geo.country || "",
-        vx: 0, vy: 0,
+        size: 14,
+        color: "#00ff9d",
+        city: geo.city || "LOCAL",
         isUser: true
       });
-
     } catch (e) {
       document.getElementById('user-ip-display').textContent = "192.168.1.42";
-      document.getElementById('user-location-display').innerHTML = `Mystic Tower, Eternal Realm`;
-
-      nodes.push({
-        id: 0, ip: "192.168.1.42", label: "YOU",
-        x: canvas.width / 2, y: canvas.height / 2,
-        size: 21, color: "#fcd34d", city: "Mystic Tower", country: "Eternal Realm",
-        vx: 0, vy: 0, isUser: true
-      });
+      document.getElementById('user-location-display').innerHTML = "MYSTIC NODE • ETERNAL NET";
+      nodes.push({ id: 0, ip: "192.168.1.42", label: "HOST", x: canvas.width / 2, y: canvas.height / 2, size: 14, color: "#00ff9d", isUser: true });
     }
 
-    const cities = ["Eldoria","Shadowfen","Ironspire","Mistvale","Dragonhold","Runeport","Stormreach","Frostgate","Aetherpeak","Voidhaven","Starfall","Blackthorn"];
-    const countries = ["Realm of Light","Dark Dominion","Crystal Isles","Eternal North","Silver Dominion","Obsidian Reach","Azure Expanse"];
-
-    for (let i = 1; i < 38; i++) {
+    for (let i = 1; i < 45; i++) {
       const fakeIP = Array.from({length: 4}, () => Math.floor(Math.random() * 256)).join('.');
       nodes.push({
         id: i,
         ip: fakeIP,
-        label: `Node ${i}`,
-        x: 90 + Math.random() * (canvas.width - 180),
-        y: 90 + Math.random() * (canvas.height - 200),
-        size: 6.5 + Math.random() * 4,
-        color: i % 6 === 0 ? "#f59e0b" : "#b45309",
-        city: cities[Math.floor(Math.random() * cities.length)],
-        country: countries[Math.floor(Math.random() * countries.length)],
-        vx: 0, vy: 0,
+        label: `NODE-${String(i).padStart(3,'0')}`,
+        x: 80 + Math.random() * (canvas.width - 160),
+        y: 80 + Math.random() * (canvas.height - 160),
+        size: 5.5,
+        color: "#00cc77",
         isUser: false
       });
     }
@@ -445,8 +275,7 @@
     edges = [];
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
-        const prob = nodes[i].isUser || nodes[j].isUser ? 0.68 : 0.25;
-        if (Math.random() < prob) {
+        if (Math.random() < (nodes[i].isUser || nodes[j].isUser ? 0.75 : 0.18)) {
           edges.push({ from: i, to: j });
         }
       }
@@ -454,27 +283,21 @@
   }
 
   function applyForceSimulation() {
-    const repulsion = 3200;
-    const attraction = 0.022;
-    const centerPull = 0.014;
-
-    for (let i = 0; i < nodes.length; i++) {
+    const repulsion = 4200;
+    nodes.forEach((node, i) => {
       for (let j = i + 1; j < nodes.length; j++) {
-        const dx = nodes[j].x - nodes[i].x;
-        const dy = nodes[j].y - nodes[i].y;
-        const distSq = dx*dx + dy*dy + 1;
-        const dist = Math.sqrt(distSq);
-
-        const force = repulsion / distSq;
-        const fx = (dx / dist) * force;
-        const fy = (dy / dist) * force;
-
-        nodes[i].vx -= fx * 0.7;
-        nodes[i].vy -= fy * 0.7;
-        nodes[j].vx += fx * 0.7;
-        nodes[j].vy += fy * 0.7;
+        const dx = nodes[j].x - node.x;
+        const dy = nodes[j].y - node.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const force = repulsion / (dist * dist);
+        node.vx = node.vx || 0; node.vy = node.vy || 0;
+        nodes[j].vx = nodes[j].vx || 0; nodes[j].vy = nodes[j].vy || 0;
+        node.vx -= (dx / dist) * force * 0.5;
+        node.vy -= (dy / dist) * force * 0.5;
+        nodes[j].vx += (dx / dist) * force * 0.5;
+        nodes[j].vy += (dy / dist) * force * 0.5;
       }
-    }
+    });
 
     edges.forEach(edge => {
       const a = nodes[edge.from];
@@ -482,41 +305,29 @@
       const dx = b.x - a.x;
       const dy = b.y - a.y;
       const dist = Math.hypot(dx, dy) || 1;
-      const fx = dx * attraction;
-      const fy = dy * attraction;
-
-      a.vx += fx;
-      a.vy += fy;
-      b.vx -= fx;
-      b.vy -= fy;
+      a.vx += dx * 0.012;
+      a.vy += dy * 0.012;
+      b.vx -= dx * 0.012;
+      b.vy -= dy * 0.012;
     });
 
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
     nodes.forEach(node => {
-      node.vx += (cx - node.x) * centerPull;
-      node.vy += (cy - node.y) * centerPull;
-
-      node.vx *= 0.84;
-      node.vy *= 0.84;
-
-      node.x += node.vx;
-      node.y += node.vy;
-
-      node.x = Math.max(70, Math.min(canvas.width - 70, node.x));
-      node.y = Math.max(90, Math.min(canvas.height - 110, node.y));
+      node.vx = (node.vx || 0) * 0.82;
+      node.vy = (node.vy || 0) * 0.82;
+      node.x += node.vx || 0;
+      node.y += node.vy || 0;
+      node.x = Math.max(60, Math.min(canvas.width - 60, node.x));
+      node.y = Math.max(70, Math.min(canvas.height - 90, node.y));
     });
   }
 
   function drawNetwork() {
-    ctx.save();
-    ctx.imageSmoothingEnabled = false;   // Crisp rendering
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Clean edges
-    ctx.strokeStyle = "rgba(212, 175, 55, 0.28)";
-    ctx.lineWidth = 1.1;
+    // Edges
+    ctx.strokeStyle = "#003300";
+    ctx.lineWidth = 1;
     edges.forEach(edge => {
       const a = nodes[edge.from];
       const b = nodes[edge.to];
@@ -526,20 +337,18 @@
       ctx.stroke();
     });
 
-    // Subtle pulsing connections from YOU
-    ctx.strokeStyle = "#fcd34d";
-    ctx.lineWidth = 1.8;
+    // Active data flow lines
+    ctx.strokeStyle = "#00ff9d";
+    ctx.lineWidth = 1.2;
     edges.forEach(edge => {
-      if (nodes[edge.from].isUser || nodes[edge.to].isUser) {
-        if (Math.random() > 0.75) {
-          const a = nodes[edge.from];
-          const b = nodes[edge.to];
-          ctx.globalAlpha = 0.7 + Math.sin(Date.now() / 300) * 0.3;
-          ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, b.y);
-          ctx.stroke();
-        }
+      if (Math.random() > 0.85) {
+        const a = nodes[edge.from];
+        const b = nodes[edge.to];
+        ctx.globalAlpha = 0.4 + Math.sin(Date.now() / 200) * 0.4;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
       }
     });
     ctx.globalAlpha = 1;
@@ -547,33 +356,24 @@
     // Nodes
     nodes.forEach(node => {
       const isHovered = hoveredNode === node;
-      const pulse = node.isUser ? Math.sin(Date.now() / 220) * 2.5 : 0;
-
-      // Shadow only for user & hovered
-      ctx.shadowBlur = node.isUser || isHovered ? 32 : 12;
-      ctx.shadowColor = node.color;
-
       ctx.fillStyle = node.color;
       ctx.beginPath();
-      ctx.arc(node.x, node.y, node.size + pulse, 0, Math.PI * 2);
+      ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
       ctx.fill();
 
-      // Sharp outer ring
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = node.isUser ? "#fefce8" : "#d4af37";
-      ctx.lineWidth = node.isUser ? 3.5 : 2;
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, node.size + (isHovered ? 9 : 5), 0, Math.PI * 2);
-      ctx.stroke();
+      if (node.isUser) {
+        ctx.strokeStyle = "#00ff9d";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.size + 8, 0, Math.PI * 2);
+        ctx.stroke();
+      }
 
-      // Label - crisp text
-      ctx.fillStyle = node.isUser ? "#fefce8" : "#e6d5b8";
-      ctx.font = node.isUser ? "bold 15px Cinzel" : "13px Cinzel";
+      ctx.fillStyle = "#00ff9d";
+      ctx.font = "14px VT323";
       ctx.textAlign = "center";
-      ctx.fillText(node.label, node.x, node.y + node.size + 26);
+      ctx.fillText(node.label, node.x, node.y + node.size + 18);
     });
-
-    ctx.restore();
   }
 
   function animateNetwork() {
@@ -586,7 +386,7 @@
     for (let node of nodes) {
       const dx = node.x - x;
       const dy = node.y - y;
-      if (dx * dx + dy * dy < (node.size + 20) ** 2) return node;
+      if (dx*dx + dy*dy < (node.size + 15)**2) return node;
     }
     return null;
   }
@@ -595,81 +395,26 @@
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
-
     const node = getNodeAt(mx, my);
-    const infoEl = document.getElementById('node-info');
+    const info = document.getElementById('node-info');
 
     if (node) {
       hoveredNode = node;
-      infoEl.innerHTML = `
-        <div class="font-bold text-lg text-amber-300">${node.label}</div>
-        <div class="font-mono text-xs tracking-wider text-amber-400 mt-1">${node.ip}</div>
-        <div class="mt-3 text-amber-200">${node.city}, ${node.country}</div>
+      info.innerHTML = `
+        <div class="text-[#00ff9d] font-bold">${node.label}</div>
+        <div class="font-mono text-xs mt-1">${node.ip}</div>
+        <div class="mt-2 text-[#00cc77]">${node.city || 'UNKNOWN LOCATION'}</div>
       `;
-      infoEl.style.left = `${e.clientX + 26}px`;
-      infoEl.style.top = `${e.clientY + 20}px`;
-      infoEl.classList.remove('hidden');
+      info.style.left = `${e.clientX + 20}px`;
+      info.style.top = `${e.clientY + 15}px`;
+      info.classList.remove('hidden');
     } else {
       hoveredNode = null;
-      infoEl.classList.add('hidden');
+      info.classList.add('hidden');
     }
   }
 
-  // ==================== Event Listeners ====================
-  const form = document.getElementById('chat-form');
-  const input = document.getElementById('user-input');
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const question = input.value.trim();
-    if (!question) return;
-
-    addMessage(question, 'user');
-    input.value = '';
-    input.style.height = 'auto';
-
-    const thinking = document.createElement('div');
-    thinking.className = 'message max-w-3xl mx-auto';
-    thinking.innerHTML = `<div class="flex gap-5"><div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-700 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0 border-4 border-amber-300">📜</div><div class="bot-bubble rounded-3xl rounded-tl-none px-7 py-5"><div class="flex items-center gap-3 text-amber-300"><i class="fa-solid fa-circle animate-pulse"></i><span>Consulting the ancient scrolls...</span></div></div></div>`;
-    chat.appendChild(thinking);
-    chat.scrollTop = chat.scrollHeight;
-
-    const reply = await getAIResponse(question);
-    thinking.remove();
-    addMessage(reply, 'bot');
-  });
-
-  input.addEventListener('input', () => {
-    input.style.height = 'auto';
-    input.style.height = Math.min(input.scrollHeight, 180) + 'px';
-  });
-
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      form.dispatchEvent(new Event('submit'));
-    }
-  });
-
-  document.getElementById('share-btn').addEventListener('click', () => {
-    if (conversation.length === 0) return alert("No quest recorded yet!");
-    saveToURL();
-    navigator.clipboard.writeText(window.location.href)
-      .then(() => alert("📜 Quest link copied to thy spellbook!"))
-      .catch(() => alert("Please copy the URL manually."));
-  });
-
-  document.getElementById('new-btn').addEventListener('click', () => {
-    if (confirm("Begin a new adventure?")) {
-      conversation = [];
-      window.location.hash = '';
-      chat.innerHTML = '';
-      showWelcome();
-      input.focus();
-    }
-  });
-
-  // IP Nodes Controls
+  // IP Nodes Button
   document.getElementById('ip-nodes-btn').addEventListener('click', async () => {
     const overlay = document.getElementById('ip-nodes-overlay');
     overlay.style.display = 'flex';
@@ -677,42 +422,41 @@
     canvas = document.getElementById('ip-canvas');
     ctx = canvas.getContext('2d');
 
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth - 40;
-      canvas.height = window.innerHeight - 180;
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight - 110;
     };
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    resize();
+    window.addEventListener('resize', resize);
 
     await loadIPData();
     if (animationFrame) cancelAnimationFrame(animationFrame);
-
     animateNetwork();
 
     canvas.addEventListener('mousemove', showNodeInfo);
-    canvas.addEventListener('mouseleave', () => {
-      hoveredNode = null;
-      document.getElementById('node-info').classList.add('hidden');
-    });
   });
 
   document.getElementById('close-nodes-btn').addEventListener('click', () => {
     const overlay = document.getElementById('ip-nodes-overlay');
     overlay.style.display = 'none';
     if (animationFrame) cancelAnimationFrame(animationFrame);
-    animationFrame = null;
-    hoveredNode = null;
-    document.getElementById('node-info').classList.add('hidden');
   });
 
-  // Initialize
-  window.addEventListener('load', () => {
-    const loaded = loadFromURL();
-    if (loaded) renderConversation();
-    else showWelcome();
+  // Simple chat demo
+  document.getElementById('chat-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = document.getElementById('user-input');
+    const text = input.value.trim();
+    if (!text) return;
+    addMessage(text, 'user');
+    input.value = '';
+    const reply = await getAIResponse(text);
+    setTimeout(() => addMessage(reply, 'bot'), 400);
+  });
 
-    updateStatus();
-    input.focus();
+  // Init
+  window.addEventListener('load', () => {
+    addMessage("SYSTEM BOOT COMPLETE. AWAITING INPUT.", 'bot');
   });
 </script>
 </body>

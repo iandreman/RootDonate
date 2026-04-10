@@ -11,6 +11,11 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cinzel:wght@400;700&family=VT323&display=swap');
 
+    :root {
+      --accent: #00ff9d;
+      --accent-dark: #008f5a;
+    }
+
     body {
       background: #0a0a0a;
       font-family: 'Cinzel', serif;
@@ -35,11 +40,14 @@
 
     .header {
       background: #0f0f0f;
-      border-bottom: 4px solid #00ff9d;
+      border-bottom: 4px solid var(--accent);
       padding: 14px 20px;
     }
 
-    .message { animation: fadeIn 0.4s ease forwards; }
+    .message {
+      animation: fadeIn 0.4s ease forwards;
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -51,15 +59,18 @@
 
     .user-bubble {
       background: #1a2a1a;
-      border: 2px solid #00ff9d;
+      border: 2px solid var(--accent);
     }
 
     .bot-bubble {
       background: #0f1a0f;
-      border: 2px solid #008f5a;
+      border: 2px solid var(--accent-dark);
     }
 
-    .rune { font-family: 'UnifrakturCook', cursive; color: #00ff9d; }
+    .rune {
+      font-family: 'UnifrakturCook', cursive;
+      color: var(--accent);
+    }
 
     /* Terminal IP Nodes Overlay */
     #ip-nodes-overlay {
@@ -70,7 +81,7 @@
       display: none;
       flex-direction: column;
       font-family: 'VT323', monospace;
-      color: #00ff9d;
+      color: var(--accent);
     }
 
     #ip-canvas {
@@ -81,7 +92,7 @@
 
     .terminal-header {
       background: #001a00;
-      border-bottom: 3px solid #00ff9d;
+      border-bottom: 3px solid var(--accent);
       padding: 12px 20px;
       display: flex;
       justify-content: space-between;
@@ -92,12 +103,12 @@
     .node-info {
       position: absolute;
       background: rgba(0, 30, 0, 0.95);
-      border: 2px solid #00ff9d;
+      border: 2px solid var(--accent);
       padding: 12px 18px;
       font-family: 'VT323', monospace;
-      color: #00ff9d;
+      color: var(--accent);
       pointer-events: none;
-      box-shadow: 0 0 20px #00ff9d;
+      box-shadow: 0 0 20px var(--accent);
       z-index: 1010;
       max-width: 260px;
       line-height: 1.3;
@@ -141,13 +152,13 @@
     </div>
     
     <div class="flex gap-3">
-      <button id="ip-nodes-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-2.5 rounded border border-[#00ff9d] transition-all">
+      <button id="ip-nodes-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-2.5 rounded border border-[#00ff9d] transition-all active:scale-95">
         <i class="fa-solid fa-network-wired"></i> IP NODES
       </button>
-      <button id="share-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-2.5 rounded border border-[#00ff9d] transition-all">
+      <button id="share-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-2.5 rounded border border-[#00ff9d] transition-all active:scale-95">
         <i class="fa-solid fa-share"></i> SHARE QUEST
       </button>
-      <button id="new-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-2.5 rounded border border-[#00ff9d] transition-all">
+      <button id="new-btn" class="flex items-center gap-2 bg-black hover:bg-[#001a00] px-6 py-2.5 rounded border border-[#00ff9d] transition-all active:scale-95">
         <i class="fa-solid fa-rotate"></i> NEW SESSION
       </button>
     </div>
@@ -165,7 +176,7 @@
           placeholder="ENTER QUERY..."></textarea>
         
         <button type="submit"
-          class="absolute right-4 bottom-4 w-11 h-11 bg-[#001a00] border border-[#00ff9d] rounded flex items-center justify-center hover:bg-[#003300]">
+          class="absolute right-4 bottom-4 w-11 h-11 bg-[#001a00] border border-[#00ff9d] rounded flex items-center justify-center hover:bg-[#003300] active:bg-[#004d00] transition-colors">
           <i class="fa-solid fa-arrow-right text-[#00ff9d]"></i>
         </button>
       </form>
@@ -200,28 +211,42 @@
 </div>
 
 <script>
-  // Chat system (kept minimal - same logic as before)
+  // Chat System
   let conversation = [];
 
   async function getAIResponse(msg) {
-    // Simple placeholder - replace with your full logic if needed
-    return "ACK: " + msg + " • PROCESSED VIA ROOTDONATE CORE";
+    // Placeholder - replace with your actual AI backend call
+    return `ACK: ${msg} • PROCESSED VIA ROOTDONATE CORE`;
   }
 
   const chat = document.getElementById('chat');
+
   function addMessage(content, role) {
     const div = document.createElement('div');
     div.className = `message max-w-3xl mx-auto ${role === 'user' ? 'ml-auto' : ''}`;
+
     if (role === 'user') {
-      div.innerHTML = `<div class="flex justify-end"><div class="user-bubble text-[#00ff9d] rounded-2xl px-6 py-4 max-w-[80%] font-mono">${content}</div></div>`;
+      div.innerHTML = `
+        <div class="flex justify-end">
+          <div class="user-bubble text-[#00ff9d] rounded-2xl px-6 py-4 max-w-[80%] font-mono">
+            ${content}
+          </div>
+        </div>`;
     } else {
-      div.innerHTML = `<div class="flex gap-4"><div class="text-2xl">▮</div><div class="bot-bubble text-[#00ff9d] rounded-2xl px-6 py-4 max-w-[80%] font-mono">${content}</div></div>`;
+      div.innerHTML = `
+        <div class="flex gap-4">
+          <div class="text-2xl rune">▮</div>
+          <div class="bot-bubble text-[#00ff9d] rounded-2xl px-6 py-4 max-w-[80%] font-mono">
+            ${content}
+          </div>
+        </div>`;
     }
+
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
   }
 
-  // ==================== Terminal Style IP Nodes ====================
+  // ==================== IP Nodes Network ====================
   let nodes = [];
   let edges = [];
   let canvas, ctx, animationFrame;
@@ -239,7 +264,7 @@
 
       document.getElementById('user-ip-display').textContent = ip;
       document.getElementById('user-location-display').innerHTML = 
-        `${geo.city || 'UNKNOWN'} • ${geo.country || 'NETWORK'} `;
+        `${geo.city || 'UNKNOWN'} • ${geo.country || 'NETWORK'}`;
 
       nodes.push({
         id: 0,
@@ -255,15 +280,26 @@
     } catch (e) {
       document.getElementById('user-ip-display').textContent = "192.168.1.42";
       document.getElementById('user-location-display').innerHTML = "MYSTIC NODE • ETERNAL NET";
-      nodes.push({ id: 0, ip: "192.168.1.42", label: "HOST", x: canvas.width / 2, y: canvas.height / 2, size: 14, color: "#00ff9d", isUser: true });
+      
+      nodes.push({
+        id: 0,
+        ip: "192.168.1.42",
+        label: "HOST",
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        size: 14,
+        color: "#00ff9d",
+        isUser: true
+      });
     }
 
+    // Generate fake nodes
     for (let i = 1; i < 45; i++) {
       const fakeIP = Array.from({length: 4}, () => Math.floor(Math.random() * 256)).join('.');
       nodes.push({
         id: i,
         ip: fakeIP,
-        label: `NODE-${String(i).padStart(3,'0')}`,
+        label: `NODE-${String(i).padStart(3, '0')}`,
         x: 80 + Math.random() * (canvas.width - 160),
         y: 80 + Math.random() * (canvas.height - 160),
         size: 5.5,
@@ -272,6 +308,7 @@
       });
     }
 
+    // Generate edges
     edges = [];
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
@@ -284,38 +321,43 @@
 
   function applyForceSimulation() {
     const repulsion = 4200;
-    nodes.forEach((node, i) => {
+
+    // Repulsion
+    for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
-        const dx = nodes[j].x - node.x;
-        const dy = nodes[j].y - node.y;
+        const dx = nodes[j].x - nodes[i].x;
+        const dy = nodes[j].y - nodes[i].y;
         const dist = Math.hypot(dx, dy) || 1;
         const force = repulsion / (dist * dist);
-        node.vx = node.vx || 0; node.vy = node.vy || 0;
-        nodes[j].vx = nodes[j].vx || 0; nodes[j].vy = nodes[j].vy || 0;
-        node.vx -= (dx / dist) * force * 0.5;
-        node.vy -= (dy / dist) * force * 0.5;
-        nodes[j].vx += (dx / dist) * force * 0.5;
-        nodes[j].vy += (dy / dist) * force * 0.5;
-      }
-    });
 
+        nodes[i].vx = (nodes[i].vx || 0) - (dx / dist) * force * 0.5;
+        nodes[j].vx = (nodes[j].vx || 0) + (dx / dist) * force * 0.5;
+        nodes[i].vy = (nodes[i].vy || 0) - (dy / dist) * force * 0.5;
+        nodes[j].vy = (nodes[j].vy || 0) + (dy / dist) * force * 0.5;
+      }
+    }
+
+    // Attraction along edges
     edges.forEach(edge => {
       const a = nodes[edge.from];
       const b = nodes[edge.to];
       const dx = b.x - a.x;
       const dy = b.y - a.y;
       const dist = Math.hypot(dx, dy) || 1;
-      a.vx += dx * 0.012;
-      a.vy += dy * 0.012;
-      b.vx -= dx * 0.012;
-      b.vy -= dy * 0.012;
+
+      a.vx = (a.vx || 0) + dx * 0.012;
+      a.vy = (a.vy || 0) + dy * 0.012;
+      b.vx = (b.vx || 0) - dx * 0.012;
+      b.vy = (b.vy || 0) - dy * 0.012;
     });
 
+    // Apply velocity + damping + bounds
     nodes.forEach(node => {
       node.vx = (node.vx || 0) * 0.82;
       node.vy = (node.vy || 0) * 0.82;
       node.x += node.vx || 0;
       node.y += node.vy || 0;
+
       node.x = Math.max(60, Math.min(canvas.width - 60, node.x));
       node.y = Math.max(70, Math.min(canvas.height - 90, node.y));
     });
@@ -325,7 +367,7 @@
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Edges
+    // Background edges
     ctx.strokeStyle = "#003300";
     ctx.lineWidth = 1;
     edges.forEach(edge => {
@@ -337,7 +379,7 @@
       ctx.stroke();
     });
 
-    // Active data flow lines
+    // Active data flow
     ctx.strokeStyle = "#00ff9d";
     ctx.lineWidth = 1.2;
     edges.forEach(edge => {
@@ -356,6 +398,7 @@
     // Nodes
     nodes.forEach(node => {
       const isHovered = hoveredNode === node;
+
       ctx.fillStyle = node.color;
       ctx.beginPath();
       ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
@@ -386,7 +429,7 @@
     for (let node of nodes) {
       const dx = node.x - x;
       const dy = node.y - y;
-      if (dx*dx + dy*dy < (node.size + 15)**2) return node;
+      if (dx * dx + dy * dy < (node.size + 15) ** 2) return node;
     }
     return null;
   }
@@ -414,7 +457,7 @@
     }
   }
 
-  // IP Nodes Button
+  // Event Listeners
   document.getElementById('ip-nodes-btn').addEventListener('click', async () => {
     const overlay = document.getElementById('ip-nodes-overlay');
     overlay.style.display = 'flex';
@@ -442,19 +485,21 @@
     if (animationFrame) cancelAnimationFrame(animationFrame);
   });
 
-  // Simple chat demo
+  // Chat Form
   document.getElementById('chat-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const input = document.getElementById('user-input');
     const text = input.value.trim();
     if (!text) return;
+
     addMessage(text, 'user');
     input.value = '';
+
     const reply = await getAIResponse(text);
     setTimeout(() => addMessage(reply, 'bot'), 400);
   });
 
-  // Init
+  // Initialize
   window.addEventListener('load', () => {
     addMessage("SYSTEM BOOT COMPLETE. AWAITING INPUT.", 'bot');
   });

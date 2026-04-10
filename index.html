@@ -212,8 +212,6 @@
 
 <script>
   // Chat System
-  let conversation = [];
-
   async function getAIResponse(msg) {
     // Placeholder - replace with your actual AI backend call
     return `ACK: ${msg} • PROCESSED VIA ROOTDONATE CORE`;
@@ -246,7 +244,7 @@
     chat.scrollTop = chat.scrollHeight;
   }
 
-  // ==================== IP Nodes Network ====================
+  // ==================== Static IP Nodes Network ====================
   let nodes = [];
   let edges = [];
   let canvas, ctx, animationFrame;
@@ -270,8 +268,8 @@
         id: 0,
         ip: ip,
         label: "HOST",
-        x: canvas.width / 2,
-        y: canvas.height / 2,
+        x: 0, // Will be centered in resize
+        y: 0,
         size: 14,
         color: "#00ff9d",
         city: geo.city || "LOCAL",
@@ -285,15 +283,15 @@
         id: 0,
         ip: "192.168.1.42",
         label: "HOST",
-        x: canvas.width / 2,
-        y: canvas.height / 2,
+        x: 0,
+        y: 0,
         size: 14,
         color: "#00ff9d",
         isUser: true
       });
     }
 
-    // Generate fake nodes
+    // Generate fake nodes with fixed random positions
     for (let i = 1; i < 45; i++) {
       const fakeIP = Array.from({length: 4}, () => Math.floor(Math.random() * 256)).join('.');
       nodes.push({
@@ -319,50 +317,7 @@
     }
   }
 
-  function applyForceSimulation() {
-    const repulsion = 4200;
-
-    // Repulsion
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        const dx = nodes[j].x - nodes[i].x;
-        const dy = nodes[j].y - nodes[i].y;
-        const dist = Math.hypot(dx, dy) || 1;
-        const force = repulsion / (dist * dist);
-
-        nodes[i].vx = (nodes[i].vx || 0) - (dx / dist) * force * 0.5;
-        nodes[j].vx = (nodes[j].vx || 0) + (dx / dist) * force * 0.5;
-        nodes[i].vy = (nodes[i].vy || 0) - (dy / dist) * force * 0.5;
-        nodes[j].vy = (nodes[j].vy || 0) + (dy / dist) * force * 0.5;
-      }
-    }
-
-    // Attraction along edges
-    edges.forEach(edge => {
-      const a = nodes[edge.from];
-      const b = nodes[edge.to];
-      const dx = b.x - a.x;
-      const dy = b.y - a.y;
-      const dist = Math.hypot(dx, dy) || 1;
-
-      a.vx = (a.vx || 0) + dx * 0.012;
-      a.vy = (a.vy || 0) + dy * 0.012;
-      b.vx = (b.vx || 0) - dx * 0.012;
-      b.vy = (b.vy || 0) - dy * 0.012;
-    });
-
-    // Apply velocity + damping + bounds
-    nodes.forEach(node => {
-      node.vx = (node.vx || 0) * 0.82;
-      node.vy = (node.vy || 0) * 0.82;
-      node.x += node.vx || 0;
-      node.y += node.vy || 0;
-
-      node.x = Math.max(60, Math.min(canvas.width - 60, node.x));
-      node.y = Math.max(70, Math.min(canvas.height - 90, node.y));
-    });
-  }
-
+  // Removed force simulation - nodes are now static
   function drawNetwork() {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -379,14 +334,14 @@
       ctx.stroke();
     });
 
-    // Active data flow
+    // Active glowing data flow lines
     ctx.strokeStyle = "#00ff9d";
     ctx.lineWidth = 1.2;
     edges.forEach(edge => {
-      if (Math.random() > 0.85) {
+      if (Math.random() > 0.82) {  // Slightly less frequent than before
         const a = nodes[edge.from];
         const b = nodes[edge.to];
-        ctx.globalAlpha = 0.4 + Math.sin(Date.now() / 200) * 0.4;
+        ctx.globalAlpha = 0.35 + Math.sin(Date.now() / 180) * 0.35;
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
         ctx.lineTo(b.x, b.y);
@@ -395,33 +350,32 @@
     });
     ctx.globalAlpha = 1;
 
-    // Nodes
+    // Draw nodes
     nodes.forEach(node => {
-      const isHovered = hoveredNode === node;
-
       ctx.fillStyle = node.color;
       ctx.beginPath();
       ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
       ctx.fill();
 
+      // Highlight user node
       if (node.isUser) {
         ctx.strokeStyle = "#00ff9d";
-        ctx.lineWidth = 2.5;
+        ctx.lineWidth = 2.8;
         ctx.beginPath();
-        ctx.arc(node.x, node.y, node.size + 8, 0, Math.PI * 2);
+        ctx.arc(node.x, node.y, node.size + 9, 0, Math.PI * 2);
         ctx.stroke();
       }
 
+      // Labels
       ctx.fillStyle = "#00ff9d";
       ctx.font = "14px VT323";
       ctx.textAlign = "center";
-      ctx.fillText(node.label, node.x, node.y + node.size + 18);
+      ctx.fillText(node.label, node.x, node.y + node.size + 19);
     });
   }
 
   function animateNetwork() {
-    applyForceSimulation();
-    drawNetwork();
+    drawNetwork();                    // Only draw, no movement
     animationFrame = requestAnimationFrame(animateNetwork);
   }
 
@@ -468,13 +422,21 @@
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight - 110;
+
+      // Re-center the HOST node when resized
+      if (nodes.length > 0) {
+        nodes[0].x = canvas.width / 2;
+        nodes[0].y = canvas.height / 2;
+      }
     };
+
     resize();
     window.addEventListener('resize', resize);
 
     await loadIPData();
     if (animationFrame) cancelAnimationFrame(animationFrame);
-    animateNetwork();
+    
+    animateNetwork();   // Now only draws (no physics)
 
     canvas.addEventListener('mousemove', showNodeInfo);
   });

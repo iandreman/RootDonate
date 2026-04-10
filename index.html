@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RootDonate</title>
+  <title>RootDonate Dictionary</title>
   
-  <!-- Removed external Tailwind CDN and Google Fonts -->
+  <!-- Custom styles - no external Tailwind or heavy dependencies -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=VT323&display=swap');
 
@@ -25,7 +25,7 @@
     .container {
       max-width: 900px;
       margin: 40px auto;
-      background: rgba(10,10,10,0.95);
+      background: rgba(10, 10, 10, 0.95);
       border: 12px solid #111;
       border-image: linear-gradient(45deg, #00ff9d, #008f5a) 1;
       box-shadow: 0 0 80px rgba(0, 255, 157, 0.3);
@@ -37,7 +37,7 @@
     }
 
     .header {
-      background: rgba(15,15,15,0.98);
+      background: rgba(15, 15, 15, 0.98);
       padding: 20px 30px;
       border-bottom: 4px solid var(--accent);
       display: flex;
@@ -163,7 +163,7 @@
   <div class="header">
     <div class="rune">☰</div>
     <div>
-      <h1 class="title text-white">RootDonate DICTIONARY</h1>
+      <h1 class="title text-white">RootDonate Dictionary</h1>
       <p class="text-[#00ff9d] text-sm tracking-widest flex items-center gap-2">
         <span class="w-3 h-3 bg-[#00ff9d] rounded-full animate-pulse"></span>
         REAL-TIME • FREE • VOID ENHANCED
@@ -184,7 +184,7 @@
     </div>
   </div>
 
-  <!-- SEARCH -->
+  <!-- SEARCH INPUT -->
   <div class="input-area">
     <div class="relative max-w-2xl mx-auto">
       <input type="text" id="search-input" 
@@ -212,226 +212,230 @@
 </div>
 
 <script>
-// Font Awesome icons are still referenced via CDN in your original — if you want full offline, you would need to embed the icons manually or remove them.
-// For now, the code still expects Font Awesome (you can keep the link or replace icons with emoji/text).
-
-function shareVoid() {
-  const url = window.location.href;
-  navigator.clipboard.writeText(url).then(() => {
-    const btn = event.currentTarget;
-    const original = btn.innerHTML;
-    btn.innerHTML = `<i class="fa-solid fa-check"></i><span>COPIED TO CLIPBOARD</span>`;
-    btn.style.color = '#00ff9d';
-    setTimeout(() => {
-      btn.innerHTML = original;
-      btn.style.color = '';
-    }, 2500);
-  }).catch(() => {
-    alert("Failed to copy. Here's the link:\n" + url);
-  });
-}
-
-async function searchWord() {
-  const input = document.getElementById('search-input');
-  const word = input.value.trim().toLowerCase();
-  const resultDiv = document.getElementById('result');
-
-  if (!word) {
-    resultDiv.innerHTML = `<p class="text-center text-red-400 text-xl">Speak a word into the void...</p>`;
-    return;
+  // Share the current page URL
+  function shareVoid() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = event.currentTarget;
+      const original = btn.innerHTML;
+      btn.innerHTML = `<i class="fa-solid fa-check"></i><span>COPIED TO CLIPBOARD</span>`;
+      btn.style.color = '#00ff9d';
+      setTimeout(() => {
+        btn.innerHTML = original;
+        btn.style.color = '';
+      }, 2500);
+    }).catch(() => {
+      alert("Failed to copy. Here's the link:\n" + url);
+    });
   }
 
-  resultDiv.innerHTML = `
-    <div class="flex items-center justify-center h-full text-[#00ff9d] text-2xl">
-      <i class="fa-solid fa-spinner fa-spin mr-4"></i> 
-      CONSULTING THE INFINITE LEXICON...
-    </div>`;
+  // Main dictionary search using free Dictionary API
+  async function searchWord() {
+    const input = document.getElementById('search-input');
+    const word = input.value.trim().toLowerCase();
+    const resultDiv = document.getElementById('result');
 
-  try {
-    const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-    
-    if (!response.ok) throw new Error('Not found');
-
-    const data = await response.json();
-    const entry = data[0];
-
-    let html = `
-      <div class="mb-10">
-        <div class="flex items-center gap-6">
-          <div>
-            <div class="word">${entry.word}</div>
-            ${entry.phonetic ? `<div class="phonetic mt-2">${entry.phonetic}</div>` : ''}
-          </div>`;
-
-    const audio = entry.phonetics?.find(p => p.audio);
-    if (audio && audio.audio) {
-      html += `
-        <button onclick="playAudio('${audio.audio}')" 
-          class="audio-btn ml-auto px-6 py-3 rounded-2xl flex items-center gap-3 text-[#00ff9d] hover:scale-105 transition-all">
-          <i class="fa-solid fa-volume-high"></i> 
-          <span>PRONOUNCE</span>
-        </button>`;
+    if (!word) {
+      resultDiv.innerHTML = `<p class="text-center text-red-400 text-xl">Speak a word into the void...</p>`;
+      return;
     }
 
-    html += `</div>`;
+    resultDiv.innerHTML = `
+      <div class="flex items-center justify-center h-full text-[#00ff9d] text-2xl">
+        <i class="fa-solid fa-spinner fa-spin mr-4"></i> 
+        CONSULTING THE INFINITE LEXICON...
+      </div>`;
 
-    html += `<h3 class="text-[#00cc77] uppercase tracking-widest text-sm mt-8 mb-4">MORTAL DEFINITIONS</h3>`;
+    try {
+      const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+      
+      if (!response.ok) throw new Error('Not found');
 
-    entry.meanings.forEach(meaning => {
-      html += `
-        <div class="meaning">
-          <div class="text-[#00cc77] uppercase tracking-widest text-sm mb-3">
-            ${meaning.partOfSpeech}
-          </div>`;
+      const data = await response.json();
+      const entry = data[0];
 
-      meaning.definitions.forEach((def, index) => {
+      let html = `
+        <div class="mb-10">
+          <div class="flex items-center gap-6">
+            <div>
+              <div class="word">${entry.word}</div>
+              ${entry.phonetic ? `<div class="phonetic mt-2">${entry.phonetic}</div>` : ''}
+            </div>`;
+
+      const audio = entry.phonetics?.find(p => p.audio);
+      if (audio && audio.audio) {
         html += `
-          <div class="mb-6">
-            <div class="text-lg">${index + 1}. ${def.definition}</div>`;
-        
-        if (def.example) {
-          html += `<div class="example mt-3 pl-6 border-l-2 border-[#00cc77]/50">"${def.example}"</div>`;
-        }
-      });
+          <button onclick="playAudio('${audio.audio}')" 
+            class="audio-btn ml-auto px-6 py-3 rounded-2xl flex items-center gap-3 text-[#00ff9d] hover:scale-105 transition-all">
+            <i class="fa-solid fa-volume-high"></i> 
+            <span>PRONOUNCE</span>
+          </button>`;
+      }
 
       html += `</div>`;
-    });
 
-    const voidInsight = generateVoidAIResponse(entry.word);
+      html += `<h3 class="text-[#00cc77] uppercase tracking-widest text-sm mt-8 mb-4">MORTAL DEFINITIONS</h3>`;
 
-    html += `
-      <div class="ai-section">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="text-3xl">☰</div>
-          <div class="text-[#00ff9d] text-xl tracking-widest">VOID AI INTERPRETATION</div>
-        </div>
-        <div class="text-[#e6d5b8] leading-relaxed text-lg">
-          ${voidInsight.replace(/\n/g, '<br><br>')}
-        </div>
-        <div class="mt-6 text-xs opacity-60 flex items-center gap-2">
-          <i class="fa-solid fa-skull"></i> 
-          THE ABYSS SPEAKS • HEED ITS WHISPERS
-        </div>
-      </div>`;
+      entry.meanings.forEach(meaning => {
+        html += `
+          <div class="meaning">
+            <div class="text-[#00cc77] uppercase tracking-widest text-sm mb-3">
+              ${meaning.partOfSpeech}
+            </div>`;
 
-    resultDiv.innerHTML = html;
+        meaning.definitions.forEach((def, index) => {
+          html += `
+            <div class="mb-6">
+              <div class="text-lg">${index + 1}. ${def.definition}</div>`;
+          
+          if (def.example) {
+            html += `<div class="example mt-3 pl-6 border-l-2 border-[#00cc77]/50">"${def.example}"</div>`;
+          }
+        });
 
-  } catch (error) {
+        html += `</div>`;
+      });
+
+      const voidInsight = generateVoidAIResponse(entry.word);
+
+      html += `
+        <div class="ai-section">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="text-3xl">☰</div>
+            <div class="text-[#00ff9d] text-xl tracking-widest">VOID AI INTERPRETATION</div>
+          </div>
+          <div class="text-[#e6d5b8] leading-relaxed text-lg">
+            ${voidInsight.replace(/\n/g, '<br><br>')}
+          </div>
+          <div class="mt-6 text-xs opacity-60 flex items-center gap-2">
+            <i class="fa-solid fa-skull"></i> 
+            THE ABYSS SPEAKS • HEED ITS WHISPERS
+          </div>
+        </div>`;
+
+      resultDiv.innerHTML = html;
+
+    } catch (error) {
+      resultDiv.innerHTML = `
+        <div class="text-center py-20">
+          <div class="text-6xl mb-6">✦</div>
+          <p class="text-3xl text-red-400">The void has no record of "${word}"</p>
+          <p class="mt-6 text-[#00cc77]">Try another word or ask the Void AI directly.</p>
+        </div>`;
+    }
+  }
+
+  // Ask Void AI (client-side mystical response)
+  async function askAI() {
+    const input = document.getElementById('search-input');
+    const query = input.value.trim();
+    const resultDiv = document.getElementById('result');
+
+    if (!query) {
+      resultDiv.innerHTML = `<p class="text-center text-red-400 text-xl">The void awaits your question...</p>`;
+      return;
+    }
+
     resultDiv.innerHTML = `
-      <div class="text-center py-20">
-        <div class="text-6xl mb-6">✦</div>
-        <p class="text-3xl text-red-400">The void has no record of "${word}"</p>
-        <p class="mt-6 text-[#00cc77]">Try another word or ask the Void AI directly.</p>
+      <div class="flex items-center justify-center h-full text-[#00ff9d] text-2xl glitch">
+        <i class="fa-solid fa-spinner fa-spin mr-4"></i> 
+        DESCENDING INTO THE ABYSS...
+      </div>`;
+
+    await new Promise(resolve => setTimeout(resolve, 1300));
+
+    const response = generateVoidAIResponse(query);
+
+    resultDiv.innerHTML = `
+      <div class="ai-section">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="text-4xl">☰</div>
+          <div>
+            <div class="text-[#00ff9d] text-xl tracking-widest">VOID AI RESPONDS</div>
+            <div class="text-sm opacity-70">Regarding: <span class="font-bold">"${query}"</span></div>
+          </div>
+        </div>
+        <div class="prose prose-invert max-w-none text-[#e6d5b8] leading-relaxed text-lg">
+          ${response.replace(/\n/g, '<br><br>')}
+        </div>
+        <div class="mt-8 text-xs opacity-50 flex items-center gap-2">
+          <i class="fa-solid fa-skull"></i>
+          THE VOID KNOWS ALL • BUT REVEALS ONLY WHAT YOU CAN BEAR
+        </div>
       </div>`;
   }
-}
 
-async function askAI() {
-  const input = document.getElementById('search-input');
-  const query = input.value.trim();
-  const resultDiv = document.getElementById('result');
+  // Generate mystical Void AI response
+  function generateVoidAIResponse(query) {
+    let response = `From the infinite darkness where words are born and forgotten, the Void speaks of <span class="text-[#00ff9d]">"${query}"</span>.\n\n`;
 
-  if (!query) {
-    resultDiv.innerHTML = `<p class="text-center text-red-400 text-xl">The void awaits your question...</p>`;
-    return;
+    const roots = ["Proto-Indo-European", "Ancient Greek", "Latin", "Old Norse", "Sumerian", "Eldritch"];
+    const root = roots[Math.floor(Math.random() * roots.length)];
+
+    response += `Its essence traces back to the ${root} tongue, where it signified "${generateRootMeaning(query)}".\n\n`;
+
+    response += `${generateMysticalMeaning(query)}\n\n`;
+
+    response += `To invoke this word is to open a fracture in the veil of ordinary reality. Use it wisely — some concepts, once awakened, refuse to return to silence.`;
+
+    return response;
   }
 
-  resultDiv.innerHTML = `
-    <div class="flex items-center justify-center h-full text-[#00ff9d] text-2xl glitch">
-      <i class="fa-solid fa-spinner fa-spin mr-4"></i> 
-      DESCENDING INTO THE ABYSS...
-    </div>`;
+  function generateRootMeaning(word) {
+    const options = [
+      "to bind with unseen chains",
+      "to consume the light within knowledge",
+      "to pierce the veil between worlds",
+      "to remember what should remain forgotten",
+      "to become the shadow that follows",
+      "to dissolve the illusion of self"
+    ];
+    return options[Math.floor(Math.random() * options.length)];
+  }
 
-  await new Promise(resolve => setTimeout(resolve, 1300));
+  function generateMysticalMeaning(word) {
+    const insights = [
+      "It is the moment when certainty collapses and something ancient stares back through your eyes.",
+      "A sigil that carries the weight of every soul who has ever whispered it in despair or ecstasy.",
+      "Not merely a definition, but a doorway. Some walk through and return transformed. Others do not return.",
+      "It lives in the negative space between what is spoken and what is truly felt.",
+      "A word that acts as both mirror and abyss — reflecting you while threatening to swallow you whole."
+    ];
+    return insights[Math.floor(Math.random() * insights.length)];
+  }
 
-  const response = generateVoidAIResponse(query);
+  function playAudio(url) {
+    const audio = new Audio(url);
+    audio.play().catch(() => alert("The void's signal is distorted."));
+  }
 
-  resultDiv.innerHTML = `
-    <div class="ai-section">
-      <div class="flex items-center gap-4 mb-6">
-        <div class="text-4xl">☰</div>
-        <div>
-          <div class="text-[#00ff9d] text-xl tracking-widest">VOID AI RESPONDS</div>
-          <div class="text-sm opacity-70">Regarding: <span class="font-bold">"${query}"</span></div>
+  function clearResult() {
+    document.getElementById('result').innerHTML = '';
+    const input = document.getElementById('search-input');
+    input.value = '';
+    input.focus();
+  }
+
+  // Enter key support
+  document.getElementById('search-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') searchWord();
+  });
+
+  // Initial welcome message
+  window.onload = () => {
+    document.getElementById('result').innerHTML = `
+      <div class="text-center py-16 text-[#00cc77]">
+        <div class="text-5xl mb-8">☰</div>
+        <h2 class="text-4xl mb-4">THE VOID DICTIONARY IS ALIVE</h2>
+        <p class="max-w-md mx-auto text-lg">
+          Enter any word above.<br>
+          Receive both mortal definitions and the <span class="text-[#00ff9d]">Void AI Interpretation</span>.
+        </p>
+        <div class="mt-12 text-sm opacity-70">
+          Dictionary API + Pure Client-Side Void AI
         </div>
-      </div>
-      <div class="prose prose-invert max-w-none text-[#e6d5b8] leading-relaxed text-lg">
-        ${response.replace(/\n/g, '<br><br>')}
-      </div>
-      <div class="mt-8 text-xs opacity-50 flex items-center gap-2">
-        <i class="fa-solid fa-skull"></i>
-        THE VOID KNOWS ALL • BUT REVEALS ONLY WHAT YOU CAN BEAR
-      </div>
-    </div>`;
-}
-
-function generateVoidAIResponse(query) {
-  let response = `From the infinite darkness where words are born and forgotten, the Void speaks of <span class="text-[#00ff9d]">"${query}"</span>.\n\n`;
-
-  const roots = ["Proto-Indo-European", "Ancient Greek", "Latin", "Old Norse", "Sumerian", "Eldritch"];
-  const root = roots[Math.floor(Math.random() * roots.length)];
-
-  response += `Its essence traces back to the ${root} tongue, where it signified "${generateRootMeaning(query)}".\n\n`;
-
-  response += `${generateMysticalMeaning(query)}\n\n`;
-
-  response += `To invoke this word is to open a fracture in the veil of ordinary reality. Use it wisely — some concepts, once awakened, refuse to return to silence.`;
-
-  return response;
-}
-
-function generateRootMeaning(word) {
-  const options = [
-    "to bind with unseen chains",
-    "to consume the light within knowledge",
-    "to pierce the veil between worlds",
-    "to remember what should remain forgotten",
-    "to become the shadow that follows",
-    "to dissolve the illusion of self"
-  ];
-  return options[Math.floor(Math.random() * options.length)];
-}
-
-function generateMysticalMeaning(word) {
-  const insights = [
-    "It is the moment when certainty collapses and something ancient stares back through your eyes.",
-    "A sigil that carries the weight of every soul who has ever whispered it in despair or ecstasy.",
-    "Not merely a definition, but a doorway. Some walk through and return transformed. Others do not return.",
-    "It lives in the negative space between what is spoken and what is truly felt.",
-    "A word that acts as both mirror and abyss — reflecting you while threatening to swallow you whole."
-  ];
-  return insights[Math.floor(Math.random() * insights.length)];
-}
-
-function playAudio(url) {
-  const audio = new Audio(url);
-  audio.play().catch(() => alert("The void's signal is distorted."));
-}
-
-function clearResult() {
-  document.getElementById('result').innerHTML = '';
-  document.getElementById('search-input').value = '';
-  document.getElementById('search-input').focus();
-}
-
-document.getElementById('search-input').addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') searchWord();
-});
-
-window.onload = () => {
-  document.getElementById('result').innerHTML = `
-    <div class="text-center py-16 text-[#00cc77]">
-      <div class="text-5xl mb-8">☰</div>
-      <h2 class="text-4xl mb-4">THE VOID DICTIONARY IS ALIVE</h2>
-      <p class="max-w-md mx-auto text-lg">
-        Enter any word above.<br>
-        Receive both mortal definitions and the <span class="text-[#00ff9d]">Void AI Interpretation</span>.
-      </p>
-      <div class="mt-12 text-sm opacity-70">
-        Dictionary API + Pure Client-Side Void AI
-      </div>
-    </div>`;
-};
+      </div>`;
+  };
 </script>
 
 </body>

@@ -120,6 +120,18 @@
       box-shadow: 0 0 25px rgba(0, 255, 157, 0.6);
     }
 
+    .share-link {
+      font-family: 'VT323', monospace;
+      font-size: 0.9rem;
+      color: #00cc77;
+      transition: all 0.3s ease;
+    }
+
+    .share-link:hover {
+      color: #00ff9d;
+      text-shadow: 0 0 10px #00ff9d;
+    }
+
     .glitch {
       animation: glitch 0.3s linear infinite alternate;
     }
@@ -144,7 +156,16 @@
         REAL-TIME • FREE • VOID ENHANCED
       </p>
     </div>
-    <div class="ml-auto flex gap-4">
+    
+    <div class="ml-auto flex items-center gap-4">
+      <!-- Share Link -->
+      <a href="https://github.com/yourusername/rootdonate-dictionary" 
+         target="_blank"
+         class="share-link flex items-center gap-2 px-4 py-2 border border-[#00cc77]/50 hover:border-[#00ff9d] rounded-xl transition-all">
+        <i class="fa-solid fa-link"></i>
+        <span>SHARE VOID</span>
+      </a>
+
       <button onclick="clearResult()" 
         class="flex items-center gap-2 px-6 py-3 bg-black border-2 border-[#00ff9d] hover:bg-[#001a00] rounded transition-all">
         <i class="fa-solid fa-trash"></i> CLEAR

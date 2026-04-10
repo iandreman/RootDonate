@@ -115,13 +115,14 @@
       position: absolute;
       background: rgba(58, 42, 31, 0.95);
       border: 3px solid #d4af37;
-      padding: 14px 22px;
+      padding: 16px 24px;
       border-radius: 12px;
       pointer-events: none;
-      box-shadow: 0 0 25px #d4af37;
+      box-shadow: 0 0 30px #d4af37;
       font-size: 0.95rem;
       z-index: 1010;
-      max-width: 260px;
+      max-width: 280px;
+      line-height: 1.4;
     }
   </style>
 </head>
@@ -379,12 +380,12 @@
       </div>`;
   }
 
-  // ==================== IP Nodes Visualization (Clean & Optimized) ====================
+  // ==================== Improved IP Nodes Visualization ====================
   let nodes = [];
   let edges = [];
-  let userNode = false;
+  let userNode = null;
   let canvas, ctx, animationFrame;
-  let hoveredNode = true;
+  let hoveredNode = null;
 
   async function loadIPData() {
     nodes = [];
@@ -405,75 +406,127 @@
       userNode = {
         id: 0,
         ip: ip,
-        label: "You",
+        label: "YOU",
         x: canvas.width / 2,
         y: canvas.height / 2,
-        size: 19,
+        size: 22,
         color: "#fcd34d",
         city: geo.city || "Your Realm",
-        country: geo.country || ""
+        country: geo.country || "",
+        vx: 0, vy: 0,
+        isUser: true
       };
       nodes.push(userNode);
 
-      const cities = ["Eldoria","Shadowfen","Ironspire","Mistvale","Dragonhold","Runeport","Stormreach","Frostgate","Aetherpeak","Voidhaven"];
-      const countries = ["Realm of Light","Dark Dominion","Crystal Isles","Eternal North","Silver Dominion","Obsidian Reach"];
-
-      for (let i = 1; i < 28; i++) {
-        const fakeIP = Array.from({length: 4}, () => Math.floor(Math.random() * 256)).join('.');
-        nodes.push({
-          id: i,
-          ip: fakeIP,
-          label: `Node ${i}`,
-          x: 80 + Math.random() * (canvas.width - 160),
-          y: 80 + Math.random() * (canvas.height - 200),
-          size: 6 + Math.random() * 7,
-          color: i % 5 === 0 ? "#d97706" : "#8b5a2b",
-          city: cities[Math.floor(Math.random() * cities.length)],
-          country: countries[Math.floor(Math.random() * countries.length)]
-        });
-      }
     } catch (e) {
       console.warn("IP fetch failed → using demo mode");
-      document.getElementById('user-ip-display').textContent = "192.168.1.1";
+      document.getElementById('user-ip-display').textContent = "192.168.1.42";
       document.getElementById('user-location-display').innerHTML = `Mystic Tower, Eternal Realm`;
 
       userNode = {
-        id: 0, ip: "192.168.1.1", label: "You",
+        id: 0, ip: "192.168.1.42", label: "YOU",
         x: canvas.width / 2, y: canvas.height / 2,
-        size: 19, color: "#fcd34d", city: "Mystic Tower", country: "Eternal Realm"
+        size: 22, color: "#fcd34d", city: "Mystic Tower", country: "Eternal Realm",
+        vx: 0, vy: 0, isUser: true
       };
       nodes.push(userNode);
+    }
 
-      for (let i = 1; i < 25; i++) {
-        nodes.push({
-          id: i,
-          ip: `10.${Math.floor(Math.random()*200)}.${Math.floor(Math.random()*255)}.${i}`,
-          label: `Node ${i}`,
-          x: 80 + Math.random() * (canvas.width - 160),
-          y: 80 + Math.random() * (canvas.height - 200),
-          size: 7,
-          color: "#8b5a2b",
-          city: "Unknown",
-          country: ""
-        });
-      }
+    const cities = ["Eldoria","Shadowfen","Ironspire","Mistvale","Dragonhold","Runeport","Stormreach","Frostgate","Aetherpeak","Voidhaven","Starfall","Blackthorn"];
+    const countries = ["Realm of Light","Dark Dominion","Crystal Isles","Eternal North","Silver Dominion","Obsidian Reach","Azure Expanse"];
+
+    for (let i = 1; i < 35; i++) {
+      const fakeIP = Array.from({length: 4}, () => Math.floor(Math.random() * 256)).join('.');
+      nodes.push({
+        id: i,
+        ip: fakeIP,
+        label: `Node ${i}`,
+        x: 100 + Math.random() * (canvas.width - 200),
+        y: 100 + Math.random() * (canvas.height - 220),
+        size: 7 + Math.random() * 6,
+        color: i % 7 === 0 ? "#f59e0b" : "#b45309",
+        city: cities[Math.floor(Math.random() * cities.length)],
+        country: countries[Math.floor(Math.random() * countries.length)],
+        vx: 0, vy: 0,
+        isUser: false
+      });
     }
 
     // Generate edges
     edges = [];
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
-        if (Math.random() > 0.72) edges.push({ from: i, to: j });
+        const prob = nodes[i].isUser || nodes[j].isUser ? 0.65 : 0.28;
+        if (Math.random() < prob) {
+          edges.push({ from: i, to: j, strength: Math.random() * 0.6 + 0.4 });
+        }
       }
     }
+  }
+
+  function applyForceSimulation() {
+    const repulsion = 2800;
+    const attraction = 0.018;
+    const centerPull = 0.012;
+
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx = nodes[j].x - nodes[i].x;
+        const dy = nodes[j].y - nodes[i].y;
+        const distSq = dx*dx + dy*dy + 1;
+        const dist = Math.sqrt(distSq);
+        if (dist < 1) continue;
+
+        const force = repulsion / distSq;
+        const fx = (dx / dist) * force;
+        const fy = (dy / dist) * force;
+
+        nodes[i].vx -= fx;
+        nodes[i].vy -= fy;
+        nodes[j].vx += fx;
+        nodes[j].vy += fy;
+      }
+    }
+
+    edges.forEach(edge => {
+      const a = nodes[edge.from];
+      const b = nodes[edge.to];
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.hypot(dx, dy) || 1;
+
+      const fx = dx * attraction * edge.strength;
+      const fy = dy * attraction * edge.strength;
+
+      a.vx += fx;
+      a.vy += fy;
+      b.vx -= fx;
+      b.vy -= fy;
+    });
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    nodes.forEach(node => {
+      node.vx += (cx - node.x) * centerPull;
+      node.vy += (cy - node.y) * centerPull;
+
+      node.vx *= 0.82;
+      node.vy *= 0.82;
+
+      node.x += node.vx;
+      node.y += node.vy;
+
+      node.x = Math.max(60, Math.min(canvas.width - 60, node.x));
+      node.y = Math.max(80, Math.min(canvas.height - 100, node.y));
+    });
   }
 
   function drawNetwork() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Edges
-    ctx.strokeStyle = "rgba(212, 175, 55, 0.25)";
-    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = "rgba(212, 175, 55, 0.22)";
+    ctx.lineWidth = 1.4;
     edges.forEach(edge => {
       const a = nodes[edge.from];
       const b = nodes[edge.to];
@@ -485,49 +538,49 @@
 
     // Pulsing highlight edges
     ctx.strokeStyle = "#fcd34d";
-    ctx.lineWidth = 2.8;
+    ctx.lineWidth = 2.2;
     edges.forEach(edge => {
-      if (Math.random() > 0.93) {
+      if (Math.random() > 0.88) {
         const a = nodes[edge.from];
         const b = nodes[edge.to];
-        ctx.globalAlpha = 0.5 + Math.sin(Date.now() / 280) * 0.4;
+        ctx.globalAlpha = 0.6 + Math.sin(Date.now() / 240) * 0.35;
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
         ctx.lineTo(b.x, b.y);
         ctx.stroke();
       }
     });
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = 1.0;
 
     // Nodes
-    nodes.forEach((node, i) => {
-      const isUser = i === 0;
+    nodes.forEach(node => {
       const isHovered = hoveredNode === node;
+      const pulse = node.isUser ? Math.sin(Date.now() / 180) * 3 + 3 : 0;
 
-      ctx.shadowBlur = isUser || isHovered ? 45 : 24;
+      ctx.shadowBlur = node.isUser || isHovered ? 55 : 22;
       ctx.shadowColor = node.color;
 
       ctx.fillStyle = node.color;
       ctx.beginPath();
-      ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
+      ctx.arc(node.x, node.y, node.size + pulse, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.shadowBlur = 0;
-      ctx.strokeStyle = isUser ? "#fef08c" : "#d4af37";
-      ctx.lineWidth = isUser ? 3.5 : 2.3;
+      ctx.strokeStyle = node.isUser ? "#fefce8" : "#d4af37";
+      ctx.lineWidth = node.isUser ? 4 : 2.2;
       ctx.beginPath();
-      ctx.arc(node.x, node.y, node.size + (isHovered ? 8 : 5), 0, Math.PI * 2);
+      ctx.arc(node.x, node.y, node.size + (isHovered ? 11 : 6), 0, Math.PI * 2);
       ctx.stroke();
 
-      // Label
-      ctx.fillStyle = isUser ? "#fefce8" : "#e6d5b8";
-      ctx.font = isUser ? "bold 14px Cinzel" : "13px Cinzel";
+      ctx.fillStyle = node.isUser ? "#fefce8" : "#e6d5b8";
+      ctx.font = node.isUser ? "bold 15px Cinzel" : "13px Cinzel";
       ctx.textAlign = "center";
-      ctx.fillText(node.label, node.x, node.y + node.size + 26);
+      ctx.fillText(node.label, node.x, node.y + node.size + 28);
     });
   }
 
   function animateNetwork() {
+    applyForceSimulation();
     drawNetwork();
     animationFrame = requestAnimationFrame(animateNetwork);
   }
@@ -536,7 +589,7 @@
     for (let node of nodes) {
       const dx = node.x - x;
       const dy = node.y - y;
-      if (dx * dx + dy * dy < (node.size + 15) ** 2) return node;
+      if (dx * dx + dy * dy < (node.size + 22) ** 2) return node;
     }
     return null;
   }
@@ -552,11 +605,11 @@
     if (node) {
       hoveredNode = node;
       infoEl.innerHTML = `
-        <strong class="text-amber-300">${node.label}</strong><br>
-        <span class="font-mono text-xs">${node.ip}</span><br>
-        ${node.city}, ${node.country}
+        <div class="font-bold text-lg text-amber-300">${node.label}</div>
+        <div class="font-mono text-xs tracking-wider text-amber-400 mt-1">${node.ip}</div>
+        <div class="mt-3 text-amber-200">${node.city}, ${node.country}</div>
       `;
-      infoEl.style.left = `${e.clientX + 22}px`;
+      infoEl.style.left = `${e.clientX + 24}px`;
       infoEl.style.top = `${e.clientY + 18}px`;
       infoEl.classList.remove('hidden');
     } else {
@@ -638,7 +691,12 @@
     if (animationFrame) cancelAnimationFrame(animationFrame);
 
     animateNetwork();
+
     canvas.addEventListener('mousemove', showNodeInfo);
+    canvas.addEventListener('mouseleave', () => {
+      hoveredNode = null;
+      document.getElementById('node-info').classList.add('hidden');
+    });
   });
 
   document.getElementById('close-nodes-btn').addEventListener('click', () => {

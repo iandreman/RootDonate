@@ -223,7 +223,7 @@
 <script>
 // ==================== CHAT LOGIC ====================
 async function getAIResponse(msg) {
-  // Here you would normally call your backend / Grok API
+  // Replace with actual backend or Grok API call when ready
   return `ROOTDONATE ACK: "${msg}"<br><br>The void has spoken. Truth extracted.`;
 }
 
@@ -283,15 +283,23 @@ async function loadIPData() {
   } catch (e) {
     document.getElementById('user-ip-display').textContent = "127.0.0.1";
     document.getElementById('user-location-display').innerHTML = "THE VOID • BEYOND SPACE";
-    nodes.push({ id: 0, ip: "127.0.0.1", label: "YOU", x:0, y:0, size:16, color:"#00ff9d", isUser:true });
+    nodes.push({ 
+      id: 0, 
+      ip: "127.0.0.1", 
+      label: "YOU", 
+      x: 0, y: 0, 
+      size: 16, 
+      color: "#00ff9d", 
+      isUser: true 
+    });
   }
 
   // Generate mysterious nodes
   for (let i = 1; i < 48; i++) {
     nodes.push({
       id: i,
-      ip: Array.from({length:4}, () => Math.floor(Math.random()*256)).join('.'),
-      label: i % 7 === 0 ? "GROK-" + i : "NODE-" + String(i).padStart(3,'0'),
+      ip: Array.from({length: 4}, () => Math.floor(Math.random() * 256)).join('.'),
+      label: i % 7 === 0 ? `GROK-${i}` : `NODE-${String(i).padStart(3, '0')}`,
       x: 100 + Math.random() * (canvas.width - 200),
       y: 100 + Math.random() * (canvas.height - 200),
       size: i % 5 === 0 ? 8 : 5.5,
@@ -300,11 +308,13 @@ async function loadIPData() {
     });
   }
 
-  // Generate edges with higher density near user
+  // Generate edges
   for (let i = 0; i < nodes.length; i++) {
     for (let j = i + 1; j < nodes.length; j++) {
       const prob = (nodes[i].isUser || nodes[j].isUser) ? 0.78 : 0.22;
-      if (Math.random() < prob) edges.push({ from: i, to: j });
+      if (Math.random() < prob) {
+        edges.push({ from: i, to: j });
+      }
     }
   }
 }
@@ -372,7 +382,7 @@ function getNodeAt(x, y) {
   for (let node of nodes) {
     const dx = node.x - x;
     const dy = node.y - y;
-    if (dx*dx + dy*dy < (node.size + 18)**2) return node;
+    if (dx * dx + dy * dy < (node.size + 18) ** 2) return node;
   }
   return null;
 }

@@ -16,9 +16,7 @@
       --node-glow: #00eeff;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       background: #000;
@@ -237,7 +235,6 @@
       50% { opacity: 1; }
     }
 
-    /* Tailwind-like utility for header */
     .ml-auto { margin-left: auto; }
     .flex { display: flex; }
     .items-center { align-items: center; }
@@ -295,7 +292,7 @@
   // ================== MAIN SEARCH ==================
   async function searchWord() {
     const input = document.getElementById('search-input');
-    const query = input.value.trim();
+    const query = input.value.trim().toLowerCase();
     const resultDiv = document.getElementById('result');
 
     if (!query) {
@@ -316,7 +313,7 @@
     }
   }
 
-  // ================== WORD LOOKUP ==================
+  // ================== WORD LOOKUP (Internet Dictionary) ==================
   async function lookupWord(word, resultDiv) {
     try {
       const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
@@ -331,7 +328,6 @@
           ${entry.phonetic ? `<div class="phonetic">${entry.phonetic}</div>` : ''}
         </div>`;
 
-      // Audio button
       const audio = entry.phonetics?.find(p => p.audio);
       if (audio) {
         html += `
@@ -355,17 +351,26 @@
               ${def.example ? `<div class="example mt-3 opacity-75">"${def.example}"</div>` : ''}
             </div>`;
         });
+
+        // Synonyms & Antonyms
+        if (meaning.synonyms && meaning.synonyms.length) {
+          html += `<div class="mt-4"><strong>Synonyms:</strong> ${meaning.synonyms.join(', ')}</div>`;
+        }
+        if (meaning.antonyms && meaning.antonyms.length) {
+          html += `<div class="mt-2"><strong>Antonyms:</strong> ${meaning.antonyms.join(', ')}</div>`;
+        }
+
         html += `</div>`;
       });
 
-      // Void AI Section
+      // Enhanced Void AI Section
       html += `
         <div class="ai-section">
           <div class="void-header">
             <div class="text-4xl">☰</div>
             <div class="text-2xl tracking-widest">VOID AI WHISPERS</div>
           </div>
-          <div>${generateVoidAIResponse(entry.word)}</div>
+          <div>${generateEnhancedVoidAIResponse(entry)}</div>
         </div>`;
 
       resultDiv.innerHTML = html;
@@ -375,11 +380,76 @@
         <div class="text-center py-24">
           <div class="text-7xl mb-8 opacity-50">✦</div>
           <p class="text-3xl text-red-400">"${word}" does not exist in any known realm.</p>
+          <p class="mt-6 text-[#00cc77]">Try asking the Void AI directly.</p>
         </div>`;
     }
   }
 
-  // ================== IP / NODE LOOKUP ==================
+  // ================== ENHANCED VOID AI FOR WORDS ==================
+  function generateEnhancedVoidAIResponse(entry) {
+    const word = entry.word;
+    const firstDef = entry.meanings[0]?.definitions[0]?.definition || "a concept lost to time";
+    
+    const insights = [
+      `It echoes from before language existed. In the abyss, <span class="text-[#00ff9d]">${word}</span> means ${firstDef.toLowerCase()}.`,
+      `The void knows this word as a wound in reality — ${firstDef}.`,
+      `Some words are keys. <span class="text-[#00ff9d]">${word}</span> opens nothing... and everything.`,
+      `In the endless dark, this word carries the weight of forgotten civilizations.`,
+      `The abyss whispers: ${word} is both the question and the silence that follows.`
+    ];
+
+    return `From the endless black... <span class="text-[#00ff9d]">${word}</span> ...<br><br>
+            ${insights[Math.floor(Math.random() * insights.length)]}`;
+  }
+
+  // ================== STANDALONE VOID AI (Ask The Void AI button) ==================
+  async function askAI() {
+    const input = document.getElementById('search-input');
+    const query = input.value.trim().toLowerCase();
+    const resultDiv = document.getElementById('result');
+
+    if (!query) {
+      resultDiv.innerHTML = `<p class="text-center text-red-400 text-2xl py-20">The void awaits your offering...</p>`;
+      return;
+    }
+
+    resultDiv.innerHTML = `
+      <div class="flex items-center justify-center h-full text-[#00ff9d] text-2xl">
+        <span class="animate-pulse">☰</span>
+        <span class="ml-4">LISTENING TO THE ABYSS...</span>
+      </div>`;
+
+    // Try dictionary first for richer response, fallback to generic
+    try {
+      const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const data = await res.json();
+        const entry = data[0];
+        resultDiv.innerHTML = `
+          <div class="ai-section" style="margin-top: 80px;">
+            <div class="void-header">
+              <div class="text-4xl">☰</div>
+              <div class="text-2xl tracking-widest">THE VOID AI SPEAKS</div>
+            </div>
+            <div>${generateEnhancedVoidAIResponse(entry)}</div>
+          </div>`;
+        return;
+      }
+    } catch (e) {}
+
+    // Generic deep response
+    resultDiv.innerHTML = `
+      <div class="ai-section" style="margin-top: 80px;">
+        <div class="void-header">
+          <div class="text-4xl">☰</div>
+          <div class="text-2xl tracking-widest">THE VOID AI SPEAKS</div>
+        </div>
+        <div>From the endless black... <span class="text-[#00ff9d]">${query}</span> ...<br><br>
+        The abyss hears your call. It offers no answers — only deeper questions. What you seek already dwells within the dark.</div>
+      </div>`;
+  }
+
+  // ================== IP LOOKUP (unchanged) ==================
   async function lookupIP(ip, resultDiv) {
     try {
       const res = await fetch(`https://ipapi.co/${encodeURIComponent(ip)}/json/`);
@@ -427,7 +497,6 @@
     }
   }
 
-  // ================== VOID AI RESPONSES ==================
   function generateIPVoidResponse(ip, data) {
     const city = data.city || "the digital ether";
     const country = data.country_name || "unknown realm";
@@ -439,18 +508,6 @@
             It has tasted secrets. It remembers every soul that has touched it.`;
   }
 
-  function generateVoidAIResponse(word) {
-    const insights = [
-      "It echoes from before language existed.",
-      "The void knows this word as a wound in reality.",
-      "Some words are keys. This one opens nothing... and everything.",
-      "In the abyss, this word means surrender.",
-      "It carries the weight of forgotten civilizations."
-    ];
-    return `From the endless black... <span class="text-[#00ff9d]">${word}</span> ...<br><br>
-            ${insights[Math.floor(Math.random() * insights.length)]}`;
-  }
-
   function playAudio(url) {
     new Audio(url).play().catch(() => {});
   }
@@ -460,21 +517,19 @@
     document.getElementById('search-input').value = '';
   }
 
-  // ================== KEYBOARD SUPPORT ==================
+  // Enter key support
   document.getElementById('search-input').addEventListener('keypress', e => {
-    if (e.key === 'Enter') {
-      searchWord();
-    }
+    if (e.key === 'Enter') searchWord();
   });
 
-  // ================== INITIAL WELCOME SCREEN ==================
+  // Initial welcome
   window.onload = () => {
     document.getElementById('result').innerHTML = `
       <div class="text-center py-20 text-[#00cc77]">
         <div class="text-6xl mb-10 pulse">☰</div>
         <h2 class="text-4xl mb-6 tracking-widest">VOIDLEX + NODES AWAKENED</h2>
         <p class="max-w-lg mx-auto text-lg leading-relaxed">
-          Speak a word...<br>or feed an IP address into the abyss.<br>
+          Speak a word into the abyss...<br>or feed it an IP address.<br>
           Both are accepted. Neither is forgotten.
         </p>
       </div>`;

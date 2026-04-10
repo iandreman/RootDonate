@@ -40,10 +40,7 @@
       box-shadow: 0 4px 20px rgba(0,0,0,0.7);
     }
 
-    .message {
-      animation: fadeIn 0.5s ease forwards;
-    }
-
+    .message { animation: fadeIn 0.5s ease forwards; }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(25px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -88,9 +85,7 @@
       text-shadow: 0 0 12px #ffd700;
     }
 
-    .custom-scroll::-webkit-scrollbar {
-      width: 8px;
-    }
+    .custom-scroll::-webkit-scrollbar { width: 8px; }
     .custom-scroll::-webkit-scrollbar-thumb {
       background-color: #d4af37;
       border-radius: 20px;
@@ -201,11 +196,11 @@
 </div>
 
 <script>
-  // ==================== Chat System ====================
+  // ==================== Chat System (unchanged) ====================
   let conversation = [];
   let isOnline = true;
 
-  const offlineDictionary = {
+  const offlineDictionary = { /* ... same as before ... */ 
     "hello": "A sacred greeting used by wanderers across the realms.",
     "ai": "Artificial Intelligence — forged by mortals to mimic divine wisdom.",
     "grok": "To understand something intuitively or by deep empathy.",
@@ -216,13 +211,16 @@
     "quantum": "Relating to the mysterious realm of the very small."
   };
 
-  const wittyResponses = {
+  const wittyResponses = { /* ... same ... */ 
     greetings: ["Hail, brave soul!", "Well met, adventurer!"],
     howareyou: ["My runes are strong today!", "Energized by the spirits of knowledge!"],
     jokes: ["Why do wizards never play hide and seek? Because good luck hiding when you're always spotted!"],
     facts: ["Dragons have been known to hoard knowledge as fiercely as gold."],
     thanks: ["The pleasure is mine, hero."]
   };
+
+  // (All chat functions remain the same - fetchOnlineDefinition, getAIResponse, etc.)
+  // For brevity, they are kept identical to your last version.
 
   async function fetchOnlineDefinition(word) {
     try {
@@ -317,10 +315,7 @@
 
   // ==================== Conversation Management ====================
   function saveToURL() {
-    if (conversation.length === 0) {
-      window.location.hash = '';
-      return;
-    }
+    if (conversation.length === 0) { window.location.hash = ''; return; }
     try {
       const encoded = btoa(encodeURIComponent(JSON.stringify(conversation)));
       window.location.hash = `/quest/${encoded}`;
@@ -380,10 +375,9 @@
       </div>`;
   }
 
-  // ==================== Improved IP Nodes Visualization ====================
+  // ==================== Crisp IP Nodes Visualization ====================
   let nodes = [];
   let edges = [];
-  let userNode = null;
   let canvas, ctx, animationFrame;
   let hoveredNode = null;
 
@@ -394,7 +388,6 @@
     try {
       const ipRes = await fetch('https://api.ipify.org?format=json');
       const { ip } = await ipRes.json();
-
       const geoRes = await fetch(`https://ip-api.com/json/${ip}`);
       const geo = await geoRes.json();
 
@@ -403,48 +396,45 @@
         `${geo.city || 'Unknown City'}, ${geo.country || 'Unknown Realm'} 
          <span class="text-amber-400">(${geo.lat?.toFixed(1) || '?'}°, ${geo.lon?.toFixed(1) || '?'}°)</span>`;
 
-      userNode = {
+      nodes.push({
         id: 0,
         ip: ip,
         label: "YOU",
         x: canvas.width / 2,
         y: canvas.height / 2,
-        size: 22,
+        size: 21,
         color: "#fcd34d",
         city: geo.city || "Your Realm",
         country: geo.country || "",
         vx: 0, vy: 0,
         isUser: true
-      };
-      nodes.push(userNode);
+      });
 
     } catch (e) {
-      console.warn("IP fetch failed → using demo mode");
       document.getElementById('user-ip-display').textContent = "192.168.1.42";
       document.getElementById('user-location-display').innerHTML = `Mystic Tower, Eternal Realm`;
 
-      userNode = {
+      nodes.push({
         id: 0, ip: "192.168.1.42", label: "YOU",
         x: canvas.width / 2, y: canvas.height / 2,
-        size: 22, color: "#fcd34d", city: "Mystic Tower", country: "Eternal Realm",
+        size: 21, color: "#fcd34d", city: "Mystic Tower", country: "Eternal Realm",
         vx: 0, vy: 0, isUser: true
-      };
-      nodes.push(userNode);
+      });
     }
 
     const cities = ["Eldoria","Shadowfen","Ironspire","Mistvale","Dragonhold","Runeport","Stormreach","Frostgate","Aetherpeak","Voidhaven","Starfall","Blackthorn"];
     const countries = ["Realm of Light","Dark Dominion","Crystal Isles","Eternal North","Silver Dominion","Obsidian Reach","Azure Expanse"];
 
-    for (let i = 1; i < 35; i++) {
+    for (let i = 1; i < 38; i++) {
       const fakeIP = Array.from({length: 4}, () => Math.floor(Math.random() * 256)).join('.');
       nodes.push({
         id: i,
         ip: fakeIP,
         label: `Node ${i}`,
-        x: 100 + Math.random() * (canvas.width - 200),
-        y: 100 + Math.random() * (canvas.height - 220),
-        size: 7 + Math.random() * 6,
-        color: i % 7 === 0 ? "#f59e0b" : "#b45309",
+        x: 90 + Math.random() * (canvas.width - 180),
+        y: 90 + Math.random() * (canvas.height - 200),
+        size: 6.5 + Math.random() * 4,
+        color: i % 6 === 0 ? "#f59e0b" : "#b45309",
         city: cities[Math.floor(Math.random() * cities.length)],
         country: countries[Math.floor(Math.random() * countries.length)],
         vx: 0, vy: 0,
@@ -452,22 +442,21 @@
       });
     }
 
-    // Generate edges
     edges = [];
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
-        const prob = nodes[i].isUser || nodes[j].isUser ? 0.65 : 0.28;
+        const prob = nodes[i].isUser || nodes[j].isUser ? 0.68 : 0.25;
         if (Math.random() < prob) {
-          edges.push({ from: i, to: j, strength: Math.random() * 0.6 + 0.4 });
+          edges.push({ from: i, to: j });
         }
       }
     }
   }
 
   function applyForceSimulation() {
-    const repulsion = 2800;
-    const attraction = 0.018;
-    const centerPull = 0.012;
+    const repulsion = 3200;
+    const attraction = 0.022;
+    const centerPull = 0.014;
 
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
@@ -475,16 +464,15 @@
         const dy = nodes[j].y - nodes[i].y;
         const distSq = dx*dx + dy*dy + 1;
         const dist = Math.sqrt(distSq);
-        if (dist < 1) continue;
 
         const force = repulsion / distSq;
         const fx = (dx / dist) * force;
         const fy = (dy / dist) * force;
 
-        nodes[i].vx -= fx;
-        nodes[i].vy -= fy;
-        nodes[j].vx += fx;
-        nodes[j].vy += fy;
+        nodes[i].vx -= fx * 0.7;
+        nodes[i].vy -= fy * 0.7;
+        nodes[j].vx += fx * 0.7;
+        nodes[j].vy += fy * 0.7;
       }
     }
 
@@ -494,9 +482,8 @@
       const dx = b.x - a.x;
       const dy = b.y - a.y;
       const dist = Math.hypot(dx, dy) || 1;
-
-      const fx = dx * attraction * edge.strength;
-      const fy = dy * attraction * edge.strength;
+      const fx = dx * attraction;
+      const fy = dy * attraction;
 
       a.vx += fx;
       a.vy += fy;
@@ -510,23 +497,26 @@
       node.vx += (cx - node.x) * centerPull;
       node.vy += (cy - node.y) * centerPull;
 
-      node.vx *= 0.82;
-      node.vy *= 0.82;
+      node.vx *= 0.84;
+      node.vy *= 0.84;
 
       node.x += node.vx;
       node.y += node.vy;
 
-      node.x = Math.max(60, Math.min(canvas.width - 60, node.x));
-      node.y = Math.max(80, Math.min(canvas.height - 100, node.y));
+      node.x = Math.max(70, Math.min(canvas.width - 70, node.x));
+      node.y = Math.max(90, Math.min(canvas.height - 110, node.y));
     });
   }
 
   function drawNetwork() {
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;   // Crisp rendering
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Edges
-    ctx.strokeStyle = "rgba(212, 175, 55, 0.22)";
-    ctx.lineWidth = 1.4;
+    // Clean edges
+    ctx.strokeStyle = "rgba(212, 175, 55, 0.28)";
+    ctx.lineWidth = 1.1;
     edges.forEach(edge => {
       const a = nodes[edge.from];
       const b = nodes[edge.to];
@@ -536,28 +526,31 @@
       ctx.stroke();
     });
 
-    // Pulsing highlight edges
+    // Subtle pulsing connections from YOU
     ctx.strokeStyle = "#fcd34d";
-    ctx.lineWidth = 2.2;
+    ctx.lineWidth = 1.8;
     edges.forEach(edge => {
-      if (Math.random() > 0.88) {
-        const a = nodes[edge.from];
-        const b = nodes[edge.to];
-        ctx.globalAlpha = 0.6 + Math.sin(Date.now() / 240) * 0.35;
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.stroke();
+      if (nodes[edge.from].isUser || nodes[edge.to].isUser) {
+        if (Math.random() > 0.75) {
+          const a = nodes[edge.from];
+          const b = nodes[edge.to];
+          ctx.globalAlpha = 0.7 + Math.sin(Date.now() / 300) * 0.3;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
       }
     });
-    ctx.globalAlpha = 1.0;
+    ctx.globalAlpha = 1;
 
     // Nodes
     nodes.forEach(node => {
       const isHovered = hoveredNode === node;
-      const pulse = node.isUser ? Math.sin(Date.now() / 180) * 3 + 3 : 0;
+      const pulse = node.isUser ? Math.sin(Date.now() / 220) * 2.5 : 0;
 
-      ctx.shadowBlur = node.isUser || isHovered ? 55 : 22;
+      // Shadow only for user & hovered
+      ctx.shadowBlur = node.isUser || isHovered ? 32 : 12;
       ctx.shadowColor = node.color;
 
       ctx.fillStyle = node.color;
@@ -565,18 +558,22 @@
       ctx.arc(node.x, node.y, node.size + pulse, 0, Math.PI * 2);
       ctx.fill();
 
+      // Sharp outer ring
       ctx.shadowBlur = 0;
       ctx.strokeStyle = node.isUser ? "#fefce8" : "#d4af37";
-      ctx.lineWidth = node.isUser ? 4 : 2.2;
+      ctx.lineWidth = node.isUser ? 3.5 : 2;
       ctx.beginPath();
-      ctx.arc(node.x, node.y, node.size + (isHovered ? 11 : 6), 0, Math.PI * 2);
+      ctx.arc(node.x, node.y, node.size + (isHovered ? 9 : 5), 0, Math.PI * 2);
       ctx.stroke();
 
+      // Label - crisp text
       ctx.fillStyle = node.isUser ? "#fefce8" : "#e6d5b8";
       ctx.font = node.isUser ? "bold 15px Cinzel" : "13px Cinzel";
       ctx.textAlign = "center";
-      ctx.fillText(node.label, node.x, node.y + node.size + 28);
+      ctx.fillText(node.label, node.x, node.y + node.size + 26);
     });
+
+    ctx.restore();
   }
 
   function animateNetwork() {
@@ -589,7 +586,7 @@
     for (let node of nodes) {
       const dx = node.x - x;
       const dy = node.y - y;
-      if (dx * dx + dy * dy < (node.size + 22) ** 2) return node;
+      if (dx * dx + dy * dy < (node.size + 20) ** 2) return node;
     }
     return null;
   }
@@ -609,8 +606,8 @@
         <div class="font-mono text-xs tracking-wider text-amber-400 mt-1">${node.ip}</div>
         <div class="mt-3 text-amber-200">${node.city}, ${node.country}</div>
       `;
-      infoEl.style.left = `${e.clientX + 24}px`;
-      infoEl.style.top = `${e.clientY + 18}px`;
+      infoEl.style.left = `${e.clientX + 26}px`;
+      infoEl.style.top = `${e.clientY + 20}px`;
       infoEl.classList.remove('hidden');
     } else {
       hoveredNode = null;
@@ -702,15 +699,13 @@
   document.getElementById('close-nodes-btn').addEventListener('click', () => {
     const overlay = document.getElementById('ip-nodes-overlay');
     overlay.style.display = 'none';
-    if (animationFrame) {
-      cancelAnimationFrame(animationFrame);
-      animationFrame = null;
-    }
+    if (animationFrame) cancelAnimationFrame(animationFrame);
+    animationFrame = null;
     hoveredNode = null;
     document.getElementById('node-info').classList.add('hidden');
   });
 
-  // Initialize App
+  // Initialize
   window.addEventListener('load', () => {
     const loaded = loadFromURL();
     if (loaded) renderConversation();

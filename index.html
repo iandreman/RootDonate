@@ -264,7 +264,7 @@
   <!-- SEARCH INPUT -->
   <div class="input-area">
     <input type="text" id="search-input" 
-           placeholder="ENTER WORD OR IP INTO THE ABYSS... (e.g. serenity or 8.8.8.8)">
+           placeholder="ENTER WORD OR IP... (e.g. serenity or 8.8.8.8)">
     
     <div class="button-group">
       <button onclick="searchWord()" class="lookup-btn">
@@ -337,7 +337,7 @@
           </button>`;
       }
 
-      html += `<div class="section-title">MORTAL DEFINITIONS</div>`;
+      html += `<div class="section-title">DEFINITIONS</div>`;
 
       entry.meanings.forEach(meaning => {
         html += `
@@ -380,7 +380,7 @@
         <div class="text-center py-24">
           <div class="text-7xl mb-8 opacity-50">✦</div>
           <p class="text-3xl text-red-400">"${word}" does not exist in any known realm.</p>
-          <p class="mt-6 text-[#00cc77]">Try asking the Void AI directly.</p>
+          <p class="mt-6 text-[#00cc77]">Try asking the AI directly.</p>
         </div>`;
     }
   }

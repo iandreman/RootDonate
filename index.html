@@ -111,7 +111,7 @@
       margin-top: 16px;
     }
 
-    .lookup-btn, .ai-btn {
+    .lookup-btn {
       flex: 1;
       padding: 16px;
       font-size: 1.1rem;
@@ -121,9 +121,6 @@
       cursor: pointer;
       transition: all 0.3s;
       font-family: 'Cinzel', serif;
-    }
-
-    .lookup-btn {
       background: rgba(0, 255, 157, 0.1);
       color: var(--accent);
       border: 2px solid var(--accent);
@@ -132,17 +129,6 @@
     .lookup-btn:hover {
       background: rgba(0, 255, 157, 0.2);
       box-shadow: 0 0 30px rgba(0, 255, 157, 0.5);
-    }
-
-    .ai-btn {
-      background: rgba(0, 204, 255, 0.1);
-      color: var(--node);
-      border: 2px solid var(--node);
-    }
-
-    .ai-btn:hover {
-      background: rgba(0, 204, 255, 0.2);
-      box-shadow: 0 0 30px rgba(0, 204, 255, 0.5);
     }
 
     .result {
@@ -242,6 +228,28 @@
     .gap-4 { gap: 16px; }
 
     .example { font-style: italic; opacity: 0.75; margin-top: 6px; }
+
+    /* Share button styling */
+    .share-btn {
+      padding: 12px 24px;
+      background: rgba(0, 204, 255, 0.1);
+      color: var(--node);
+      border: 2px solid var(--node);
+      border-radius: 9999px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.95rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .share-btn:hover {
+      background: rgba(0, 204, 255, 0.2);
+      box-shadow: 0 0 25px rgba(0, 204, 255, 0.5);
+    }
   </style>
 </head>
 <body>
@@ -261,6 +269,10 @@
               class="px-6 py-3 bg-black border-2 border-[#00ff9d] hover:bg-[#001a00] rounded-2xl flex items-center gap-2 text-sm font-medium">
         CLEAR
       </button>
+      <button onclick="shareCurrentResult()" 
+              class="share-btn">
+        <span>↗</span> SHARE LINK
+      </button>
     </div>
   </div>
 
@@ -272,9 +284,6 @@
     <div class="button-group">
       <button onclick="searchWord()" class="lookup-btn">
         LOOKUP
-      </button>
-      <button onclick="askAI()" class="ai-btn">
-        ASK THE VOID
       </button>
     </div>
   </div>
@@ -381,7 +390,7 @@
         <div class="text-center py-24">
           <div class="text-7xl mb-8 opacity-50">✦</div>
           <p class="text-3xl text-red-400">"${word}" does not exist in any known realm.</p>
-          <p class="mt-6 text-[#00cc77]">Try asking the AI directly.</p>
+          <p class="mt-6 text-[#00cc77]">The abyss remains silent.</p>
         </div>`;
     }
   }
@@ -400,52 +409,6 @@
 
     return `From the endless black... <span class="text-[#00ff9d]">${word}</span> ...<br><br>
             ${insights[Math.floor(Math.random() * insights.length)]}`;
-  }
-
-  // ================== ASK THE VOID AI ==================
-  async function askAI() {
-    const input = document.getElementById('search-input');
-    const query = input.value.trim().toLowerCase();
-    const resultDiv = document.getElementById('result');
-
-    if (!query) {
-      resultDiv.innerHTML = `<p class="text-center text-red-400 text-2xl py-20">The void awaits your offering...</p>`;
-      return;
-    }
-
-    resultDiv.innerHTML = `
-      <div class="flex items-center justify-center h-full text-[#00ff9d] text-2xl">
-        <span class="animate-pulse">☰</span>
-        <span class="ml-4">LISTENING TO THE ABYSS...</span>
-      </div>`;
-
-    try {
-      const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(query)}`);
-      if (res.ok) {
-        const data = await res.json();
-        const entry = data[0];
-        resultDiv.innerHTML = `
-          <div class="ai-section" style="margin-top: 80px;">
-            <div class="void-header">
-              <div class="text-4xl">☰</div>
-              <div class="text-2xl tracking-widest">THE VOID AI SPEAKS</div>
-            </div>
-            <div>${generateEnhancedVoidAIResponse(entry)}</div>
-          </div>`;
-        return;
-      }
-    } catch (e) {}
-
-    // Generic response
-    resultDiv.innerHTML = `
-      <div class="ai-section" style="margin-top: 80px;">
-        <div class="void-header">
-          <div class="text-4xl">☰</div>
-          <div class="text-2xl tracking-widest">THE VOID AI SPEAKS</div>
-        </div>
-        <div>From the endless black... <span class="text-[#00ff9d]">${query}</span> ...<br><br>
-        The abyss hears your call. It offers no answers — only deeper questions. What you seek already dwells within the dark.</div>
-      </div>`;
   }
 
   // ================== IP LOOKUP ==================
@@ -516,22 +479,56 @@
     document.getElementById('search-input').value = '';
   }
 
+  // ================== SHARE LINK ==================
+  function shareCurrentResult() {
+    const query = document.getElementById('search-input').value.trim();
+    if (!query) {
+      alert("Enter a word or IP first to generate a shareable link.");
+      return;
+    }
+
+    // Create shareable URL with the query as a parameter
+    const url = new URL(window.location.href);
+    url.searchParams.set('q', query);
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(url.toString()).then(() => {
+      const originalText = event.currentTarget.innerHTML;
+      event.currentTarget.innerHTML = `<span>✓</span> COPIED LINK`;
+      
+      setTimeout(() => {
+        event.currentTarget.innerHTML = originalText;
+      }, 2000);
+    }).catch(() => {
+      alert("Link copied: " + url.toString());
+    });
+  }
+
   // Enter key support
   document.getElementById('search-input').addEventListener('keypress', e => {
     if (e.key === 'Enter') searchWord();
   });
 
-  // Initial welcome
+  // Load from URL parameter on page load
   window.onload = () => {
-    document.getElementById('result').innerHTML = `
-      <div class="text-center py-20 text-[#00cc77]">
-        <div class="text-6xl mb-10 pulse">☰</div>
-        <h2 class="text-4xl mb-6 tracking-widest">DICTIONARY + NODES</h2>
-        <p class="max-w-lg mx-auto text-lg leading-relaxed">
-          Speak a word...<br>or feed it an IP address.<br>
-          Both are accepted in the void.
-        </p>
-      </div>`;
+    const urlParams = new URLSearchParams(window.location.search);
+    const query = urlParams.get('q');
+    
+    if (query) {
+      document.getElementById('search-input').value = query;
+      searchWord();
+    } else {
+      // Initial welcome
+      document.getElementById('result').innerHTML = `
+        <div class="text-center py-20 text-[#00cc77]">
+          <div class="text-6xl mb-10 pulse">☰</div>
+          <h2 class="text-4xl mb-6 tracking-widest">DICTIONARY + NODES</h2>
+          <p class="max-w-lg mx-auto text-lg leading-relaxed">
+            Speak a word...<br>or feed it an IP address.<br>
+            Both are accepted in the void.
+          </p>
+        </div>`;
+    }
   };
 </script>
 </body>

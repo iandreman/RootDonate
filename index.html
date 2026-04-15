@@ -150,6 +150,7 @@
       padding: 30px 40px;
       overflow-y: auto;
       scrollbar-color: #00ff9d #001a0f;
+      scrollbar-width: thin;
     }
 
     .word {
@@ -239,6 +240,8 @@
     .flex { display: flex; }
     .items-center { align-items: center; }
     .gap-4 { gap: 16px; }
+
+    .example { font-style: italic; opacity: 0.75; margin-top: 6px; }
   </style>
 </head>
 <body>
@@ -271,7 +274,7 @@
         LOOKUP
       </button>
       <button onclick="askAI()" class="ai-btn">
-        ASK
+        ASK THE VOID
       </button>
     </div>
   </div>
@@ -313,7 +316,7 @@
     }
   }
 
-  // ================== WORD LOOKUP (Internet Dictionary) ==================
+  // ================== WORD LOOKUP ==================
   async function lookupWord(word, resultDiv) {
     try {
       const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
@@ -348,11 +351,10 @@
           html += `
             <div class="mb-8">
               ${i + 1}. ${def.definition}
-              ${def.example ? `<div class="example mt-3 opacity-75">"${def.example}"</div>` : ''}
+              ${def.example ? `<div class="example">"${def.example}"</div>` : ''}
             </div>`;
         });
 
-        // Synonyms & Antonyms
         if (meaning.synonyms && meaning.synonyms.length) {
           html += `<div class="mt-4"><strong>Synonyms:</strong> ${meaning.synonyms.join(', ')}</div>`;
         }
@@ -363,7 +365,6 @@
         html += `</div>`;
       });
 
-      // Enhanced Void AI Section
       html += `
         <div class="ai-section">
           <div class="void-header">
@@ -385,7 +386,6 @@
     }
   }
 
-  // ================== ENHANCED VOID AI FOR WORDS ==================
   function generateEnhancedVoidAIResponse(entry) {
     const word = entry.word;
     const firstDef = entry.meanings[0]?.definitions[0]?.definition || "a concept lost to time";
@@ -402,7 +402,7 @@
             ${insights[Math.floor(Math.random() * insights.length)]}`;
   }
 
-  // ================== STANDALONE VOID AI (Ask The Void AI button) ==================
+  // ================== ASK THE VOID AI ==================
   async function askAI() {
     const input = document.getElementById('search-input');
     const query = input.value.trim().toLowerCase();
@@ -419,7 +419,6 @@
         <span class="ml-4">LISTENING TO THE ABYSS...</span>
       </div>`;
 
-    // Try dictionary first for richer response, fallback to generic
     try {
       const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(query)}`);
       if (res.ok) {
@@ -437,7 +436,7 @@
       }
     } catch (e) {}
 
-    // Generic deep response
+    // Generic response
     resultDiv.innerHTML = `
       <div class="ai-section" style="margin-top: 80px;">
         <div class="void-header">
@@ -449,7 +448,7 @@
       </div>`;
   }
 
-  // ================== IP LOOKUP (unchanged) ==================
+  // ================== IP LOOKUP ==================
   async function lookupIP(ip, resultDiv) {
     try {
       const res = await fetch(`https://ipapi.co/${encodeURIComponent(ip)}/json/`);
@@ -527,10 +526,10 @@
     document.getElementById('result').innerHTML = `
       <div class="text-center py-20 text-[#00cc77]">
         <div class="text-6xl mb-10 pulse">☰</div>
-        <h2 class="text-4xl mb-6 tracking-widest">DICTONARY + NODES</h2>
+        <h2 class="text-4xl mb-6 tracking-widest">DICTIONARY + NODES</h2>
         <p class="max-w-lg mx-auto text-lg leading-relaxed">
           Speak a word...<br>or feed it an IP address.<br>
-          Both are accepted.
+          Both are accepted in the void.
         </p>
       </div>`;
   };

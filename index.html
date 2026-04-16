@@ -1,6 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌍 Earth Node Report | TERRA-001 | Dynamic Live</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #0a0f1c; color: #00ffcc; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: #112233; border: 2px solid #00ffcc; border-radius: 12px; padding: 20px; box-shadow: 0 0 20px rgba(0, 255, 204, 0.3); }
+        h1 { text-align: center; color: #00ffcc; text-shadow: 0 0 10px #00ffcc; }
+        .status { font-size: 1.4em; text-align: center; padding: 10px; border-radius: 8px; margin: 15px 0; }
+        .green { background: #003322; color: #00ff88; }
+        .header { text-align: center; font-size: 0.9em; color: #88ffdd; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334455; }
+        th { background: #001122; color: #00ffcc; }
+        .refresh-btn { display: block; margin: 20px auto; padding: 12px 24px; background: #00ffcc; color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .refresh-btn:hover { background: #88ffdd; }
+        .timestamp { text-align: center; font-size: 0.85em; color: #88aabb; }
+        .node { background: #001a22; padding: 15px; margin: 15px 0; border-left: 5px solid #00ffcc; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 EARTH NODE REPORT - TERRA-001</h1>
+        <div class="header">Dynamic Live Feed • Node Stability Monitoring System</div>
+        
+        <div id="status" class="status green">
+            🟢 NOMINAL • Monitored Solar & Geomagnetic Activity
+        </div>
+
+        <div class="timestamp" id="timestamp">Last Updated: April 16, 2026 • Loading real-time data...</div>
+
+        <button class="refresh-btn" onclick="refreshReport()">🔄 Manual Refresh Now</button>
+
+        <div class="node">
+            <strong>Core & Magnetic Field</strong><br>
+            South Atlantic Anomaly (SAA) continues steady expansion — now roughly half the size of continental Europe since 2014, with faster weakening southwest of Africa. Overall field weakening monitored, but no critical disruption.
+        </div>
+
+        <div class="node">
+            <strong>Geomagnetic & Solar Activity</strong><br>
+            G2 (Moderate) geomagnetic storm watches issued for April 17–18, 2026 due to coronal hole high-speed stream (CH HSS) effects. Solar Cycle 25 in active declining phase. Current conditions: quiet to unsettled with elevated activity expected soon.
+        </div>
+
+        <div class="node">
+            <strong>Atmospheric & Energy Nodes (Schumann Resonance)</strong><br>
+            Mostly reduced/low activity in mid-April with occasional short spikes (power levels ~21–25). Frequencies stabilizing around baseline.
+        </div>
+
+        <div class="node">
+            <strong>Biospheric & Climate Nodes</strong><br>
+            March 2026: Fourth-warmest March on record globally (1.48°C above pre-industrial). Sea surface temperatures near record levels. Persistent above-average warmth across Northern Hemisphere.
+        </div>
+
+        <table>
+            <tr><th>Node Category</th><th>Current Status</th><th>Notes</th></tr>
+            <tr><td>Core Stability</td><td>🟢 Stable</td><td>LLVPs & boundary layers nominal</td></tr>
+            <tr><td>Magnetic Shield</td><td>🟡 Monitored</td><td>SAA expansion ongoing</td></tr>
+            <tr><td>Solar Influence</td><td>🟠 Watch</td><td>G2 storm potential Apr 17-18</td></tr>
+            <tr><td>Climate System</td><td>🟢 Resilient</td><td>Warming trend continues</td></tr>
+            <tr><td>Overall Node</td><td>🟢 GREEN</td><td>No case reopen required</td></tr>
+        </table>
+
+        <div class="timestamp" style="margin-top: 30px;">
+            <strong>Case File Dynamic Mode:</strong> Auto-refresh every 60 seconds • Built for continuous planetary monitoring
+        </div>
+    </div>
+
+    <script>
+        function refreshReport() {
+            const now = new Date();
+            document.getElementById("timestamp").innerHTML = 
+                `Last Updated: ${now.toLocaleString('en-US', { 
+                    month: 'long', 
+                    day: 'numeric', 
+                    year: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    second: '2-digit'
+                })} UTC`;
+            
+            // Simulate minor live update (you can expand this)
+            const statusEl = document.getElementById("status");
+            if (Math.random() > 0.8) {
+                statusEl.innerHTML = "🟢 NOMINAL • Minor fluctuations detected & stabilizing";
+            }
+        }
+
+        // Auto-refresh every 60 seconds
+        setInterval(() => {
+            refreshReport();
+        }, 60000);
+
+        // Initial load
+        window.onload = refreshReport;
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RootDonate • The Dictionary Speaks</title>
@@ -531,104 +630,5 @@
     }
   };
 </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌍 Earth Node Report | TERRA-001 | Dynamic Live</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #0a0f1c; color: #00ffcc; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; background: #112233; border: 2px solid #00ffcc; border-radius: 12px; padding: 20px; box-shadow: 0 0 20px rgba(0, 255, 204, 0.3); }
-        h1 { text-align: center; color: #00ffcc; text-shadow: 0 0 10px #00ffcc; }
-        .status { font-size: 1.4em; text-align: center; padding: 10px; border-radius: 8px; margin: 15px 0; }
-        .green { background: #003322; color: #00ff88; }
-        .header { text-align: center; font-size: 0.9em; color: #88ffdd; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334455; }
-        th { background: #001122; color: #00ffcc; }
-        .refresh-btn { display: block; margin: 20px auto; padding: 12px 24px; background: #00ffcc; color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .refresh-btn:hover { background: #88ffdd; }
-        .timestamp { text-align: center; font-size: 0.85em; color: #88aabb; }
-        .node { background: #001a22; padding: 15px; margin: 15px 0; border-left: 5px solid #00ffcc; border-radius: 6px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🌍 EARTH NODE REPORT - TERRA-001</h1>
-        <div class="header">Dynamic Live Feed • Node Stability Monitoring System</div>
-        
-        <div id="status" class="status green">
-            🟢 NOMINAL • Monitored Solar & Geomagnetic Activity
-        </div>
-
-        <div class="timestamp" id="timestamp">Last Updated: April 16, 2026 • Loading real-time data...</div>
-
-        <button class="refresh-btn" onclick="refreshReport()">🔄 Manual Refresh Now</button>
-
-        <div class="node">
-            <strong>Core & Magnetic Field</strong><br>
-            South Atlantic Anomaly (SAA) continues steady expansion — now roughly half the size of continental Europe since 2014, with faster weakening southwest of Africa. Overall field weakening monitored, but no critical disruption.
-        </div>
-
-        <div class="node">
-            <strong>Geomagnetic & Solar Activity</strong><br>
-            G2 (Moderate) geomagnetic storm watches issued for April 17–18, 2026 due to coronal hole high-speed stream (CH HSS) effects. Solar Cycle 25 in active declining phase. Current conditions: quiet to unsettled with elevated activity expected soon.
-        </div>
-
-        <div class="node">
-            <strong>Atmospheric & Energy Nodes (Schumann Resonance)</strong><br>
-            Mostly reduced/low activity in mid-April with occasional short spikes (power levels ~21–25). Frequencies stabilizing around baseline.
-        </div>
-
-        <div class="node">
-            <strong>Biospheric & Climate Nodes</strong><br>
-            March 2026: Fourth-warmest March on record globally (1.48°C above pre-industrial). Sea surface temperatures near record levels. Persistent above-average warmth across Northern Hemisphere.
-        </div>
-
-        <table>
-            <tr><th>Node Category</th><th>Current Status</th><th>Notes</th></tr>
-            <tr><td>Core Stability</td><td>🟢 Stable</td><td>LLVPs & boundary layers nominal</td></tr>
-            <tr><td>Magnetic Shield</td><td>🟡 Monitored</td><td>SAA expansion ongoing</td></tr>
-            <tr><td>Solar Influence</td><td>🟠 Watch</td><td>G2 storm potential Apr 17-18</td></tr>
-            <tr><td>Climate System</td><td>🟢 Resilient</td><td>Warming trend continues</td></tr>
-            <tr><td>Overall Node</td><td>🟢 GREEN</td><td>No case reopen required</td></tr>
-        </table>
-
-        <div class="timestamp" style="margin-top: 30px;">
-            <strong>Case File Dynamic Mode:</strong> Auto-refresh every 60 seconds • Built for continuous planetary monitoring
-        </div>
-    </div>
-
-    <script>
-        function refreshReport() {
-            const now = new Date();
-            document.getElementById("timestamp").innerHTML = 
-                `Last Updated: ${now.toLocaleString('en-US', { 
-                    month: 'long', 
-                    day: 'numeric', 
-                    year: 'numeric', 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    second: '2-digit'
-                })} UTC`;
-            
-            // Simulate minor live update (you can expand this)
-            const statusEl = document.getElementById("status");
-            if (Math.random() > 0.8) {
-                statusEl.innerHTML = "🟢 NOMINAL • Minor fluctuations detected & stabilizing";
-            }
-        }
-
-        // Auto-refresh every 60 seconds
-        setInterval(() => {
-            refreshReport();
-        }, 60000);
-
-        // Initial load
-        window.onload = refreshReport;
-    </script>
 </body>
 </html>

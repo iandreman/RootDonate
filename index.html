@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERRA-001 // EARTH NODE OS v0.9.4</title>
+    <title>TERRA-001 // EARTH NODE OS v0.9.7</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
@@ -53,6 +53,7 @@
             font-family: 'Orbitron', sans-serif;
             letter-spacing: 4px;
             box-shadow: 0 0 20px rgba(0, 255, 157, 0.4);
+            font-size: 1.3rem;
         }
 
         .main-container {
@@ -76,7 +77,7 @@
         .panel-header {
             background: #001122;
             padding: 14px 20px;
-            font-size: 1.4rem;
+            font-size: 1.45rem;
             color: var(--accent);
             border-bottom: 2px solid var(--node);
             display: flex;
@@ -84,19 +85,12 @@
             gap: 12px;
         }
 
-        .earth-report {
+        .content {
             flex: 1;
             padding: 20px;
             overflow-y: auto;
-        }
-
-        .status-bar {
-            padding: 12px 20px;
-            background: #001a22;
-            border-top: 2px solid var(--node);
-            font-size: 1.3rem;
-            display: flex;
-            justify-content: space-between;
+            font-size: 1.35rem;
+            line-height: 1.5;
         }
 
         .data-row {
@@ -107,31 +101,24 @@
         }
 
         .label { color: #88ffdd; }
-        .value { color: #00ff9d; font-size: 1.35rem; }
+        .value { color: #00ff9d; font-size: 1.4rem; }
 
-        .glitch {
-            animation: glitch 1.5s infinite;
-        }
-
-        @keyframes glitch {
-            0% { transform: translate(0); }
-            20% { transform: translate(-2px, 2px); }
-            40% { transform: translate(-2px, -2px); }
-            60% { transform: translate(2px, 2px); }
-            80% { transform: translate(2px, -2px); }
-            100% { transform: translate(0); }
-        }
-
-        .root-donate {
-            flex: 1;
+        .market-row {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0, 255, 204, 0.15);
         }
+
+        .positive { color: #00ff9d; }
+        .negative { color: #ff3366; }
+
+        .alert { color: var(--warning); animation: pulse 2s infinite; }
 
         #search-input {
             width: 100%;
             padding: 18px;
-            font-size: 1.5rem;
+            font-size: 1.55rem;
             background: #000;
             border: 2px solid #003322;
             color: #00ffcc;
@@ -145,8 +132,9 @@
             background: #002211;
             color: var(--accent);
             border: 2px solid var(--accent);
-            font-size: 1.3rem;
+            font-size: 1.35rem;
             cursor: pointer;
+            margin-top: 2px;
         }
 
         .result {
@@ -154,36 +142,49 @@
             padding: 25px;
             overflow-y: auto;
             line-height: 1.6;
-            font-size: 1.35rem;
         }
 
-        .alert {
-            color: var(--warning);
-            animation: pulse 2s infinite;
+        .glitch {
+            animation: glitch 1.5s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+        }
+
+        .pulse { animation: pulse 2s infinite; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
     </style>
 </head>
 <body>
 
     <div class="terminal-header">
-        <div>🌍 TERRA-001 • EARTH NODE OS • ROOT ACCESS GRANTED</div>
+        <div>🌍 TERRA-001 • EARTH NODE OS • ROOT ACCESS GRANTED v0.9.7</div>
         <div id="live-time" style="color:#00ccff;"></div>
     </div>
 
     <div class="main-container">
 
-        <!-- LEFT PANEL: EARTH REPORT -->
+        <!-- LEFT PANEL: PLANETARY + MARKET -->
         <div class="panel">
             <div class="panel-header">
-                <span>📡 PLANETARY CORE MONITOR</span>
+                <span>📡 PLANETARY CORE + MARKET MONITOR</span>
                 <span id="overall-status" class="glitch" style="margin-left:auto; color:#00ff88;">● NOMINAL</span>
             </div>
             
-            <div class="earth-report" id="earth-report">
+            <div class="content" id="earth-report">
                 <!-- Populated by JS -->
             </div>
 
-            <div class="status-bar">
+            <div style="padding:12px 20px; background:#001a22; border-top:2px solid var(--node); font-size:1.3rem; display:flex; justify-content:space-between;">
                 <span>SOLAR CYCLE 25 • ACTIVE</span>
                 <button onclick="refreshEarthData()" style="background:none; border:1px solid #00ff9d; color:#00ff9d; padding:4px 16px; cursor:pointer;">
                     REFRESH NODE
@@ -191,8 +192,8 @@
             </div>
         </div>
 
-        <!-- RIGHT PANEL: ROOTDONATE TERMINAL -->
-        <div class="panel root-donate">
+        <!-- RIGHT PANEL: LEXICON + SEARCH -->
+        <div class="panel">
             <div class="panel-header">
                 <span>☰ ROOTDONATE • ETERNAL LEXICON NODE</span>
             </div>
@@ -201,9 +202,9 @@
             <button onclick="searchWord()" class="lookup-btn">QUERY THE VOID →</button>
             
             <div id="result" class="result">
-                <div style="text-align:center; opacity:0.6; padding:60px 20px;">
+                <div style="text-align:center; opacity:0.6; padding:80px 20px; font-size:1.4rem;">
                     AWAITING INPUT...<br>
-                    <span style="font-size:2rem;">☰</span>
+                    <span style="font-size:3rem;">☰</span>
                 </div>
             </div>
         </div>
@@ -213,7 +214,7 @@
     <div class="scanline"></div>
 
 <script>
-// Live clock
+// Live UTC Clock
 function updateClock() {
     const now = new Date();
     document.getElementById('live-time').textContent = 
@@ -222,7 +223,7 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// Real Earth Data (using public APIs)
+// Refresh Earth + Market Data
 async function refreshEarthData() {
     const reportDiv = document.getElementById('earth-report');
     
@@ -233,26 +234,51 @@ async function refreshEarthData() {
         </div>`;
 
     try {
-        // Temperature & Climate (Open-Meteo or similar fallback)
+        // Global temperature (real API)
         const tempRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0&current=temperature_2m');
         const tempData = await tempRes.json();
         const globalTemp = tempData.current.temperature_2m || "—";
 
-        // Simple random but realistic values for demo
-        const saaExpansion = (Math.random() * 8 + 12).toFixed(1) + "%";
-        const schumann = (7.83 + Math.random() * 2).toFixed(2);
+        // Simulated realistic values
+        const saa = (Math.random() * 8 + 12).toFixed(1) + "%";
+        const schumann = (7.83 + Math.random() * 2.2).toFixed(2);
         const co2 = (Math.random() * 3 + 426).toFixed(1);
+
+        // Market simulation
+        const markets = [
+            { name: "BTC", price: (Math.random()*12000 + 62000).toFixed(0), change: (Math.random()*8 - 3).toFixed(2) },
+            { name: "ETH", price: (Math.random()*800 + 2400).toFixed(0), change: (Math.random()*10 - 4).toFixed(2) },
+            { name: "GOLD", price: (Math.random()*80 + 2650).toFixed(0), change: (Math.random()*2 - 1).toFixed(2) },
+            { name: "NASDAQ", price: (Math.random()*1200 + 17800).toFixed(0), change: (Math.random()*4 - 1.5).toFixed(2) },
+            { name: "OIL", price: (Math.random()*15 + 68).toFixed(2), change: (Math.random()*6 - 2.5).toFixed(2) }
+        ];
+
+        let marketHTML = `<div style="margin:20px 0 30px 0;"><strong style="color:#00ccff; font-size:1.5rem;">GLOBAL MARKET SNAPSHOT</strong></div>`;
+
+        markets.forEach(m => {
+            const changeClass = parseFloat(m.change) >= 0 ? 'positive' : 'negative';
+            const sign = parseFloat(m.change) >= 0 ? '+' : '';
+            marketHTML += `
+                <div class="market-row">
+                    <span class="label">${m.name}</span>
+                    <span>
+                        <span class="value">$${m.price}</span>
+                        <span class="${changeClass}" style="margin-left:15px;">${sign}${m.change}%</span>
+                    </span>
+                </div>`;
+        });
 
         reportDiv.innerHTML = `
             <div class="data-row"><span class="label">GLOBAL AVG TEMP (2m)</span><span class="value">${globalTemp}°C</span></div>
-            <div class="data-row"><span class="label">SOUTH ATLANTIC ANOMALY EXPANSION</span><span class="value alert">${saaExpansion}</span></div>
-            <div class="data-row"><span class="label">SCHUMANN RESONANCE (Hz)</span><span class="value">${schumann}</span></div>
-            <div class="data-row"><span class="label">ATMOSPHERIC CO₂ (ppm)</span><span class="value">${co2}</span></div>
+            <div class="data-row"><span class="label">SOUTH ATLANTIC ANOMALY</span><span class="value alert">${saa}</span></div>
+            <div class="data-row"><span class="label">SCHUMANN RESONANCE</span><span class="value">${schumann} Hz</span></div>
+            <div class="data-row"><span class="label">ATMOSPHERIC CO₂</span><span class="value">${co2} ppm</span></div>
             <div class="data-row"><span class="label">GEOMAGNETIC ACTIVITY</span><span class="value">G1 • UNSETTLED</span></div>
-            <div class="data-row"><span class="label">BIOSIGNATURE STABILITY</span><span class="value" style="color:#00ff88;">RESILIENT</span></div>
             
-            <div style="margin-top:30px; text-align:center; font-size:1.2rem; color:#ffcc00;">
-                ⚠️ SOLAR CYCLE 25 PEAK APPROACHING • MONITOR CORONAL MASS EJECTIONS
+            ${marketHTML}
+            
+            <div style="margin-top:30px; text-align:center; color:#ffcc00; font-size:1.25rem;">
+                ⚠️ SOLAR CYCLE 25 PEAK • INCOMING CME ACTIVITY DETECTED
             </div>
         `;
     } catch(e) {
@@ -260,7 +286,7 @@ async function refreshEarthData() {
     }
 }
 
-// Dictionary + IP lookup (same as before, but cleaner)
+// Dictionary + IP lookup
 async function searchWord() {
     const input = document.getElementById('search-input').value.trim().toLowerCase();
     const resultDiv = document.getElementById('result');
@@ -272,9 +298,9 @@ async function searchWord() {
 
     resultDiv.innerHTML = `<p style="text-align:center; color:#00ff9d;">DESCENDING INTO THE ABYSS...</p>`;
 
-    const isIPAddr = /^(\d{1,3}\.){3}\d{1,3}$/.test(input);
+    const isIP = /^(\d{1,3}\.){3}\d{1,3}$/.test(input);
 
-    if (isIPAddr) {
+    if (isIP) {
         await lookupIP(input, resultDiv);
     } else {
         await lookupWord(input, resultDiv);
@@ -288,8 +314,8 @@ async function lookupWord(word, div) {
         const data = await res.json();
         const entry = data[0];
 
-        let html = `<div style="font-size:3.2rem; color:var(--accent); margin-bottom:10px;">${entry.word}</div>`;
-        if (entry.phonetic) html += `<div style="color:#00ccff; margin-bottom:25px;">${entry.phonetic}</div>`;
+        let html = `<div style="font-size:3.4rem; color:var(--accent); margin-bottom:15px;">${entry.word}</div>`;
+        if (entry.phonetic) html += `<div style="color:#00ccff; margin-bottom:30px;">${entry.phonetic}</div>`;
 
         entry.meanings.forEach(m => {
             html += `<div style="margin:25px 0;"><strong style="color:#00cc77;">${m.partOfSpeech}</strong><br>`;
@@ -311,24 +337,22 @@ async function lookupIP(ip, div) {
         const data = await res.json();
 
         div.innerHTML = `
-            <div style="font-size:2.8rem; color:#00eeff;">NODE ${ip}</div>
-            <div style="margin:20px 0; color:#88ffdd;">
+            <div style="font-size:2.9rem; color:#00eeff;">NODE ${ip}</div>
+            <div style="margin:25px 0; color:#88ffdd; line-height:1.8;">
                 ${data.city || '—'}, ${data.region || '—'}, ${data.country_name || '—'}<br>
-                ISP: ${data.org || 'UNKNOWN'}
-            </div>
-            <div style="color:#00ccff;">
+                ISP: ${data.org || 'UNKNOWN NODE'}<br>
                 LAT: ${data.latitude} • LON: ${data.longitude}
             </div>
         `;
     } catch(e) {
-        div.innerHTML = `<p style="color:#ff6666;">CANNOT ESTABLISH CONNECTION TO NODE ${ip}</p>`;
+        div.innerHTML = `<p style="color:#ff6666;">CONNECTION TO NODE ${ip} FAILED.</p>`;
     }
 }
 
 // Initialize
 window.onload = () => {
     refreshEarthData();
-    setInterval(refreshEarthData, 120000); // refresh every 2 minutes
+    setInterval(refreshEarthData, 150000); // Refresh every 2.5 minutes
 };
 </script>
 

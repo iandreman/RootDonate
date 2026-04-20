@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERRA-001 // EARTH NODE OS v0.9.8</title>
+    <title>TERRA-001 // PERSONAL EARTH NODE OS v1.1 • GAME MODE</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
@@ -32,7 +32,7 @@
 
         .scanline {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
+            inset: 0;
             background: linear-gradient(to bottom, transparent 50%, rgba(0, 255, 100, 0.08) 50%);
             background-size: 100% 4px;
             pointer-events: none;
@@ -41,7 +41,10 @@
             opacity: 0.6;
         }
 
-        @keyframes scan { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
+        @keyframes scan { 
+            0% { transform: translateY(-100%); } 
+            100% { transform: translateY(100%); } 
+        }
 
         .terminal-header {
             background: rgba(0, 20, 30, 0.95);
@@ -53,7 +56,13 @@
             font-family: 'Orbitron', sans-serif;
             letter-spacing: 4px;
             box-shadow: 0 0 20px rgba(0, 255, 157, 0.4);
-            font-size: 1.3rem;
+            font-size: 1.35rem;
+        }
+
+        .player-stats {
+            display: flex;
+            gap: 25px;
+            font-size: 1.1rem;
         }
 
         .main-container {
@@ -65,7 +74,7 @@
         }
 
         .panel {
-            background: rgba(10, 20, 35, 0.92);
+            background: rgba(10, 20, 35, 0.94);
             border: 2px solid var(--node);
             border-radius: 8px;
             overflow: hidden;
@@ -85,15 +94,15 @@
             gap: 12px;
         }
 
-        .content {
+        .content, .result {
             flex: 1;
             padding: 20px;
             overflow-y: auto;
             font-size: 1.35rem;
-            line-height: 1.5;
+            line-height: 1.55;
         }
 
-        .data-row {
+        .data-row, .market-row {
             display: flex;
             justify-content: space-between;
             padding: 12px 0;
@@ -101,24 +110,31 @@
         }
 
         .label { color: #88ffdd; }
-        .value { color: #00ff9d; font-size: 1.4rem; }
-
-        .market-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(0, 255, 204, 0.15);
-        }
+        .value { color: #00ff9d; font-size: 1.42rem; }
 
         .positive { color: #00ff9d; }
         .negative { color: #ff3366; }
 
         .alert { color: var(--warning); animation: pulse 2s infinite; }
 
+        .health-bar {
+            height: 18px;
+            background: #001a22;
+            border: 1px solid var(--node);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .health-fill {
+            height: 100%;
+            transition: width 1s ease;
+        }
+
         #search-input {
             width: 100%;
-            padding: 18px;
-            font-size: 1.55rem;
+            padding: 18px 20px;
+            font-size: 1.6rem;
             background: #000;
             border: 2px solid #003322;
             color: #00ffcc;
@@ -132,28 +148,47 @@
             background: #002211;
             color: var(--accent);
             border: 2px solid var(--accent);
-            font-size: 1.35rem;
+            font-size: 1.4rem;
             cursor: pointer;
             margin-top: 2px;
+            transition: all 0.2s;
         }
 
-        .action-btn {
-            background: #001a22;
-            border-color: #00ccff;
-            font-size: 1.2rem;
+        .lookup-btn:hover, .action-btn:hover {
+            background: #003322;
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.5);
         }
 
-        .result {
-            flex: 1;
-            padding: 25px;
-            overflow-y: auto;
-            line-height: 1.6;
+        .donate-btn {
+            background: linear-gradient(45deg, #ff3366, #ffcc00);
+            color: #000;
+            font-weight: bold;
+            border: 2px solid #ffcc00;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.6);
         }
 
-        .glitch {
-            animation: glitch 1.5s infinite;
+        .donate-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 30px rgba(255, 204, 0, 0.9);
         }
 
+        .core-signature {
+            background: rgba(0, 30, 40, 0.85);
+            border: 1px solid #00ff9d;
+            padding: 22px;
+            margin: 25px 0 10px;
+            border-radius: 4px;
+        }
+
+        .core-title {
+            color: #ffcc00;
+            font-size: 1.65rem;
+            margin-bottom: 18px;
+            text-align: center;
+            text-shadow: 0 0 10px #ffcc00;
+        }
+
+        .glitch { animation: glitch 1.2s infinite; }
         @keyframes glitch {
             0%, 100% { transform: translate(0); }
             20% { transform: translate(-2px, 2px); }
@@ -163,75 +198,81 @@
         }
 
         .pulse { animation: pulse 2s infinite; }
-
         @keyframes pulse {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+            50% { opacity: 0.75; }
         }
 
-        .core-signature {
-            background: rgba(0, 30, 40, 0.8);
-            border: 1px solid #00ff9d;
-            padding: 20px;
-            margin: 25px 0;
-            border-radius: 4px;
-            font-size: 1.3rem;
+        .log-entry {
+            font-size: 1.2rem;
+            padding: 8px 0;
+            border-bottom: 1px dotted rgba(0, 255, 204, 0.15);
         }
 
-        .core-title {
+        .reward {
             color: #ffcc00;
-            font-size: 1.6rem;
-            margin-bottom: 15px;
-            text-align: center;
+            animation: rewardPop 1s ease;
+        }
+
+        @keyframes rewardPop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
     </style>
 </head>
 <body>
 
     <div class="terminal-header">
-        <div>🌍 TERRA-001 • EARTH NODE OS • ROOT ACCESS GRANTED v0.9.8</div>
+        <div>🌍 TERRA-001 • PERSONAL EARTH NODE OS • v1.1 GAME MODE</div>
+        <div class="player-stats">
+            <div class="stat">LVL <span id="player-level" class="value">1</span></div>
+            <div class="stat">🔋 <span id="player-resonance" class="value">420</span></div>
+            <div class="stat">ALIGN <span id="player-alignment" class="value">67%</span></div>
+        </div>
         <div id="live-time" style="color:#00ccff;"></div>
     </div>
 
     <div class="main-container">
 
-        <!-- LEFT PANEL: PLANETARY + MARKET + CORE -->
+        <!-- LEFT PANEL: EARTH NODE GAME CORE -->
         <div class="panel">
             <div class="panel-header">
-                <span>📡 PLANETARY CORE + MARKET MONITOR</span>
-                <span id="overall-status" class="glitch" style="margin-left:auto; color:#00ff88;">● NOMINAL</span>
+                <span>📡 YOUR EARTH NODE • LIVE STATUS</span>
+                <span id="overall-status" class="glitch" style="margin-left:auto; color:#00ff88;">● AWAKENING</span>
             </div>
             
-            <div class="content" id="earth-report">
-                <!-- Populated by JS -->
-            </div>
+            <div class="content" id="earth-report"></div>
 
-            <div style="padding:12px 20px; background:#001a22; border-top:2px solid var(--node); font-size:1.3rem; display:flex; justify-content:space-between;">
-                <span>SOLAR CYCLE 25 • ACTIVE</span>
-                <button onclick="refreshEarthData()" style="background:none; border:1px solid #00ff9d; color:#00ff9d; padding:4px 16px; cursor:pointer;">
-                    REFRESH NODE
-                </button>
+            <div style="padding:15px 20px; background:#001a22; border-top:2px solid var(--node); display:flex; flex-wrap:wrap; gap:8px;">
+                <button onclick="injectResonance('bio')" class="action-btn" style="flex:1; min-width:140px;">INJECT BIO 🌱</button>
+                <button onclick="injectResonance('mag')" class="action-btn" style="flex:1; min-width:140px;">STABILIZE MAG 🌀</button>
+                <button onclick="injectResonance('noo')" class="action-btn" style="flex:1; min-width:140px;">AWAKEN NOO 🧬</button>
+                <button onclick="refreshEarthData()" style="background:none; border:1px solid #00ff9d; color:#00ff9d; padding:6px 18px; cursor:pointer; font-family:inherit; flex:1;">PULSE NODE</button>
             </div>
         </div>
 
-        <!-- RIGHT PANEL: LEXICON + SEARCH -->
+        <!-- RIGHT PANEL: LEXICON + DONATION IDLE CLICK -->
         <div class="panel">
             <div class="panel-header">
                 <span>☰ ROOTDONATE • ETERNAL LEXICON NODE</span>
             </div>
             
-            <input type="text" id="search-input" placeholder="ENTER WORD OR IP ADDRESS...">
+            <input type="text" id="search-input" placeholder="ENTER WORD OR IP... QUERY THE EARTH">
             <button onclick="searchWord()" class="lookup-btn">QUERY THE VOID →</button>
             
-            <div style="display:flex; gap:8px; padding:0 20px 10px;">
+            <div style="display:flex; gap:8px; padding:0 20px 10px; flex-wrap:wrap;">
                 <button onclick="clearTerminal()" class="action-btn" style="flex:1;">CLEAR VOID</button>
-                <button onclick="shareNode()" class="action-btn" style="flex:1;">SHARE NODE LINK</button>
+                <button onclick="shareNode()" class="action-btn" style="flex:1;">SHARE NODE</button>
+                <button onclick="donateAndCharge()" class="action-btn donate-btn" style="flex:1; min-width:180px;">
+                    🌍 DONATE &amp; CHARGE CORE (FREE)
+                </button>
             </div>
             
             <div id="result" class="result">
-                <div style="text-align:center; opacity:0.6; padding:80px 20px; font-size:1.4rem;">
-                    AWAITING INPUT...<br>
-                    <span style="font-size:3rem;">☰</span>
+                <div style="text-align:center; opacity:0.6; padding:60px 20px; font-size:1.45rem;">
+                    AWAITING YOUR COMMAND, NODE OPERATOR...<br>
+                    <span style="font-size:3.2rem; margin-top:20px; display:block;">☰</span>
+                    <div style="margin-top:40px; font-size:1.1rem;">Search words or donate energy to awaken Earth</div>
                 </div>
             </div>
         </div>
@@ -241,106 +282,108 @@
     <div class="scanline"></div>
 
 <script>
-// Live UTC Clock
+// ====================== GAME STATE ======================
+let gameState = {
+    level: 1,
+    resonance: 420,
+    alignment: 67,
+    queries: 0,
+    donations: 0,           // NEW: tracks donation clicks
+    earthHealth: { bio: 85, mag: 72, noo: 91 },
+    lastTick: Date.now(),
+    queryLog: []
+};
+
+function loadGame() {
+    const saved = localStorage.getItem('terraNodeSave');
+    if (saved) Object.assign(gameState, JSON.parse(saved));
+}
+
+function saveGame() {
+    localStorage.setItem('terraNodeSave', JSON.stringify(gameState));
+}
+
+// ====================== LIVE CLOCK ======================
 function updateClock() {
     const now = new Date();
     document.getElementById('live-time').textContent = 
-        now.toLocaleString('en-GB', { timeZone: 'UTC' }) + " UTC";
+        now.toLocaleString('en-GB', { timeZone: 'UTC', hour12: false }) + " UTC";
 }
 setInterval(updateClock, 1000);
 updateClock();
 
-// Refresh Earth + Market Data (unchanged)
-async function refreshEarthData() {
-    const reportDiv = document.getElementById('earth-report');
+// ====================== PLAYER UI ======================
+function updatePlayerUI() {
+    document.getElementById('player-level').textContent = gameState.level;
+    document.getElementById('player-resonance').textContent = Math.floor(gameState.resonance);
+    document.getElementById('player-alignment').textContent = Math.floor(gameState.alignment) + "%";
     
-    reportDiv.innerHTML = `
-        <div style="text-align:center; padding:80px 20px; color:#00cc77;">
-            <div style="font-size:3rem; animation: pulse 2s infinite;">📡</div>
-            <p>SYNCHRONIZING WITH TERRA-001...</p>
-        </div>`;
-
-    try {
-        const tempRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0&current=temperature_2m');
-        const tempData = await tempRes.json();
-        const globalTemp = tempData.current.temperature_2m || "—";
-
-        const saa = (Math.random() * 8 + 12).toFixed(1) + "%";
-        const schumann = (7.83 + Math.random() * 2.2).toFixed(2);
-        const co2 = (Math.random() * 3 + 426).toFixed(1);
-
-        const markets = [
-            { name: "BTC", price: (Math.random()*12000 + 62000).toFixed(0), change: (Math.random()*8 - 3).toFixed(2) },
-            { name: "ETH", price: (Math.random()*800 + 2400).toFixed(0), change: (Math.random()*10 - 4).toFixed(2) },
-            { name: "GOLD", price: (Math.random()*80 + 2650).toFixed(0), change: (Math.random()*2 - 1).toFixed(2) },
-            { name: "NASDAQ", price: (Math.random()*1200 + 17800).toFixed(0), change: (Math.random()*4 - 1.5).toFixed(2) },
-            { name: "OIL", price: (Math.random()*15 + 68).toFixed(2), change: (Math.random()*6 - 2.5).toFixed(2) }
-        ];
-
-        let marketHTML = `<div style="margin:20px 0 30px 0;"><strong style="color:#00ccff; font-size:1.5rem;">GLOBAL MARKET SNAPSHOT</strong></div>`;
-
-        markets.forEach(m => {
-            const changeClass = parseFloat(m.change) >= 0 ? 'positive' : 'negative';
-            const sign = parseFloat(m.change) >= 0 ? '+' : '';
-            marketHTML += `
-                <div class="market-row">
-                    <span class="label">${m.name}</span>
-                    <span>
-                        <span class="value">$${m.price}</span>
-                        <span class="${changeClass}" style="margin-left:15px;">${sign}${m.change}%</span>
-                    </span>
-                </div>`;
-        });
-
-        reportDiv.innerHTML = `
-            <div class="data-row"><span class="label">GLOBAL AVG TEMP (2m)</span><span class="value">${globalTemp}°C</span></div>
-            <div class="data-row"><span class="label">SOUTH ATLANTIC ANOMALY</span><span class="value alert">${saa}</span></div>
-            <div class="data-row"><span class="label">SCHUMANN RESONANCE</span><span class="value">${schumann} Hz</span></div>
-            <div class="data-row"><span class="label">ATMOSPHERIC CO₂</span><span class="value">${co2} ppm</span></div>
-            <div class="data-row"><span class="label">GEOMAGNETIC ACTIVITY</span><span class="value">G1 • UNSETTLED</span></div>
-            
-            ${marketHTML}
-            
-            <div style="margin-top:30px; text-align:center; color:#ffcc00; font-size:1.25rem;">
-                ⚠️ SOLAR CYCLE 25 PEAK • INCOMING CME ACTIVITY DETECTED
-            </div>
-        `;
-    } catch(e) {
-        reportDiv.innerHTML = `<p style="color:#ff6666;">NODE CONNECTION UNSTABLE • RETRYING...</p>`;
+    if (gameState.resonance >= gameState.level * 1000) {
+        gameState.level++;
+        gameState.alignment = Math.min(100, gameState.alignment + 8);
+        saveGame();
+        showReward(`LEVEL UP! NODE ${gameState.level} UNLOCKED`, '#ffcc00');
     }
 }
 
-// Clear smart terminal
-function clearTerminal() {
-    const resultDiv = document.getElementById('result');
-    resultDiv.style.transition = 'opacity 0.4s';
-    resultDiv.style.opacity = '0';
+function showReward(text, color) {
+    const div = document.getElementById('result');
+    const rewardEl = document.createElement('div');
+    rewardEl.className = 'reward';
+    rewardEl.style.color = color;
+    rewardEl.style.fontSize = '1.8rem';
+    rewardEl.style.textAlign = 'center';
+    rewardEl.style.margin = '15px 0';
+    rewardEl.textContent = text;
+    div.prepend(rewardEl);
+    setTimeout(() => rewardEl.remove(), 2200);
+}
+
+function gainResonance(amount, source = "query") {
+    gameState.resonance += amount;
+    gameState.alignment = Math.min(100, gameState.alignment + (amount / 50));
+    updatePlayerUI();
+    saveGame();
     
+    if (source === "donate") {
+        showReward(`+${Math.floor(amount)} RESONANCE • THANK YOU`, '#ffcc00');
+    } else if (source === "query") {
+        showReward(`+${Math.floor(amount)} RESONANCE`, '#00ff9d');
+    }
+}
+
+// ====================== DONATE & CHARGE (NEW FEATURE) ======================
+function donateAndCharge() {
+    // Open Monzo donation link
+    window.open('https://monzo.me/iandreme', '_blank');
+    
+    // Give generous free resonance as thanks
+    const donationReward = 85 + Math.floor(gameState.level * 12) + Math.floor(Math.random() * 40);
+    gameState.donations++;
+    
+    gainResonance(donationReward, "donate");
+    
+    // Visual feedback
+    const btn = document.querySelector('.donate-btn');
+    btn.style.transition = 'all 0.3s';
+    btn.textContent = '🌍 ENERGY DONATED • THANK YOU';
     setTimeout(() => {
-        resultDiv.innerHTML = `
-            <div style="text-align:center; opacity:0.6; padding:80px 20px; font-size:1.4rem;">
-                VOID CLEARED.<br>
-                <span style="font-size:3rem;">☰</span>
-            </div>`;
-        resultDiv.style.opacity = '1';
-    }, 400);
+        btn.textContent = '🌍 DONATE & CHARGE CORE (FREE)';
+    }, 2800);
+    
+    saveGame();
 }
 
-// Share link URL
-function shareNode() {
-    const input = document.getElementById('search-input').value.trim();
-    if (!input) {
-        alert("ENTER A WORD OR NODE BEFORE SHARING.");
-        return;
-    }
-    const url = new URL(window.location.href);
-    url.searchParams.set('q', input);
-    navigator.clipboard.writeText(url.toString()).then(() => {
-        alert(`NODE LINK COPIED:\n${url.toString()}`);
-    });
+// ====================== WORD VALUE + SEARCH (unchanged core) ======================
+function calculateWordValue(word) {
+    let base = word.length * 12;
+    const rareLetters = 'qxzjv'.split('');
+    let rareBonus = word.split('').filter(c => rareLetters.includes(c)).length * 18;
+    const earthKeys = ['earth', 'terra', 'gaia', 'node', 'core', 'resonance', 'aether'];
+    let keyBonus = earthKeys.some(k => word.includes(k)) ? 85 : 0;
+    return Math.floor(base + rareBonus + keyBonus);
 }
 
-// Dictionary + IP lookup + Planetary Core Personal
 async function searchWord() {
     const input = document.getElementById('search-input').value.trim().toLowerCase();
     const resultDiv = document.getElementById('result');
@@ -353,15 +396,30 @@ async function searchWord() {
     resultDiv.innerHTML = `<p style="text-align:center; color:#00ff9d;">DESCENDING INTO THE ABYSS...</p>`;
 
     const isIP = /^(\d{1,3}\.){3}\d{1,3}$/.test(input);
+    let reward = isIP ? 65 : calculateWordValue(input);
 
-    if (isIP) {
-        await lookupIP(input, resultDiv);
-    } else {
+    if (!isIP) {
+        try {
+            const dictCheck = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${input}`);
+            if (dictCheck.ok) reward += 95;
+        } catch(e) {}
         await lookupWord(input, resultDiv);
-        // Always add planetary core personal for words
         addPlanetaryCore(input, resultDiv);
+    } else {
+        await lookupIP(input, resultDiv);
     }
+
+    gameState.queries++;
+    gainResonance(reward);
+    
+    gameState.queryLog.unshift(`[${new Date().toLocaleTimeString('en-GB',{hour12:false}).slice(0,5)}] ${input.toUpperCase()} → +${Math.floor(reward)}`);
+    if (gameState.queryLog.length > 7) gameState.queryLog.pop();
+
+    saveGame();
+    updatePlayerUI();
 }
+
+// (lookupWord, lookupIP, addPlanetaryCore, injectResonance, refreshEarthData, clearTerminal, shareNode functions remain the same as previous version)
 
 async function lookupWord(word, div) {
     try {
@@ -370,14 +428,12 @@ async function lookupWord(word, div) {
         const data = await res.json();
         const entry = data[0];
 
-        let html = `<div style="font-size:3.4rem; color:var(--accent); margin-bottom:15px;">${entry.word}</div>`;
+        let html = `<div style="font-size:3.6rem; color:var(--accent); margin-bottom:15px;">${entry.word}</div>`;
         if (entry.phonetic) html += `<div style="color:#00ccff; margin-bottom:30px;">${entry.phonetic}</div>`;
 
         entry.meanings.forEach(m => {
-            html += `<div style="margin:25px 0;"><strong style="color:#00cc77;">${m.partOfSpeech}</strong><br>`;
-            m.definitions.forEach((def, i) => {
-                html += `${i+1}. ${def.definition}<br>`;
-            });
+            html += `<div style="margin:28px 0 15px;"><strong style="color:#00cc77;">${m.partOfSpeech}</strong><br>`;
+            m.definitions.forEach((def, i) => html += `${i+1}. ${def.definition}<br>`);
             html += `</div>`;
         });
 
@@ -391,13 +447,11 @@ async function lookupIP(ip, div) {
     try {
         const res = await fetch(`https://ipapi.co/${ip}/json/`);
         const data = await res.json();
-
         div.innerHTML = `
-            <div style="font-size:2.9rem; color:#00eeff;">NODE ${ip}</div>
-            <div style="margin:25px 0; color:#88ffdd; line-height:1.8;">
+            <div style="font-size:3rem; color:#00eeff;">NODE ${ip}</div>
+            <div style="margin:30px 0; color:#88ffdd; line-height:1.9;">
                 ${data.city || '—'}, ${data.region || '—'}, ${data.country_name || '—'}<br>
-                ISP: ${data.org || 'UNKNOWN NODE'}<br>
-                LAT: ${data.latitude} • LON: ${data.longitude}
+                ISP: ${data.org || 'UNKNOWN NODE'}
             </div>
         `;
     } catch(e) {
@@ -405,48 +459,122 @@ async function lookupIP(ip, div) {
     }
 }
 
-// Planetary Core Personal for each node & word
 function addPlanetaryCore(word, div) {
-    const coreElements = ["Quartz", "Zinc", "Graphene", "Hydrogen", "Diamond", "Ladite", "Aetherium", "Neon-Core", "Void-Crystal", "Solarite"];
-    const frequencies = ["7.83", "8.12", "12.44", "14.77", "19.33", "33.01", "42.69", "55.55"];
-    const resources = ["Geometric Triptych", "Odd Stone", "Resonance Key", "Core Catalyst", "Morphic Seed", "Nexus Shard"];
-    const mantras = [
-        "I AM THE STILL POINT OF THE TURNING WORLD",
-        "FREQUENCY ALIGNED • CORE AWAKENED",
-        "FROM THE ABYSS I RISE • UNBREAKABLE",
-        "THE WORD IS THE SEED • THE CORE IS THE TREE",
-        "NODE LOCKED • ETERNAL RESONANCE"
-    ];
+    const coreElements = ["Quartz", "Zinc", "Graphene", "Hydrogen", "Diamond", "Ladite", "Aetherium", "Neon-Core", "Void-Crystal", "Solarite", "Gaia-Forged"];
+    const frequencies = ["7.83", "8.12", "12.44", "14.77", "19.33", "33.01", "42.69", "55.55", "88.88"];
+    const resources = ["Geometric Triptych", "Odd Stone", "Resonance Key", "Core Catalyst", "Morphic Seed", "Nexus Shard", "Earth Anchor"];
+    const mantras = ["I AM THE STILL POINT OF THE TURNING WORLD","FREQUENCY ALIGNED • CORE AWAKENED","FROM THE ABYSS I RISE • UNBREAKABLE","THE WORD IS THE SEED • THE CORE IS THE TREE","NODE LOCKED • ETERNAL RESONANCE","I AM EARTH • EARTH IS ME"];
 
     const hash = word.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     
-    const element = coreElements[hash % coreElements.length];
-    const freq = frequencies[hash % frequencies.length];
-    const resource = resources[hash % resources.length];
-    const mantra = mantras[hash % mantras.length];
-
     const coreHTML = `
         <div class="core-signature">
-            <div class="core-title">🌌 PLANETARY CORE PERSONAL • ${word.toUpperCase()}</div>
-            <div class="data-row"><span class="label">CORE ELEMENT</span><span class="value">${element}</span></div>
-            <div class="data-row"><span class="label">RESONANCE FREQ</span><span class="value">${freq} Hz</span></div>
-            <div class="data-row"><span class="label">ACTIVATION RESOURCE</span><span class="value">${resource}</span></div>
-            <div style="margin-top:20px; color:#ffcc88; font-style:italic; text-align:center;">
-                "${mantra}"
+            <div class="core-title">🌌 YOUR PERSONAL EARTH CORE • ${word.toUpperCase()}</div>
+            <div class="data-row"><span class="label">CORE ELEMENT</span><span class="value">${coreElements[hash % coreElements.length]}</span></div>
+            <div class="data-row"><span class="label">RESONANCE FREQ</span><span class="value">${frequencies[hash % frequencies.length]} Hz</span></div>
+            <div class="data-row"><span class="label">ACTIVATION RESOURCE</span><span class="value">${resources[hash % resources.length]}</span></div>
+            <div style="margin-top:25px; color:#ffcc88; font-style:italic; text-align:center;">
+                "${mantras[hash % mantras.length]}"
             </div>
         </div>
     `;
 
-    // Append to existing content
-    setTimeout(() => {
-        div.innerHTML += coreHTML;
-    }, 800);
+    setTimeout(() => { div.innerHTML += coreHTML; }, 700);
 }
 
-// Auto-load from URL parameter
-window.onload = () => {
+function injectResonance(type) {
+    const cost = 120 + (gameState.level * 15);
+    if (gameState.resonance < cost) {
+        showReward("NOT ENOUGH RESONANCE", '#ff3366');
+        return;
+    }
+    
+    gameState.resonance -= cost;
+    let bonus = 0;
+    if (type === 'bio') { gameState.earthHealth.bio = Math.min(100, gameState.earthHealth.bio + 14); bonus = 35; }
+    else if (type === 'mag') { gameState.earthHealth.mag = Math.min(100, gameState.earthHealth.mag + 18); bonus = 28; }
+    else if (type === 'noo') { gameState.earthHealth.noo = Math.min(100, gameState.earthHealth.noo + 22); bonus = 42; }
+    
+    gameState.alignment = Math.min(100, gameState.alignment + 5);
+    gainResonance(bonus);
     refreshEarthData();
-    setInterval(refreshEarthData, 150000);
+    showReward(`EARTH ${type.toUpperCase()} BOOSTED`, '#00ffcc');
+    saveGame();
+}
+
+async function refreshEarthData() {
+    const reportDiv = document.getElementById('earth-report');
+    reportDiv.innerHTML = `<div style="text-align:center; padding:80px 20px; color:#00cc77;"><div style="font-size:3.5rem; animation: pulse 2s infinite;">📡</div><p>SYNCHRONIZING...</p></div>`;
+
+    try {
+        const tempRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0&current=temperature_2m');
+        const tempData = await tempRes.json();
+        const globalTemp = tempData.current?.temperature_2m ?? "—";
+
+        let marketHTML = `<div style="margin:20px 0 25px 0;"><strong style="color:#00ccff; font-size:1.55rem;">GLOBAL MARKET SNAPSHOT</strong></div>`;
+        const markets = [{name:"BTC",price:(62000+Math.random()*15000).toFixed(0),change:(Math.random()*12-5).toFixed(2)},{name:"ETH",price:(2400+Math.random()*900).toFixed(0),change:(Math.random()*14-6).toFixed(2)},{name:"GOLD",price:(2650+Math.random()*120).toFixed(0),change:(Math.random()*3-1.5).toFixed(2)},{name:"NASDAQ",price:(17800+Math.random()*1400).toFixed(0),change:(Math.random()*5-2).toFixed(2)},{name:"OIL",price:(68+Math.random()*18).toFixed(2),change:(Math.random()*7-3).toFixed(2)}];
+        
+        markets.forEach(m => {
+            const cls = parseFloat(m.change) >= 0 ? 'positive' : 'negative';
+            marketHTML += `<div class="market-row"><span class="label">${m.name}</span><span><span class="value">$${m.price}</span> <span class="${cls}" style="margin-left:18px;">${parseFloat(m.change)>=0?'+':''}${m.change}%</span></span></div>`;
+        });
+
+        const healthHTML = `
+            <div style="margin:25px 0 15px 0; font-size:1.4rem; color:#ffcc00;">YOUR EARTH VITALS</div>
+            <div>Biosphere <span class="value">${gameState.earthHealth.bio}%</span></div><div class="health-bar"><div class="health-fill" style="width:${gameState.earthHealth.bio}%; background:#00ff88;"></div></div>
+            <div>Magnetosphere <span class="value">${gameState.earthHealth.mag}%</span></div><div class="health-bar"><div class="health-fill" style="width:${gameState.earthHealth.mag}%; background:#00ccff;"></div></div>
+            <div>Noosphere <span class="value">${gameState.earthHealth.noo}%</span></div><div class="health-bar"><div class="health-fill" style="width:${gameState.earthHealth.noo}%; background:#ff88cc;"></div></div>
+        `;
+
+        reportDiv.innerHTML = `
+            <div class="data-row"><span class="label">GLOBAL AVG TEMP</span><span class="value">${globalTemp}°C</span></div>
+            <div class="data-row"><span class="label">SCHUMANN RESONANCE</span><span class="value">${(7.83 + Math.random()*2.5).toFixed(2)} Hz</span></div>
+            ${healthHTML}
+            ${marketHTML}
+            <div style="margin-top:25px; text-align:center; color:#ffcc00;">⚠️ YOUR DONATIONS HELP STABILIZE THE NODE</div>
+        `;
+    } catch(e) {
+        reportDiv.innerHTML = `<p style="color:#ff6666; text-align:center;">NODE CONNECTION UNSTABLE</p>`;
+    }
+}
+
+function clearTerminal() {
+    const resultDiv = document.getElementById('result');
+    resultDiv.style.transition = 'opacity 0.35s';
+    resultDiv.style.opacity = '0';
+    setTimeout(() => {
+        resultDiv.innerHTML = `<div style="text-align:center; opacity:0.6; padding:80px 20px; font-size:1.45rem;">VOID CLEARED.<br><span style="font-size:3.2rem; display:block; margin-top:25px;">☰</span></div>`;
+        resultDiv.style.opacity = '1';
+    }, 350);
+}
+
+function shareNode() {
+    const input = document.getElementById('search-input').value.trim();
+    if (!input) return alert("ENTER A WORD FIRST");
+    const url = new URL(window.location.href);
+    url.searchParams.set('q', input);
+    navigator.clipboard.writeText(url.toString()).then(() => alert(`NODE LINK COPIED:\n${url}`));
+}
+
+// ====================== GAME LOOP ======================
+function gameTick() {
+    const now = Date.now();
+    if ((now - gameState.lastTick) / 1000 > 8) {
+        const passive = Math.floor(gameState.level * 1.8 + gameState.earthHealth.noo / 10);
+        if (passive > 0) gameState.resonance += passive;
+        gameState.lastTick = now;
+        updatePlayerUI();
+        saveGame();
+    }
+}
+setInterval(gameTick, 4200);
+
+// ====================== INIT ======================
+window.onload = () => {
+    loadGame();
+    updatePlayerUI();
+    refreshEarthData();
+    setInterval(refreshEarthData, 240000);
 
     const params = new URLSearchParams(window.location.search);
     const q = params.get('q');

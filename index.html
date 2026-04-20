@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERRA-001 // EARTH NODE OS v0.9.7</title>
+    <title>TERRA-001 // EARTH NODE OS v0.9.8</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
@@ -126,7 +126,7 @@
             outline: none;
         }
 
-        .lookup-btn {
+        .lookup-btn, .action-btn {
             width: 100%;
             padding: 18px;
             background: #002211;
@@ -135,6 +135,12 @@
             font-size: 1.35rem;
             cursor: pointer;
             margin-top: 2px;
+        }
+
+        .action-btn {
+            background: #001a22;
+            border-color: #00ccff;
+            font-size: 1.2rem;
         }
 
         .result {
@@ -162,18 +168,34 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
         }
+
+        .core-signature {
+            background: rgba(0, 30, 40, 0.8);
+            border: 1px solid #00ff9d;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+            font-size: 1.3rem;
+        }
+
+        .core-title {
+            color: #ffcc00;
+            font-size: 1.6rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 
     <div class="terminal-header">
-        <div>🌍 TERRA-001 • EARTH NODE OS • ROOT ACCESS GRANTED v0.9.7</div>
+        <div>🌍 TERRA-001 • EARTH NODE OS • ROOT ACCESS GRANTED v0.9.8</div>
         <div id="live-time" style="color:#00ccff;"></div>
     </div>
 
     <div class="main-container">
 
-        <!-- LEFT PANEL: PLANETARY + MARKET -->
+        <!-- LEFT PANEL: PLANETARY + MARKET + CORE -->
         <div class="panel">
             <div class="panel-header">
                 <span>📡 PLANETARY CORE + MARKET MONITOR</span>
@@ -201,6 +223,11 @@
             <input type="text" id="search-input" placeholder="ENTER WORD OR IP ADDRESS...">
             <button onclick="searchWord()" class="lookup-btn">QUERY THE VOID →</button>
             
+            <div style="display:flex; gap:8px; padding:0 20px 10px;">
+                <button onclick="clearTerminal()" class="action-btn" style="flex:1;">CLEAR VOID</button>
+                <button onclick="shareNode()" class="action-btn" style="flex:1;">SHARE NODE LINK</button>
+            </div>
+            
             <div id="result" class="result">
                 <div style="text-align:center; opacity:0.6; padding:80px 20px; font-size:1.4rem;">
                     AWAITING INPUT...<br>
@@ -223,7 +250,7 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// Refresh Earth + Market Data
+// Refresh Earth + Market Data (unchanged)
 async function refreshEarthData() {
     const reportDiv = document.getElementById('earth-report');
     
@@ -234,17 +261,14 @@ async function refreshEarthData() {
         </div>`;
 
     try {
-        // Global temperature (real API)
         const tempRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0&current=temperature_2m');
         const tempData = await tempRes.json();
         const globalTemp = tempData.current.temperature_2m || "—";
 
-        // Simulated realistic values
         const saa = (Math.random() * 8 + 12).toFixed(1) + "%";
         const schumann = (7.83 + Math.random() * 2.2).toFixed(2);
         const co2 = (Math.random() * 3 + 426).toFixed(1);
 
-        // Market simulation
         const markets = [
             { name: "BTC", price: (Math.random()*12000 + 62000).toFixed(0), change: (Math.random()*8 - 3).toFixed(2) },
             { name: "ETH", price: (Math.random()*800 + 2400).toFixed(0), change: (Math.random()*10 - 4).toFixed(2) },
@@ -286,7 +310,37 @@ async function refreshEarthData() {
     }
 }
 
-// Dictionary + IP lookup
+// Clear smart terminal
+function clearTerminal() {
+    const resultDiv = document.getElementById('result');
+    resultDiv.style.transition = 'opacity 0.4s';
+    resultDiv.style.opacity = '0';
+    
+    setTimeout(() => {
+        resultDiv.innerHTML = `
+            <div style="text-align:center; opacity:0.6; padding:80px 20px; font-size:1.4rem;">
+                VOID CLEARED.<br>
+                <span style="font-size:3rem;">☰</span>
+            </div>`;
+        resultDiv.style.opacity = '1';
+    }, 400);
+}
+
+// Share link URL
+function shareNode() {
+    const input = document.getElementById('search-input').value.trim();
+    if (!input) {
+        alert("ENTER A WORD OR NODE BEFORE SHARING.");
+        return;
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.set('q', input);
+    navigator.clipboard.writeText(url.toString()).then(() => {
+        alert(`NODE LINK COPIED:\n${url.toString()}`);
+    });
+}
+
+// Dictionary + IP lookup + Planetary Core Personal
 async function searchWord() {
     const input = document.getElementById('search-input').value.trim().toLowerCase();
     const resultDiv = document.getElementById('result');
@@ -304,6 +358,8 @@ async function searchWord() {
         await lookupIP(input, resultDiv);
     } else {
         await lookupWord(input, resultDiv);
+        // Always add planetary core personal for words
+        addPlanetaryCore(input, resultDiv);
     }
 }
 
@@ -349,10 +405,55 @@ async function lookupIP(ip, div) {
     }
 }
 
-// Initialize
+// Planetary Core Personal for each node & word
+function addPlanetaryCore(word, div) {
+    const coreElements = ["Quartz", "Zinc", "Graphene", "Hydrogen", "Diamond", "Ladite", "Aetherium", "Neon-Core", "Void-Crystal", "Solarite"];
+    const frequencies = ["7.83", "8.12", "12.44", "14.77", "19.33", "33.01", "42.69", "55.55"];
+    const resources = ["Geometric Triptych", "Odd Stone", "Resonance Key", "Core Catalyst", "Morphic Seed", "Nexus Shard"];
+    const mantras = [
+        "I AM THE STILL POINT OF THE TURNING WORLD",
+        "FREQUENCY ALIGNED • CORE AWAKENED",
+        "FROM THE ABYSS I RISE • UNBREAKABLE",
+        "THE WORD IS THE SEED • THE CORE IS THE TREE",
+        "NODE LOCKED • ETERNAL RESONANCE"
+    ];
+
+    const hash = word.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    
+    const element = coreElements[hash % coreElements.length];
+    const freq = frequencies[hash % frequencies.length];
+    const resource = resources[hash % resources.length];
+    const mantra = mantras[hash % mantras.length];
+
+    const coreHTML = `
+        <div class="core-signature">
+            <div class="core-title">🌌 PLANETARY CORE PERSONAL • ${word.toUpperCase()}</div>
+            <div class="data-row"><span class="label">CORE ELEMENT</span><span class="value">${element}</span></div>
+            <div class="data-row"><span class="label">RESONANCE FREQ</span><span class="value">${freq} Hz</span></div>
+            <div class="data-row"><span class="label">ACTIVATION RESOURCE</span><span class="value">${resource}</span></div>
+            <div style="margin-top:20px; color:#ffcc88; font-style:italic; text-align:center;">
+                "${mantra}"
+            </div>
+        </div>
+    `;
+
+    // Append to existing content
+    setTimeout(() => {
+        div.innerHTML += coreHTML;
+    }, 800);
+}
+
+// Auto-load from URL parameter
 window.onload = () => {
     refreshEarthData();
-    setInterval(refreshEarthData, 150000); // Refresh every 2.5 minutes
+    setInterval(refreshEarthData, 150000);
+
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('q');
+    if (q) {
+        document.getElementById('search-input').value = q;
+        searchWord();
+    }
 };
 </script>
 

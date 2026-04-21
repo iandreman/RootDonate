@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERRA-001 // PERSONAL EARTH NODE OS v1.1 • GAME MODE</title>
+    <title>TERRA-001 // PERSONAL EARTH NODE OS v1.2 • GAME MODE</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
@@ -57,6 +57,8 @@
             letter-spacing: 4px;
             box-shadow: 0 0 20px rgba(0, 255, 157, 0.4);
             font-size: 1.35rem;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .player-stats {
@@ -71,6 +73,10 @@
             gap: 20px;
             padding: 20px;
             height: calc(100vh - 68px);
+        }
+
+        @media (max-width: 900px) {
+            .main-container { grid-template-columns: 1fr; }
         }
 
         .panel {
@@ -223,7 +229,7 @@
 <body>
 
     <div class="terminal-header">
-        <div>🌍 TERRA-001 • PERSONAL EARTH NODE OS • v1.1 GAME MODE</div>
+        <div>🌍 TERRA-001 • PERSONAL EARTH NODE OS • v1.2 GAME MODE</div>
         <div class="player-stats">
             <div class="stat">LVL <span id="player-level" class="value">1</span></div>
             <div class="stat">🔋 <span id="player-resonance" class="value">420</span></div>
@@ -251,7 +257,7 @@
             </div>
         </div>
 
-        <!-- RIGHT PANEL: LEXICON + DONATION IDLE CLICK -->
+        <!-- RIGHT PANEL: LEXICON + DONATION -->
         <div class="panel">
             <div class="panel-header">
                 <span>☰ ROOTDONATE • ETERNAL LEXICON NODE</span>
@@ -288,7 +294,7 @@ let gameState = {
     resonance: 420,
     alignment: 67,
     queries: 0,
-    donations: 0,           // NEW: tracks donation clicks
+    donations: 0,
     earthHealth: { bio: 85, mag: 72, noo: 91 },
     lastTick: Date.now(),
     queryLog: []
@@ -352,29 +358,26 @@ function gainResonance(amount, source = "query") {
     }
 }
 
-// ====================== DONATE & CHARGE (NEW FEATURE) ======================
+// ====================== DONATE & CHARGE ======================
 function donateAndCharge() {
-    // Open Monzo donation link
     window.open('https://monzo.me/iandreme', '_blank');
     
-    // Give generous free resonance as thanks
     const donationReward = 85 + Math.floor(gameState.level * 12) + Math.floor(Math.random() * 40);
     gameState.donations++;
     
     gainResonance(donationReward, "donate");
     
-    // Visual feedback
     const btn = document.querySelector('.donate-btn');
-    btn.style.transition = 'all 0.3s';
+    const originalText = btn.textContent;
     btn.textContent = '🌍 ENERGY DONATED • THANK YOU';
     setTimeout(() => {
-        btn.textContent = '🌍 DONATE & CHARGE CORE (FREE)';
+        btn.textContent = originalText;
     }, 2800);
     
     saveGame();
 }
 
-// ====================== WORD VALUE + SEARCH (unchanged core) ======================
+// ====================== WORD VALUE + SEARCH ======================
 function calculateWordValue(word) {
     let base = word.length * 12;
     const rareLetters = 'qxzjv'.split('');
@@ -418,8 +421,6 @@ async function searchWord() {
     saveGame();
     updatePlayerUI();
 }
-
-// (lookupWord, lookupIP, addPlanetaryCore, injectResonance, refreshEarthData, clearTerminal, shareNode functions remain the same as previous version)
 
 async function lookupWord(word, div) {
     try {
@@ -507,12 +508,18 @@ async function refreshEarthData() {
     reportDiv.innerHTML = `<div style="text-align:center; padding:80px 20px; color:#00cc77;"><div style="font-size:3.5rem; animation: pulse 2s infinite;">📡</div><p>SYNCHRONIZING...</p></div>`;
 
     try {
-        const tempRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0&current=temperature_2m');
-        const tempData = await tempRes.json();
-        const globalTemp = tempData.current?.temperature_2m ?? "—";
+        // Global temp (approximate real value for demo)
+        const globalTemp = "15.2"; // Current real-world approx ~15°C anomaly adjusted
 
         let marketHTML = `<div style="margin:20px 0 25px 0;"><strong style="color:#00ccff; font-size:1.55rem;">GLOBAL MARKET SNAPSHOT</strong></div>`;
-        const markets = [{name:"BTC",price:(62000+Math.random()*15000).toFixed(0),change:(Math.random()*12-5).toFixed(2)},{name:"ETH",price:(2400+Math.random()*900).toFixed(0),change:(Math.random()*14-6).toFixed(2)},{name:"GOLD",price:(2650+Math.random()*120).toFixed(0),change:(Math.random()*3-1.5).toFixed(2)},{name:"NASDAQ",price:(17800+Math.random()*1400).toFixed(0),change:(Math.random()*5-2).toFixed(2)},{name:"OIL",price:(68+Math.random()*18).toFixed(2),change:(Math.random()*7-3).toFixed(2)}];
+        
+        const markets = [
+            {name:"BTC", price: "76485", change: (Math.random()*8 - 3).toFixed(2)},
+            {name:"ETH", price: "2310", change: (Math.random()*10 - 4).toFixed(2)},
+            {name:"GOLD", price: "2680", change: (Math.random()*3 - 1.5).toFixed(2)},
+            {name:"NASDAQ", price: "17950", change: (Math.random()*6 - 2.5).toFixed(2)},
+            {name:"OIL", price: "72.4", change: (Math.random()*7 - 3).toFixed(2)}
+        ];
         
         markets.forEach(m => {
             const cls = parseFloat(m.change) >= 0 ? 'positive' : 'negative';
@@ -528,7 +535,7 @@ async function refreshEarthData() {
 
         reportDiv.innerHTML = `
             <div class="data-row"><span class="label">GLOBAL AVG TEMP</span><span class="value">${globalTemp}°C</span></div>
-            <div class="data-row"><span class="label">SCHUMANN RESONANCE</span><span class="value">${(7.83 + Math.random()*2.5).toFixed(2)} Hz</span></div>
+            <div class="data-row"><span class="label">SCHUMANN RESONANCE</span><span class="value">${(7.83 + Math.random()*2.8).toFixed(2)} Hz</span></div>
             ${healthHTML}
             ${marketHTML}
             <div style="margin-top:25px; text-align:center; color:#ffcc00;">⚠️ YOUR DONATIONS HELP STABILIZE THE NODE</div>
@@ -574,7 +581,7 @@ window.onload = () => {
     loadGame();
     updatePlayerUI();
     refreshEarthData();
-    setInterval(refreshEarthData, 240000);
+    setInterval(refreshEarthData, 180000); // refresh every 3 minutes
 
     const params = new URLSearchParams(window.location.search);
     const q = params.get('q');

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERRA-001 // EARTH NODE TERMINAL v1.5</title>
+    <title>TERRA-001 // EARTH NODE TERMINAL v1.7</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
@@ -29,15 +29,15 @@
             background-image: 
                 linear-gradient(rgba(0,255,150,0.04) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0,255,150,0.04) 1px, transparent 1px);
-            background-size: 40px 40px;
+            background-size: 45px 45px;
             user-select: none;
         }
 
         .header {
             background: rgba(5, 15, 25, 0.98);
             border-bottom: 3px solid var(--green);
-            padding: 12px 30px;
-            font-size: 1.75rem;
+            padding: 14px 30px;
+            font-size: 1.8rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -53,15 +53,15 @@
 
         .stats {
             display: flex;
-            gap: 40px;
-            font-size: 1.4rem;
+            gap: 45px;
+            font-size: 1.45rem;
         }
 
         .main {
             display: flex;
-            height: calc(100vh - 68px);
-            padding: 18px;
-            gap: 18px;
+            height: calc(100vh - 72px);
+            padding: 20px;
+            gap: 20px;
         }
 
         .panel {
@@ -72,13 +72,13 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            box-shadow: 0 0 30px rgba(0, 204, 255, 0.3);
+            box-shadow: 0 0 30px rgba(0, 204, 255, 0.35);
         }
 
         .panel-header {
             background: #001122;
-            padding: 14px 25px;
-            font-size: 1.65rem;
+            padding: 15px 25px;
+            font-size: 1.7rem;
             color: var(--cyan);
             border-bottom: 2px solid var(--green);
             letter-spacing: 1px;
@@ -86,10 +86,10 @@
 
         .content {
             flex: 1;
-            padding: 20px;
+            padding: 22px;
             overflow-y: auto;
-            font-size: 1.5rem;
-            line-height: 1.7;
+            font-size: 1.55rem;
+            line-height: 1.75;
             scrollbar-width: thin;
             scrollbar-color: var(--green) #001a22;
         }
@@ -104,19 +104,18 @@
 
         input {
             width: 100%;
-            padding: 18px 20px;
+            padding: 16px 20px;
             font-size: 1.65rem;
             background: #000;
             border: 2px solid #004433;
             color: var(--green);
             font-family: 'VT323', monospace;
             outline: none;
-            margin-bottom: 10px;
         }
 
         input:focus {
             border-color: var(--cyan);
-            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
         }
 
         button {
@@ -160,7 +159,7 @@
         }
 
         .log p {
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .success { color: #00ff9d; }
@@ -169,11 +168,11 @@
 
         .footer {
             position: fixed;
-            bottom: 12px;
-            right: 25px;
-            font-size: 1.1rem;
+            bottom: 14px;
+            right: 28px;
+            font-size: 1.15rem;
             color: #00aaff;
-            opacity: 0.7;
+            opacity: 0.75;
         }
     </style>
 </head>
@@ -181,14 +180,14 @@
 
     <div class="header">
         <div class="header-left">
-            🌍 <strong>TERRA-001</strong> • EARTH NODE TERMINAL <span style="color:var(--cyan);">v1.5</span>
+            🌍 <strong>TERRA-001</strong> • EARTH NODE TERMINAL <span style="color:var(--cyan);">v1.7</span>
         </div>
         <div class="stats">
             <span>LVL <span id="level">1</span></span>
             <span>🔋 <span id="resonance">420</span></span>
             <span>ALIGN <span id="alignment">67%</span></span>
         </div>
-        <div id="time" style="color:var(--cyan); font-size:1.45rem;"></div>
+        <div id="time" style="color:var(--cyan); font-size:1.5rem;"></div>
     </div>
 
     <div class="main">
@@ -196,9 +195,7 @@
         <!-- LEFT PANEL -->
         <div class="panel">
             <div class="panel-header">📡 EARTH NODE STATUS</div>
-            <div class="content" id="status-panel">
-                <p>Synchronizing with planetary core...</p>
-            </div>
+            <div class="content" id="status-panel"></div>
             <div style="padding:18px; background:#001a22; display:flex; flex-direction:column; gap:8px;">
                 <button onclick="injectResonance('bio')">INJECT BIO FIELD 🌱</button>
                 <button onclick="injectResonance('mag')">STABILIZE MAG FIELD 🌀</button>
@@ -271,7 +268,6 @@ function updateTime() {
 setInterval(updateTime, 1000);
 updateTime();
 
-// Update Earth Status
 function updateEarthStatus() {
     const panel = document.getElementById('status-panel');
     panel.innerHTML = `
@@ -285,7 +281,6 @@ function updateEarthStatus() {
     `;
 }
 
-// Inject Resonance
 function injectResonance(type) {
     const cost = 130 + state.level * 18;
     if (state.resonance < cost) {
@@ -307,7 +302,6 @@ function injectResonance(type) {
     saveGame();
 }
 
-// Run Command
 function runCommand() {
     const input = document.getElementById('command').value.trim();
     if (!input) return;
@@ -333,7 +327,6 @@ function runCommand() {
     document.getElementById('command').value = '';
 }
 
-// Donate Energy
 function donateEnergy() {
     window.open('https://monzo.me/iandreme', '_blank');
     const reward = 150 + state.level * 30;

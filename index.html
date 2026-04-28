@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERRA-001 // EARTH NODE TERMINAL v1.4</title>
+    <title>TERRA-001 // EARTH NODE TERMINAL v1.5</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
@@ -11,102 +11,133 @@
             --green: #00ff9d;
             --cyan: #00f0ff;
             --dark: #0a0f1c;
+            --bg: #05080f;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             font-family: 'VT323', monospace;
-            background: #05080f;
+            background: var(--bg);
             color: var(--green);
             height: 100vh;
             overflow: hidden;
             background-image: 
-                linear-gradient(rgba(0,255,150,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,255,150,0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
+                linear-gradient(rgba(0,255,150,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,150,0.04) 1px, transparent 1px);
+            background-size: 40px 40px;
+            user-select: none;
         }
 
         .header {
-            background: rgba(0, 20, 30, 0.98);
-            border-bottom: 4px solid var(--green);
-            padding: 10px 25px;
-            font-size: 1.6rem;
+            background: rgba(5, 15, 25, 0.98);
+            border-bottom: 3px solid var(--green);
+            padding: 12px 30px;
+            font-size: 1.75rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 0 20px rgba(0, 255, 157, 0.4);
+            box-shadow: 0 0 25px rgba(0, 255, 157, 0.5);
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .stats {
             display: flex;
-            gap: 35px;
-            font-size: 1.35rem;
+            gap: 40px;
+            font-size: 1.4rem;
         }
 
         .main {
             display: flex;
             height: calc(100vh - 68px);
-            padding: 15px;
-            gap: 15px;
+            padding: 18px;
+            gap: 18px;
         }
 
         .panel {
             flex: 1;
-            background: rgba(10, 20, 35, 0.95);
+            background: rgba(10, 20, 35, 0.96);
             border: 2px solid var(--cyan);
-            border-radius: 4px;
+            border-radius: 6px;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 0 25px rgba(0, 204, 255, 0.25);
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 204, 255, 0.3);
         }
 
         .panel-header {
             background: #001122;
-            padding: 12px 20px;
-            font-size: 1.55rem;
+            padding: 14px 25px;
+            font-size: 1.65rem;
             color: var(--cyan);
             border-bottom: 2px solid var(--green);
+            letter-spacing: 1px;
         }
 
         .content {
             flex: 1;
             padding: 20px;
             overflow-y: auto;
-            font-size: 1.45rem;
-            line-height: 1.65;
+            font-size: 1.5rem;
+            line-height: 1.7;
+            scrollbar-width: thin;
+            scrollbar-color: var(--green) #001a22;
+        }
+
+        .content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .content::-webkit-scrollbar-thumb {
+            background: var(--green);
         }
 
         input {
             width: 100%;
-            padding: 18px;
-            font-size: 1.6rem;
+            padding: 18px 20px;
+            font-size: 1.65rem;
             background: #000;
-            border: 2px solid #004422;
+            border: 2px solid #004433;
             color: var(--green);
             font-family: 'VT323', monospace;
             outline: none;
+            margin-bottom: 10px;
+        }
+
+        input:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
         }
 
         button {
-            width: 100%;
-            padding: 16px;
-            margin-top: 8px;
+            padding: 14px 20px;
+            margin: 6px 0;
             font-size: 1.45rem;
             background: #001a11;
             color: var(--green);
             border: 2px solid var(--green);
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.2s;
+            width: 100%;
         }
 
         button:hover {
             background: #003322;
-            box-shadow: 0 0 15px rgba(0, 255, 157, 0.6);
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.7);
         }
 
         .donate {
-            background: linear-gradient(45deg, #ff3366, #ffaa00);
+            background: linear-gradient(45deg, #ff3366, #ff8800);
             color: #000;
             border: 2px solid #ffcc00;
             font-weight: bold;
@@ -115,12 +146,12 @@
         .scanline {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(transparent 50%, rgba(0, 255, 100, 0.08) 50%);
-            background-size: 100% 6px;
+            background: linear-gradient(transparent 50%, rgba(0, 255, 120, 0.06) 50%);
+            background-size: 100% 4px;
             pointer-events: none;
-            animation: scan 12s linear infinite;
-            z-index: 100;
-            opacity: 0.4;
+            animation: scan 10s linear infinite;
+            z-index: 200;
+            opacity: 0.35;
         }
 
         @keyframes scan {
@@ -128,51 +159,67 @@
             100% { transform: translateY(100%); }
         }
 
-        .log { font-size: 1.3rem; }
+        .log p {
+            margin-bottom: 6px;
+        }
+
         .success { color: #00ff9d; }
         .warning { color: #ffcc00; }
+        .error   { color: #ff4444; }
+
+        .footer {
+            position: fixed;
+            bottom: 12px;
+            right: 25px;
+            font-size: 1.1rem;
+            color: #00aaff;
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div>🌍 TERRA-001 • EARTH NODE TERMINAL v1.4</div>
+        <div class="header-left">
+            🌍 <strong>TERRA-001</strong> • EARTH NODE TERMINAL <span style="color:var(--cyan);">v1.5</span>
+        </div>
         <div class="stats">
             <span>LVL <span id="level">1</span></span>
             <span>🔋 <span id="resonance">420</span></span>
             <span>ALIGN <span id="alignment">67%</span></span>
         </div>
-        <div id="time" style="color:var(--cyan);"></div>
+        <div id="time" style="color:var(--cyan); font-size:1.45rem;"></div>
     </div>
 
     <div class="main">
 
-        <!-- LEFT PANEL: NODE STATUS -->
+        <!-- LEFT PANEL -->
         <div class="panel">
             <div class="panel-header">📡 EARTH NODE STATUS</div>
             <div class="content" id="status-panel">
                 <p>Synchronizing with planetary core...</p>
             </div>
-            <div style="padding:15px; background:#001a22; display:flex; gap:10px; flex-wrap:wrap;">
-                <button onclick="injectResonance('bio')">INJECT BIO 🌱</button>
-                <button onclick="injectResonance('mag')">STABILIZE MAG 🌀</button>
-                <button onclick="injectResonance('noo')">AWAKEN NOO 🧬</button>
+            <div style="padding:18px; background:#001a22; display:flex; flex-direction:column; gap:8px;">
+                <button onclick="injectResonance('bio')">INJECT BIO FIELD 🌱</button>
+                <button onclick="injectResonance('mag')">STABILIZE MAG FIELD 🌀</button>
+                <button onclick="injectResonance('noo')">AWAKEN NOOSPHERE 🧬</button>
             </div>
         </div>
 
-        <!-- RIGHT PANEL: COMMAND TERMINAL -->
+        <!-- RIGHT PANEL -->
         <div class="panel">
-            <div class="panel-header">☰ COMMAND TERMINAL • LEXICON QUERY</div>
-            <div style="padding:15px 20px; background:#000;">
-                <input type="text" id="command" placeholder="ENTER WORD / IP / COMMAND..." onkeypress="if(event.key==='Enter') runCommand()">
+            <div class="panel-header">☰ COMMAND TERMINAL • LEXICON INTERFACE</div>
+            <div style="padding:18px 22px; background:#000;">
+                <input type="text" id="command" placeholder="ENTER WORD • IP • CONCEPT..." 
+                       onkeypress="if(event.key==='Enter') runCommand()">
             </div>
-            <div style="padding:0 20px 15px;">
+            <div style="padding:0 22px 15px;">
                 <button onclick="runCommand()">EXECUTE QUERY →</button>
-                <button onclick="donateEnergy()" class="donate">DONATE ENERGY & CHARGE NODE</button>
-                <button onclick="clearScreen()" style="background:#220000; border-color:#ff4444;">CLEAR TERMINAL</button>
+                <button onclick="donateEnergy()" class="donate">DONATE ENERGY • CHARGE THE CORE</button>
+                <button onclick="clearScreen()" style="background:#220000; border-color:#ff5555;">CLEAR TERMINAL</button>
             </div>
             <div class="content log" id="output">
-                <p class="success">>> TERRA-001 ONLINE</p>
+                <p class="success">>> TERRA-001 ONLINE • EARTH NODE ACTIVE</p>
                 <p class="success">>> AWAITING OPERATOR INPUT...</p>
             </div>
         </div>
@@ -180,6 +227,7 @@
     </div>
 
     <div class="scanline"></div>
+    <div class="footer">GLOBAL NOOSPHERE CONNECTION • STABLE</div>
 
 <script>
 // Game State
@@ -205,58 +253,61 @@ function updateUI() {
     document.getElementById('alignment').textContent = Math.floor(state.alignment) + "%";
 }
 
-function addOutput(text, className = "") {
+function addOutput(text, className = "success") {
     const output = document.getElementById('output');
-    const line = document.createElement('div');
+    const line = document.createElement('p');
     line.innerHTML = `>> ${text}`;
     if (className) line.className = className;
     output.appendChild(line);
     output.scrollTop = output.scrollHeight;
 }
 
-// Live Clock
+// Live UTC Clock
 function updateTime() {
     const now = new Date();
-    document.getElementById('time').textContent = now.toLocaleTimeString('en-GB', {timeZone: 'UTC'}) + " UTC";
+    document.getElementById('time').textContent = 
+        now.toLocaleTimeString('en-GB', { timeZone: 'UTC' }) + " UTC";
 }
 setInterval(updateTime, 1000);
 updateTime();
 
-// Earth Status
+// Update Earth Status
 function updateEarthStatus() {
     const panel = document.getElementById('status-panel');
     panel.innerHTML = `
         <strong style="color:#00ccff;">PLANETARY CORE VITALS</strong><br><br>
-        BIO FIELD : ${state.earthHealth.bio}%<br>
-        MAG FIELD : ${state.earthHealth.mag}%<br>
-        NOO FIELD : ${state.earthHealth.noo}%<br><br>
-        SCHUMANN : ${(7.8 + Math.random()*3).toFixed(2)} Hz<br>
-        TEMP      : 15.3°C
+        BIO FIELD  : ${state.earthHealth.bio}%<br>
+        MAG FIELD  : ${state.earthHealth.mag}%<br>
+        NOO FIELD  : ${state.earthHealth.noo}%<br><br>
+        SCHUMANN   : ${(7.83 + Math.random()*2.5).toFixed(2)} Hz<br>
+        CORE TEMP  : ${(14.8 + Math.random()*3).toFixed(1)}°C<br>
+        STATUS     : <span style="color:#00ff9d;">STABLE</span>
     `;
 }
 
 // Inject Resonance
 function injectResonance(type) {
-    const cost = 130 + state.level * 15;
+    const cost = 130 + state.level * 18;
     if (state.resonance < cost) {
-        addOutput("INSUFFICIENT RESONANCE", "warning");
+        addOutput("INSUFFICIENT RESONANCE ENERGY", "warning");
         return;
     }
 
     state.resonance -= cost;
 
-    if (type === 'bio') state.earthHealth.bio = Math.min(100, state.earthHealth.bio + 16);
-    if (type === 'mag') state.earthHealth.mag = Math.min(100, state.earthHealth.mag + 20);
-    if (type === 'noo') state.earthHealth.noo = Math.min(100, state.earthHealth.noo + 24);
+    if (type === 'bio') state.earthHealth.bio = Math.min(100, state.earthHealth.bio + 18);
+    if (type === 'mag') state.earthHealth.mag = Math.min(100, state.earthHealth.mag + 22);
+    if (type === 'noo') state.earthHealth.noo = Math.min(100, state.earthHealth.noo + 26);
 
-    addOutput(`${type.toUpperCase()} RESONANCE INJECTED [+35]`, "success");
-    state.resonance += 35;
+    addOutput(`${type.toUpperCase()} FIELD STRENGTHENED [+40]`, "success");
+    state.resonance += 40;
+    
     updateEarthStatus();
     updateUI();
     saveGame();
 }
 
-// Run Command (Search)
+// Run Command
 function runCommand() {
     const input = document.getElementById('command').value.trim();
     if (!input) return;
@@ -264,34 +315,36 @@ function runCommand() {
     addOutput(`QUERYING: ${input.toUpperCase()}`);
 
     setTimeout(() => {
-        const reward = Math.floor(input.length * 18 + Math.random() * 70);
-        addOutput(`WORD REGISTERED IN NOOSPHERE`, "success");
-        addOutput(`CORE RESONANCE GAINED: +${reward}`, "success");
+        const reward = Math.floor(input.length * 22 + Math.random() * 85);
+        addOutput(`ENTRY REGISTERED IN THE NOOSPHERE`, "success");
+        addOutput(`RESONANCE GAINED: +${reward}`, "success");
         
         state.resonance += reward;
-        if (state.resonance >= state.level * 1100) {
+
+        if (state.resonance >= state.level * 1200) {
             state.level++;
-            addOutput(`NODE LEVEL UP! NOW LEVEL ${state.level}`, "success");
+            addOutput(`NODE ASCENSION COMPLETE — LEVEL ${state.level}`, "success");
         }
+
         updateUI();
         saveGame();
-    }, 700);
+    }, 650);
 
     document.getElementById('command').value = '';
 }
 
-// Donate
+// Donate Energy
 function donateEnergy() {
     window.open('https://monzo.me/iandreme', '_blank');
-    const reward = 120 + state.level * 25;
+    const reward = 150 + state.level * 30;
     state.resonance += reward;
-    addOutput(`THANK YOU FOR CHARGING THE CORE [+${reward} RESONANCE]`, "success");
+    addOutput(`ENERGY DONATION RECEIVED • +${reward} RESONANCE`, "success");
     updateUI();
     saveGame();
 }
 
 function clearScreen() {
-    document.getElementById('output').innerHTML = `<p class="success">>> TERMINAL CLEARED</p>`;
+    document.getElementById('output').innerHTML = `<p class="success">>> TERMINAL BUFFER CLEARED</p>`;
 }
 
 // Initialize
@@ -299,12 +352,11 @@ window.onload = () => {
     loadSave();
     updateUI();
     updateEarthStatus();
-    
-    // Welcome message
+
     setTimeout(() => {
-        addOutput("PERSONAL EARTH NODE ONLINE", "success");
-        addOutput("TYPE A WORD OR IP TO BEGIN QUERY", "success");
-    }, 600);
+        addOutput("PERSONAL EARTH NODE CONNECTED", "success");
+        addOutput("THE NOOSPHERE IS LISTENING...", "success");
+    }, 800);
 };
 </script>
 

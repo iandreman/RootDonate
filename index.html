@@ -17,9 +17,7 @@
             --text-secondary: #86868b;
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             font-family: 'SF Pro Display', system-ui, -apple-system, sans-serif;
@@ -46,23 +44,13 @@
             border-bottom: 1px solid #333;
         }
 
-        .logo {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 600;
-            letter-spacing: -0.5px;
-        }
+        .logo { font-size: 48px; margin-bottom: 10px; }
+        h1 { margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.5px; }
 
         .subtitle {
             color: var(--text-secondary);
             margin-top: 8px;
             font-size: 17px;
-            font-weight: 400;
         }
 
         .chat-area {
@@ -77,16 +65,11 @@
 
         .message {
             margin-bottom: 36px;
-            scroll-margin-top: 110px;
+            scroll-margin-top: 80px;
         }
 
-        .user {
-            color: var(--accent-blue);
-        }
-
-        .grok {
-            color: var(--accent-green);
-        }
+        .user { color: var(--accent-blue); }
+        .grok { color: var(--accent-green); }
 
         .action-links {
             margin-top: 14px;
@@ -100,11 +83,9 @@
             color: var(--accent-blue);
             cursor: pointer;
             text-decoration: none;
-            transition: color 0.2s ease;
         }
 
         .action-link:hover {
-            color: #4da3ff;
             text-decoration: underline;
         }
 
@@ -124,7 +105,6 @@
         .reply-to-btn:hover {
             background: var(--accent-green);
             color: #000;
-            border-color: var(--accent-green);
         }
 
         .input-area {
@@ -147,10 +127,6 @@
             outline: none;
         }
 
-        input[type="text"]::placeholder {
-            color: #6e6e73;
-        }
-
         button {
             background: var(--accent-blue);
             color: white;
@@ -158,16 +134,9 @@
             padding: 0 32px;
             border-radius: 14px;
             font-weight: 600;
-            font-size: 16px;
             cursor: pointer;
-            transition: background 0.2s ease;
         }
 
-        button:hover {
-            background: #0077ed;
-        }
-
-        /* Notification */
         .notification {
             position: fixed;
             bottom: 30px;
@@ -178,10 +147,8 @@
             padding: 14px 28px;
             border-radius: 12px;
             font-weight: 600;
-            font-size: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             z-index: 10000;
-            white-space: nowrap;
         }
     </style>
 </head>
@@ -191,7 +158,7 @@
     <div class="header">
         <div class="logo">🌐</div>
         <h1>RootDonate</h1>
-        <p class="subtitle">Inspired by the classic cleverbot.py</p>
+        <p class="subtitle">Inspired by cleverbot.py • Apple Intelligence style</p>
     </div>
 
     <div class="chat-area" id="chat"></div>
@@ -205,7 +172,6 @@
 <script>
     const chat = document.getElementById('chat');
     const input = document.getElementById('userInput');
-    let messageCounter = 0;
     let conversationHistory = [];
 
     function addMessage(text, type) {
@@ -215,18 +181,17 @@
         let html = `<div>${text}</div>`;
 
         if (type === 'grok') {
-            messageCounter++;
-            const replyId = `reply-${messageCounter}`;
-            const shareUrl = `${window.location.origin}${window.location.pathname}#${replyId}`;
-
+            const replyId = 'reply-' + Date.now();
             div.id = replyId;
+
+            const shareUrl = generateShareLink(replyId);
 
             html += `
                 <div class="action-links">
                     <span class="action-link" onclick="copyShareLink('${shareUrl}')">🔗 Share Link</span>
                     <span class="action-link" onclick="emailThisReply('${replyId}')">✉️ Email This Reply</span>
                 </div>
-                <button class="reply-to-btn" onclick="replyToThis('${text.replace(/'/g, "\\'").replace(/"/g, '\\"')}')">
+                <button class="reply-to-btn" onclick="replyToThis('${replyId}')">
                     ↩️ Reply to this conversation
                 </button>
             `;
@@ -241,43 +206,52 @@
         chat.scrollTop = chat.scrollHeight;
     }
 
-    function replyToThis(grokText) {
-        const quoted = grokText.length > 140 
-            ? grokText.substring(0, 137) + "..." 
-            : grokText;
-        
-        input.value = `> ${quoted}\n\n`;
-        input.focus();
+    // Generate shareable URL with conversation data
+    function generateShareLink(replyId) {
+        const data = {
+            history: conversationHistory,
+            highlight: replyId
+        };
+        const encoded = btoa(JSON.stringify(data));
+        return `${window.location.origin}${window.location.pathname}#${encoded}`;
     }
 
     function copyShareLink(url) {
         navigator.clipboard.writeText(url).then(() => {
-            showNotification("Share link copied to clipboard");
+            showNotification("Share link copied to clipboard!");
         }).catch(() => {
-            prompt("Copy this share link:", url);
+            prompt("Copy this link:", url);
         });
     }
 
     function emailThisReply(replyId) {
-        const shareUrl = `${window.location.origin}${window.location.pathname}#${replyId}`;
+        const shareUrl = generateShareLink(replyId);
+        const lastReply = conversationHistory.find(m => m.id === replyId) || 
+                         conversationHistory[conversationHistory.length - 1];
 
-        let historyText = "Conversation History:\n\n";
+        let body = `Grok replied:\n\n${lastReply.text}\n\n`;
+        body += `🔗 View this reply: ${shareUrl}\n\n`;
+        body += `────────────────────────────\n\nFull conversation:\n\n`;
+
         conversationHistory.forEach(msg => {
-            const prefix = msg.type === 'user' ? "You:" : "Grok:";
-            historyText += `${prefix} ${msg.text}\n\n`;
+            const prefix = msg.type === 'user' ? "You" : "Grok";
+            body += `${prefix}: ${msg.text}\n\n`;
         });
 
-        const subject = encodeURIComponent("Grok Reply — Apple Intelligence Chat");
-        const body = encodeURIComponent(
-            `Grok replied:\n\n` +
-            `${conversationHistory[conversationHistory.length - 1].text}\n\n` +
-            `🔗 View this exact reply:\n${shareUrl}\n\n` +
-            `────────────────────────────\n\n` +
-            historyText +
-            `Shared via Grok • Apple Intelligence`
-        );
+        const subject = encodeURIComponent("RootDonate • Grok Conversation");
+        window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
+    }
 
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    function replyToThis(replyId) {
+        const grokMsg = conversationHistory.find(m => m.id === replyId);
+        if (!grokMsg) return;
+
+        const quoted = grokMsg.text.length > 120 
+            ? grokMsg.text.substring(0, 117) + "..." 
+            : grokMsg.text;
+
+        input.value = `> ${quoted}\n\n`;
+        input.focus();
     }
 
     function showNotification(message) {
@@ -285,7 +259,6 @@
         notif.className = 'notification';
         notif.textContent = message;
         document.body.appendChild(notif);
-
         setTimeout(() => notif.remove(), 2800);
     }
 
@@ -293,36 +266,45 @@
         const text = input.value.trim();
         if (!text) return;
 
-        addMessage(`> ${text}`, 'user');
+        addMessage(text, 'user');
         input.value = '';
 
         setTimeout(() => {
-            let reply = "That's an interesting point.";
+            let reply = "Interesting point. Tell me more.";
 
             const lower = text.toLowerCase();
-            if (lower.includes("hello") || lower.includes("hi")) {
-                reply = "Hello there! Nice to see you again.";
-            } else if (lower.includes("how are you")) {
-                reply = "I'm doing great, thanks for asking.";
-            } else if (lower.includes("cleverbot") || lower.includes("code")) {
-                reply = "The original cleverbot.py was quite clever.";
-            } else if (lower.includes("thank")) {
-                reply = "You're very welcome!";
-            }
+            if (lower.includes("hello") || lower.includes("hi")) reply = "Hello! Good to see you.";
+            else if (lower.includes("how are you")) reply = "I'm running perfectly, thanks for asking!";
+            else if (lower.includes("cleverbot")) reply = "Ah yes, the legendary cleverbot.py... those were the days.";
 
             addMessage(reply, 'grok');
-        }, 650);
+        }, 600);
     }
 
+    // Handle deep links (shared URLs)
     function handleDeepLink() {
-        const hash = window.location.hash;
+        const hash = window.location.hash.substring(1);
         if (!hash) return;
 
-        const target = document.querySelector(hash);
-        if (target) {
-            setTimeout(() => {
-                target.scrollIntoView({ behavior: "smooth", block: "center" });
-            }, 650);
+        try {
+            const data = JSON.parse(atob(hash));
+            conversationHistory = data.history || [];
+
+            // Rebuild chat
+            chat.innerHTML = '';
+            conversationHistory.forEach(msg => {
+                addMessage(msg.text, msg.type);
+            });
+
+            // Scroll to highlighted reply
+            if (data.highlight) {
+                setTimeout(() => {
+                    const target = document.getElementById(data.highlight);
+                    if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
+                }, 300);
+            }
+        } catch (e) {
+            console.warn("Invalid share link");
         }
     }
 
@@ -332,15 +314,14 @@
     });
 
     window.onload = () => {
-        // Welcome message
         setTimeout(() => {
             addMessage(
                 "Hello! I'm Grok.<br><br>" +
-                "Welcome to this clean Apple Intelligence styled interface.<br><br>" +
-                "Use the Share Link or Email buttons on my replies to save or continue conversations.", 
+                "Welcome to RootDonate — a clean Apple Intelligence inspired chat.<br><br>" +
+                "Try sharing a reply or using \"Reply to this conversation\".", 
                 'grok'
             );
-        }, 500);
+        }, 400);
 
         handleDeepLink();
         window.addEventListener('hashchange', handleDeepLink);

@@ -154,7 +154,7 @@
 
     function emailThisReply(replyText) {
         const subject = encodeURIComponent("Grok Reply from Apple Intelligence Chat");
-        const body = encodeURIComponent(`Here's a reply from Grok:${shareUrl}\n\n${replyText}\n\nShared via Grok • Apple Intelligence Interface`);
+        const body = encodeURIComponent(`Here's a reply from Grok:\n\n${replyText}\n\nShared via Grok • Apple Intelligence Interface`);
         
         window.location.href = `mailto:?subject=${subject}&body=${body}`;
     }
@@ -202,7 +202,7 @@
                 reply = "I'm here in the spirit of the classic cleverbot library.";
             }
 
-            addMessage(${shareUrl}, 'grok');
+            addMessage(reply, 'grok');
         }, 650);
     }
 

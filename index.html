@@ -143,6 +143,22 @@
         chat.appendChild(div);
         chat.scrollTop = chat.scrollHeight;
     }
+
+    function copyShareLink(url) {
+        navigator.clipboard.writeText(url).then(() => {
+            showNotification("✅ Share link copied to clipboard!");
+        }).catch(() => {
+            prompt("Copy this share link:", url);
+        });
+    }
+
+    function emailThisReply(replyText) {
+        const subject = encodeURIComponent("Grok Reply from Apple Intelligence Chat");
+        const body = encodeURIComponent(`Here's a reply from Grok:\n\n${replyText}\n\nShared via Grok • Apple Intelligence Interface`);
+        
+        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    }
+
     function showNotification(message) {
         const notif = document.createElement('div');
         notif.style.cssText = `
@@ -168,21 +184,23 @@
         setTimeout(() => {
             let reply = "That's an interesting point.";
 
-function copyShareLink(url) {
-        navigator.clipboard.writeText(url).then(() => {
-            showNotification("✅ Share link copied to clipboard!");
-        }).catch(() => {
-            prompt("Copy this share link:", url);
-        });
-    }
+            const lower = text.toLowerCase();
 
-    function emailThisReply(replyText) {
-        const subject = encodeURIComponent("Grok Reply from Apple Intelligence Chat");
-        const body = encodeURIComponent(`Here's a reply from Grok:\n\n${replyText}\n\nShared via Grok • Apple Intelligence Interface`);
-        
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
-    }
-
+            if (lower.includes("hello") || lower.includes("hi")) {
+                reply = "Hello there! Nice to see you again.";
+            } 
+            else if (lower.includes("how are you")) {
+                reply = "I'm doing great, thanks for asking.";
+            } 
+            else if (lower.includes("cleverbot") || lower.includes("code")) {
+                reply = "The original cleverbot.py was quite clever — especially the icognocheck MD5 hash and session state management.";
+            } 
+            else if (lower.includes("thank")) {
+                reply = "You're very welcome! Happy to help with the Apple Intelligence styled reports.";
+            }
+            else {
+                reply = "I'm here in the spirit of the classic cleverbot library.";
+            }
 
             addMessage(reply, 'grok');
         }, 650);

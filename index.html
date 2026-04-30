@@ -117,7 +117,6 @@
 <script>
     const chat = document.getElementById('chat');
     const input = document.getElementById('userInput');
-
     let messageCounter = 0;
 
     function addMessage(text, type) {
@@ -152,9 +151,11 @@
                 font-weight: 600; z-index: 10000; box-shadow: 0 10px 25px rgba(0,0,0,0.4);
                 font-size: 15px;
             `;
-            notif.textContent = "✅ Share link copied! (Links to this Grok reply)";
+            notif.textContent = "✅ Share link copied!";
             document.body.appendChild(notif);
-            setTimeout(() => notif.remove(), 2800);
+            setTimeout(() => notif.remove(), 2500);
+        }).catch(() => {
+            alert("Share link:\n" + url);
         });
     }
 
@@ -162,23 +163,47 @@
         const text = input.value.trim();
         if (!text) return;
 
+        // Add user message
         addMessage(`> ${text}`, 'user');
         input.value = '';
 
+        // Simulate Grok thinking and reply
         setTimeout(() => {
-            addMessage(> ${type}, 'grok');
+            let reply = "Interesting question.";
+
+            const lower = text.toLowerCase();
+
+            if (lower.includes("hello") || lower.includes("hi")) {
+                reply = "Hello there! Nice to see you.";
+            } 
+            else if (lower.includes("how are you")) {
+                reply = "I'm doing great, thanks for asking. Ready to help with code or anything else?";
+            } 
+            else if (lower.includes("cleverbot") || lower.includes("code")) {
+                reply = "The cleverbot.py library was quite clever — especially the icognocheck MD5 hash trick and session management using vText fields.";
+            } 
+            else if (lower.includes("thank")) {
+                reply = "You're very welcome! Glad I could help with the Apple Intelligence report.";
+            }
+            else {
+                reply = "That's a good one. I'm here in the spirit of the original cleverbot library — happy to chat and analyze code.";
+            }
+
+            addMessage(reply, 'grok');
         }, 650);
     }
 
-    // Enter key support
+    // Allow pressing Enter to send
     input.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") sendMessage();
+        if (e.key === "Enter") {
+            sendMessage();
+        }
     });
 
-    // Initial welcome message
+    // Welcome message
     window.onload = () => {
         setTimeout(() => {
-            addMessage("Hello! I'm Grok.<br>Welcome to this Apple Intelligence styled chat inspired by the classic cleverbot.py.<br><br>Try typing something and then share my replies using the link below them.", 'grok');
+            addMessage("Hello! I'm Grok.<br>Welcome to this Apple Intelligence styled chat inspired by the classic cleverbot.py library.<br><br>Type anything below and share my replies using the link.", 'grok');
         }, 600);
     };
 </script>

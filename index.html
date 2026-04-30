@@ -122,9 +122,9 @@
 
     function addMessage(text, type) {
         const div = document.createElement('div');
-        div.className = `message ${text}`;
+        div.className = `message ${type}`;
         
-        let html = `<div>${type}</div>`;
+        let html = `<div>${text}</div>`;
         
         if (type === 'grok') {
             messageCounter++;

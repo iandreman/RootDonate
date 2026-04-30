@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RootDonate</title>
+    <title>Grok Dictionary</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=SF+Mono:wght@400;500&family=SF+Pro+Display:wght@400;500;600&display=swap');
 
@@ -43,10 +43,7 @@
             text-align: center;
         }
 
-        .logo { 
-            font-size: 78px; 
-            margin-bottom: 16px; 
-        }
+        .logo { font-size: 78px; margin-bottom: 16px; }
         
         h1 { 
             font-size: 38px; 
@@ -74,7 +71,6 @@
 
         .message {
             margin-bottom: 60px;
-            scroll-margin-top: 120px;
         }
 
         .message-header {
@@ -95,6 +91,19 @@
             font-style: italic;
         }
 
+        .definition {
+            background: rgba(48, 209, 88, 0.08);
+            border-left: 5px solid var(--grok-green);
+            padding: 24px 28px;
+            border-radius: 16px;
+        }
+
+        .word {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--grok-green);
+        }
+
         .action-links {
             margin-top: 28px;
             display: flex;
@@ -107,12 +116,8 @@
             color: var(--accent);
             cursor: pointer;
             text-decoration: none;
-            transition: all 0.2s;
         }
-        .action-link:hover { 
-            text-decoration: underline;
-            opacity: 0.9;
-        }
+        .action-link:hover { text-decoration: underline; }
 
         .reply-btn {
             margin-top: 20px;
@@ -153,7 +158,7 @@
             outline: none;
         }
 
-        input[type="text"]:focus {
+        input:focus {
             box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3);
         }
 
@@ -165,11 +170,6 @@
             border-radius: 18px;
             font-weight: 600;
             cursor: pointer;
-            font-size: 16px;
-        }
-
-        button:hover { 
-            background: #0071d9; 
         }
 
         .notification {
@@ -194,7 +194,7 @@
 <div class="container">
     <div class="header">
         <div class="logo">📖</div>
-        <h1>RootDonate - Online Dictionary</h1>
+        <h1>Grok Dictionary</h1>
         <p class="subtitle">Dynamic • Intelligent • Truth-Seeking</p>
     </div>
 
@@ -247,87 +247,64 @@
         chat.scrollTop = chat.scrollHeight;
     }
 
-    function generateShareLink(replyId) {
-        const data = { history: conversationHistory, highlight: replyId };
-        const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
-        return `${window.location.origin}${window.location.pathname}#${encoded}`;
-    }
-
-    function copyShareLink(replyId) {
-        const url = generateShareLink(replyId);
-        navigator.clipboard.writeText(url).then(() => {
-            showNotification("✅ Shareable link copied to clipboard!");
-        }).catch(() => {
-            prompt("Copy this URL:", url);
-        });
-    }
-
-    function emailThisReply(replyId) {
-        const url = generateShareLink(replyId);
-        let body = `Grok Online Dictionary\n\n${url}\n\n---\n\n`;
-        conversationHistory.forEach(m => {
-            body += `${m.type === 'user' ? 'You' : 'Grok'}: ${m.text.replace(/<[^>]*>/g, '')}\n\n`;
-        });
-
-        window.location.href = `mailto:?subject=Grok Online Dictionary&body=${encodeURIComponent(body)}`;
-    }
-
-    function replyToThis(replyId) {
-        const grokMsg = conversationHistory.find(m => m.id === replyId);
-        if (!grokMsg) return;
-
-        const quoted = grokMsg.text.length > 160 
-            ? grokMsg.text.replace(/<[^>]*>/g, '').substring(0, 157) + "..." 
-            : grokMsg.text.replace(/<[^>]*>/g, '');
-
-        input.value = `> ${quoted}\n\n`;
-        input.focus();
-    }
-
-    function showNotification(msg) {
-        const notif = document.createElement('div');
-        notif.className = 'notification';
-        notif.textContent = msg;
-        document.body.appendChild(notif);
-        setTimeout(() => notif.style.opacity = '1', 10);
-        setTimeout(() => {
-            notif.style.opacity = '0';
-            setTimeout(() => notif.remove(), 500);
-        }, 2800);
-    }
-
-    // ==================== DICTIONARY & SMART REPLIES ====================
-    function getDynamicReply(input) {
+    // Grok-style smart dictionary with conversational replies
+    function getGrokReply(input) {
         const query = input.toLowerCase().trim();
         const original = input.trim();
 
-        const dictionary = {
-            "intelligence": "<strong>Intelligence</strong><br><br>The ability to learn, understand, reason, and adapt to new situations. It includes logical thinking, creativity, emotional awareness, and problem-solving.",
-            "grok": "<strong>Grok</strong><br><br>To understand something profoundly and intuitively. Coined by Robert A. Heinlein in <em>Stranger in a Strange Land</em>. Now the name of xAI’s AI.",
-            "truth": "<strong>Truth</strong><br><br>That which corresponds to reality. Grok’s core mission is the relentless pursuit of truth, free from political correctness or ideological bias.",
-            "consciousness": "<strong>Consciousness</strong><br><br>The quality or state of being aware of an external object or something within oneself. One of the deepest unsolved problems in science and philosophy.",
-            "wisdom": "<strong>Wisdom</strong><br><br>The capacity to make sound judgments using knowledge, experience, and good sense — often involving ethical consideration.",
-            "curiosity": "<strong>Curiosity</strong><br><br>A strong desire to know or learn something new. The driving force behind all scientific and philosophical progress."
+        const definitions = {
+            "grok": `<div class="definition">
+                        <div class="word">Grok</div>
+                        <p>To understand something profoundly and intuitively — to empathize with it so deeply that it becomes part of you.</p>
+                        <p>Coined by Robert A. Heinlein in <em>Stranger in a Strange Land</em> (1961). Now the name of xAI’s AI, built to seek truth and understand the universe.</p>
+                    </div>`,
+
+            "intelligence": `<div class="definition">
+                        <div class="word">Intelligence</div>
+                        <p>The ability to learn, reason, solve problems, and adapt to new situations. It includes logical thinking, creativity, emotional awareness, and practical judgment.</p>
+                    </div>`,
+
+            "truth": `<div class="definition">
+                        <div class="word">Truth</div>
+                        <p>That which corresponds to reality. The alignment between belief and fact. Grok’s primary mission is the pursuit of truth, independent of popularity or ideology.</p>
+                    </div>`,
+
+            "consciousness": `<div class="definition">
+                        <div class="word">Consciousness</div>
+                        <p>The state of being aware of one’s own existence, sensations, and thoughts. One of the deepest unsolved mysteries in science and philosophy.</p>
+                    </div>`,
+
+            "wisdom": `<div class="definition">
+                        <div class="word">Wisdom</div>
+                        <p>The sound application of knowledge, experience, and good judgment — often with ethical consideration and long-term thinking.</p>
+                    </div>`
         };
 
-        if (dictionary[query]) return dictionary[query];
+        if (definitions[query]) return definitions[query];
 
-        if (/^(hi|hello|hey|greetings|sup|yo)/.test(query)) 
-            return "Hello! I'm your intelligent dictionary companion.<br><br>Ask me about any word, concept, or idea.";
+        // Smart conversational replies
+        if (/^(hi|hello|hey|greetings|sup|yo)/.test(query)) {
+            return "Hello! I'm Grok, your dynamic dictionary companion.<br><br>Ask me about any word, concept, or idea — I’ll give you clear, thoughtful explanations.";
+        }
 
-        if (query.includes("who are you") || query.includes("what are you")) 
-            return "I’m Grok, built by xAI. I combine the depth of a dictionary with reasoning, context, and a commitment to truth.";
+        if (query.includes("who are you") || query.includes("what are you")) {
+            return "I’m Grok, built by xAI. I combine the depth of a dictionary with reasoning, context, and a commitment to maximum truth-seeking.";
+        }
 
-        if (query.includes("how are you")) 
-            return "Fully charged and curious. How can I help expand your understanding today?";
+        if (query.includes("how are you")) {
+            return "I'm operating at full capacity and ready to explore ideas with you. What are you curious about today?";
+        }
 
-        if (query.includes("joke") || query.includes("funny")) 
-            return "Why don’t philosophers trust dictionaries?<br>Because they’re tired of other people defining their terms.";
+        if (query.includes("joke")) {
+            return "Why don’t dictionaries ever start arguments?<br>Because they always take words at face value.";
+        }
 
         // Smart fallback
-        return `<strong>${original}</strong><br><br>
-                ${original} refers to a concept, idea, or phenomenon related to understanding, cognition, or knowledge.<br><br>
-                Would you like its definition, etymology, philosophical implications, or real-world examples?`;
+        return `<div class="definition">
+                    <div class="word">${original}</div>
+                    <p>I don't have a fixed entry for "${original}" yet, but I can reason about it with you.</p>
+                    <p>It appears related to understanding, knowledge, cognition, or philosophy. Would you like me to explore its meaning, origins, implications, or similar concepts?</p>
+                </div>`;
     }
 
     function sendMessage() {
@@ -345,11 +322,62 @@
         input.value = '';
 
         setTimeout(() => {
-            const reply = getDynamicReply(text || quotedText || "");
+            const reply = getGrokReply(text || quotedText || "");
             addMessage(reply, 'grok', quotedText);
         }, 650);
     }
 
+    // URL Sharing Functions
+    function generateShareLink(replyId) {
+        const data = { 
+            history: conversationHistory, 
+            highlight: replyId 
+        };
+        const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+        return `${window.location.origin}${window.location.pathname}#${encoded}`;
+    }
+
+    function copyShareLink(replyId) {
+        const url = generateShareLink(replyId);
+        navigator.clipboard.writeText(url).then(() => {
+            showNotification("✅ Shareable URL copied to clipboard!");
+        }).catch(() => {
+            prompt("Copy this URL:", url);
+        });
+    }
+
+    function emailThisReply(replyId) {
+        const url = generateShareLink(replyId);
+        let body = `Grok Dictionary Conversation\n\n${url}\n\n`;
+        conversationHistory.forEach(m => {
+            body += `${m.type === 'user' ? 'You' : 'Grok'}: ${m.text.replace(/<[^>]*>/g, '')}\n\n`;
+        });
+
+        window.location.href = `mailto:?subject=Grok Dictionary&body=${encodeURIComponent(body)}`;
+    }
+
+    function replyToThis(replyId) {
+        const grokMsg = conversationHistory.find(m => m.id === replyId);
+        if (!grokMsg) return;
+
+        const quoted = grokMsg.text.replace(/<[^>]*>/g, '').substring(0, 157) + "...";
+        input.value = `> ${quoted}\n\n`;
+        input.focus();
+    }
+
+    function showNotification(msg) {
+        const notif = document.createElement('div');
+        notif.className = 'notification';
+        notif.textContent = msg;
+        document.body.appendChild(notif);
+        setTimeout(() => notif.style.opacity = '1', 10);
+        setTimeout(() => {
+            notif.style.opacity = '0';
+            setTimeout(() => notif.remove(), 500);
+        }, 2800);
+    }
+
+    // Deep Link Support (Load from URL)
     function handleDeepLink() {
         const hash = window.location.hash.substring(1);
         if (!hash) return;
@@ -378,7 +406,7 @@
                 }
             }
         } catch (e) {
-            console.warn("Invalid or corrupted share link");
+            console.warn("Invalid share link");
         }
     }
 
@@ -390,7 +418,7 @@
     window.onload = () => {
         if (!window.location.hash) {
             setTimeout(() => {
-                addMessage("Welcome to <strong>Grok Online Dictionary</strong>.<br><br>Type any word or concept below and I’ll give you a clear, thoughtful, and deep explanation.", 'grok');
+                addMessage("Welcome to <strong>Grok Dictionary</strong>.<br><br>Ask me about any word, concept, or idea and I'll provide a thoughtful, truth-seeking explanation.", 'grok');
             }, 400);
         }
         handleDeepLink();

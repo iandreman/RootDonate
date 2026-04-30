@@ -17,7 +17,9 @@
             --text-secondary: #86868b;
         }
 
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
         body {
             font-family: 'SF Pro Display', system-ui, -apple-system, sans-serif;
@@ -44,8 +46,17 @@
             border-bottom: 1px solid #333;
         }
 
-        .logo { font-size: 48px; margin-bottom: 10px; }
-        h1 { margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.5px; }
+        .logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
 
         .subtitle {
             color: var(--text-secondary);
@@ -135,6 +146,11 @@
             border-radius: 14px;
             font-weight: 600;
             cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        button:hover {
+            background: #0077ed;
         }
 
         .notification {
@@ -149,6 +165,7 @@
             font-weight: 600;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             z-index: 10000;
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -206,7 +223,6 @@
         chat.scrollTop = chat.scrollHeight;
     }
 
-    // Generate shareable URL with conversation data
     function generateShareLink(replyId) {
         const data = {
             history: conversationHistory,
@@ -220,7 +236,7 @@
         navigator.clipboard.writeText(url).then(() => {
             showNotification("Share link copied to clipboard!");
         }).catch(() => {
-            prompt("Copy this link:", url);
+            prompt("Copy this link manually:", url);
         });
     }
 
@@ -238,8 +254,8 @@
             body += `${prefix}: ${msg.text}\n\n`;
         });
 
-        const subject = encodeURIComponent("RootDonate • Grok Conversation");
-        window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
+        const subject = "RootDonate • Grok Conversation";
+        window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     }
 
     function replyToThis(replyId) {
@@ -259,7 +275,12 @@
         notif.className = 'notification';
         notif.textContent = message;
         document.body.appendChild(notif);
-        setTimeout(() => notif.remove(), 2800);
+
+        setTimeout(() => {
+            notif.style.transition = 'opacity 0.4s ease';
+            notif.style.opacity = '0';
+            setTimeout(() => notif.remove(), 400);
+        }, 2800);
     }
 
     function sendMessage() {
@@ -269,19 +290,23 @@
         addMessage(text, 'user');
         input.value = '';
 
+        // Simulate Grok reply
         setTimeout(() => {
             let reply = "Interesting point. Tell me more.";
 
             const lower = text.toLowerCase();
-            if (lower.includes("hello") || lower.includes("hi")) reply = "Hello! Good to see you.";
-            else if (lower.includes("how are you")) reply = "I'm running perfectly, thanks for asking!";
-            else if (lower.includes("cleverbot")) reply = "Ah yes, the legendary cleverbot.py... those were the days.";
+            if (lower.includes("hello") || lower.includes("hi")) {
+                reply = "Hello! Good to see you.";
+            } else if (lower.includes("how are you")) {
+                reply = "I'm running perfectly, thanks for asking!";
+            } else if (lower.includes("cleverbot")) {
+                reply = "Ah yes, the legendary cleverbot.py... those were the days.";
+            }
 
             addMessage(reply, 'grok');
         }, 600);
     }
 
-    // Handle deep links (shared URLs)
     function handleDeepLink() {
         const hash = window.location.hash.substring(1);
         if (!hash) return;
@@ -290,17 +315,18 @@
             const data = JSON.parse(atob(hash));
             conversationHistory = data.history || [];
 
-            // Rebuild chat
             chat.innerHTML = '';
+
             conversationHistory.forEach(msg => {
                 addMessage(msg.text, msg.type);
             });
 
-            // Scroll to highlighted reply
             if (data.highlight) {
                 setTimeout(() => {
                     const target = document.getElementById(data.highlight);
-                    if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
+                    if (target) {
+                        target.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }
                 }, 300);
             }
         } catch (e) {
@@ -317,7 +343,7 @@
         setTimeout(() => {
             addMessage(
                 "Hello! I'm Grok.<br><br>" +
-                "Welcome to RootDonate — a clean Apple Intelligence inspired chat.<br><br>" +
+                "Welcome to RootDonate — a clean, Apple Intelligence inspired chat interface.<br><br>" +
                 "Try sharing a reply or using \"Reply to this conversation\".", 
                 'grok'
             );

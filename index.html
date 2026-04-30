@@ -17,9 +17,7 @@
             --text-secondary: #86868b;
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             font-family: 'SF Pro Display', system-ui, -apple-system, sans-serif;
@@ -46,17 +44,8 @@
             border-bottom: 1px solid #333;
         }
 
-        .logo {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 600;
-            letter-spacing: -0.5px;
-        }
+        .logo { font-size: 48px; margin-bottom: 10px; }
+        h1 { margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.5px; }
 
         .subtitle {
             color: var(--text-secondary);
@@ -96,9 +85,7 @@
             text-decoration: none;
         }
 
-        .action-link:hover {
-            text-decoration: underline;
-        }
+        .action-link:hover { text-decoration: underline; }
 
         .reply-to-btn {
             margin-top: 12px;
@@ -146,12 +133,9 @@
             border-radius: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s ease;
         }
 
-        button:hover {
-            background: #0077ed;
-        }
+        button:hover { background: #0077ed; }
 
         .notification {
             position: fixed;
@@ -165,7 +149,6 @@
             font-weight: 600;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             z-index: 10000;
-            white-space: nowrap;
         }
     </style>
 </head>
@@ -181,7 +164,7 @@
     <div class="chat-area" id="chat"></div>
 
     <div class="input-area">
-        <input type="text" id="userInput" placeholder="Type your message..." autocomplete="off">
+        <input type="text" id="userInput" placeholder="Type your message to continue..." autocomplete="off">
         <button onclick="sendMessage()">Send</button>
     </div>
 </div>
@@ -191,7 +174,7 @@
     const input = document.getElementById('userInput');
     let conversationHistory = [];
 
-    function addMessage(text, type) {
+    function addMessage(text, type, isRestoring = false) {
         const div = document.createElement('div');
         div.className = `message ${type}`;
 
@@ -213,8 +196,8 @@
                 </button>
             `;
 
-            conversationHistory.push({ type: 'grok', text: text, id: replyId });
-        } else {
+            if (!isRestoring) conversationHistory.push({ type: 'grok', text: text, id: replyId });
+        } else if (!isRestoring) {
             conversationHistory.push({ type: 'user', text: text });
         }
 
@@ -224,30 +207,22 @@
     }
 
     function generateShareLink(replyId) {
-        const data = {
-            history: conversationHistory,
-            highlight: replyId
-        };
-        const encoded = btoa(JSON.stringify(data));
+        const data = { history: conversationHistory, highlight: replyId };
+        const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
         return `${window.location.origin}${window.location.pathname}#${encoded}`;
     }
 
     function copyShareLink(url) {
         navigator.clipboard.writeText(url).then(() => {
-            showNotification("Share link copied to clipboard!");
-        }).catch(() => {
-            prompt("Copy this link manually:", url);
-        });
+            showNotification("Share link copied! Anyone with this link can continue the conversation.");
+        }).catch(() => prompt("Copy this link:", url));
     }
 
     function emailThisReply(replyId) {
         const shareUrl = generateShareLink(replyId);
-        const lastReply = conversationHistory.find(m => m.id === replyId) || 
-                         conversationHistory[conversationHistory.length - 1];
-
-        let body = `Grok replied:\n\n${lastReply.text}\n\n`;
-        body += `🔗 View this reply: ${shareUrl}\n\n`;
-        body += `────────────────────────────\n\nFull conversation:\n\n`;
+        let body = "Join the conversation:\n\n";
+        body += `🔗 ${shareUrl}\n\n`;
+        body += "Full conversation:\n\n";
 
         conversationHistory.forEach(msg => {
             const prefix = msg.type === 'user' ? "You" : "Grok";
@@ -261,11 +236,7 @@
     function replyToThis(replyId) {
         const grokMsg = conversationHistory.find(m => m.id === replyId);
         if (!grokMsg) return;
-
-        const quoted = grokMsg.text.length > 120 
-            ? grokMsg.text.substring(0, 117) + "..." 
-            : grokMsg.text;
-
+        const quoted = grokMsg.text.length > 120 ? grokMsg.text.substring(0, 117) + "..." : grokMsg.text;
         input.value = `> ${quoted}\n\n`;
         input.focus();
     }
@@ -275,12 +246,25 @@
         notif.className = 'notification';
         notif.textContent = message;
         document.body.appendChild(notif);
+        setTimeout(() => notif.remove(), 3200);
+    }
 
-        setTimeout(() => {
-            notif.style.transition = 'opacity 0.4s ease';
-            notif.style.opacity = '0';
-            setTimeout(() => notif.remove(), 400);
-        }, 2800);
+    function getSmartReply(lastUserMessage) {
+        const msg = lastUserMessage.toLowerCase().trim();
+
+        if (msg.includes("hello") || msg.includes("hi") || msg.includes("hey")) 
+            return "Hello again! What would you like to talk about?";
+
+        if (msg.includes("how are you")) 
+            return "I'm doing well, thanks! How about you?";
+
+        if (msg.includes("cleverbot")) 
+            return "Cleverbot.py was legendary. We've evolved quite a bit since then.";
+
+        if (msg.includes("who are you")) 
+            return "I'm Grok, created by xAI.";
+
+        return "That's interesting. Can you elaborate more on that?";
     }
 
     function sendMessage() {
@@ -290,21 +274,10 @@
         addMessage(text, 'user');
         input.value = '';
 
-        // Simulate Grok reply
         setTimeout(() => {
-            let reply = "Interesting point. Tell me more.";
-
-            const lower = text.toLowerCase();
-            if (lower.includes("hello") || lower.includes("hi")) {
-                reply = "Hello! Good to see you.";
-            } else if (lower.includes("how are you")) {
-                reply = "I'm running perfectly, thanks for asking!";
-            } else if (lower.includes("cleverbot")) {
-                reply = "Ah yes, the legendary cleverbot.py... those were the days.";
-            }
-
+            const reply = getSmartReply(text);
             addMessage(reply, 'grok');
-        }, 600);
+        }, 650);
     }
 
     function handleDeepLink() {
@@ -312,42 +285,48 @@
         if (!hash) return;
 
         try {
-            const data = JSON.parse(atob(hash));
-            conversationHistory = data.history || [];
+            const decoded = decodeURIComponent(atob(hash));
+            const data = JSON.parse(decoded);
 
-            chat.innerHTML = '';
+            if (data.history && Array.isArray(data.history)) {
+                conversationHistory = data.history;
+                chat.innerHTML = '';
 
-            conversationHistory.forEach(msg => {
-                addMessage(msg.text, msg.type);
-            });
+                conversationHistory.forEach(msg => {
+                    addMessage(msg.text, msg.type, true);
+                });
 
-            if (data.highlight) {
-                setTimeout(() => {
-                    const target = document.getElementById(data.highlight);
-                    if (target) {
-                        target.scrollIntoView({ behavior: "smooth", block: "center" });
-                    }
-                }, 300);
+                // Auto-reply to last user message when opening shared link
+                const lastMsg = conversationHistory[conversationHistory.length - 1];
+                if (lastMsg && lastMsg.type === 'user') {
+                    setTimeout(() => {
+                        const autoReply = getSmartReply(lastMsg.text);
+                        addMessage(autoReply, 'grok');
+                    }, 900);
+                }
+
+                if (data.highlight) {
+                    setTimeout(() => {
+                        const target = document.getElementById(data.highlight);
+                        if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }, 500);
+                }
             }
         } catch (e) {
             console.warn("Invalid share link");
         }
     }
 
-    // Event Listeners
     input.addEventListener("keypress", (e) => {
         if (e.key === "Enter") sendMessage();
     });
 
     window.onload = () => {
-        setTimeout(() => {
-            addMessage(
-                "Hello! I'm Grok.<br><br>" +
-                "Welcome to RootDonate — a clean, Apple Intelligence inspired chat interface.<br><br>" +
-                "Try sharing a reply or using \"Reply to this conversation\".", 
-                'grok'
-            );
-        }, 400);
+        if (!window.location.hash) {
+            setTimeout(() => {
+                addMessage("Hello! I'm Grok.<br><br>Welcome to RootDonate.<br><br>Share any reply — anyone with the link can continue the conversation.", 'grok');
+            }, 400);
+        }
 
         handleDeepLink();
         window.addEventListener('hashchange', handleDeepLink);

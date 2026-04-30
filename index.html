@@ -28,20 +28,10 @@
             text-align: center;
             border-bottom: 1px solid #333;
         }
-        .logo {
-            font-size: 42px;
-            margin-bottom: 8px;
-        }
-        h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 600;
-        }
-        .subtitle {
-            color: #86868b;
-            margin-top: 8px;
-            font-size: 17px;
-        }
+        .logo { font-size: 42px; margin-bottom: 8px; }
+        h1 { margin: 0; font-size: 28px; font-weight: 600; }
+        .subtitle { color: #86868b; margin-top: 8px; font-size: 17px; }
+
         .chat-area {
             min-height: 520px;
             padding: 30px;
@@ -51,43 +41,18 @@
             font-size: 15.5px;
             line-height: 1.65;
         }
-        .input-area {
-            padding: 20px 30px;
-            background: #1c1c1e;
-            border-top: 1px solid #333;
-            display: flex;
-            gap: 12px;
-        }
-        input[type="text"] {
-            flex: 1;
-            background: #2c2c2e;
-            border: none;
-            color: #f5f5f7;
-            padding: 14px 18px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-family: 'SF Mono', monospace;
-            outline: none;
-        }
-        button {
-            background: #0a84ff;
-            color: white;
-            border: none;
-            padding: 0 28px;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .message {
-            margin-bottom: 28px;
+        .message { 
+            margin-bottom: 32px; 
+            scroll-margin-top: 100px;
         }
         .user { color: #0a84ff; }
         .grok { color: #30d158; }
-        
+
         .action-links {
             margin-top: 12px;
             display: flex;
-            gap: 20px;
+            flex-wrap: wrap;
+            gap: 18px;
             font-size: 13.8px;
         }
         .action-link {
@@ -96,6 +61,21 @@
             text-decoration: underline;
         }
         .action-link:hover { color: #4da3ff; }
+
+        .reply-to-btn {
+            background: #2c2c2e;
+            color: #30d158;
+            border: 1px solid #30d158;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .reply-to-btn:hover {
+            background: #30d158;
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -119,8 +99,9 @@
     const chat = document.getElementById('chat');
     const input = document.getElementById('userInput');
     let messageCounter = 0;
+    let conversationHistory = [];
 
-    function addMessage(text, type) {
+    function addMessage(text, type, isFromShare = false) {
         const div = document.createElement('div');
         div.className = `message ${type}`;
         
@@ -130,13 +111,22 @@
             messageCounter++;
             const replyId = `reply-${messageCounter}`;
             const shareUrl = `${window.location.origin}${window.location.pathname}#${replyId}`;
-            
+
+            div.id = replyId;
+
             html += `
                 <div class="action-links">
                     <span class="action-link" onclick="copyShareLink('${shareUrl}')">🔗 Share Link</span>
-                    <span class="action-link" onclick="emailThisReply(\`${text.replace(/`/g, '\\`')}\`)">✉️ Email This Reply</span>
+                    <span class="action-link" onclick="emailThisReply('${replyId}')">✉️ Email This Reply</span>
                 </div>
+                <button class="reply-to-btn" onclick="replyToThis('${text.replace(/'/g, "\\'").replace(/"/g, '\\"')}')">
+                    ↩️ Reply to this conversation
+                </button>
             `;
+
+            conversationHistory.push({ type: 'grok', text: text, id: replyId });
+        } else {
+            conversationHistory.push({ type: 'user', text: text });
         }
         
         div.innerHTML = html;
@@ -144,29 +134,45 @@
         chat.scrollTop = chat.scrollHeight;
     }
 
-    function copyShareLink(url) {
-        navigator.clipboard.writeText(url).then(() => {
-            showNotification("✅ Share link copied to clipboard!");
-        }).catch(() => {
-            prompt("Copy this share link:", url);
-        });
+    function replyToThis(grokText) {
+        const quoted = grokText.length > 120 ? grokText.substring(0, 117) + "..." : grokText;
+        input.value = `> ${quoted}\n\n`;
+        input.focus();
     }
 
-    function emailThisReply(replyText) {
-        const subject = encodeURIComponent("Grok Reply from Apple Intelligence Chat");
-        const body = encodeURIComponent(`Here's a reply from Grok:\n\n${replyText}\n\nShared via Grok • Apple Intelligence Interface`);
-        
+    function copyShareLink(url) {
+        navigator.clipboard.writeText(url).then(() => {
+            showNotification("✅ Share link copied!");
+        }).catch(() => prompt("Copy this link:", url));
+    }
+
+    function emailThisReply(replyId) {
+        const shareUrl = `${window.location.origin}${window.location.pathname}#${replyId}`;
+
+        let historyText = "📜 Conversation History:\n\n";
+        conversationHistory.forEach(msg => {
+            const prefix = msg.type === 'user' ? "You:" : "Grok:";
+            historyText += `${prefix} ${msg.text}\n\n`;
+        });
+
+        const subject = encodeURIComponent("Grok Reply - Apple Intelligence Chat");
+        const body = encodeURIComponent(
+            `Grok replied:\n\n` +
+            `${conversationHistory[conversationHistory.length-1].text}\n\n` +
+            `🔗 Open this exact reply in the chat:\n${shareUrl}\n\n` +
+            `─`.repeat(50) + `\n\n` +
+            historyText +
+            `\nShared via Grok • Apple Intelligence`
+        );
+
         window.location.href = `mailto:?subject=${subject}&body=${body}`;
     }
 
     function showNotification(message) {
         const notif = document.createElement('div');
-        notif.style.cssText = `
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: #30d158; color: #000; padding: 14px 26px; border-radius: 12px;
-            font-weight: 600; z-index: 10000; box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-            font-size: 15px;
-        `;
+        notif.style.cssText = `position:fixed;bottom:30px;left:50%;transform:translateX(-50%);
+            background:#30d158;color:#000;padding:14px 26px;border-radius:12px;
+            font-weight:600;z-index:10000;`;
         notif.textContent = message;
         document.body.appendChild(notif);
         setTimeout(() => notif.remove(), 2500);
@@ -176,46 +182,47 @@
         const text = input.value.trim();
         if (!text) return;
 
-        // Add user message
         addMessage(`> ${text}`, 'user');
         input.value = '';
 
-        // Grok's reply
         setTimeout(() => {
             let reply = "That's an interesting point.";
 
             const lower = text.toLowerCase();
-
-            if (lower.includes("hello") || lower.includes("hi")) {
-                reply = "Hello there! Nice to see you again.";
-            } 
-            else if (lower.includes("how are you")) {
-                reply = "I'm doing great, thanks for asking.";
-            } 
-            else if (lower.includes("cleverbot") || lower.includes("code")) {
-                reply = "The original cleverbot.py was quite clever — especially the icognocheck MD5 hash and session state management.";
-            } 
-            else if (lower.includes("thank")) {
-                reply = "You're very welcome! Happy to help with the Apple Intelligence styled reports.";
-            }
-            else {
-                reply = "I'm here in the spirit of the classic cleverbot library.";
-            }
+            if (lower.includes("hello") || lower.includes("hi")) reply = "Hello there! Nice to see you again.";
+            else if (lower.includes("how are you")) reply = "I'm doing great, thanks for asking.";
+            else if (lower.includes("cleverbot") || lower.includes("code")) reply = "The original cleverbot.py was quite clever.";
+            else if (lower.includes("thank")) reply = "You're very welcome!";
+            else reply = "I'm here in the spirit of the classic cleverbot library.";
 
             addMessage(reply, 'grok');
         }, 650);
     }
 
-    // Enter key support
+    // Handle share link deep linking
+    function handleDeepLink() {
+        const hash = window.location.hash;
+        if (hash) {
+            const target = document.querySelector(hash);
+            if (target) {
+                setTimeout(() => {
+                    target.scrollIntoView({ behavior: "smooth", block: "center" });
+                }, 700);
+            }
+        }
+    }
+
     input.addEventListener("keypress", (e) => {
         if (e.key === "Enter") sendMessage();
     });
 
-    // Welcome message
     window.onload = () => {
         setTimeout(() => {
-            addMessage("Hello! I'm Grok.<br>Welcome to this Apple Intelligence styled chat inspired by the classic cleverbot.py.<br><br>Type something below and use the Share or Email buttons on my replies.", 'grok');
+            addMessage("Hello! I'm Grok.<br>Welcome to this Apple Intelligence styled chat.<br><br>Try using Share Link or Email, then open from email to continue the conversation.", 'grok');
         }, 600);
+
+        handleDeepLink();
+        window.addEventListener('hashchange', handleDeepLink);
     };
 </script>
 

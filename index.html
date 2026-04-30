@@ -79,22 +79,23 @@
             cursor: pointer;
         }
         .message {
-            margin-bottom: 24px;
+            margin-bottom: 26px;
         }
         .user { color: #0a84ff; }
         .grok { color: #30d158; }
         
-        .share-link {
+        .action-links {
             margin-top: 10px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            display: flex;
+            gap: 16px;
             font-size: 13.5px;
+        }
+        .action-link {
             color: #0a84ff;
             cursor: pointer;
             text-decoration: underline;
         }
-        .share-link:hover { color: #4da3ff; }
+        .action-link:hover { color: #4da3ff; }
     </style>
 </head>
 <body>
@@ -131,8 +132,9 @@
             const shareUrl = `${window.location.origin}${window.location.pathname}#${replyId}`;
             
             html += `
-                <div class="share-link" onclick="copyShareLink('${shareUrl}', '${replyId}')">
-                    🔗 Share this Grok reply
+                <div class="action-links">
+                    <span class="action-link" onclick="copyShareLink('${shareUrl}')">🔗 Share Link</span>
+                    <span class="action-link" onclick="emailReply('${text.replace(/'/g, "\\'")}')">✉️ Email This Reply</span>
                 </div>
             `;
         }
@@ -142,68 +144,76 @@
         chat.scrollTop = chat.scrollHeight;
     }
 
-    function copyShareLink(url, replyId) {
+    function copyShareLink(url) {
         navigator.clipboard.writeText(url).then(() => {
-            const notif = document.createElement('div');
-            notif.style.cssText = `
-                position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-                background: #30d158; color: #000; padding: 14px 26px; border-radius: 12px;
-                font-weight: 600; z-index: 10000; box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-                font-size: 15px;
-            `;
-            notif.textContent = "✅ Share link copied!";
-            document.body.appendChild(notif);
-            setTimeout(() => notif.remove(), 2500);
+            showNotification("✅ Share link copied to clipboard!");
         }).catch(() => {
-            alert("Share link:\n" + url);
+            prompt("Copy this link:", url);
         });
+    }
+
+    function emailReply(replyText) {
+        const subject = encodeURIComponent("Grok Reply from Apple Intelligence Chat");
+        const body = encodeURIComponent("Here's a reply from Grok:\n\n" + replyText + "\n\nShared via Grok • Apple Intelligence Interface");
+        
+        const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+        window.location.href = mailtoLink;
+    }
+
+    function showNotification(message) {
+        const notif = document.createElement('div');
+        notif.style.cssText = `
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: #30d158; color: #000; padding: 14px 26px; border-radius: 12px;
+            font-weight: 600; z-index: 10000; box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            font-size: 15px;
+        `;
+        notif.textContent = message;
+        document.body.appendChild(notif);
+        setTimeout(() => notif.remove(), 2500);
     }
 
     function sendMessage() {
         const text = input.value.trim();
         if (!text) return;
 
-        // Add user message
         addMessage(`> ${text}`, 'user');
         input.value = '';
 
-        // Simulate Grok thinking and reply
         setTimeout(() => {
             let reply = "Interesting question.";
 
             const lower = text.toLowerCase();
 
             if (lower.includes("hello") || lower.includes("hi")) {
-                reply = "Hello there! Nice to see you.";
+                reply = "Hello there! Nice to see you again.";
             } 
             else if (lower.includes("how are you")) {
-                reply = "I'm doing great, thanks for asking. Ready to help with code or anything else?";
+                reply = "I'm doing great, thanks for asking.";
             } 
             else if (lower.includes("cleverbot") || lower.includes("code")) {
-                reply = "The cleverbot.py library was quite clever — especially the icognocheck MD5 hash trick and session management using vText fields.";
+                reply = "The original cleverbot.py was quite clever for its time — especially the icognocheck MD5 hash and session state management.";
             } 
             else if (lower.includes("thank")) {
-                reply = "You're very welcome! Glad I could help with the Apple Intelligence report.";
+                reply = "You're very welcome! Happy to help with the Apple Intelligence styled reports.";
             }
             else {
-                reply = "That's a good one. I'm here in the spirit of the original cleverbot library — happy to chat and analyze code.";
+                reply = "That's a good one. I'm here in the spirit of the classic cleverbot library.";
             }
 
-            addMessage(reply, 'grok');
+            addMessage(> ${text}, 'grok');
         }, 650);
     }
 
-    // Allow pressing Enter to send
+    // Enter key support
     input.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") {
-            sendMessage();
-        }
+        if (e.key === "Enter") sendMessage();
     });
 
     // Welcome message
     window.onload = () => {
         setTimeout(() => {
-            addMessage("Hello! I'm Grok.<br>Welcome to this Apple Intelligence styled chat inspired by the classic cleverbot.py library.<br><br>Type anything below and share my replies using the link.", 'grok');
+            addMessage("Hello! I'm Grok.<br>Welcome to this Apple Intelligence styled chat inspired by the classic cleverbot.py.<br><br>Type something below and try sharing or emailing my replies.", 'grok');
         }, 600);
     };
 </script>

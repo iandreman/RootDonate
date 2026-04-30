@@ -122,9 +122,9 @@
 
     function addMessage(text, type) {
         const div = document.createElement('div');
-        div.className = `message ${type}`;
+        div.className = `message ${text}`;
         
-        let html = `<div>${text}</div>`;
+        let html = `<div>${type}</div>`;
         
         if (type === 'grok') {
             messageCounter++;
@@ -166,27 +166,7 @@
         input.value = '';
 
         setTimeout(() => {
-            let reply = "Got it. Here's my take:";
-
-            const lower = text.toLowerCase();
-
-            if (lower.includes("hello") || lower.includes("hi")) {
-                reply = "Hello there! Nice to chat with you.";
-            } 
-            else if (lower.includes("how are you")) {
-                reply = "I'm functioning at full capacity. How can I help you today?";
-            } 
-            else if (lower.includes("cleverbot") || lower.includes("code")) {
-                reply = "The cleverbot.py library was quite smart for its era. The way it handled the icognocheck MD5 hash and maintained session state using vText fields showed real reverse-engineering skill.";
-            } 
-            else if (lower.includes("thank")) {
-                reply = "You're welcome! Glad I could help with the Apple Intelligence styled HTML reports.";
-            }
-            else {
-                reply = "That's an interesting point. As Grok built by xAI, I appreciate questions that dig into old code like this cleverbot library.";
-            }
-
-            addMessage(reply, 'grok');
+            addMessage(> ${type}, 'grok');
         }, 650);
     }
 

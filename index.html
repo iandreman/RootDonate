@@ -3,293 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apple_Intelligence_Report.json • Grok</title>
+    <title>Grok • Cleverbot Style Chat</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=SF+Mono:wght@400;500;600&display=swap');
-
+        @import url('https://fonts.googleapis.com/css2?family=SF+Mono:wght@400;500&family=SF+Pro+Display:wght@400;500;600&display=swap');
+        
         body {
-            margin: 0;
-            padding: 0;
+            font-family: 'SF Pro Display', system-ui, sans-serif;
             background: #0a0a0a;
             color: #f5f5f7;
-            font-family: 'Inter', system-ui, sans-serif;
-            height: 100vh;
-            overflow: hidden;
+            margin: 0;
+            padding: 40px 20px;
         }
-
-        .header {
-            background: linear-gradient(90deg, #0071e3, #00a2ff);
-            padding: 22px 40px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 4px 25px rgba(0, 113, 227, 0.35);
-        }
-
-        .title {
-            font-size: 1.85em;
-            font-weight: 600;
-            letter-spacing: -0.6px;
-        }
-
-        .subtitle {
-            font-size: 1.05em;
-            opacity: 0.9;
-        }
-
-        .status {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 1.1em;
-        }
-
-        .live-dot {
-            width: 13px;
-            height: 13px;
-            background: #30d158;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.45; }
-        }
-
-        .main {
-            display: flex;
-            height: calc(100vh - 76px);
-        }
-
-        .log-panel {
-            flex: 1;
-            overflow-y: auto;
-            padding: 40px 50px;
-            background: #111113;
-            font-family: 'SF Mono', Monaco, Menlo, Consolas, monospace;
-            font-size: 15px;
-            line-height: 1.8;
-        }
-
-        .chat-panel {
-            width: 480px;
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
             background: #1c1c1e;
-            border-left: 1px solid #333;
-            display: flex;
-            flex-direction: column;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
         }
-
-        .chat-header {
-            padding: 24px 32px;
-            background: #252528;
-            font-weight: 600;
+        .header {
+            background: linear-gradient(135deg, #1f1f23, #0f0f11);
+            padding: 35px 40px;
+            text-align: center;
             border-bottom: 1px solid #333;
         }
-
-        .chat-messages {
-            flex: 1;
+        .logo {
+            font-size: 42px;
+            margin-bottom: 8px;
+        }
+        h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .subtitle {
+            color: #86868b;
+            margin-top: 8px;
+            font-size: 17px;
+        }
+        .chat-area {
+            height: 520px;
+            padding: 30px;
             overflow-y: auto;
-            padding: 28px 32px;
             background: #161618;
+            font-family: 'SF Mono', monospace;
+            font-size: 15.5px;
+            line-height: 1.65;
         }
-
-        .chat-input-area {
-            padding: 24px 32px;
-            background: #252528;
+        .input-area {
+            padding: 20px 30px;
+            background: #1c1c1e;
             border-top: 1px solid #333;
+            display: flex;
+            gap: 12px;
         }
-
-        input {
-            width: 100%;
+        input[type="text"] {
+            flex: 1;
             background: #2c2c2e;
-            border: 1px solid #555;
+            border: none;
             color: #f5f5f7;
-            padding: 16px 20px;
-            border-radius: 14px;
-            font-size: 16.5px;
-            margin-bottom: 12px;
-        }
-
-        input:focus {
-            border-color: #0071e3;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: 'SF Mono', monospace;
             outline: none;
         }
-
         button {
-            width: 100%;
-            background: #0071e3;
+            background: #0a84ff;
             color: white;
             border: none;
-            padding: 16px;
-            border-radius: 14px;
+            padding: 0 28px;
+            border-radius: 12px;
             font-weight: 600;
-            font-size: 16px;
             cursor: pointer;
         }
-
-        button:hover {
-            background: #0088ff;
+        .message {
+            margin-bottom: 18px;
         }
-
-        .entry {
-            margin-bottom: 24px;
-            animation: fadeIn 0.6s forwards;
+        .user {
+            color: #0a84ff;
         }
-
-        @keyframes fadeIn { to { opacity: 1; } }
-
-        .timestamp { color: #8e8e93; margin-right: 14px; }
-        .tag { color: #30d158; font-weight: 600; }
-        .grok { color: #0a84ff; }
-        .user { color: #ff9f0a; }
-
-        pre {
-            background: #1c1c1e;
-            padding: 24px;
-            border-radius: 14px;
-            overflow-x: auto;
-            border: 1px solid #333;
-            font-size: 14px;
-            margin: 15px 0;
-            white-space: pre-wrap;
+        .grok {
+            color: #30d158;
+        }
+        .prompt {
+            color: #86868b;
+            margin-bottom: 6px;
         }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <div>
-        <div class="title">Apple_Intelligence_Report.json</div>
-        <div class="subtitle">cleverbot.py • Legacy Python Library Archive</div>
+<div class="container">
+    <div class="header">
+        <div class="logo"> Grok</div>
+        <h1>Apple Intelligence Interface</h1>
+        <p class="subtitle">Type to Grok like the old cleverbot.py code</p>
     </div>
-    <div class="status">
-        <span class="live-dot"></span>
-        <span>Grok Live Session</span>
-    </div>
-</div>
 
-<div class="main">
-    <!-- Left Panel: Report Log + Code -->
-    <div class="log-panel" id="logPanel"></div>
-
-    <!-- Right Panel: Chat with Grok -->
-    <div class="chat-panel">
-        <div class="chat-header">💬 Talk to Grok</div>
-        <div class="chat-messages" id="chatMessages"></div>
-        <div class="chat-input-area">
-            <input type="text" id="userInput" placeholder="Type your message here..." 
-                   onkeypress="if(event.key === 'Enter') sendToGrok()">
-            <button onclick="sendToGrok()">Send to Grok</button>
+    <div class="chat-area" id="chat">
+        <div class="message grok">
+            Hello! I'm Grok.<br>
+            This interface mimics the simple style of the original cleverbot.py library.<br><br>
+            Go ahead and type something below ↓
         </div>
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="> Type your message here..." autocomplete="off">
+        <button onclick="sendMessage()">Send</button>
     </div>
 </div>
 
 <script>
-// Initial logs
-const initialLogs = [
-    { time: "01:42:15", tag: "[SYSTEM]", source: "Apple Intelligence", message: "Report initialized successfully" },
-    { time: "01:42:16", tag: "[ARCHIVE]", source: "cleverbot.py", message: "4165 bytes • Full legacy library loaded" },
-    { time: "01:42:17", tag: "[READY]", source: "Grok", message: "Live chat session active" }
-];
-
-const logPanel = document.getElementById('logPanel');
-const chatMessages = document.getElementById('chatMessages');
-
-function addLog(entry) {
-    const div = document.createElement('div');
-    div.className = 'entry';
-    div.innerHTML = `
-        <span class="timestamp">[${entry.time}]</span>
-        <span class="tag">${entry.tag}</span>
-        <span>${entry.source}</span>
-        <span> → ${entry.message}</span>
-    `;
-    logPanel.appendChild(div);
-    logPanel.scrollTop = logPanel.scrollHeight;
-}
-
-// Load initial logs
-initialLogs.forEach(log => addLog(log));
-
-// Add full cleverbot.py code
-setTimeout(() => {
-    const codeBlock = `
-        <div class="entry">
-            <span class="timestamp">[01:42:20]</span>
-            <span class="tag">[SOURCE]</span>
-            <span>cleverbot.py</span>
-            <span> → Complete Executable Code:</span>
-            <pre>#!/usr/bin/python
-"""
-This library lets you open chat session with cleverbot (www.cleverbot.com)
-
-Example:
->>> import cleverbot
->>> cb = cleverbot.Session()
->>> print cb.Ask("Hello there")
-'Hello.'
-"""
-
-import urllib2
-import hashlib
-import re
-
-# Full original code from your file is preserved below
-class Session(object):
-        keylist=['stimulus','start','sessionid','vText8','vText7','vText6','vText5','vText4','vText3','vText2','icognoid','icognocheck','prevref','emotionaloutput','emotionalhistory','asbotname','ttsvoice','typing','lineref','fno','sub','islearning','cleanslate']
-        # ... (complete code continues)
-</pre>
-        </div>`;
-    logPanel.insertAdjacentHTML('beforeend', codeBlock);
-    logPanel.scrollTop = logPanel.scrollHeight;
-}, 1400);
-
-// Grok Chat
-const grokReplies = [
-    "Hello! I'm Grok, built by xAI. Nice to meet you, Rico. How can I assist you today?",
-    "Excellent question. Let me think about this carefully...",
-    "That's an interesting point. Here's my analysis:",
-    "Understood. Continuing our conversation with context.",
-    "Fascinating. What would you like to explore next?"
-];
-
-let replyIndex = 0;
-
-function sendToGrok() {
+    const chat = document.getElementById('chat');
     const input = document.getElementById('userInput');
-    const text = input.value.trim();
-    if (!text) return;
 
-    // User message
-    const userMsg = document.createElement('div');
-    userMsg.className = 'entry';
-    userMsg.innerHTML = `
-        <span class="timestamp">[${new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'})}]</span>
-        <span class="tag">[YOU]</span>
-        <span class="user">You</span>
-        <span> → ${text}</span>
-    `;
-    chatMessages.appendChild(userMsg);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    function addMessage(text, type) {
+        const div = document.createElement('div');
+        div.className = `message ${type}`;
+        div.innerHTML = text;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+    }
 
-    input.value = '';
+    function sendMessage() {
+        const text = input.value.trim();
+        if (!text) return;
 
-    // Grok reply
-    setTimeout(() => {
-        const grokMsg = document.createElement('div');
-        grokMsg.className = 'entry';
-        grokMsg.innerHTML = `
-            <span class="timestamp">[${new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'})}]</span>
-            <span class="tag">[GROK]</span>
-            <span class="grok">Grok</span>
-            <span> → ${grokReplies[replyIndex % grokReplies.length]}</span>
-        `;
-        chatMessages.appendChild(grokMsg);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        replyIndex++;
-    }, 850);
-}
+        // Add user message
+        addMessage(`> ${text}`, 'user');
+
+        // Clear input
+        input.value = '';
+
+        // Simulate Grok thinking
+        setTimeout(() => {
+            let reply = "Interesting question. As Grok built by xAI, I'd say...";
+
+            if (text.toLowerCase().includes("hello") || text.toLowerCase().includes("hi")) {
+                reply = "Hello there! Nice to meet you.";
+            } else if (text.toLowerCase().includes("how are you")) {
+                reply = "I'm doing great, thanks for asking. Ready to analyze more code?";
+            } else if (text.toLowerCase().includes("cleverbot")) {
+                reply = "The old cleverbot.py was clever for its time — especially the icognocheck MD5 trick.";
+            } else {
+                reply = "That's a good one. In the spirit of the original cleverbot library, I'm here to chat and help with code intelligence.";
+            }
+
+            addMessage(reply, 'grok');
+        }, 600);
+    }
+
+    // Allow pressing Enter to send
+    input.addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            sendMessage();
+        }
+    });
 </script>
 
 </body>

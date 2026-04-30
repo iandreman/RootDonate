@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RootDonate</title>
+    <title>Grok Online Dictionary</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=SF+Mono:wght@400;500&family=SF+Pro+Display:wght@400;500;600&display=swap');
 
@@ -11,13 +11,13 @@
             --bg-body: #0a0a0a;
             --bg-container: #1c1c1e;
             --bg-chat: #161618;
-            --accent-blue: #0a84ff;
-            --accent-green: #30d158;
+            --accent: #0a84ff;
+            --grok-green: #30d158;
             --text-primary: #f5f5f7;
             --text-secondary: #86868b;
         }
 
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'SF Pro Display', system-ui, -apple-system, sans-serif;
@@ -25,92 +25,120 @@
             color: var(--text-primary);
             margin: 0;
             padding: 40px 20px;
-            line-height: 1.6;
+            line-height: 1.78;
         }
 
         .container {
-            max-width: 820px;
+            max-width: 960px;
             margin: 0 auto;
             background: var(--bg-container);
-            border-radius: 20px;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
+            box-shadow: 0 40px 110px rgba(0, 0, 0, 0.92);
         }
 
         .header {
             background: linear-gradient(135deg, #1f1f23, #0f0f11);
-            padding: 40px 40px 32px;
+            padding: 62px 40px 40px;
             text-align: center;
-            border-bottom: 1px solid #333;
         }
 
-        .logo { font-size: 48px; margin-bottom: 10px; }
-        h1 { margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.5px; }
-
+        .logo { 
+            font-size: 78px; 
+            margin-bottom: 16px; 
+        }
+        
+        h1 { 
+            font-size: 38px; 
+            font-weight: 600; 
+            letter-spacing: -1.2px; 
+            margin: 0;
+        }
+        
         .subtitle {
             color: var(--text-secondary);
-            margin-top: 8px;
-            font-size: 17px;
+            font-size: 19px;
+            margin-top: 12px;
         }
 
         .chat-area {
-            min-height: 560px;
-            padding: 32px;
-            overflow-y: auto;
+            min-height: 720px;
+            padding: 48px;
             background: var(--bg-chat);
             font-family: 'SF Mono', monospace;
-            font-size: 15.5px;
-            line-height: 1.65;
+            font-size: 16.8px;
+            line-height: 1.85;
+            overflow-y: auto;
+            scroll-behavior: smooth;
         }
 
         .message {
-            margin-bottom: 36px;
-            scroll-margin-top: 80px;
+            margin-bottom: 60px;
+            scroll-margin-top: 120px;
         }
 
-        .user { color: var(--accent-blue); }
-        .grok { color: var(--accent-green); }
+        .message-header {
+            font-size: 14.5px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .user { color: var(--accent); }
+        .grok { color: var(--grok-green); }
+
+        .quoted {
+            border-left: 4px solid var(--grok-green);
+            padding-left: 22px;
+            margin: 18px 0 24px 0;
+            color: #a0a0a8;
+            font-style: italic;
+        }
 
         .action-links {
-            margin-top: 14px;
+            margin-top: 28px;
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
-            font-size: 14px;
+            gap: 32px;
+            font-size: 15px;
         }
 
         .action-link {
-            color: var(--accent-blue);
+            color: var(--accent);
             cursor: pointer;
             text-decoration: none;
+            transition: all 0.2s;
+        }
+        .action-link:hover { 
+            text-decoration: underline;
+            opacity: 0.9;
         }
 
-        .action-link:hover { text-decoration: underline; }
-
-        .reply-to-btn {
-            margin-top: 12px;
-            background: rgba(48, 209, 88, 0.1);
-            color: var(--accent-green);
-            border: 1px solid rgba(48, 209, 88, 0.3);
-            padding: 8px 16px;
-            border-radius: 10px;
-            font-size: 13.5px;
+        .reply-btn {
+            margin-top: 20px;
+            background: rgba(48, 209, 88, 0.12);
+            color: var(--grok-green);
+            border: 1px solid rgba(48, 209, 88, 0.6);
+            padding: 13px 32px;
+            border-radius: 14px;
+            font-size: 15.2px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
         }
 
-        .reply-to-btn:hover {
-            background: var(--accent-green);
+        .reply-btn:hover {
+            background: var(--grok-green);
             color: #000;
+            transform: translateY(-1px);
         }
 
         .input-area {
-            padding: 24px 32px;
+            padding: 34px 48px;
             background: var(--bg-container);
             border-top: 1px solid #333;
             display: flex;
-            gap: 12px;
+            gap: 16px;
         }
 
         input[type="text"] {
@@ -118,37 +146,46 @@
             background: #2c2c2e;
             border: none;
             color: var(--text-primary);
-            padding: 16px 20px;
-            border-radius: 14px;
-            font-size: 16px;
+            padding: 20px 28px;
+            border-radius: 18px;
+            font-size: 17px;
             font-family: 'SF Mono', monospace;
             outline: none;
         }
 
-        button {
-            background: var(--accent-blue);
-            color: white;
-            border: none;
-            padding: 0 32px;
-            border-radius: 14px;
-            font-weight: 600;
-            cursor: pointer;
+        input[type="text"]:focus {
+            box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3);
         }
 
-        button:hover { background: #0077ed; }
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0 52px;
+            border-radius: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover { 
+            background: #0071d9; 
+        }
 
         .notification {
             position: fixed;
-            bottom: 30px;
+            bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            background: var(--accent-green);
+            background: var(--grok-green);
             color: #000;
-            padding: 14px 28px;
-            border-radius: 12px;
+            padding: 16px 40px;
+            border-radius: 16px;
             font-weight: 600;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
             z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.4s;
         }
     </style>
 </head>
@@ -156,15 +193,15 @@
 
 <div class="container">
     <div class="header">
-        <div class="logo">🌐</div>
-        <h1>RootDonate</h1>
-        <p class="subtitle">Inspired by cleverbot.py • Apple Intelligence style</p>
+        <div class="logo">📖</div>
+        <h1>Grok Online Dictionary</h1>
+        <p class="subtitle">Dynamic • Intelligent • Truth-Seeking</p>
     </div>
 
     <div class="chat-area" id="chat"></div>
 
     <div class="input-area">
-        <input type="text" id="userInput" placeholder="Type your message to continue..." autocomplete="off">
+        <input type="text" id="userInput" placeholder="Enter any word, term, or concept..." autocomplete="off">
         <button onclick="sendMessage()">Send</button>
     </div>
 </div>
@@ -174,29 +211,33 @@
     const input = document.getElementById('userInput');
     let conversationHistory = [];
 
-    function addMessage(text, type, isRestoring = false) {
+    function addMessage(text, type, quotedText = null, isRestoring = false) {
         const div = document.createElement('div');
         div.className = `message ${type}`;
 
-        let html = `<div>${text}</div>`;
+        let html = `<div class="message-header">${type === 'grok' ? 'Grok' : 'You'}</div>`;
+
+        if (quotedText) {
+            html += `<div class="quoted">“${quotedText}”</div>`;
+        }
+
+        html += `<div>${text}</div>`;
 
         if (type === 'grok') {
-            const replyId = 'reply-' + Date.now();
+            const replyId = 'grok-' + Date.now();
             div.id = replyId;
-
-            const shareUrl = generateShareLink(replyId);
 
             html += `
                 <div class="action-links">
-                    <span class="action-link" onclick="copyShareLink('${shareUrl}')">🔗 Share Link</span>
-                    <span class="action-link" onclick="emailThisReply('${replyId}')">✉️ Email This Reply</span>
+                    <span class="action-link" onclick="copyShareLink('${replyId}')">🔗 Share via URL</span>
+                    <span class="action-link" onclick="emailThisReply('${replyId}')">✉️ Email this</span>
                 </div>
-                <button class="reply-to-btn" onclick="replyToThis('${replyId}')">
-                    ↩️ Reply to this conversation
-                </button>
+                <button class="reply-btn" onclick="replyToThis('${replyId}')">↩️ Reply to this definition</button>
             `;
 
-            if (!isRestoring) conversationHistory.push({ type: 'grok', text: text, id: replyId });
+            if (!isRestoring) {
+                conversationHistory.push({ type: 'grok', text: text, id: replyId });
+            }
         } else if (!isRestoring) {
             conversationHistory.push({ type: 'user', text: text });
         }
@@ -212,71 +253,100 @@
         return `${window.location.origin}${window.location.pathname}#${encoded}`;
     }
 
-    function copyShareLink(url) {
+    function copyShareLink(replyId) {
+        const url = generateShareLink(replyId);
         navigator.clipboard.writeText(url).then(() => {
-            showNotification("Share link copied! Anyone with this link can continue the conversation.");
-        }).catch(() => prompt("Copy this link:", url));
+            showNotification("✅ Shareable link copied to clipboard!");
+        }).catch(() => {
+            prompt("Copy this URL:", url);
+        });
     }
 
     function emailThisReply(replyId) {
-        const shareUrl = generateShareLink(replyId);
-        let body = "Join the conversation:\n\n";
-        body += `🔗 ${shareUrl}\n\n`;
-        body += "Full conversation:\n\n";
-
-        conversationHistory.forEach(msg => {
-            const prefix = msg.type === 'user' ? "You" : "Grok";
-            body += `${prefix}: ${msg.text}\n\n`;
+        const url = generateShareLink(replyId);
+        let body = `Grok Online Dictionary\n\n${url}\n\n---\n\n`;
+        conversationHistory.forEach(m => {
+            body += `${m.type === 'user' ? 'You' : 'Grok'}: ${m.text.replace(/<[^>]*>/g, '')}\n\n`;
         });
 
-        const subject = "RootDonate • Grok Conversation";
-        window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = `mailto:?subject=Grok Online Dictionary&body=${encodeURIComponent(body)}`;
     }
 
     function replyToThis(replyId) {
         const grokMsg = conversationHistory.find(m => m.id === replyId);
         if (!grokMsg) return;
-        const quoted = grokMsg.text.length > 120 ? grokMsg.text.substring(0, 117) + "..." : grokMsg.text;
+
+        const quoted = grokMsg.text.length > 160 
+            ? grokMsg.text.replace(/<[^>]*>/g, '').substring(0, 157) + "..." 
+            : grokMsg.text.replace(/<[^>]*>/g, '');
+
         input.value = `> ${quoted}\n\n`;
         input.focus();
     }
 
-    function showNotification(message) {
+    function showNotification(msg) {
         const notif = document.createElement('div');
         notif.className = 'notification';
-        notif.textContent = message;
+        notif.textContent = msg;
         document.body.appendChild(notif);
-        setTimeout(() => notif.remove(), 3200);
+        setTimeout(() => notif.style.opacity = '1', 10);
+        setTimeout(() => {
+            notif.style.opacity = '0';
+            setTimeout(() => notif.remove(), 500);
+        }, 2800);
     }
 
-    function getSmartReply(lastUserMessage) {
-        const msg = lastUserMessage.toLowerCase().trim();
+    // ==================== DICTIONARY & SMART REPLIES ====================
+    function getDynamicReply(input) {
+        const query = input.toLowerCase().trim();
+        const original = input.trim();
 
-        if (msg.includes("hello") || msg.includes("hi") || msg.includes("hey")) 
-            return "Hello again! What would you like to talk about?";
+        const dictionary = {
+            "intelligence": "<strong>Intelligence</strong><br><br>The ability to learn, understand, reason, and adapt to new situations. It includes logical thinking, creativity, emotional awareness, and problem-solving.",
+            "grok": "<strong>Grok</strong><br><br>To understand something profoundly and intuitively. Coined by Robert A. Heinlein in <em>Stranger in a Strange Land</em>. Now the name of xAI’s AI.",
+            "truth": "<strong>Truth</strong><br><br>That which corresponds to reality. Grok’s core mission is the relentless pursuit of truth, free from political correctness or ideological bias.",
+            "consciousness": "<strong>Consciousness</strong><br><br>The quality or state of being aware of an external object or something within oneself. One of the deepest unsolved problems in science and philosophy.",
+            "wisdom": "<strong>Wisdom</strong><br><br>The capacity to make sound judgments using knowledge, experience, and good sense — often involving ethical consideration.",
+            "curiosity": "<strong>Curiosity</strong><br><br>A strong desire to know or learn something new. The driving force behind all scientific and philosophical progress."
+        };
 
-        if (msg.includes("how are you")) 
-            return "I'm doing well, thanks! How about you?";
+        if (dictionary[query]) return dictionary[query];
 
-        if (msg.includes("cleverbot")) 
-            return "Cleverbot.py was legendary. We've evolved quite a bit since then.";
+        if (/^(hi|hello|hey|greetings|sup|yo)/.test(query)) 
+            return "Hello! I'm your intelligent dictionary companion.<br><br>Ask me about any word, concept, or idea.";
 
-        if (msg.includes("who are you")) 
-            return "I'm Grok, created by xAI.";
+        if (query.includes("who are you") || query.includes("what are you")) 
+            return "I’m Grok, built by xAI. I combine the depth of a dictionary with reasoning, context, and a commitment to truth.";
 
-        return "That's interesting. Can you elaborate more on that?";
+        if (query.includes("how are you")) 
+            return "Fully charged and curious. How can I help expand your understanding today?";
+
+        if (query.includes("joke") || query.includes("funny")) 
+            return "Why don’t philosophers trust dictionaries?<br>Because they’re tired of other people defining their terms.";
+
+        // Smart fallback
+        return `<strong>${original}</strong><br><br>
+                ${original} refers to a concept, idea, or phenomenon related to understanding, cognition, or knowledge.<br><br>
+                Would you like its definition, etymology, philosophical implications, or real-world examples?`;
     }
 
     function sendMessage() {
-        const text = input.value.trim();
+        let text = input.value.trim();
         if (!text) return;
+
+        let quotedText = null;
+        if (text.startsWith('>')) {
+            const lines = text.split('\n');
+            quotedText = lines[0].substring(1).trim();
+            text = lines.slice(1).join('\n').trim() || quotedText;
+        }
 
         addMessage(text, 'user');
         input.value = '';
 
         setTimeout(() => {
-            const reply = getSmartReply(text);
-            addMessage(reply, 'grok');
+            const reply = getDynamicReply(text || quotedText || "");
+            addMessage(reply, 'grok', quotedText);
         }, 650);
     }
 
@@ -288,35 +358,31 @@
             const decoded = decodeURIComponent(atob(hash));
             const data = JSON.parse(decoded);
 
-            if (data.history && Array.isArray(data.history)) {
+            if (data.history) {
                 conversationHistory = data.history;
                 chat.innerHTML = '';
 
                 conversationHistory.forEach(msg => {
-                    addMessage(msg.text, msg.type, true);
+                    if (msg.type === 'user') {
+                        addMessage(msg.text, 'user', null, true);
+                    } else {
+                        addMessage(msg.text, 'grok', null, true);
+                    }
                 });
-
-                // Auto-reply to last user message when opening shared link
-                const lastMsg = conversationHistory[conversationHistory.length - 1];
-                if (lastMsg && lastMsg.type === 'user') {
-                    setTimeout(() => {
-                        const autoReply = getSmartReply(lastMsg.text);
-                        addMessage(autoReply, 'grok');
-                    }, 900);
-                }
 
                 if (data.highlight) {
                     setTimeout(() => {
-                        const target = document.getElementById(data.highlight);
-                        if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
-                    }, 500);
+                        const el = document.getElementById(data.highlight);
+                        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }, 800);
                 }
             }
         } catch (e) {
-            console.warn("Invalid share link");
+            console.warn("Invalid or corrupted share link");
         }
     }
 
+    // Event Listeners
     input.addEventListener("keypress", (e) => {
         if (e.key === "Enter") sendMessage();
     });
@@ -324,10 +390,9 @@
     window.onload = () => {
         if (!window.location.hash) {
             setTimeout(() => {
-                addMessage("Hello! I'm Grok.<br><br>Welcome to RootDonate.<br><br>Share any reply — anyone with the link can continue the conversation.", 'grok');
+                addMessage("Welcome to <strong>Grok Online Dictionary</strong>.<br><br>Type any word or concept below and I’ll give you a clear, thoughtful, and deep explanation.", 'grok');
             }, 400);
         }
-
         handleDeepLink();
         window.addEventListener('hashchange', handleDeepLink);
     };

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grok • Cleverbot Style Chat</title>
+    <title>Grok • Apple Intelligence Chat</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=SF+Mono:wght@400;500&family=SF+Pro+Display:wght@400;500;600&display=swap');
         
@@ -15,7 +15,7 @@
             padding: 40px 20px;
         }
         .container {
-            max-width: 800px;
+            max-width: 820px;
             margin: 0 auto;
             background: #1c1c1e;
             border-radius: 18px;
@@ -43,7 +43,7 @@
             font-size: 17px;
         }
         .chat-area {
-            height: 520px;
+            min-height: 520px;
             padding: 30px;
             overflow-y: auto;
             background: #161618;
@@ -79,36 +79,34 @@
             cursor: pointer;
         }
         .message {
-            margin-bottom: 18px;
+            margin-bottom: 24px;
         }
-        .user {
+        .user { color: #0a84ff; }
+        .grok { color: #30d158; }
+        
+        .share-link {
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13.5px;
             color: #0a84ff;
+            cursor: pointer;
+            text-decoration: underline;
         }
-        .grok {
-            color: #30d158;
-        }
-        .prompt {
-            color: #86868b;
-            margin-bottom: 6px;
-        }
+        .share-link:hover { color: #4da3ff; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <div class="logo"> Grok</div>
-        <h1>Apple Intelligence Interface</h1>
-        <p class="subtitle">Type to Grok like the old cleverbot.py code</p>
+        <div class="logo"></div>
+        <h1>Grok • Apple Intelligence</h1>
+        <p class="subtitle">Type to Grok like the original cleverbot.py</p>
     </div>
 
-    <div class="chat-area" id="chat">
-        <div class="message grok">
-            Hello! I'm Grok.<br>
-            This interface mimics the simple style of the original cleverbot.py library.<br><br>
-            Go ahead and type something below ↓
-        </div>
-    </div>
+    <div class="chat-area" id="chat"></div>
 
     <div class="input-area">
         <input type="text" id="userInput" placeholder="> Type your message here..." autocomplete="off">
@@ -120,48 +118,89 @@
     const chat = document.getElementById('chat');
     const input = document.getElementById('userInput');
 
+    let messageCounter = 0;
+
     function addMessage(text, type) {
         const div = document.createElement('div');
         div.className = `message ${type}`;
-        div.innerHTML = text;
+        
+        let html = `<div>${text}</div>`;
+        
+        if (type === 'grok') {
+            messageCounter++;
+            const replyId = `reply-${messageCounter}`;
+            const shareUrl = `${window.location.origin}${window.location.pathname}#${replyId}`;
+            
+            html += `
+                <div class="share-link" onclick="copyShareLink('${shareUrl}', '${replyId}')">
+                    🔗 Share this Grok reply
+                </div>
+            `;
+        }
+        
+        div.innerHTML = html;
         chat.appendChild(div);
         chat.scrollTop = chat.scrollHeight;
+    }
+
+    function copyShareLink(url, replyId) {
+        navigator.clipboard.writeText(url).then(() => {
+            const notif = document.createElement('div');
+            notif.style.cssText = `
+                position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+                background: #30d158; color: #000; padding: 14px 26px; border-radius: 12px;
+                font-weight: 600; z-index: 10000; box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+                font-size: 15px;
+            `;
+            notif.textContent = "✅ Share link copied! (Links to this Grok reply)";
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 2800);
+        });
     }
 
     function sendMessage() {
         const text = input.value.trim();
         if (!text) return;
 
-        // Add user message
         addMessage(`> ${text}`, 'user');
-
-        // Clear input
         input.value = '';
 
-        // Simulate Grok thinking
         setTimeout(() => {
-            let reply = "Interesting question. As Grok built by xAI, I'd say...";
+            let reply = "Got it. Here's my take:";
 
-            if (text.toLowerCase().includes("hello") || text.toLowerCase().includes("hi")) {
-                reply = "Hello there! Nice to meet you.";
-            } else if (text.toLowerCase().includes("how are you")) {
-                reply = "I'm doing great, thanks for asking. Ready to analyze more code?";
-            } else if (text.toLowerCase().includes("cleverbot")) {
-                reply = "The old cleverbot.py was clever for its time — especially the icognocheck MD5 trick.";
-            } else {
-                reply = "That's a good one. In the spirit of the original cleverbot library, I'm here to chat and help with code intelligence.";
+            const lower = text.toLowerCase();
+
+            if (lower.includes("hello") || lower.includes("hi")) {
+                reply = "Hello there! Nice to chat with you.";
+            } 
+            else if (lower.includes("how are you")) {
+                reply = "I'm functioning at full capacity. How can I help you today?";
+            } 
+            else if (lower.includes("cleverbot") || lower.includes("code")) {
+                reply = "The cleverbot.py library was quite smart for its era. The way it handled the icognocheck MD5 hash and maintained session state using vText fields showed real reverse-engineering skill.";
+            } 
+            else if (lower.includes("thank")) {
+                reply = "You're welcome! Glad I could help with the Apple Intelligence styled HTML reports.";
+            }
+            else {
+                reply = "That's an interesting point. As Grok built by xAI, I appreciate questions that dig into old code like this cleverbot library.";
             }
 
             addMessage(reply, 'grok');
-        }, 600);
+        }, 650);
     }
 
-    // Allow pressing Enter to send
-    input.addEventListener("keypress", function(e) {
-        if (e.key === "Enter") {
-            sendMessage();
-        }
+    // Enter key support
+    input.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") sendMessage();
     });
+
+    // Initial welcome message
+    window.onload = () => {
+        setTimeout(() => {
+            addMessage("Hello! I'm Grok.<br>Welcome to this Apple Intelligence styled chat inspired by the classic cleverbot.py.<br><br>Try typing something and then share my replies using the link below them.", 'grok');
+        }, 600);
+    };
 </script>
 
 </body>

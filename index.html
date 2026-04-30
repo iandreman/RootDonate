@@ -120,6 +120,29 @@
     const input = document.getElementById('userInput');
     let messageCounter = 0;
 
+    function addMessage(text, type) {
+        const div = document.createElement('div');
+        div.className = `message ${type}`;
+        
+        let html = `<div>${text}</div>`;
+        
+        if (type === 'grok') {
+            messageCounter++;
+            const replyId = `reply-${messageCounter}`;
+            const shareUrl = `${window.location.origin}${window.location.pathname}#${replyId}`;
+            
+            html += `
+                <div class="action-links">
+                    <span class="action-link" onclick="copyShareLink('${shareUrl}')">🔗 Share Link</span>
+                    <span class="action-link" onclick="emailThisReply(\`${text.replace(/`/g, '\\`')}\`)">✉️ Email This Reply</span>
+                </div>
+            `;
+        }
+        
+        div.innerHTML = html;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+    }
     function showNotification(message) {
         const notif = document.createElement('div');
         notif.style.cssText = `
@@ -145,31 +168,7 @@
         setTimeout(() => {
             let reply = "That's an interesting point.";
 
-            function addMessage(text, type) {
-        const div = document.createElement('div');
-        div.className = `message ${type}`;
-        
-        let html = `<div>${text}</div>`;
-        
-        if (type === 'grok') {
-            messageCounter++;
-            const replyId = `reply-${messageCounter}`;
-            const shareUrl = `${window.location.origin}${window.location.pathname}#${replyId}`;
-            
-            html += `
-                <div class="action-links">
-                    <span class="action-link" onclick="copyShareLink('${shareUrl}')">🔗 Share Link</span>
-                    <span class="action-link" onclick="emailThisReply(\`${text.replace(/`/g, '\\`')}\`)">✉️ Email This Reply</span>
-                </div>
-            `;
-        }
-        
-        div.innerHTML = html;
-        chat.appendChild(div);
-        chat.scrollTop = chat.scrollHeight;
-    }
-
-    function copyShareLink(url) {
+function copyShareLink(url) {
         navigator.clipboard.writeText(url).then(() => {
             showNotification("✅ Share link copied to clipboard!");
         }).catch(() => {

@@ -74,18 +74,24 @@
         }
 
         .definition {
-            background: rgba(48, 209, 88, 0.07);
+            background: rgba(48, 209, 88, 0.08);
             border-left: 5px solid var(--grok-green);
             padding: 26px 30px;
             border-radius: 16px;
-            margin: 12px 0;
+            margin: 16px 0;
         }
 
         .word {
             font-size: 29px;
             font-weight: 600;
             color: var(--grok-green);
-            margin-bottom: 12px;
+            margin-bottom: 8px;
+        }
+
+        .phonetic {
+            color: #999;
+            font-size: 15.5px;
+            margin-bottom: 16px;
         }
 
         .action-links {
@@ -109,6 +115,10 @@
             border-radius: 14px;
             font-size: 15.5px;
             cursor: pointer;
+            transition: all 0.2s;
+        }
+        .reply-btn:hover {
+            background: rgba(48, 209, 88, 0.2);
         }
 
         .input-area {
@@ -139,7 +149,9 @@
             border-radius: 18px;
             font-weight: 600;
             cursor: pointer;
+            transition: 0.2s;
         }
+        button:hover { opacity: 0.9; }
 
         .notification {
             position: fixed;
@@ -169,13 +181,13 @@
     <div class="chat-area" id="chat"></div>
 
     <div class="input-area">
-        <input type="text" id="userInput" placeholder="Ask about any word, phrase, or concept..." autocomplete="off">
+        <input type="text" id="userInput" placeholder="Ask about any word, phrase, concept, or idea..." autocomplete="off">
         <button onclick="sendMessage()">Send</button>
     </div>
 </div>
 
 <script>
-// === Main Script ===
+// === Enhanced Grok Dictionary Intelligence ===
 const chat = document.getElementById('chat');
 const input = document.getElementById('userInput');
 let conversationHistory = [];
@@ -186,7 +198,9 @@ function addMessage(text, type, quotedText = null, isRestoring = false) {
 
     let html = `<div class="message-header">${type === 'grok' ? 'Grok' : 'You'}</div>`;
 
-    if (quotedText) html += `<div class="quoted">“${quotedText}”</div>`;
+    if (quotedText) {
+        html += `<div class="quoted">“${quotedText}”</div>`;
+    }
 
     html += `<div>${text}</div>`;
 
@@ -196,9 +210,9 @@ function addMessage(text, type, quotedText = null, isRestoring = false) {
 
         html += `
             <div class="action-links">
-                <span class="action-link" onclick="copyShareLink('${replyId}')">🔗 Share via URL</span>
+                <span class="action-link" onclick="copyShareLink('${replyId}')">🔗 Share</span>
             </div>
-            <button class="reply-btn" onclick="replyToThis('${replyId}')">↩️ Reply to this</button>
+            <button class="reply-btn" onclick="replyToThis('${replyId}')">↩️ Reply to this definition</button>
         `;
 
         if (!isRestoring) conversationHistory.push({ type: 'grok', text: text, id: replyId });
@@ -211,12 +225,12 @@ function addMessage(text, type, quotedText = null, isRestoring = false) {
     chat.scrollTop = chat.scrollHeight;
 }
 
-// Real dictionary + Grok-style intelligence
-async function getGrokReply(input) {
-    const query = input.toLowerCase().trim();
-    const original = input.trim();
+// === Core Intelligence Function ===
+async function getGrokReply(inputText) {
+    const query = inputText.toLowerCase().trim();
+    const original = inputText.trim();
 
-    // 1. Try Free Dictionary API
+    // 1. Dictionary API (Standard Definitions)
     try {
         const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(query)}`);
         if (res.ok) {
@@ -224,30 +238,63 @@ async function getGrokReply(input) {
             const entry = data[0];
 
             let phonetic = entry.phonetic ? `/${entry.phonetic}/` : '';
-            let meaningHTML = entry.meanings.map(m => `
-                <strong>${m.partOfSpeech}</strong><br>
-                ${m.definitions[0].definition}
-                ${m.definitions[0].example ? `<br><em>"${m.definitions[0].example}"</em>` : ''}
-            `).join('<br><br>');
+            
+            let meaningsHTML = entry.meanings.map(meaning => `
+                <strong>${meaning.partOfSpeech}</strong><br>
+                ${meaning.definitions.map((def, i) => `
+                    <div style="margin: 12px 0;">
+                        ${i+1}. ${def.definition}
+                        ${def.example ? `<br><em style="color:#888;">“${def.example}”</em>` : ''}
+                    </div>
+                `).join('')}
+            `).join('<br>');
 
-            return `<div class="definition">
-                        <div class="word">${original}</div>
-                        <p style="color:#999; margin-bottom:12px;">${phonetic}</p>
-                        ${meaningHTML}
-                    </div>`;
+            return `
+                <div class="definition">
+                    <div class="word">${original}</div>
+                    <div class="phonetic">${phonetic}</div>
+                    ${meaningsHTML}
+                    <p style="margin-top: 18px; font-size: 14.5px; color: #888;">
+                        Powered by Dictionary API • Grok-enhanced
+                    </p>
+                </div>`;
         }
-    } catch (e) {}
-
-    // 2. Grok-style smart fallback
-    if (/^(hi|hello|hey|sup|yo)/.test(query)) {
-        return "Hello! I'm your intelligent dictionary companion.<br><br>Ask me about any word, concept, or philosophical idea.";
+    } catch (e) {
+        console.log("Dictionary API failed, using intelligence fallback");
     }
 
-    return `<div class="definition">
-                <div class="word">${original}</div>
-                <p>I don't have a pre-written entry for this, but I can reason with you about it.</p>
-                <p>What aspect interests you most — etymology, philosophical implications, modern usage, or related concepts?</p>
-            </div>`;
+    // 2. Smart Grok-style responses for non-dictionary queries
+    if (/^(hi|hello|hey|sup|greetings|yo)/.test(query)) {
+        return `Hello! I'm <strong>Grok Dictionary</strong> — a dynamic, truth-seeking linguistic companion.<br><br>
+                You can ask me about:<br>
+                • Word definitions and etymology<br>
+                • Philosophical concepts<br>
+                • Scientific terms<br>
+                • Memes, slang, or cultural phenomena<br>
+                • Anything that deserves precise understanding.`;
+    }
+
+    if (query.includes("meaning of life") || query.includes("purpose")) {
+        return `<div class="definition">
+                    <div class="word">The Meaning of Life</div>
+                    <p>42 — according to Douglas Adams.</p>
+                    <p>More seriously: The question itself may be malformed. Life doesn't have a single "meaning" handed to us; it is the medium through which meaning is created. The real question is: <em>What meaning will you create today?</em></p>
+                </div>`;
+    }
+
+    // Default intelligent fallback
+    return `
+        <div class="definition">
+            <div class="word">${original}</div>
+            <p>I don't have a fixed dictionary entry for this, but I can reason with you.</p>
+            <p>What specifically would you like to explore?</p>
+            <ul style="margin-top: 12px; padding-left: 20px;">
+                <li>Etymology / origin</li>
+                <li>Philosophical or political implications</li>
+                <li>Modern usage and cultural context</li>
+                <li>Related concepts</li>
+            </ul>
+        </div>`;
 }
 
 async function sendMessage() {
@@ -261,16 +308,26 @@ async function sendMessage() {
         text = lines.slice(1).join('\n').trim() || quotedText;
     }
 
-    addMessage(text, 'user', null);
+    addMessage(text, 'user');
     input.value = '';
 
+    // Show typing indicator (optional enhancement)
+    const typingId = 'typing-' + Date.now();
+    const typingDiv = document.createElement('div');
+    typingDiv.id = typingId;
+    typingDiv.className = 'message grok';
+    typingDiv.innerHTML = `<div class="message-header">Grok</div><div>Thinking<span class="dots">...</span></div>`;
+    chat.appendChild(typingDiv);
+    chat.scrollTop = chat.scrollHeight;
+
     setTimeout(async () => {
+        typingDiv.remove();
         const reply = await getGrokReply(text || quotedText || "");
         addMessage(reply, 'grok', quotedText);
-    }, 600);
+    }, 650);
 }
 
-// URL Sharing Functions
+// Share & Reply functions (same as before, slightly cleaned)
 function generateShareLink(replyId) {
     const data = { history: conversationHistory, highlight: replyId };
     const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
@@ -280,15 +337,16 @@ function generateShareLink(replyId) {
 function copyShareLink(replyId) {
     const url = generateShareLink(replyId);
     navigator.clipboard.writeText(url).then(() => {
-        showNotification("✅ Shareable URL copied!");
+        showNotification("✅ Shareable link copied to clipboard");
     });
 }
 
 function replyToThis(replyId) {
     const grokMsg = conversationHistory.find(m => m.id === replyId);
     if (!grokMsg) return;
-    const quoted = grokMsg.text.replace(/<[^>]*>/g, '').substring(0, 140) + "...";
-    input.value = `> ${quoted}\n\n`;
+    
+    const cleanText = grokMsg.text.replace(/<[^>]*>/g, '').substring(0, 120);
+    input.value = `> ${cleanText}...\n\n`;
     input.focus();
 }
 
@@ -298,7 +356,7 @@ function showNotification(msg) {
     notif.textContent = msg;
     document.body.appendChild(notif);
     setTimeout(() => notif.style.opacity = '1', 50);
-    setTimeout(() => notif.remove(), 3200);
+    setTimeout(() => notif.remove(), 3000);
 }
 
 // Deep link support
@@ -326,7 +384,7 @@ function handleDeepLink() {
                 setTimeout(() => {
                     const el = document.getElementById(data.highlight);
                     if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-                }, 600);
+                }, 400);
             }
         }
     } catch (e) {
@@ -341,7 +399,9 @@ input.addEventListener("keypress", (e) => {
 
 window.onload = () => {
     if (!window.location.hash) {
-        addMessage("Welcome to <strong>Grok Dictionary</strong>.<br><br>Ask me anything — words, concepts, philosophy, science, or abstract ideas. I'll try to give you clear, thoughtful answers.", 'grok');
+        addMessage(`Welcome to <strong>Grok Dictionary</strong>.<br><br>
+                    A dynamic, truth-seeking companion for language and ideas.<br><br>
+                    Ask me about any word, concept, or philosophical question.`, 'grok');
     }
     handleDeepLink();
     window.addEventListener('hashchange', handleDeepLink);

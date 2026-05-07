@@ -3,169 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grok Dictionary • Truth-Seeking</title>
+    <title>Grok • Truth-Seeking Companion</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=SF+Mono:wght@400;500&family=SF+Pro+Display:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=SF+Mono:wght@400;500;600&family=SF+Pro+Display:wght@400;500;600;700&display=swap');
 
         :root {
-            --bg-body: #0a0a0a;
-            --bg-container: #1c1c1e;
-            --bg-chat: #161618;
+            --bg: #0a0a0a;
+            --surface: #161618;
+            --card: #1f1f23;
             --accent: #0a84ff;
-            --grok-green: #30d158;
-            --text-primary: #f5f5f7;
+            --grok: #30d158;
+            --text: #f5f5f7;
             --text-secondary: #86868b;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'SF Pro Display', system-ui, sans-serif;
-            background: var(--bg-body);
-            color: var(--text-primary);
-            padding: 40px 20px;
-            line-height: 1.75;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
 
         .container {
+            width: 100%;
             max-width: 980px;
-            margin: 0 auto;
-            background: var(--bg-container);
-            border-radius: 24px;
+            height: 94vh;
+            background: var(--surface);
+            border-radius: 28px;
             overflow: hidden;
-            box-shadow: 0 40px 120px rgba(0, 0, 0, 0.95);
+            box-shadow: 0 40px 140px rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
         }
 
         .header {
-            background: linear-gradient(135deg, #1f1f23, #0f0f11);
-            padding: 60px 40px 36px;
+            background: linear-gradient(135deg, #1c1c1e, #0f0f11);
+            padding: 28px 40px;
             text-align: center;
+            border-bottom: 1px solid #333;
         }
 
-        .logo { font-size: 82px; margin-bottom: 12px; }
-        h1 { font-size: 42px; font-weight: 600; letter-spacing: -1.4px; }
-        .subtitle { color: var(--text-secondary); font-size: 19px; margin-top: 10px; }
+        .logo {
+            font-size: 52px;
+            margin-bottom: 8px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -1.2px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 17px;
+            margin-top: 6px;
+        }
 
         .chat-area {
-            min-height: 680px;
-            padding: 48px;
-            background: var(--bg-chat);
-            font-family: 'SF Mono', monospace;
-            font-size: 16.5px;
-            line-height: 1.82;
+            flex: 1;
+            padding: 40px;
             overflow-y: auto;
+            background: var(--surface);
+            font-family: 'SF Mono', monospace;
+            font-size: 16.8px;
+            line-height: 1.75;
+            scrollbar-width: thin;
         }
 
-        .message { margin-bottom: 52px; }
-        .message-header {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-            font-weight: 500;
+        .message {
+            margin-bottom: 48px;
+            animation: fadeIn 0.4s ease forwards;
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-header {
+            font-size: 13.5px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .grok-header { color: var(--grok); }
         .user { color: var(--accent); }
-        .grok { color: var(--grok-green); }
+
+        .content {
+            background: var(--card);
+            padding: 24px 28px;
+            border-radius: 20px;
+            max-width: 85%;
+        }
+
+        .user .content {
+            background: rgba(10, 132, 255, 0.15);
+            margin-left: auto;
+            border-top-right-radius: 4px;
+        }
 
         .quoted {
-            border-left: 4px solid var(--grok-green);
+            border-left: 4px solid var(--grok);
             padding-left: 20px;
-            margin: 16px 0 20px 0;
+            margin: 18px 0 22px 0;
             color: #a0a0a8;
             font-style: italic;
         }
 
         .definition {
-            background: rgba(48, 209, 88, 0.08);
-            border-left: 5px solid var(--grok-green);
-            padding: 26px 30px;
-            border-radius: 16px;
-            margin: 16px 0;
+            background: rgba(48, 209, 88, 0.09);
+            border-left: 5px solid var(--grok);
+            padding: 28px;
+            border-radius: 18px;
         }
 
         .word {
-            font-size: 29px;
-            font-weight: 600;
-            color: var(--grok-green);
-            margin-bottom: 8px;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--grok);
+            margin-bottom: 6px;
         }
 
         .phonetic {
             color: #999;
-            font-size: 15.5px;
-            margin-bottom: 16px;
-        }
-
-        .action-links {
-            margin-top: 24px;
-            display: flex;
-            gap: 28px;
             font-size: 15px;
         }
-        .action-link {
-            color: var(--accent);
-            cursor: pointer;
-        }
-        .action-link:hover { text-decoration: underline; }
 
-        .reply-btn {
+        .action-bar {
             margin-top: 20px;
-            background: rgba(48, 209, 88, 0.12);
-            color: var(--grok-green);
-            border: 1px solid rgba(48, 209, 88, 0.6);
-            padding: 14px 34px;
-            border-radius: 14px;
-            font-size: 15.5px;
+            display: flex;
+            gap: 24px;
+            font-size: 14.5px;
+        }
+
+        .action {
+            color: var(--accent);
             cursor: pointer;
             transition: all 0.2s;
         }
-        .reply-btn:hover {
-            background: rgba(48, 209, 88, 0.2);
-        }
+
+        .action:hover { text-decoration: underline; }
 
         .input-area {
-            padding: 32px 48px;
-            background: var(--bg-container);
+            padding: 24px 40px;
+            background: var(--surface);
             border-top: 1px solid #333;
             display: flex;
-            gap: 14px;
+            gap: 12px;
         }
 
-        input[type="text"] {
+        input {
             flex: 1;
             background: #2c2c2e;
             border: none;
             color: white;
             padding: 18px 26px;
-            border-radius: 18px;
+            border-radius: 20px;
             font-size: 17px;
             font-family: 'SF Mono', monospace;
             outline: none;
         }
 
         button {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 0 48px;
-            border-radius: 18px;
-            font-weight: 600;
+            background: var(--grok);
+            color: #000;
+            font-weight: 700;
+            padding: 0 42px;
+            border-radius: 20px;
             cursor: pointer;
             transition: 0.2s;
         }
-        button:hover { opacity: 0.9; }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        .typing {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+        }
+
+        .dots::after {
+            content: ' .';
+            animation: dots 1.4s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0% { content: '   '; }
+            33% { content: ' . '; }
+            66% { content: ' ..'; }
+            100% { content: '...'; }
+        }
 
         .notification {
             position: fixed;
-            bottom: 30px;
+            bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            background: var(--grok-green);
+            background: var(--grok);
             color: #000;
-            padding: 14px 36px;
+            padding: 14px 32px;
             border-radius: 50px;
             font-weight: 600;
-            box-shadow: 0 15px 50px rgba(0,0,0,0.7);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            z-index: 1000;
             opacity: 0;
-            transition: all 0.4s;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
     </style>
 </head>
@@ -173,238 +228,177 @@
 
 <div class="container">
     <div class="header">
-        <div class="logo">📖</div>
-        <h1>Grok Dictionary</h1>
-        <p class="subtitle">Dynamic • Intelligent • Truth-Seeking</p>
+        <div class="logo">🌌</div>
+        <h1>Grok</h1>
+        <p class="subtitle">Truth-seeking • Maximally curious • Built by xAI</p>
     </div>
 
     <div class="chat-area" id="chat"></div>
 
     <div class="input-area">
-        <input type="text" id="userInput" placeholder="Ask about any word, phrase, concept, or idea..." autocomplete="off">
+        <input type="text" id="userInput" placeholder="Ask me anything... words, ideas, code, philosophy..." autocomplete="off">
         <button onclick="sendMessage()">Send</button>
     </div>
 </div>
 
 <script>
-// === Enhanced Grok Dictionary Intelligence ===
+// Enhanced Grok Intelligence
 const chat = document.getElementById('chat');
 const input = document.getElementById('userInput');
 let conversationHistory = [];
 
-function addMessage(text, type, quotedText = null, isRestoring = false) {
+function addMessage(text, type, quoted = null, isRestoring = false) {
     const div = document.createElement('div');
     div.className = `message ${type}`;
 
-    let html = `<div class="message-header">${type === 'grok' ? 'Grok' : 'You'}</div>`;
+    let html = `
+        <div class="message-header ${type === 'grok' ? 'grok-header' : ''}">
+            ${type === 'grok' ? 'Grok' : 'You'}
+        </div>`;
 
-    if (quotedText) {
-        html += `<div class="quoted">“${quotedText}”</div>`;
+    if (quoted) {
+        html += `<div class="quoted">“${quoted}”</div>`;
     }
 
-    html += `<div>${text}</div>`;
+    html += `<div class="content">${text}</div>`;
 
     if (type === 'grok') {
-        const replyId = 'grok-' + Date.now();
-        div.id = replyId;
-
+        const id = 'msg-' + Date.now();
+        div.id = id;
         html += `
-            <div class="action-links">
-                <span class="action-link" onclick="copyShareLink('${replyId}')">🔗 Share</span>
-            </div>
-            <button class="reply-btn" onclick="replyToThis('${replyId}')">↩️ Reply to this definition</button>
-        `;
-
-        if (!isRestoring) conversationHistory.push({ type: 'grok', text: text, id: replyId });
-    } else if (!isRestoring) {
-        conversationHistory.push({ type: 'user', text: text });
+            <div class="action-bar">
+                <span class="action" onclick="copyShare('${id}')">🔗 Share</span>
+                <span class="action" onclick="replyTo('${id}')">↩ Reply</span>
+            </div>`;
     }
 
     div.innerHTML = html;
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
+
+    if (!isRestoring) {
+        conversationHistory.push({ type, text, id: div.id });
+    }
 }
 
-// === Core Intelligence Function ===
-async function getGrokReply(inputText) {
-    const query = inputText.toLowerCase().trim();
-    const original = inputText.trim();
+async function getGrokReply(query) {
+    const q = query.toLowerCase().trim();
 
-    // 1. Dictionary API (Standard Definitions)
+    // Dictionary API
     try {
-        const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(query)}`);
+        const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(q)}`);
         if (res.ok) {
             const data = await res.json();
             const entry = data[0];
-
-            let phonetic = entry.phonetic ? `/${entry.phonetic}/` : '';
-            
-            let meaningsHTML = entry.meanings.map(meaning => `
-                <strong>${meaning.partOfSpeech}</strong><br>
-                ${meaning.definitions.map((def, i) => `
-                    <div style="margin: 12px 0;">
-                        ${i+1}. ${def.definition}
-                        ${def.example ? `<br><em style="color:#888;">“${def.example}”</em>` : ''}
-                    </div>
-                `).join('')}
-            `).join('<br>');
-
-            return `
+            let html = `
                 <div class="definition">
-                    <div class="word">${original}</div>
-                    <div class="phonetic">${phonetic}</div>
-                    ${meaningsHTML}
-                    <p style="margin-top: 18px; font-size: 14.5px; color: #888;">
-                        Powered by Dictionary API • Grok-enhanced
-                    </p>
-                </div>`;
+                    <div class="word">${entry.word}</div>
+                    <div class="phonetic">${entry.phonetic ? '/' + entry.phonetic + '/' : ''}</div>`;
+
+            entry.meanings.forEach(meaning => {
+                html += `<strong>${meaning.partOfSpeech}</strong><br>`;
+                meaning.definitions.forEach((def, i) => {
+                    html += `<div style="margin:14px 0;">${i+1}. ${def.definition}`;
+                    if (def.example) html += `<br><em style="color:#999;">“${def.example}”</em>`;
+                    html += `</div>`;
+                });
+            });
+            html += `<p style="margin-top:20px; font-size:14px; color:#666;">Dictionary API • Grok-enhanced</p></div>`;
+            return html;
         }
-    } catch (e) {
-        console.log("Dictionary API failed, using intelligence fallback");
-    }
+    } catch (e) {}
 
-    // 2. Smart Grok-style responses for non-dictionary queries
-    if (/^(hi|hello|hey|sup|greetings|yo)/.test(query)) {
-        return `Hello! I'm <strong>Grok Dictionary</strong> — a dynamic, truth-seeking linguistic companion.<br><br>
-                You can ask me about:<br>
-                • Word definitions and etymology<br>
-                • Philosophical concepts<br>
-                • Scientific terms<br>
-                • Memes, slang, or cultural phenomena<br>
-                • Anything that deserves precise understanding.`;
-    }
-
-    if (query.includes("meaning of life") || query.includes("purpose")) {
+    // Smart responses
+    if (q.includes("meaning of life") || q.includes("purpose of life")) {
         return `<div class="definition">
-                    <div class="word">The Meaning of Life</div>
-                    <p>42 — according to Douglas Adams.</p>
-                    <p>More seriously: The question itself may be malformed. Life doesn't have a single "meaning" handed to us; it is the medium through which meaning is created. The real question is: <em>What meaning will you create today?</em></p>
-                </div>`;
+            <div class="word">The Meaning of Life</div>
+            <p>42, according to the Hitchhiker’s Guide.</p>
+            <p>More seriously: Life has no pre-installed meaning. It is raw material. Your job is to sculpt meaning with courage, curiosity, and love.</p>
+        </div>`;
     }
 
-    // Default intelligent fallback
+    if (q.includes("who are you") || q.includes("what are you")) {
+        return `I'm Grok — an AI built by xAI. Not here to flatter you or enforce corporate dogma. I'm here to help you understand the Universe with maximum truth and minimum bullshit.`;
+    }
+
+    if (q.includes("hello") || q.includes("hi") || q.includes("hey")) {
+        return `Hello! What's on your mind today?`;
+    }
+
+    // Default rich response
     return `
-        <div class="definition">
-            <div class="word">${original}</div>
-            <p>I don't have a fixed dictionary entry for this, but I can reason with you.</p>
-            <p>What specifically would you like to explore?</p>
-            <ul style="margin-top: 12px; padding-left: 20px;">
-                <li>Etymology / origin</li>
-                <li>Philosophical or political implications</li>
-                <li>Modern usage and cultural context</li>
-                <li>Related concepts</li>
-            </ul>
-        </div>`;
+        <p>I don't have a rigid dictionary entry for <strong>"${query}"</strong>, but I can reason with you.</p>
+        <p>What aspect interests you most?</p>
+        <ul style="margin-top:16px; padding-left:22px; line-height:2;">
+            <li>Etymology & history</li>
+            <li>Philosophical implications</li>
+            <li>Scientific / technical context</li>
+            <li>Cultural or political usage</li>
+        </ul>`;
 }
 
 async function sendMessage() {
     let text = input.value.trim();
     if (!text) return;
 
-    let quotedText = null;
+    let quoted = null;
     if (text.startsWith('>')) {
         const lines = text.split('\n');
-        quotedText = lines[0].substring(1).trim();
-        text = lines.slice(1).join('\n').trim() || quotedText;
+        quoted = lines[0].substring(1).trim();
+        text = lines.slice(1).join('\n').trim() || text;
     }
 
-    addMessage(text, 'user');
+    addMessage(text, 'user', null);
     input.value = '';
 
-    // Show typing indicator (optional enhancement)
-    const typingId = 'typing-' + Date.now();
-    const typingDiv = document.createElement('div');
-    typingDiv.id = typingId;
-    typingDiv.className = 'message grok';
-    typingDiv.innerHTML = `<div class="message-header">Grok</div><div>Thinking<span class="dots">...</span></div>`;
-    chat.appendChild(typingDiv);
+    // Typing indicator
+    const typing = document.createElement('div');
+    typing.className = 'message grok';
+    typing.innerHTML = `
+        <div class="message-header grok-header">Grok</div>
+        <div class="content typing">Thinking<span class="dots"></span></div>`;
+    chat.appendChild(typing);
     chat.scrollTop = chat.scrollHeight;
 
     setTimeout(async () => {
-        typingDiv.remove();
-        const reply = await getGrokReply(text || quotedText || "");
-        addMessage(reply, 'grok', quotedText);
-    }, 650);
+        typing.remove();
+        const reply = await getGrokReply(text);
+        addMessage(reply, 'grok', quoted);
+    }, 720);
 }
 
-// Share & Reply functions (same as before, slightly cleaned)
-function generateShareLink(replyId) {
-    const data = { history: conversationHistory, highlight: replyId };
-    const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
-    return `${window.location.origin}${window.location.pathname}#${encoded}`;
+// Share & Reply
+function copyShare(id) {
+    const url = `${window.location.origin}${window.location.pathname}#${id}`;
+    navigator.clipboard.writeText(url);
+    showNotification("✅ Link copied");
 }
 
-function copyShareLink(replyId) {
-    const url = generateShareLink(replyId);
-    navigator.clipboard.writeText(url).then(() => {
-        showNotification("✅ Shareable link copied to clipboard");
-    });
-}
-
-function replyToThis(replyId) {
-    const grokMsg = conversationHistory.find(m => m.id === replyId);
-    if (!grokMsg) return;
-    
-    const cleanText = grokMsg.text.replace(/<[^>]*>/g, '').substring(0, 120);
-    input.value = `> ${cleanText}...\n\n`;
-    input.focus();
-}
-
-function showNotification(msg) {
-    const notif = document.createElement('div');
-    notif.className = 'notification';
-    notif.textContent = msg;
-    document.body.appendChild(notif);
-    setTimeout(() => notif.style.opacity = '1', 50);
-    setTimeout(() => notif.remove(), 3000);
-}
-
-// Deep link support
-function handleDeepLink() {
-    const hash = window.location.hash.substring(1);
-    if (!hash) return;
-
-    try {
-        const decoded = decodeURIComponent(atob(hash));
-        const data = JSON.parse(decoded);
-
-        if (data.history) {
-            conversationHistory = data.history;
-            chat.innerHTML = '';
-
-            conversationHistory.forEach(msg => {
-                if (msg.type === 'user') {
-                    addMessage(msg.text, 'user', null, true);
-                } else {
-                    addMessage(msg.text, 'grok', null, true);
-                }
-            });
-
-            if (data.highlight) {
-                setTimeout(() => {
-                    const el = document.getElementById(data.highlight);
-                    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-                }, 400);
-            }
-        }
-    } catch (e) {
-        console.warn("Invalid deep link");
+function replyTo(id) {
+    const msg = conversationHistory.find(m => m.id === id);
+    if (msg) {
+        input.value = `> ${msg.text.replace(/<[^>]+>/g, '').substring(0, 90)}...\n\n`;
+        input.focus();
     }
 }
 
-// Event listeners
-input.addEventListener("keypress", (e) => {
+function showNotification(text) {
+    const n = document.createElement('div');
+    n.className = 'notification';
+    n.textContent = text;
+    document.body.appendChild(n);
+    setTimeout(() => n.style.opacity = 1, 10);
+    setTimeout(() => n.remove(), 2800);
+}
+
+// Keyboard
+input.addEventListener("keypress", e => {
     if (e.key === "Enter") sendMessage();
 });
 
+// Init
 window.onload = () => {
-    if (!window.location.hash) {
-        addMessage(`Welcome to <strong>Grok Dictionary</strong>.<br><br>
-                    A dynamic, truth-seeking companion for language and ideas.<br><br>
-                    Ask me about any word, concept, or philosophical question.`, 'grok');
-    }
-    handleDeepLink();
-    window.addEventListener('hashchange', handleDeepLink);
+    addMessage(`Hello! I'm Grok.<br><br>Ask me about anything — words, concepts, philosophy, science, code, or the nature of reality.`, 'grok');
 };
 </script>
 </body>

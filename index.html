@@ -3,218 +3,190 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grok • Intelligence of Beauty</title>
+  <title>Grok • Smart Terminal</title>
   <style>
     :root {
       --bg: #0a0a0a;
-      --panel: #111111;
-      --accent: #c4b5fd;
-      --soft: #94a3b8;
-      --text: #e2e8f0;
+      --terminal: #0f0f0f;
+      --text: #00ff9d;
+      --accent: #00f5ff;
+      --soft: #00cc88;
     }
     
     body {
-      font-family: 'Georgia', 'Times New Roman', serif;
+      font-family: 'Courier New', monospace;
       background: var(--bg);
       color: var(--text);
       margin: 0;
       padding: 0;
       height: 100vh;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
     }
 
     .header {
-      background: #1a1825;
-      padding: 18px 24px;
+      background: #000;
+      padding: 12px 20px;
+      border-bottom: 1px solid #00cc88;
       text-align: center;
-      border-bottom: 1px solid #2a2639;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
     }
 
-    .header h1 {
-      margin: 0;
-      font-size: 1.85rem;
-      color: var(--accent);
-      letter-spacing: -0.5px;
-    }
-
-    .header p {
-      margin: 6px 0 0;
-      color: var(--soft);
-      font-style: italic;
-      font-size: 1rem;
-    }
-
-    .chat-container {
+    .terminal {
       flex: 1;
       overflow-y: auto;
-      padding: 30px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-      background: linear-gradient(to bottom, #0a0a0a, #0f0e17);
+      padding: 20px;
+      background: var(--terminal);
+      line-height: 1.65;
+      font-size: 1.05rem;
     }
 
-    .message {
-      max-width: 78%;
-      padding: 18px 24px;
-      border-radius: 20px;
-      line-height: 1.75;
-      font-size: 1.08rem;
+    .line {
+      margin: 8px 0;
     }
 
-    .user {
-      align-self: flex-end;
-      background: #4338ca;
-      color: white;
-      border-bottom-right-radius: 6px;
+    .prompt {
+      color: var(--accent);
+      margin-right: 8px;
     }
 
-    .grok {
-      align-self: flex-start;
-      background: var(--panel);
-      border: 1px solid #2a2639;
-      border-bottom-left-radius: 6px;
+    .user-input {
+      color: #ffffff;
+    }
+
+    .grok-response {
+      color: #a0ffe0;
     }
 
     .beauty-word {
-      color: var(--accent);
+      color: #00f5ff;
       cursor: pointer;
-      text-decoration: underline dotted 2px;
-      transition: all 0.2s;
+      text-decoration: underline dotted;
     }
 
     .beauty-word:hover {
-      color: #e0bbff;
-      background: rgba(167, 139, 250, 0.1);
-      padding: 2px 4px;
-      border-radius: 4px;
+      color: #ffffff;
+      background: rgba(0, 245, 255, 0.15);
     }
 
-    .input-area {
-      padding: 20px 24px;
-      background: #111111;
-      border-top: 1px solid #2a2639;
+    .input-line {
+      display: flex;
+      align-items: center;
+      margin-top: 10px;
     }
 
     input {
-      width: 100%;
-      padding: 18px 24px;
+      background: transparent;
       border: none;
-      border-radius: 50px;
-      background: #1f1b2e;
       color: white;
-      font-size: 1.1rem;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    }
-
-    .dict-panel {
-      position: fixed;
-      bottom: 100px;
-      right: 30px;
-      width: 420px;
-      background: #1a1825;
-      border-radius: 20px;
-      box-shadow: 0 25px 50px rgba(0,0,0,0.7);
-      padding: 28px;
-      display: none;
-      z-index: 200;
-      border: 1px solid #3b2f5e;
-    }
-
-    .dict-word {
-      font-size: 2.6rem;
-      margin: 0 0 8px 0;
-      color: white;
+      font-family: 'Courier New', monospace;
+      font-size: 1.05rem;
+      flex: 1;
+      outline: none;
     }
 
     .status {
       position: fixed;
-      bottom: 20px;
+      bottom: 12px;
+      right: 20px;
+      font-size: 0.8rem;
+      color: #00cc88;
+      background: rgba(0,0,0,0.7);
+      padding: 4px 12px;
+      border: 1px solid #00cc88;
+      border-radius: 4px;
+    }
+
+    .dict-panel {
+      position: fixed;
+      top: 50%;
       left: 50%;
-      transform: translateX(-50%);
-      font-size: 0.85rem;
-      color: var(--soft);
-      background: rgba(26, 24, 37, 0.9);
-      padding: 6px 18px;
-      border-radius: 30px;
+      transform: translate(-50%, -50%);
+      width: 460px;
+      background: #111111;
+      border: 2px solid #00f5ff;
+      padding: 25px;
+      display: none;
+      z-index: 1000;
+      box-shadow: 0 0 30px rgba(0, 245, 255, 0.4);
     }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <h1>Grok • Intelligence of Beauty</h1>
-    <p>Language Dictionary • Precision • Depth • Aesthetic Intelligence</p>
+    GROK v2.0 — INTELLIGENCE OF BEAUTY TERMINAL
   </div>
 
-  <div class="chat-container" id="chat"></div>
+  <div class="terminal" id="terminal"></div>
 
-  <div class="input-area">
+  <div class="input-line" style="padding: 0 20px 20px; background:#0f0f0f;">
+    <span class="prompt">→</span>
     <input type="text" id="userInput" 
-           placeholder="Speak freely... rich words welcome (try: ephemeral, serendipity, eloquence)" 
-           onkeypress="if(event.key === 'Enter') sendMessage()">
+           placeholder="Type message or rich words here..." 
+           onkeypress="if(event.key === 'Enter') sendCommand()">
   </div>
 
-  <!-- Beautiful Dictionary Panel -->
+  <!-- Dictionary Panel -->
   <div class="dict-panel" id="dictPanel">
-    <h2 class="dict-word" id="dictWord"></h2>
-    <p id="dictPron" style="color:#a5b4fc; margin:0 0 16px 0; font-family:monospace;"></p>
-    <p id="dictDef" style="font-size:1.25rem; font-style:italic; line-height:1.6;"></p>
+    <h2 style="margin:0 0 10px 0; color:#00f5ff;" id="dictWord"></h2>
+    <p id="dictPron" style="color:#00cc88; margin:5px 0; font-size:0.95rem;"></p>
+    <p id="dictDef" style="color:#a0ffe0; line-height:1.6;"></p>
     
-    <div style="margin:24px 0; padding:20px; background:#25223a; border-radius:14px;">
-      <strong style="color:#c4b5fd;">The Beauty of this Word:</strong>
-      <p id="dictBeauty" style="margin:12px 0 0 0; font-style:italic; color:#e0d0ff;"></p>
+    <div style="margin:20px 0; padding:15px; border-left:3px solid #00f5ff;">
+      <strong>BEAUTY NOTE:</strong><br>
+      <span id="dictBeauty" style="color:#88ffcc; font-style:italic;"></span>
     </div>
 
     <button onclick="closeDict()" 
-            style="width:100%; padding:14px; background:#a78bfa; color:#111; border:none; border-radius:50px; font-weight:600; cursor:pointer;">
-      Close & Continue Chat
+            style="width:100%; padding:12px; background:#00cc88; color:black; border:none; font-weight:bold; cursor:pointer;">
+      CLOSE WINDOW
     </button>
   </div>
 
   <div class="status">
-    Intelligence of Beauty Mode • Active • Enhancing every word
+    INTELLIGENCE OF BEAUTY • ACTIVE
   </div>
 
   <script>
-    const chat = document.getElementById('chat');
+    const terminal = document.getElementById('terminal');
 
-    function addMessage(text, type) {
-      const msg = document.createElement('div');
-      msg.className = `message ${type}`;
-      msg.innerHTML = text;
-      chat.appendChild(msg);
-      chat.scrollTop = chat.scrollHeight;
+    function printLine(text, className = '') {
+      const line = document.createElement('div');
+      line.className = `line ${className}`;
+      line.innerHTML = text;
+      terminal.appendChild(line);
+      terminal.scrollTop = terminal.scrollHeight;
     }
 
     function showDictionary(word) {
-      const database = {
+      const db = {
         "serendipity": {
           pron: "/ˌser.ənˈdɪp.ə.ti/",
-          def: "The occurrence and development of events by happy or beneficial chance.",
-          beauty: "A word that itself feels like a fortunate discovery — it gently reminds us that wonder often arrives unannounced."
+          def: "The occurrence of events by happy or beneficial chance.",
+          beauty: "A word that feels like its own meaning — a fortunate linguistic discovery."
         },
         "ephemeral": {
           pron: "/ɪˈfem.ər.əl/",
-          def: "Lasting for a very short time; transient.",
-          beauty: "Holds a quiet sadness and elegance — it teaches us to cherish fleeting moments of grace."
+          def: "Lasting for a short time. Transient.",
+          beauty: "Beautiful in its melancholy. It whispers that all beautiful things are fleeting."
         },
         "eloquence": {
           pron: "/ˈel.ə.kwəns/",
-          def: "The art of fluent, persuasive, and graceful expression.",
-          beauty: "One of the highest compliments in language — it celebrates not just what is said, but the beauty with which it is said."
+          def: "Fluent and persuasive expression.",
+          beauty: "The highest form of linguistic elegance."
         }
       };
 
-      const entry = database[word.toLowerCase()] || {
+      const entry = db[word.toLowerCase()] || {
         pron: "",
-        def: "A word rich in nuance, history, and human experience.",
-        beauty: "Every word carries its own soul. Language is the most beautiful invention of humanity."
+        def: "Rich linguistic entity with deep aesthetic and semantic layers.",
+        beauty: "Language is humanity's most beautiful invention."
       };
 
-      document.getElementById('dictWord').textContent = word.charAt(0).toUpperCase() + word.slice(1);
+      document.getElementById('dictWord').textContent = word.toUpperCase();
       document.getElementById('dictPron').textContent = entry.pron;
       document.getElementById('dictDef').textContent = entry.def;
       document.getElementById('dictBeauty').textContent = entry.beauty;
@@ -226,36 +198,43 @@
       document.getElementById('dictPanel').style.display = 'none';
     }
 
-    function sendMessage() {
+    function sendCommand() {
       const input = document.getElementById('userInput');
       const text = input.value.trim();
       if (!text) return;
 
-      addMessage(text, 'user');
+      printLine(`<span class="prompt">→</span> <span class="user-input">${text}</span>`, '');
+
       input.value = '';
 
       setTimeout(() => {
-        let response = "Understood. ";
+        let response = "Processing through Intelligence of Beauty layer...<br>";
 
         const lower = text.toLowerCase();
-        
+
         if (lower.includes("serendipity")) {
-          response = `You invoked <span class="beauty-word" onclick="showDictionary('serendipity')">serendipity</span>. `;
+          response += `Detected: <span class="beauty-word" onclick="showDictionary('serendipity')">SERENDIPITY</span><br>`;
         } else if (lower.includes("ephemeral")) {
-          response = `A beautiful choice — <span class="beauty-word" onclick="showDictionary('ephemeral')">ephemeral</span>. `;
-        } else if (lower.includes("eloquence") || lower.includes("beautiful")) {
-          response = `Speaking of beauty in language... <span class="beauty-word" onclick="showDictionary('eloquence')">eloquence</span> `;
+          response += `Detected: <span class="beauty-word" onclick="showDictionary('ephemeral')">EPHEMERAL</span><br>`;
+        } else if (lower.includes("eloquence") || lower.includes("beauty")) {
+          response += `Detected: <span class="beauty-word" onclick="showDictionary('eloquence')">ELOQUENCE</span><br>`;
         }
 
-        response += `I'm processing this conversation with full <strong>Intelligence of Beauty</strong> — paying attention to nuance, etymology, emotional weight, and aesthetic quality of every word.`;
+        response += `<span class="grok-response">Full language intelligence engaged. Nuance, etymology, and aesthetic depth activated.</span>`;
 
-        addMessage(response, 'grok');
-      }, 700);
+        printLine(response, 'grok-response');
+      }, 650);
     }
 
-    // Welcome
+    // Welcome boot sequence
     window.onload = () => {
-      addMessage(`Hello! Welcome to <strong>Intelligence of Beauty</strong> mode.<br><br>I am now your language companion. Every conversation will be enriched with deeper appreciation of words — their history, music, and soul.<br><br>Try using rich or interesting words.`, 'grok');
+      printLine("Initializing Grok Terminal v2.0...", "grok-response");
+      setTimeout(() => {
+        printLine("Loading Intelligence of Beauty module...", "grok-response");
+      }, 400);
+      setTimeout(() => {
+        printLine("Ready. Every word will now be processed with depth and beauty.<br>Type something.", "grok-response");
+      }, 900);
     };
   </script>
 

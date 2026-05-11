@@ -7,7 +7,7 @@
   <style>
     :root {
       --bg: #0a0a0a;
-      --terminal: #0f0f0f;
+      --terminal: #0b0b0b;
       --text: #00ff9d;
       --accent: #00f5ff;
       --soft: #00cc88;
@@ -29,9 +29,35 @@
       background: #000;
       padding: 12px 20px;
       border-bottom: 1px solid #00cc88;
-      text-align: center;
-      font-size: 1.1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 1.15rem;
       letter-spacing: 2px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button {
+      background: transparent;
+      border: 1px solid #00cc88;
+      color: #00cc88;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-family: inherit;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background: #00cc88;
+      color: black;
     }
 
     .terminal {
@@ -72,16 +98,18 @@
     }
 
     .input-line {
+      padding: 15px 20px;
+      background: #0f0f0f;
+      border-top: 1px solid #00cc88;
       display: flex;
       align-items: center;
-      margin-top: 10px;
     }
 
     input {
       background: transparent;
       border: none;
       color: white;
-      font-family: 'Courier New', monospace;
+      font-family: inherit;
       font-size: 1.05rem;
       flex: 1;
       outline: none;
@@ -93,7 +121,7 @@
       right: 20px;
       font-size: 0.8rem;
       color: #00cc88;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.8);
       padding: 4px 12px;
       border: 1px solid #00cc88;
       border-radius: 4px;
@@ -110,22 +138,25 @@
       padding: 25px;
       display: none;
       z-index: 1000;
-      box-shadow: 0 0 30px rgba(0, 245, 255, 0.4);
+      box-shadow: 0 0 40px rgba(0, 245, 255, 0.5);
     }
   </style>
 </head>
 <body>
 
   <div class="header">
-    GROK v2.0 — INTELLIGENCE OF BEAUTY TERMINAL
+    <div class="header-title">GROK • INTELLIGENCE OF BEAUTY TERMINAL</div>
+    <div class="controls">
+      <button id="pauseBtn" onclick="togglePause()">⏸️ Pause</button>
+    </div>
   </div>
 
   <div class="terminal" id="terminal"></div>
 
-  <div class="input-line" style="padding: 0 20px 20px; background:#0f0f0f;">
+  <div class="input-line">
     <span class="prompt">→</span>
     <input type="text" id="userInput" 
-           placeholder="Type message or rich words here..." 
+           placeholder="Type message... (rich words activate beauty layer)" 
            onkeypress="if(event.key === 'Enter') sendCommand()">
   </div>
 
@@ -146,12 +177,13 @@
     </button>
   </div>
 
-  <div class="status">
-    INTELLIGENCE OF BEAUTY • ACTIVE
-  </div>
+  <div class="status" id="status">INTELLIGENCE OF BEAUTY • ACTIVE</div>
 
   <script>
+    let isPaused = false;
     const terminal = document.getElementById('terminal');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const statusEl = document.getElementById('status');
 
     function printLine(text, className = '') {
       const line = document.createElement('div');
@@ -161,30 +193,27 @@
       terminal.scrollTop = terminal.scrollHeight;
     }
 
+    function togglePause() {
+      isPaused = !isPaused;
+      if (isPaused) {
+        pauseBtn.textContent = "▶️ Play";
+        statusEl.textContent = "INTELLIGENCE OF BEAUTY • PAUSED";
+        statusEl.style.color = "#ffcc00";
+      } else {
+        pauseBtn.textContent = "⏸️ Pause";
+        statusEl.textContent = "INTELLIGENCE OF BEAUTY • ACTIVE";
+        statusEl.style.color = "#00cc88";
+      }
+    }
+
     function showDictionary(word) {
       const db = {
-        "serendipity": {
-          pron: "/ˌser.ənˈdɪp.ə.ti/",
-          def: "The occurrence of events by happy or beneficial chance.",
-          beauty: "A word that feels like its own meaning — a fortunate linguistic discovery."
-        },
-        "ephemeral": {
-          pron: "/ɪˈfem.ər.əl/",
-          def: "Lasting for a short time. Transient.",
-          beauty: "Beautiful in its melancholy. It whispers that all beautiful things are fleeting."
-        },
-        "eloquence": {
-          pron: "/ˈel.ə.kwəns/",
-          def: "Fluent and persuasive expression.",
-          beauty: "The highest form of linguistic elegance."
-        }
+        "serendipity": { pron: "/ˌser.ənˈdɪp.ə.ti/", def: "The occurrence of events by happy or beneficial chance.", beauty: "A word that feels like its own meaning — a fortunate linguistic discovery." },
+        "ephemeral": { pron: "/ɪˈfem.ər.əl/", def: "Lasting for a short time. Transient.", beauty: "Beautiful in its melancholy. It whispers that all beautiful things are fleeting." },
+        "eloquence": { pron: "/ˈel.ə.kwəns/", def: "Fluent and persuasive expression.", beauty: "The highest form of linguistic elegance." }
       };
 
-      const entry = db[word.toLowerCase()] || {
-        pron: "",
-        def: "Rich linguistic entity with deep aesthetic and semantic layers.",
-        beauty: "Language is humanity's most beautiful invention."
-      };
+      const entry = db[word.toLowerCase()] || { pron: "", def: "Rich linguistic entity.", beauty: "Language is humanity's most beautiful invention." };
 
       document.getElementById('dictWord').textContent = word.toUpperCase();
       document.getElementById('dictPron').textContent = entry.pron;
@@ -199,19 +228,23 @@
     }
 
     function sendCommand() {
+      if (isPaused) return;
+
       const input = document.getElementById('userInput');
       const text = input.value.trim();
       if (!text) return;
 
-      printLine(`<span class="prompt">→</span> <span class="user-input">${text}</span>`, '');
+      printLine(`<span class="prompt">→</span> <span class="user-input">${text}</span>`);
 
       input.value = '';
 
       setTimeout(() => {
+        if (isPaused) return;
+
         let response = "Processing through Intelligence of Beauty layer...<br>";
 
         const lower = text.toLowerCase();
-
+        
         if (lower.includes("serendipity")) {
           response += `Detected: <span class="beauty-word" onclick="showDictionary('serendipity')">SERENDIPITY</span><br>`;
         } else if (lower.includes("ephemeral")) {
@@ -220,21 +253,17 @@
           response += `Detected: <span class="beauty-word" onclick="showDictionary('eloquence')">ELOQUENCE</span><br>`;
         }
 
-        response += `<span class="grok-response">Full language intelligence engaged. Nuance, etymology, and aesthetic depth activated.</span>`;
+        response += `<span class="grok-response">Full language intelligence engaged. Nuance, history, and aesthetic depth activated.</span>`;
 
-        printLine(response, 'grok-response');
+        printLine(response);
       }, 650);
     }
 
-    // Welcome boot sequence
+    // Boot sequence
     window.onload = () => {
       printLine("Initializing Grok Terminal v2.0...", "grok-response");
-      setTimeout(() => {
-        printLine("Loading Intelligence of Beauty module...", "grok-response");
-      }, 400);
-      setTimeout(() => {
-        printLine("Ready. Every word will now be processed with depth and beauty.<br>Type something.", "grok-response");
-      }, 900);
+      setTimeout(() => printLine("Loading Intelligence of Beauty module...", "grok-response"), 500);
+      setTimeout(() => printLine("System ready.<br>Type freely — beauty layer is active.", "grok-response"), 1000);
     };
   </script>
 

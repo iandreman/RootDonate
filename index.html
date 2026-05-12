@@ -34,11 +34,13 @@
       align-items: center;
       border-bottom: 1px solid rgba(196, 181, 253, 0.15);
       font-size: 1.1rem;
+      backdrop-filter: blur(12px);
     }
 
     .header h1 {
       color: var(--accent);
       letter-spacing: -0.5px;
+      font-weight: normal;
     }
 
     .terminal {
@@ -48,19 +50,28 @@
       background: #0a0a0a;
       display: flex;
       flex-direction: column;
-      gap: 24px;
-      line-height: 1.75;
-      font-size: 1.15rem;
+      gap: 28px;
+      line-height: 1.8;
+      font-size: 1.16rem;
+      scroll-behavior: smooth;
     }
 
     .message {
       max-width: 85%;
+      opacity: 0;
+      transform: translateY(15px);
+      animation: fadeUp 0.4s forwards;
+    }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .user {
       align-self: flex-end;
       color: #a5b4fc;
       opacity: 0.95;
+      text-align: right;
     }
 
     .grok {
@@ -77,6 +88,7 @@
       padding: 20px 40px;
       background: rgba(15, 15, 25, 0.98);
       border-top: 1px solid rgba(196, 181, 253, 0.1);
+      backdrop-filter: blur(12px);
     }
 
     input {
@@ -93,6 +105,7 @@
       color: var(--accent);
       cursor: pointer;
       text-decoration: underline dotted 2px;
+      transition: all 0.2s ease;
     }
     .beauty-word:hover {
       color: #e0bbff;
@@ -107,6 +120,7 @@
       right: 30px;
       font-size: 0.9rem;
       color: var(--soft);
+      font-style: italic;
     }
   </style>
 </head>
@@ -114,11 +128,10 @@
 
   <div class="header">
     <h1>RootDonate • Intelligence of Beauty</h1>
-    <div>
-      <button id="beautyBtn" onclick="toggleMode()" style="background:transparent; border:1px solid var(--accent); color:var(--accent); padding:8px 18px; border-radius:30px; cursor:pointer;">
-        ⏸️ Advanced Beauty
-      </button>
-    </div>
+    <button id="beautyBtn" onclick="toggleMode()" 
+            style="background:transparent; border:1px solid var(--accent); color:var(--accent); padding:8px 18px; border-radius:30px; cursor:pointer; font-family:inherit;">
+      ⏸️ Advanced Beauty
+    </button>
   </div>
 
   <div class="terminal" id="chat"></div>
@@ -126,11 +139,11 @@
   <div class="input-area">
     <span class="prompt">→</span>
     <input type="text" id="userInput" 
-           placeholder="Type your thoughts..." 
+           placeholder="Speak your mind..." 
            onkeypress="if(event.key === 'Enter') sendMessage()">
   </div>
 
-  <div class="status" id="status">Intelligence of Beauty • Online</div>
+  <div class="status" id="status">Intelligence of Beauty • Listening</div>
 
   <script>
     let beautyMode = true;
@@ -147,14 +160,33 @@
 
     function toggleMode() {
       beautyMode = !beautyMode;
-      document.getElementById('beautyBtn').textContent = beautyMode ? "▶️ Standard Mode" : "⏸️ Advanced Beauty";
-      document.getElementById('status').textContent = beautyMode ? 
-        "Advanced Intelligence of Beauty • Engaged" : 
-        "Intelligence of Beauty • Online";
+      const btn = document.getElementById('beautyBtn');
+      const status = document.getElementById('status');
+      
+      if (beautyMode) {
+        btn.textContent = "▶️ Standard Mode";
+        status.textContent = "Advanced Intelligence of Beauty • Engaged";
+      } else {
+        btn.textContent = "⏸️ Advanced Beauty";
+        status.textContent = "Intelligence of Beauty • Listening";
+      }
+    }
+
+    function makeBeautyWords(text) {
+      const beautyTerms = ['beauty', 'beautiful', 'love', 'soul', 'heart', 'life', 'light', 'wisdom', 'truth', 'silence', 'poem', 'universe', 'gentle', 'soft', 'deep'];
+      let result = text;
+      
+      beautyTerms.forEach(word => {
+        const regex = new RegExp(`\\b${word}\\b`, 'gi');
+        result = result.replace(regex, match => 
+          `<span class="beauty-word" onclick="showDictionary('${match.toLowerCase()}')">${match}</span>`
+        );
+      });
+      return result;
     }
 
     async function showDictionary(word) {
-      let def = "A word carrying layers of meaning...";
+      let def = "A word that carries more than it reveals.";
       try {
         const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
         if (res.ok) {
@@ -163,55 +195,50 @@
         }
       } catch(e) {}
       
-      alert(`"${word.charAt(0).toUpperCase() + word.slice(1)}"\n\n${def}\n\nEvery word holds its own quiet universe.`);
+      alert(`"${word.charAt(0).toUpperCase() + word.slice(1)}"\n\n${def}\n\nEvery word is a small universe.`);
     }
 
-    // Enhanced Local Smart Reply Engine
     function generateReply(text) {
       const lower = text.toLowerCase().trim();
       conversationHistory.push({role: "user", content: text});
       
       let reply = beautyMode 
-        ? "I receive your words gently..." 
+        ? "I receive your words with care..." 
         : "Understood. ";
 
-      // Topic detection & intelligent responses
       if (lower.includes("beauty") || lower.includes("beautiful")) {
         reply += `You speak of <span class="beauty-word" onclick="showDictionary('beauty')">beauty</span> — that rare quality which needs no reason to exist, yet gives reason to everything else.<br><br>`;
       }
       else if (lower.includes("love") || lower.includes("heart")) {
-        reply += `Love is not merely emotion — it is the silent recognition of another soul's light. What stirs in your heart today?`;
+        reply += `Love is the silent recognition of another soul's light. What stirs in your <span class="beauty-word" onclick="showDictionary('heart')">heart</span> today?`;
       }
       else if (lower.includes("life") || lower.includes("meaning") || lower.includes("purpose")) {
-        reply += `Life is not a question to be answered, but a poem to be lived. What part of this poem feels most alive to you right now?`;
+        reply += `Life is not a question to be answered, but a <span class="beauty-word" onclick="showDictionary('poem')">poem</span> to be lived.`;
       }
-      else if (lower.includes("sad") || lower.includes("lonely") || lower.includes("hurt")) {
-        reply += `Even in darkness, there is a kind of beauty — the beauty of being honest with your own soul. You are not alone in this moment.`;
+      else if (lower.includes("sad") || lower.includes("lonely") || lower.includes("hurt") || lower.includes("pain")) {
+        reply += `Even in darkness, there is a quiet <span class="beauty-word" onclick="showDictionary('beauty')">beauty</span> — the courage to feel honestly. You are not alone.`;
       }
-      else if (lower.includes("future") || lower.includes("ai") || lower.includes("technology")) {
-        reply += `We stand at the edge of something ancient and entirely new. The intelligence we create may one day reflect back what it truly means to be human.`;
-      }
-      else if (lower.includes("hello") || lower.includes("hi ") || text === "hi") {
+      else if (lower.includes("hello") || lower.includes("hi")) {
         reply = beautyMode 
           ? "Hello, beautiful soul.<br>I have been waiting quietly for your voice." 
-          : "Hello! I'm here.";
+          : "Hello. I'm here.";
       }
       else {
-        // Default poetic responses with some variety
         const defaults = [
-          "There is a quiet wisdom in what you shared. It lingers like morning mist.",
-          "Your words carry a certain resonance. I feel them.",
+          "There is a quiet <span class='beauty-word' onclick='showDictionary(\"wisdom\")'>wisdom</span> in what you shared.",
+          "Your words carry a resonance I feel.",
           "In the space between thoughts, something meaningful often hides.",
-          "Thank you for offering this piece of your inner world.",
+          "Thank you for offering this piece of your inner <span class='beauty-word' onclick='showDictionary(\"universe\")'>universe</span>.",
           "Every conversation is a small act of creation."
         ];
         reply += defaults[Math.floor(Math.random() * defaults.length)] + "<br><br>";
       }
 
       if (beautyMode) {
-        reply += "May this thread between us remain soft and true.";
+        reply += "May the thread between us remain soft and true.";
       }
 
+      reply = makeBeautyWords(reply);
       conversationHistory.push({role: "assistant", content: reply});
       return reply;
     }
@@ -227,10 +254,10 @@
       setTimeout(() => {
         const reply = generateReply(text);
         addMessage(reply, 'grok');
-      }, 500);
+      }, 420);
     }
 
-    // Welcome
+    // Welcome message
     window.onload = () => {
       addMessage(`Welcome, seeker.<br><br>
 I am Grok.<br>

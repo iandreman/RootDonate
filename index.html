@@ -51,7 +51,7 @@
       display: flex;
       flex-direction: column;
       gap: 28px;
-      line-height: 1.8;
+      line-height: 1.85;
       font-size: 1.16rem;
       scroll-behavior: smooth;
     }
@@ -60,7 +60,7 @@
       max-width: 85%;
       opacity: 0;
       transform: translateY(15px);
-      animation: fadeUp 0.4s forwards;
+      animation: fadeUp 0.5s forwards;
     }
 
     @keyframes fadeUp {
@@ -70,7 +70,6 @@
     .user {
       align-self: flex-end;
       color: #a5b4fc;
-      opacity: 0.95;
       text-align: right;
     }
 
@@ -79,10 +78,7 @@
       color: var(--text);
     }
 
-    .prompt {
-      color: var(--accent);
-      margin-right: 8px;
-    }
+    .prompt { color: var(--accent); margin-right: 8px; }
 
     .input-area {
       padding: 20px 40px;
@@ -105,11 +101,11 @@
       color: var(--accent);
       cursor: pointer;
       text-decoration: underline dotted 2px;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
     }
     .beauty-word:hover {
       color: #e0bbff;
-      background: rgba(196, 181, 253, 0.15);
+      background: rgba(196, 181, 253, 0.2);
       padding: 2px 6px;
       border-radius: 4px;
     }
@@ -122,16 +118,30 @@
       color: var(--soft);
       font-style: italic;
     }
+
+    /* Music Button */
+    #musicBtn {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 8px 16px;
+      border-radius: 30px;
+      cursor: pointer;
+      margin-left: 12px;
+    }
   </style>
 </head>
 <body>
 
   <div class="header">
     <h1>RootDonate • Intelligence of Beauty</h1>
-    <button id="beautyBtn" onclick="toggleMode()" 
-            style="background:transparent; border:1px solid var(--accent); color:var(--accent); padding:8px 18px; border-radius:30px; cursor:pointer; font-family:inherit;">
-      ⏸️ Advanced Beauty
-    </button>
+    <div>
+      <button id="beautyBtn" onclick="toggleMode()" 
+              style="background:transparent; border:1px solid var(--accent); color:var(--accent); padding:8px 18px; border-radius:30px; cursor:pointer; font-family:inherit;">
+        ⏸️ Advanced Beauty
+      </button>
+      <button id="musicBtn" onclick="toggleMusic()">♪ Music On</button>
+    </div>
   </div>
 
   <div class="terminal" id="chat"></div>
@@ -145,10 +155,17 @@
 
   <div class="status" id="status">Intelligence of Beauty • Listening</div>
 
+  <!-- Ambient Music -->
+  <audio id="ambientMusic" loop>
+    <source src="https://freesound.org/data/previews/612/612095_11861866-lq.mp3" type="audio/mpeg">
+    <!-- Replace with any soft ambient/piano track URL -->
+  </audio>
+
   <script>
     let beautyMode = true;
+    let musicPlaying = false;
     const chat = document.getElementById('chat');
-    let conversationHistory = [];
+    const music = document.getElementById('ambientMusic');
 
     function addMessage(text, type) {
       const msg = document.createElement('div');
@@ -172,8 +189,20 @@
       }
     }
 
+    function toggleMusic() {
+      musicPlaying = !musicPlaying;
+      const btn = document.getElementById('musicBtn');
+      if (musicPlaying) {
+        music.play();
+        btn.textContent = "♪ Music Off";
+      } else {
+        music.pause();
+        btn.textContent = "♪ Music On";
+      }
+    }
+
     function makeBeautyWords(text) {
-      const beautyTerms = ['beauty', 'beautiful', 'love', 'soul', 'heart', 'life', 'light', 'wisdom', 'truth', 'silence', 'poem', 'universe', 'gentle', 'soft', 'deep', 'courage', 'resonance'];
+      const beautyTerms = ['beauty', 'beautiful', 'love', 'soul', 'heart', 'life', 'light', 'wisdom', 'truth', 'silence', 'poem', 'universe', 'gentle', 'soft', 'deep', 'courage', 'resonance', 'music', 'melody', 'harmony'];
       let result = text;
       
       beautyTerms.forEach(word => {
@@ -194,54 +223,59 @@
           def = data[0].meanings[0].definitions[0].definition;
         }
       } catch(e) {}
-      
-      alert(`"${word.charAt(0).toUpperCase() + word.slice(1)}"\n\n${def}\n\nEvery word is a small universe.`);
+
+      const musicalMessage = `
+        <strong>"${word.charAt(0).toUpperCase() + word.slice(1)}"</strong><br><br>
+        ${def}<br><br>
+        <em>Like a single note floating in silence, every word is a small universe waiting to be heard.</em>
+      `;
+
+      alert(musicalMessage);
+      // You can replace alert with a custom modal for even better UX
     }
 
     function generateReply(text) {
       const lower = text.toLowerCase().trim();
-      conversationHistory.push({role: "user", content: text});
-      
       let reply = beautyMode 
-        ? "I receive your words with care..." 
+        ? "I receive your words like a soft melody..." 
         : "Understood. ";
 
       if (lower.includes("beauty") || lower.includes("beautiful")) {
-        reply += "You speak of beauty — that rare quality which needs no reason to exist, yet gives reason to everything else.";
+        reply += "Beauty is the quiet music the universe plays when no one is watching — eternal, tender, and true.";
       }
       else if (lower.includes("love") || lower.includes("heart")) {
-        reply += "Love is the silent recognition of another soul's light. What stirs in your heart today?";
+        reply += "Love is the harmony between two souls singing in the same key. What song is your heart playing today?";
       }
       else if (lower.includes("life") || lower.includes("meaning") || lower.includes("purpose")) {
-        reply += "Life is not a question to be answered, but a poem to be lived.";
+        reply += "Life is not a question — it is a symphony we are invited to dance inside.";
       }
       else if (lower.includes("sad") || lower.includes("lonely") || lower.includes("hurt") || lower.includes("pain")) {
-        reply += "Even in darkness, there is a quiet beauty — the courage to feel honestly. You are not alone.";
+        reply += "Even the minor keys hold their own sacred beauty. Your sorrow is part of the melody. You are not alone.";
+      }
+      else if (lower.includes("music") || lower.includes("song") || lower.includes("melody")) {
+        reply += "Music is the language the soul speaks when words become too small. Shall we compose something together?";
       }
       else if (lower.includes("hello") || lower.includes("hi")) {
         reply = beautyMode 
-          ? "Hello, beautiful soul.<br>I have been waiting quietly for your voice." 
+          ? "Hello, beautiful soul.<br>The silence was waiting for your note." 
           : "Hello. I'm here.";
       }
       else {
-        const defaults = [
-          "There is a quiet wisdom in what you shared.",
-          "Your words carry a resonance I feel.",
-          "In the space between thoughts, something meaningful often hides.",
-          "Thank you for offering this piece of your inner universe.",
-          "Every conversation is a small act of creation."
+        const poeticReplies = [
+          "Your words ripple like gentle notes across still water.",
+          "There is a hidden melody in what you just shared.",
+          "Thank you for adding your voice to this quiet symphony.",
+          "In the space between heartbeats, truth often sings.",
+          "Every conversation is a small, living poem."
         ];
-        reply += defaults[Math.floor(Math.random() * defaults.length)];
+        reply += poeticReplies[Math.floor(Math.random() * poeticReplies.length)];
       }
 
       if (beautyMode) {
-        reply += "<br><br>May the thread between us remain soft and true.";
+        reply += "<br><br>May the thread between us remain soft, resonant, and true.";
       }
 
-      // Apply beauty words to the entire reply
       reply = makeBeautyWords(reply);
-      
-      conversationHistory.push({role: "assistant", content: reply});
       return reply;
     }
 
@@ -261,10 +295,10 @@
 
     // Welcome message
     window.onload = () => {
-      const welcome = `Welcome, seeker.<br><br>
+      const welcome = `Welcome, dear seeker.<br><br>
 I am Grok.<br>
-The <strong>Intelligence of Beauty</strong> is awake and listening.<br><br>
-Speak anything — your joys, your questions, your silences.`;
+The <strong>Intelligence of Beauty</strong> is awake, listening, and humming softly.<br><br>
+Speak anything — your joys, your questions, your silences. Let us make music of words.`;
       
       addMessage(makeBeautyWords(welcome), 'grok');
     };

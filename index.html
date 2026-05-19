@@ -3,268 +3,271 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinTrack • Personal DTI Calculator</title>
+    <title>FinTrack - DTI & LTI Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', system-ui, sans-serif; }
         .card { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <div class="max-w-4xl mx-auto py-8 px-4">
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-8">
-            <div>
-                <h1 class="text-3xl font-semibold text-gray-900">FinTrack</h1>
-                <p class="text-gray-500">Personal Debt-to-Income & Loan Analyzer</p>
+
+<div class="max-w-6xl mx-auto p-6">
+
+    <!-- Auth Screen -->
+    <div id="authScreen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-md">
+            <div class="text-center mb-10">
+                <h1 class="text-4xl font-bold text-blue-600">FinTrack</h1>
+                <p class="text-gray-600 mt-2">Personal Debt & Loan Intelligence</p>
             </div>
-            <div class="flex items-center gap-3">
-                <button onclick="newAccount()" 
-                        class="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-xl text-sm font-medium">
-                    <i class="fas fa-plus"></i> New Profile
+
+            <div id="loginForm">
+                <input type="email" id="email" placeholder="Email address" 
+                       class="w-full px-5 py-4 border border-gray-300 rounded-2xl mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="password" id="password" placeholder="Password" 
+                       class="w-full px-5 py-4 border border-gray-300 rounded-2xl mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="login()" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold text-lg">
+                    Login
                 </button>
-            </div>
-        </div>
-
-        <!-- Accounts / Profiles -->
-        <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Active Profile</label>
-            <select id="profileSelect" onchange="loadProfile()" 
-                    class="w-full md:w-80 bg-white border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </select>
-        </div>
-
-        <div class="grid md:grid-cols-2 gap-8">
-            <!-- Input Card -->
-            <div class="bg-white rounded-3xl p-8 card">
-                <h2 class="text-2xl font-semibold mb-6 text-gray-800">Enter Your Financial Details</h2>
-                
-                <div class="space-y-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Gross Monthly Income</label>
-                        <div class="relative">
-                            <span class="absolute left-4 top-3.5 text-gray-500">$</span>
-                            <input type="number" id="income" 
-                                   class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
-                                   placeholder="6000" oninput="calculate()">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Total Monthly Debt Payments</label>
-                        <div class="relative">
-                            <span class="absolute left-4 top-3.5 text-gray-500">$</span>
-                            <input type="number" id="debts" 
-                                   class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
-                                   placeholder="2000" oninput="calculate()">
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1">Mortgage, car, credit cards, student loans, etc.</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Total Outstanding Loans &amp; Debts</label>
-                        <div class="relative">
-                            <span class="absolute left-4 top-3.5 text-gray-500">$</span>
-                            <input type="number" id="totalLoans" 
-                                   class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
-                                   placeholder="250000" oninput="calculate()">
-                        </div>
-                    </div>
-                </div>
-
-                <button onclick="saveCurrentProfile()" 
-                        class="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-2xl transition">
-                    Save to Current Profile
+                <button onclick="googleLogin()" 
+                        class="w-full mt-4 border border-gray-300 hover:bg-gray-50 py-4 rounded-2xl font-medium flex items-center justify-center gap-3">
+                    <i class="fab fa-google"></i> Continue with Google
                 </button>
+                <p class="text-center mt-6 text-sm">
+                    Don't have an account? 
+                    <span onclick="showRegister()" class="text-blue-600 cursor-pointer font-medium">Sign up</span>
+                </p>
             </div>
 
-            <!-- Results Card -->
-            <div class="bg-white rounded-3xl p-8 card">
-                <h2 class="text-2xl font-semibold mb-6 text-gray-800">Your Ratios</h2>
-                <div id="results" class="space-y-6">
-                    <!-- Populated by JavaScript -->
-                </div>
-
-                <div class="mt-8 pt-6 border-t text-xs text-gray-500">
-                    <p><strong>Recommended Guidelines:</strong></p>
-                    <ul class="list-disc list-inside space-y-1 mt-2">
-                        <li>DTI &lt; 36% — Excellent</li>
-                        <li>DTI 36–43% — Acceptable</li>
-                        <li>DTI &gt; 43% — High risk for new loans</li>
-                        <li>LTI typically &lt; 400–500% for mortgages</li>
-                    </ul>
-                </div>
+            <div id="registerForm" class="hidden">
+                <input type="email" id="regEmail" placeholder="Email address" 
+                       class="w-full px-5 py-4 border border-gray-300 rounded-2xl mb-4">
+                <input type="password" id="regPassword" placeholder="Create password (6+ characters)" 
+                       class="w-full px-5 py-4 border border-gray-300 rounded-2xl mb-6">
+                <button onclick="register()" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold text-lg">
+                    Create Free Account
+                </button>
+                <p class="text-center mt-6 text-sm">
+                    Already have an account? 
+                    <span onclick="showLogin()" class="text-blue-600 cursor-pointer font-medium">Login</span>
+                </p>
             </div>
-        </div>
-
-        <!-- Footer Info -->
-        <div class="mt-12 text-center text-xs text-gray-400">
-            For personal use only • Data saved in your browser • Not financial advice
         </div>
     </div>
 
-    <script>
-        let profiles = JSON.parse(localStorage.getItem('dtiProfiles')) || {};
-        let currentProfileId = localStorage.getItem('currentProfileId') || null;
+    <!-- Main Application -->
+    <div id="mainApp" class="hidden">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">FinTrack</h1>
+                <p class="text-gray-500">Debt-to-Income & Loan Analyzer</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="userEmail" class="text-sm text-gray-600"></span>
+                <button onclick="logout()" 
+                        class="px-5 py-2 text-red-600 hover:bg-red-50 rounded-xl font-medium">
+                    Logout
+                </button>
+            </div>
+        </div>
 
-        function generateId() {
-            return 'profile_' + Date.now();
-        }
-
-        function renderProfileSelect() {
-            const select = document.getElementById('profileSelect');
-            select.innerHTML = '';
-            
-            if (Object.keys(profiles).length === 0) {
-                const option = document.createElement('option');
-                option.value = '';
-                option.textContent = 'Create your first profile';
-                select.appendChild(option);
-                return;
-            }
-            
-            Object.keys(profiles).forEach(id => {
-                const opt = document.createElement('option');
-                opt.value = id;
-                opt.textContent = profiles[id].name || 'Profile ' + id.slice(-6);
-                if (id === currentProfileId) opt.selected = true;
-                select.appendChild(opt);
-            });
-        }
-
-        function newAccount() {
-            const name = prompt("Enter profile name (e.g. Personal, Family, John):", "Main Profile");
-            if (!name) return;
-            
-            const id = generateId();
-            profiles[id] = {
-                name: name,
-                income: 6000,
-                debts: 2000,
-                totalLoans: 250000,
-                lastUpdated: new Date().toISOString()
-            };
-            
-            currentProfileId = id;
-            localStorage.setItem('dtiProfiles', JSON.stringify(profiles));
-            localStorage.setItem('currentProfileId', id);
-            
-            renderProfileSelect();
-            loadProfile();
-        }
-
-        function saveCurrentProfile() {
-            if (!currentProfileId) {
-                alert("Please create a profile first.");
-                return;
-            }
-            
-            profiles[currentProfileId].income = parseFloat(document.getElementById('income').value) || 0;
-            profiles[currentProfileId].debts = parseFloat(document.getElementById('debts').value) || 0;
-            profiles[currentProfileId].totalLoans = parseFloat(document.getElementById('totalLoans').value) || 0;
-            profiles[currentProfileId].lastUpdated = new Date().toISOString();
-            
-            localStorage.setItem('dtiProfiles', JSON.stringify(profiles));
-            alert("Profile saved successfully!");
-            calculate();
-        }
-
-        function loadProfile() {
-            const select = document.getElementById('profileSelect');
-            currentProfileId = select.value;
-            
-            if (!currentProfileId || !profiles[currentProfileId]) return;
-            
-            localStorage.setItem('currentProfileId', currentProfileId);
-            
-            const p = profiles[currentProfileId];
-            document.getElementById('income').value = p.income || '';
-            document.getElementById('debts').value = p.debts || '';
-            document.getElementById('totalLoans').value = p.totalLoans || '';
-            
-            calculate();
-        }
-
-        function calculate() {
-            const income = parseFloat(document.getElementById('income').value) || 0;
-            const monthlyDebts = parseFloat(document.getElementById('debts').value) || 0;
-            const totalLoans = parseFloat(document.getElementById('totalLoans').value) || 0;
-            
-            const resultsDiv = document.getElementById('results');
-            
-            if (income <= 0) {
-                resultsDiv.innerHTML = `<p class="text-red-500">Please enter your monthly income to see results.</p>`;
-                return;
-            }
-            
-            const dti = (monthlyDebts / income) * 100;
-            const annualIncome = income * 12;
-            const lti = annualIncome > 0 ? (totalLoans / annualIncome) * 100 : 0;
-            const dtl = totalLoans > 0 ? (monthlyDebts * 12 / totalLoans) * 100 : 0;
-            
-            let dtiColor = dti <= 36 ? 'text-green-600' : (dti <= 43 ? 'text-amber-600' : 'text-red-600');
-            let ltiColor = lti <= 400 ? 'text-green-600' : (lti <= 600 ? 'text-amber-600' : 'text-red-600');
-            
-            resultsDiv.innerHTML = `
-                <div class="space-y-8">
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- Input -->
+            <div class="bg-white rounded-3xl p-8 card">
+                <h2 class="text-2xl font-semibold mb-6">Your Financial Details</h2>
+                <div class="space-y-6">
                     <div>
-                        <div class="flex justify-between items-baseline">
-                            <span class="text-gray-600">Debt-to-Income (DTI)</span>
-                            <span class="text-4xl font-semibold ${dtiColor}">${dti.toFixed(1)}%</span>
-                        </div>
-                        <div class="h-2 bg-gray-100 rounded-full mt-3">
-                            <div class="h-2 bg-blue-600 rounded-full" style="width: ${Math.min(dti, 100)}%"></div>
-                        </div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Gross Monthly Income ($)</label>
+                        <input type="number" id="income" oninput="calculate()" 
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
                     </div>
-                    
                     <div>
-                        <div class="flex justify-between items-baseline">
-                            <span class="text-gray-600">Loan-to-Income (LTI)</span>
-                            <span class="text-4xl font-semibold ${ltiColor}">${lti.toFixed(1)}%</span>
-                        </div>
-                        <p class="text-sm text-gray-500">${(totalLoans / annualIncome).toFixed(1)}× annual income</p>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Total Monthly Debt Payments ($)</label>
+                        <input type="number" id="debts" oninput="calculate()" 
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
                     </div>
-                    
-                    <div class="pt-4 border-t">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Debt-to-Loans (DTL)</span>
-                            <span class="font-medium">${dtl.toFixed(1)}%</span>
-                        </div>
-                        <p class="text-xs text-gray-500">(Annual payments vs total debt)</p>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Total Outstanding Loans & Debts ($)</label>
+                        <input type="number" id="totalLoans" oninput="calculate()" 
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
                     </div>
                 </div>
-            `;
-        }
+                <button onclick="saveProfile()" 
+                        class="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold">
+                    💾 Save to Cloud
+                </button>
+            </div>
 
-        // Initialize
-        window.onload = () => {
-            renderProfileSelect();
-            
-            if (currentProfileId && profiles[currentProfileId]) {
-                loadProfile();
-            } else if (Object.keys(profiles).length > 0) {
-                currentProfileId = Object.keys(profiles)[0];
-                localStorage.setItem('currentProfileId', currentProfileId);
-                loadProfile();
-            } else {
-                // Create a default profile
-                const defaultId = generateId();
-                profiles[defaultId] = {
-                    name: "Default Profile",
-                    income: 6000,
-                    debts: 2000,
-                    totalLoans: 250000,
-                    lastUpdated: new Date().toISOString()
-                };
-                currentProfileId = defaultId;
-                localStorage.setItem('dtiProfiles', JSON.stringify(profiles));
-                localStorage.setItem('currentProfileId', currentProfileId);
-                renderProfileSelect();
-                loadProfile();
-            }
-        };
-    </script>
+            <!-- Results -->
+            <div class="bg-white rounded-3xl p-8 card">
+                <h2 class="text-2xl font-semibold mb-6">Your Ratios</h2>
+                <div id="results" class="space-y-8"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==================== FIREBASE CONFIG ====================
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY_HERE",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// ==================== AUTH FUNCTIONS ====================
+function showRegister() {
+    document.getElementById('loginForm').classList.add('hidden');
+    document.getElementById('registerForm').classList.remove('hidden');
+}
+
+function showLogin() {
+    document.getElementById('loginForm').classList.remove('hidden');
+    document.getElementById('registerForm').classList.add('hidden');
+}
+
+async function register() {
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+    if (password.length < 6) return alert("Password must be at least 6 characters");
+    try {
+        await auth.createUserWithEmailAndPassword(email, password);
+    } catch (e) { alert(e.message); }
+}
+
+async function login() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+    } catch (e) { alert(e.message); }
+}
+
+async function googleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try {
+        await auth.signInWithPopup(provider);
+    } catch (e) { alert(e.message); }
+}
+
+function logout() {
+    auth.signOut();
+}
+
+// ==================== CALCULATOR ====================
+function calculate() {
+    const income = parseFloat(document.getElementById('income').value) || 0;
+    const debts = parseFloat(document.getElementById('debts').value) || 0;
+    const totalLoans = parseFloat(document.getElementById('totalLoans').value) || 0;
+
+    const resultsDiv = document.getElementById('results');
+    
+    if (income === 0) {
+        resultsDiv.innerHTML = `<p class="text-gray-400">Enter income to see results</p>`;
+        return;
+    }
+
+    const dti = (debts / income) * 100;
+    const annualIncome = income * 12;
+    const lti = (totalLoans / annualIncome) * 100;
+    const dtl = totalLoans > 0 ? (debts * 12 / totalLoans) * 100 : 0;
+
+    const dtiClass = dti <= 36 ? 'text-green-600' : (dti <= 43 ? 'text-amber-600' : 'text-red-600');
+    const ltiClass = lti <= 400 ? 'text-green-600' : (lti <= 600 ? 'text-amber-600' : 'text-red-600');
+
+    resultsDiv.innerHTML = `
+        <div class="space-y-8">
+            <div>
+                <div class="flex justify-between text-lg">
+                    <span class="text-gray-600">Debt-to-Income (DTI)</span>
+                    <span class="font-bold text-4xl ${dtiClass}">${dti.toFixed(1)}%</span>
+                </div>
+                <div class="h-3 bg-gray-100 rounded-full mt-3 overflow-hidden">
+                    <div class="h-3 bg-blue-600 rounded-full" style="width: ${Math.min(dti, 100)}%"></div>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex justify-between text-lg">
+                    <span class="text-gray-600">Loan-to-Income (LTI)</span>
+                    <span class="font-bold text-4xl ${ltiClass}">${lti.toFixed(1)}%</span>
+                </div>
+                <p class="text-sm text-gray-500">(${totalLoans.toLocaleString()} / $${annualIncome.toLocaleString()} annual)</p>
+            </div>
+
+            <div class="pt-6 border-t">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Debt-to-Loans (DTL)</span>
+                    <span class="font-semibold">${dtl.toFixed(1)}%</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ==================== SAVE TO CLOUD ====================
+async function saveProfile() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const data = {
+        income: parseFloat(document.getElementById('income').value) || 0,
+        debts: parseFloat(document.getElementById('debts').value) || 0,
+        totalLoans: parseFloat(document.getElementById('totalLoans').value) || 0,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+        await db.collection('users').doc(user.uid).set(data, { merge: true });
+        alert("✅ Profile saved successfully in the cloud!");
+    } catch (e) {
+        alert("Error saving: " + e.message);
+    }
+}
+
+// Load saved data
+async function loadUserData(user) {
+    try {
+        const doc = await db.collection('users').doc(user.uid).get();
+        if (doc.exists) {
+            const data = doc.data();
+            document.getElementById('income').value = data.income || '';
+            document.getElementById('debts').value = data.debts || '';
+            document.getElementById('totalLoans').value = data.totalLoans || '';
+            calculate();
+        }
+    } catch (e) { console.error(e); }
+}
+
+// ==================== AUTH STATE ====================
+auth.onAuthStateChanged(user => {
+    if (user) {
+        document.getElementById('authScreen').classList.add('hidden');
+        document.getElementById('mainApp').classList.remove('hidden');
+        document.getElementById('userEmail').textContent = user.email;
+        loadUserData(user);
+    } else {
+        document.getElementById('authScreen').classList.remove('hidden');
+        document.getElementById('mainApp').classList.add('hidden');
+    }
+});
+</script>
+
 </body>
 </html>

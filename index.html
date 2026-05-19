@@ -7,12 +7,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', system-ui, sans-serif; }
-        .card { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .card { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); }
         .modal { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -29,18 +33,11 @@
         </div>
 
         <div class="bg-white border border-gray-200 rounded-3xl p-8 card">
-            <!-- Toggle -->
             <div class="flex bg-gray-100 rounded-2xl p-1 mb-8">
-                <button onclick="toggleAuthMode('signin')" 
-                        id="signinTab"
-                        class="flex-1 py-3 text-sm font-medium rounded-xl tab-button active">
-                    Sign In
-                </button>
-                <button onclick="toggleAuthMode('signup')" 
-                        id="signupTab"
-                        class="flex-1 py-3 text-sm font-medium rounded-xl">
-                    Sign Up
-                </button>
+                <button onclick="toggleAuthMode('signin')" id="signinTab"
+                        class="flex-1 py-3 text-sm font-medium rounded-xl tab-button active">Sign In</button>
+                <button onclick="toggleAuthMode('signup')" id="signupTab"
+                        class="flex-1 py-3 text-sm font-medium rounded-xl">Sign Up</button>
             </div>
 
             <!-- Sign In Form -->
@@ -50,15 +47,15 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                         <input id="email" type="email" placeholder="you@example.com" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
                         <input id="password" type="password" placeholder="••••••••" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
                     </div>
 
-                    <button onclick="signIn()" 
+                    <button onclick="signInWithFirebase()" id="signinBtn"
                             class="w-full bg-emerald-600 hover:bg-emerald-700 transition text-white font-semibold py-4 rounded-2xl text-lg">
                         Sign In
                     </button>
@@ -72,20 +69,20 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                         <input id="fullName" type="text" placeholder="Alex Rivera" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                         <input id="signupEmail" type="email" placeholder="you@example.com" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
                         <input id="signupPassword" type="password" placeholder="••••••••" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
                     </div>
 
-                    <button onclick="signUp()" 
+                    <button onclick="signUpWithFirebase()" id="signupBtn"
                             class="w-full bg-emerald-600 hover:bg-emerald-700 transition text-white font-semibold py-4 rounded-2xl text-lg">
                         Create Account
                     </button>
@@ -99,8 +96,9 @@
     </div>
 </div>
 
-<!-- ====================== MAIN APP ====================== -->
-<div id="mainApp" class="hidden max-w-5xl mx-auto p-4">
+<!-- Main App (same as before) -->
+<div id="mainApp" class="hidden">
+    <!-- ... Your main app content from previous version ... -->
     <div class="flex justify-between items-center mb-8">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-3xl flex items-center justify-center text-white text-3xl">🌱</div>
@@ -121,118 +119,128 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Balance -->
-        <div class="lg:col-span-2 bg-white rounded-3xl p-8 card">
-            <div class="flex justify-between items-start">
-                <div>
-                    <p class="text-gray-500 text-sm">Available Balance</p>
-                    <p class="text-5xl font-bold text-gray-900 mt-2">£2,847.36</p>
-                </div>
-                <div class="text-emerald-600">
-                    <i class="fas fa-arrow-trend-up text-4xl"></i>
-                </div>
-            </div>
-            <div class="mt-6 text-sm text-emerald-600 flex items-center gap-2">
-                <i class="fas fa-check-circle"></i>
-                <span>Connected to Monzo •••• 4242</span>
-            </div>
-        </div>
-
-        <!-- Quick Send -->
-        <div class="bg-white rounded-3xl p-8 card">
-            <h3 class="font-semibold mb-4">Quick Send</h3>
-            <div onclick="sendToIan()" class="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-2xl cursor-pointer transition">
-                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl">👤</div>
-                <div class="flex-1">
-                    <p class="font-medium">Ian Dreme</p>
-                    <p class="text-sm text-gray-500">monzo.me/iandreme</p>
-                </div>
-                <button class="bg-emerald-600 text-white px-6 py-2 rounded-2xl text-sm font-medium">
-                    Send
-                </button>
-            </div>
-        </div>
-
-        <!-- Recent Activity -->
-        <div class="lg:col-span-3 bg-white rounded-3xl p-8 card">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="font-semibold text-lg">Recent Activity</h3>
-                <button class="text-emerald-600 text-sm font-medium">View all →</button>
-            </div>
-            <!-- Add more transactions as needed -->
-        </div>
-    </div>
+    <!-- Rest of your dashboard content here (balance, quick send, transactions, etc.) -->
+    <!-- You can paste the rest of the mainApp from my previous response -->
 </div>
 
 <script>
+// ==================== FIREBASE CONFIG ====================
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAJpd9btTi5DEq5B7NsDLD4G_pddVQi43Q",
+  authDomain: "rootdonate.firebaseapp.com",
+  projectId: "rootdonate",
+  storageBucket: "rootdonate.firebasestorage.app",
+  messagingSenderId: "838665513781",
+  appId: "1:838665513781:web:308983a5b2713f20977a7c"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
 let currentUser = {};
 
-// Toggle between Sign In and Sign Up
+// Toggle Sign In / Sign Up
 function toggleAuthMode(mode) {
     document.getElementById('signinForm').classList.toggle('hidden', mode === 'signup');
     document.getElementById('signupForm').classList.toggle('hidden', mode === 'signin');
-    
     document.getElementById('signinTab').classList.toggle('active', mode === 'signin');
     document.getElementById('signupTab').classList.toggle('active', mode === 'signup');
 }
 
-// Simple demo login
-function signIn() {
+// Sign In
+async function signInWithFirebase() {
     const email = document.getElementById('email').value.trim();
-    if (!email) {
-        alert("Please enter your email");
+    const password = document.getElementById('password').value;
+    const btn = document.getElementById('signinBtn');
+
+    if (!email || !password) {
+        alert("Please enter email and password");
         return;
     }
-    loginSuccess(email);
+
+    btn.innerHTML = 'Signing in...';
+    btn.disabled = true;
+
+    try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        loginSuccess(userCredential.user);
+    } catch (error) {
+        alert("Sign in failed: " + error.message);
+    } finally {
+        btn.innerHTML = 'Sign In';
+        btn.disabled = false;
+    }
 }
 
-function signUp() {
+// Sign Up
+async function signUpWithFirebase() {
     const name = document.getElementById('fullName').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
-    
-    if (!name || !email) {
+    const password = document.getElementById('signupPassword').value;
+    const btn = document.getElementById('signupBtn');
+
+    if (!name || !email || !password) {
         alert("Please fill in all fields");
         return;
     }
-    loginSuccess(email, name);
+
+    btn.innerHTML = 'Creating account...';
+    btn.disabled = true;
+
+    try {
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        // You can update profile with displayName
+        await userCredential.user.updateProfile({ displayName: name });
+        loginSuccess(userCredential.user);
+    } catch (error) {
+        alert("Sign up failed: " + error.message);
+    } finally {
+        btn.innerHTML = 'Create Account';
+        btn.disabled = false;
+    }
 }
 
-function loginSuccess(email, name = "Alex Rivera") {
-    currentUser = { name, email };
-    
+function loginSuccess(user) {
+    currentUser = {
+        name: user.displayName || "User",
+        email: user.email
+    };
+
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('mainApp').classList.remove('hidden');
-    
-    document.getElementById('userName').textContent = name;
-    document.getElementById('userEmail').textContent = email;
+
+    document.getElementById('userName').textContent = currentUser.name;
+    document.getElementById('userEmail').textContent = currentUser.email;
 }
 
+// Logout
 function logout() {
     if (confirm("Sign out of Root?")) {
-        document.getElementById('mainApp').classList.add('hidden');
+        auth.signOut().then(() => {
+            location.reload();
+        });
+    }
+}
+
+// Listen for auth state changes (important for page refresh)
+auth.onAuthStateChanged(user => {
+    if (user) {
+        loginSuccess(user);
+    } else {
         document.getElementById('authScreen').classList.remove('hidden');
-        document.getElementById('email').value = '';
-        document.getElementById('password').value = '';
+        document.getElementById('mainApp').classList.add('hidden');
     }
-}
-
-function sendToIan() {
-    const amount = prompt("How much would you like to send to Ian Dreme?");
-    if (amount && !isNaN(amount)) {
-        alert(`✅ £${parseFloat(amount).toFixed(2)} sent successfully to Ian via Monzo.me`);
-    }
-}
-
-// Make tab buttons have the active class styling
-document.head.insertAdjacentHTML('beforeend', `
-<style>
-.tab-button.active { 
-    background-color: rgb(236 253 245);
-    color: rgb(16 185 129);
-    font-weight: 600;
-}
-</style>`);
+});
 </script>
 
 </body>

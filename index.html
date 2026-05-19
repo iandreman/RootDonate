@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RootDonate - DTI & LTI Calculator</title>
+    <title>RootDonate - Personal Finance</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -13,6 +13,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', system-ui, sans-serif; }
         .card { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .tab-button.active { background-color: #eff6ff; color: #1e40af; font-weight: 600; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -24,92 +25,111 @@
         <div class="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-md">
             <div class="text-center mb-10">
                 <h1 class="text-4xl font-bold text-blue-600">RootDonate</h1>
-                <p class="text-gray-600 mt-2">Personal Debt & Loan Intelligence</p>
+                <p class="text-gray-600 mt-2">Personal Finance • Banking • Debt Intelligence</p>
             </div>
 
             <div id="loginForm">
-                <input type="email" id="email" placeholder="Email address" 
-                       class="w-full px-5 py-4 border border-gray-300 rounded-2xl mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="password" id="password" placeholder="Password" 
-                       class="w-full px-5 py-4 border border-gray-300 rounded-2xl mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button onclick="login()" 
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold text-lg">
-                    Login
-                </button>
-                <button onclick="googleLogin()" 
-                        class="w-full mt-4 border border-gray-300 hover:bg-gray-50 py-4 rounded-2xl font-medium flex items-center justify-center gap-3">
+                <input type="email" id="email" placeholder="Email address" class="w-full px-5 py-4 border border-gray-300 rounded-2xl mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="password" id="password" placeholder="Password" class="w-full px-5 py-4 border border-gray-300 rounded-2xl mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold text-lg">Login</button>
+                <button onclick="googleLogin()" class="w-full mt-4 border border-gray-300 hover:bg-gray-50 py-4 rounded-2xl font-medium flex items-center justify-center gap-3">
                     <i class="fab fa-google"></i> Continue with Google
                 </button>
                 <p class="text-center mt-6 text-sm">
-                    Don't have an account? 
-                    <span onclick="showRegister()" class="text-blue-600 cursor-pointer font-medium">Sign up</span>
+                    Don't have an account? <span onclick="showRegister()" class="text-blue-600 cursor-pointer font-medium">Sign up</span>
                 </p>
             </div>
 
             <div id="registerForm" class="hidden">
-                <input type="email" id="regEmail" placeholder="Email address" 
-                       class="w-full px-5 py-4 border border-gray-300 rounded-2xl mb-4">
-                <input type="password" id="regPassword" placeholder="Create password (6+ characters)" 
-                       class="w-full px-5 py-4 border border-gray-300 rounded-2xl mb-6">
-                <button onclick="register()" 
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold text-lg">
-                    Create Free Account
-                </button>
+                <input type="email" id="regEmail" placeholder="Email address" class="w-full px-5 py-4 border border-gray-300 rounded-2xl mb-4">
+                <input type="password" id="regPassword" placeholder="Create password (6+ characters)" class="w-full px-5 py-4 border border-gray-300 rounded-2xl mb-6">
+                <button onclick="register()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold text-lg">Create Free Account</button>
                 <p class="text-center mt-6 text-sm">
-                    Already have an account? 
-                    <span onclick="showLogin()" class="text-blue-600 cursor-pointer font-medium">Login</span>
+                    Already have an account? <span onclick="showLogin()" class="text-blue-600 cursor-pointer font-medium">Login</span>
                 </p>
             </div>
         </div>
     </div>
 
-    <!-- Main Application -->
+    <!-- Main App -->
     <div id="mainApp" class="hidden">
         <div class="flex justify-between items-center mb-8">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">RootDonate</h1>
-                <p class="text-gray-500">Debt-to-Income & Loan Analyzer</p>
-            </div>
+            <h1 class="text-3xl font-bold text-gray-900">RootDonate</h1>
             <div class="flex items-center gap-4">
                 <span id="userEmail" class="text-sm text-gray-600"></span>
-                <button onclick="logout()" 
-                        class="px-5 py-2 text-red-600 hover:bg-red-50 rounded-xl font-medium">
-                    Logout
-                </button>
+                <button onclick="logout()" class="px-5 py-2 text-red-600 hover:bg-red-50 rounded-xl font-medium">Logout</button>
             </div>
         </div>
 
-        <div class="grid lg:grid-cols-2 gap-8">
-            <!-- Input -->
-            <div class="bg-white rounded-3xl p-8 card">
-                <h2 class="text-2xl font-semibold mb-6">Your Financial Details</h2>
-                <div class="space-y-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Gross Monthly Income ($)</label>
-                        <input type="number" id="income" oninput="calculate()" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Total Monthly Debt Payments ($)</label>
-                        <input type="number" id="debts" oninput="calculate()" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Total Outstanding Loans & Debts ($)</label>
-                        <input type="number" id="totalLoans" oninput="calculate()" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
-                    </div>
-                </div>
-                <button onclick="saveProfile()" 
-                        class="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold">
-                    💾 Save to Cloud
-                </button>
-            </div>
+        <!-- Tabs -->
+        <div class="flex gap-2 mb-8 border-b pb-2 overflow-x-auto">
+            <button onclick="showTab(0)" class="tab-button active px-6 py-3 rounded-2xl" id="tab0">🏠 Dashboard</button>
+            <button onclick="showTab(1)" class="tab-button px-6 py-3 rounded-2xl" id="tab1">🏦 Online Banking</button>
+            <button onclick="showTab(2)" class="tab-button px-6 py-3 rounded-2xl" id="tab2">📊 DTI / LTI</button>
+        </div>
 
-            <!-- Results -->
+        <!-- Dashboard -->
+        <div id="tabContent0">
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-3xl p-8 card">
+                    <p class="text-gray-500">Net Worth</p>
+                    <p id="netWorth" class="text-4xl font-bold text-green-600 mt-2">$0</p>
+                </div>
+                <div class="bg-white rounded-3xl p-8 card">
+                    <p class="text-gray-500">Bank Balance</p>
+                    <p id="bankBalance" class="text-3xl font-semibold mt-2">$0</p>
+                </div>
+                <div class="bg-white rounded-3xl p-8 card">
+                    <p class="text-gray-500">Total Debt</p>
+                    <p id="totalDebt" class="text-3xl font-semibold text-red-600 mt-2">$0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Online Banking -->
+        <div id="tabContent1" class="hidden">
             <div class="bg-white rounded-3xl p-8 card">
-                <h2 class="text-2xl font-semibold mb-6">Your Ratios</h2>
-                <div id="results" class="space-y-8"></div>
+                <h2 class="text-2xl font-semibold mb-6 flex items-center gap-3"><i class="fas fa-university"></i> Online Banking</h2>
+                
+                <button onclick="connectBank()" class="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-2xl font-semibold flex items-center gap-3">
+                    <i class="fas fa-plug"></i> Connect New Bank Account
+                </button>
+
+                <div id="connectedBanks" class="mt-8 space-y-4"></div>
+
+                <div class="mt-10">
+                    <h3 class="font-semibold mb-4">Recent Transactions</h3>
+                    <div id="transactions" class="space-y-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DTI / LTI -->
+        <div id="tabContent2" class="hidden">
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-3xl p-8 card">
+                    <h2 class="text-2xl font-semibold mb-6">Financial Details</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Gross Monthly Income ($)</label>
+                            <input type="number" id="income" oninput="calculate()" class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Total Monthly Debt Payments ($)</label>
+                            <input type="number" id="debts" oninput="calculate()" class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Total Outstanding Loans ($)</label>
+                            <input type="number" id="totalLoans" oninput="calculate()" class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
+                        </div>
+                    </div>
+                    <button onclick="saveProfile()" class="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold">💾 Save Everything to Cloud</button>
+                </div>
+
+                <div class="bg-white rounded-3xl p-8 card">
+                    <h2 class="text-2xl font-semibold mb-6">Your Ratios</h2>
+                    <div id="results" class="space-y-8"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -117,12 +137,6 @@
 
 <script>
 // ==================== FIREBASE CONFIG ====================
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAJpd9btTi5DEq5B7NsDLD4G_pddVQi43Q",
   authDomain: "rootdonate.firebaseapp.com",
@@ -132,73 +146,101 @@ const firebaseConfig = {
   appId: "1:838665513781:web:308983a5b2713f20977a7c"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// ==================== AUTH FUNCTIONS ====================
-function showRegister() {
-    document.getElementById('loginForm').classList.add('hidden');
-    document.getElementById('registerForm').classList.remove('hidden');
+let connectedAccounts = [];
+
+// Tab Navigation
+function showTab(n) {
+    document.querySelectorAll('[id^="tabContent"]').forEach(el => el.classList.add('hidden'));
+    document.getElementById('tabContent' + n).classList.remove('hidden');
+
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('tab' + n).classList.add('active');
 }
 
-function showLogin() {
-    document.getElementById('loginForm').classList.remove('hidden');
-    document.getElementById('registerForm').classList.add('hidden');
+// Online Banking
+function connectBank() {
+    const bankName = prompt("Enter Bank Name (e.g., Chase, Bank of America, Wells Fargo):", "Chase");
+    if (!bankName) return;
+
+    const balance = parseFloat(prompt("Enter approximate balance ($):", "12450.75")) || 0;
+
+    connectedAccounts.push({
+        name: bankName,
+        balance: balance,
+        lastSync: new Date().toLocaleString()
+    });
+
+    renderConnectedBanks();
+    renderMockTransactions();
+    updateDashboard();
+    alert(`✅ Connected to ${bankName} successfully!`);
 }
 
-async function register() {
-    const email = document.getElementById('regEmail').value;
-    const password = document.getElementById('regPassword').value;
-    if (password.length < 6) return alert("Password must be at least 6 characters");
-    try {
-        await auth.createUserWithEmailAndPassword(email, password);
-    } catch (e) { alert(e.message); }
+function renderConnectedBanks() {
+    const container = document.getElementById('connectedBanks');
+    container.innerHTML = connectedAccounts.map(acc => `
+        <div class="flex justify-between items-center bg-gray-50 p-5 rounded-2xl">
+            <div>
+                <p class="font-semibold">${acc.name}</p>
+                <p class="text-xs text-gray-500">Last synced: ${acc.lastSync}</p>
+            </div>
+            <p class="text-2xl font-bold text-green-600">$${acc.balance.toLocaleString()}</p>
+        </div>
+    `).join('');
 }
 
-async function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    try {
-        await auth.signInWithEmailAndPassword(email, password);
-    } catch (e) { alert(e.message); }
+function renderMockTransactions() {
+    const transactions = [
+        { date: "Today", desc: "Direct Deposit - Salary", amount: 4850, type: "credit" },
+        { date: "Yesterday", desc: "Mortgage Payment", amount: -1850, type: "debit" },
+        { date: "2 days ago", desc: "Grocery Store", amount: -124.50, type: "debit" }
+    ];
+
+    document.getElementById('transactions').innerHTML = transactions.map(tx => `
+        <div class="flex justify-between items-center py-3 border-b last:border-0">
+            <div>
+                <p class="font-medium">${tx.desc}</p>
+                <p class="text-xs text-gray-500">${tx.date}</p>
+            </div>
+            <p class="${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'} font-semibold">
+                ${tx.type === 'credit' ? '+' : ''}$${Math.abs(tx.amount).toFixed(2)}
+            </p>
+        </div>
+    `).join('');
 }
 
-async function googleLogin() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    try {
-        await auth.signInWithPopup(provider);
-    } catch (e) { alert(e.message); }
+function updateDashboard() {
+    const totalBank = connectedAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+    const totalLoans = parseFloat(document.getElementById('totalLoans').value) || 0;
+    const netWorth = totalBank - totalLoans;
+
+    document.getElementById('bankBalance').textContent = '$' + totalBank.toLocaleString();
+    document.getElementById('totalDebt').textContent = '$' + totalLoans.toLocaleString();
+    document.getElementById('netWorth').textContent = '$' + netWorth.toLocaleString();
 }
 
-function logout() {
-    auth.signOut();
-}
-
-// ==================== CALCULATOR ====================
+// Calculator
 function calculate() {
     const income = parseFloat(document.getElementById('income').value) || 0;
     const debts = parseFloat(document.getElementById('debts').value) || 0;
     const totalLoans = parseFloat(document.getElementById('totalLoans').value) || 0;
 
     const resultsDiv = document.getElementById('results');
-    
     if (income === 0) {
-        resultsDiv.innerHTML = `<p class="text-gray-400">Enter income to see results</p>`;
+        resultsDiv.innerHTML = `<p class="text-gray-400">Enter your income to see ratios</p>`;
         return;
     }
 
     const dti = (debts / income) * 100;
     const annualIncome = income * 12;
-    const lti = (totalLoans / annualIncome) * 100;
-    const dtl = totalLoans > 0 ? (debts * 12 / totalLoans) * 100 : 0;
+    const lti = annualIncome > 0 ? (totalLoans / annualIncome) * 100 : 0;
 
     const dtiClass = dti <= 36 ? 'text-green-600' : (dti <= 43 ? 'text-amber-600' : 'text-red-600');
-    const ltiClass = lti <= 400 ? 'text-green-600' : (lti <= 600 ? 'text-amber-600' : 'text-red-600');
+    const ltiClass = lti <= 400 ? 'text-green-600' : 'text-red-600';
 
     resultsDiv.innerHTML = `
         <div class="space-y-8">
@@ -211,46 +253,36 @@ function calculate() {
                     <div class="h-3 bg-blue-600 rounded-full" style="width: ${Math.min(dti, 100)}%"></div>
                 </div>
             </div>
-
             <div>
                 <div class="flex justify-between text-lg">
                     <span class="text-gray-600">Loan-to-Income (LTI)</span>
                     <span class="font-bold text-4xl ${ltiClass}">${lti.toFixed(1)}%</span>
                 </div>
-                <p class="text-sm text-gray-500">(${totalLoans.toLocaleString()} / $${annualIncome.toLocaleString()} annual)</p>
-            </div>
-
-            <div class="pt-6 border-t">
-                <div class="flex justify-between">
-                    <span class="text-gray-600">Debt-to-Loans (DTL)</span>
-                    <span class="font-semibold">${dtl.toFixed(1)}%</span>
-                </div>
             </div>
         </div>
     `;
+    updateDashboard();
 }
 
-// ==================== SAVE TO CLOUD ====================
+// Save & Load
 async function saveProfile() {
     const user = auth.currentUser;
-    if (!user) return;
+    if (!user) return alert("Please login first");
 
     const data = {
         income: parseFloat(document.getElementById('income').value) || 0,
         debts: parseFloat(document.getElementById('debts').value) || 0,
         totalLoans: parseFloat(document.getElementById('totalLoans').value) || 0,
+        connectedAccounts: connectedAccounts,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
     try {
         await db.collection('users').doc(user.uid).set(data, { merge: true });
-        alert("✅ Profile saved successfully in the cloud!");
-    } catch (e) {
-        alert("Error saving: " + e.message);
-    }
+        alert("✅ All data saved successfully!");
+    } catch (e) { alert("Save error: " + e.message); }
 }
 
-// Load saved data
 async function loadUserData(user) {
     try {
         const doc = await db.collection('users').doc(user.uid).get();
@@ -259,24 +291,52 @@ async function loadUserData(user) {
             document.getElementById('income').value = data.income || '';
             document.getElementById('debts').value = data.debts || '';
             document.getElementById('totalLoans').value = data.totalLoans || '';
+            connectedAccounts = data.connectedAccounts || [];
+            renderConnectedBanks();
             calculate();
         }
     } catch (e) { console.error(e); }
 }
 
-// ==================== AUTH STATE ====================
+// Auth Functions
+function showRegister() {
+    document.getElementById('loginForm').classList.add('hidden');
+    document.getElementById('registerForm').classList.remove('hidden');
+}
+function showLogin() {
+    document.getElementById('loginForm').classList.remove('hidden');
+    document.getElementById('registerForm').classList.add('hidden');
+}
+async function register() { /* same as before */ 
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+    if (password.length < 6) return alert("Password must be at least 6 characters");
+    try { await auth.createUserWithEmailAndPassword(email, password); } catch (e) { alert(e.message); }
+}
+async function login() { /* same */ 
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    try { await auth.signInWithEmailAndPassword(email, password); } catch (e) { alert(e.message); }
+}
+async function googleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try { await auth.signInWithPopup(provider); } catch (e) { alert(e.message); }
+}
+function logout() { auth.signOut(); }
+
+// Auth State Listener
 auth.onAuthStateChanged(user => {
     if (user) {
         document.getElementById('authScreen').classList.add('hidden');
         document.getElementById('mainApp').classList.remove('hidden');
         document.getElementById('userEmail').textContent = user.email;
         loadUserData(user);
+        showTab(0);
     } else {
         document.getElementById('authScreen').classList.remove('hidden');
         document.getElementById('mainApp').classList.add('hidden');
     }
 });
 </script>
-
 </body>
 </html>

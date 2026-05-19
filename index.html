@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK (Compat version) -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 
@@ -26,8 +26,8 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-<!-- Sign In Screen -->
-<div id="signinScreen" class="fixed inset-0 bg-white flex items-center justify-center z-50">
+<!-- Auth Screen -->
+<div id="authScreen" class="fixed inset-0 bg-white flex items-center justify-center z-50">
     <div class="max-w-md w-full px-6">
         <div class="text-center mb-10">
             <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-3xl text-white text-5xl mb-6">
@@ -38,63 +38,88 @@
         </div>
 
         <div class="bg-white border border-gray-200 rounded-3xl p-8 shadow-xl">
-            <h2 class="text-2xl font-semibold text-center mb-8">Sign in to continue</h2>
-            
-            <div class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input id="email" type="email" placeholder="you@example.com" 
-                           class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                    <input id="password" type="password" placeholder="••••••••" 
-                           class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500">
-                </div>
-
-                <div class="flex items-center justify-between text-sm">
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" class="w-4 h-4">
-                        <span class="text-gray-600">Remember me</span>
-                    </label>
-                    <a href="#" onclick="forgotPassword()" class="text-blue-600 hover:underline">Forgot password?</a>
-                </div>
-
-                <button onclick="signInWithEmail()" 
-                        class="w-full bg-blue-600 hover:bg-blue-700 transition text-white font-semibold py-4 rounded-2xl text-lg">
+            <!-- Toggle -->
+            <div class="flex bg-gray-100 rounded-2xl p-1 mb-8">
+                <button onclick="toggleAuthMode('signin')" 
+                        id="signinTab"
+                        class="flex-1 py-3 text-sm font-medium rounded-xl tab-button active">
                     Sign In
                 </button>
-
-                <div class="relative my-6">
-                    <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-gray-300"></div>
-                    </div>
-                    <div class="relative text-center">
-                        <span class="bg-white px-4 text-gray-500 text-sm">or</span>
-                    </div>
-                </div>
-
-                <button onclick="signInWithGoogle()" 
-                        class="w-full border border-gray-300 hover:bg-gray-50 transition font-medium py-4 rounded-2xl flex items-center justify-center gap-3">
-                    <i class="fab fa-google"></i>
-                    Continue with Google
+                <button onclick="toggleAuthMode('signup')" 
+                        id="signupTab"
+                        class="flex-1 py-3 text-sm font-medium rounded-xl">
+                    Sign Up
                 </button>
+            </div>
 
-                <div class="text-center text-sm text-gray-500">
-                    Don't have an account? 
-                    <a href="#" onclick="alert('Sign up flow coming soon')" class="text-blue-600 hover:underline">Sign up</a>
+            <!-- Sign In Form -->
+            <div id="signinForm">
+                <h2 class="text-2xl font-semibold text-center mb-8">Welcome back</h2>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input id="email" type="email" placeholder="you@example.com" 
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input id="password" type="password" placeholder="••••••••" 
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500 transition">
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" class="w-4 h-4 accent-blue-600">
+                            <span class="text-gray-600">Remember me</span>
+                        </label>
+                        <a href="#" onclick="forgotPassword()" class="text-blue-600 hover:underline">Forgot password?</a>
+                    </div>
+
+                    <button onclick="signInWithEmail()" 
+                            class="w-full bg-blue-600 hover:bg-blue-700 transition text-white font-semibold py-4 rounded-2xl text-lg">
+                        Sign In
+                    </button>
                 </div>
+            </div>
+
+            <!-- Sign Up Form -->
+            <div id="signupForm" class="hidden">
+                <h2 class="text-2xl font-semibold text-center mb-8">Create an account</h2>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                        <input id="fullName" type="text" placeholder="Alex Rivera" 
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input id="signupEmail" type="email" placeholder="you@example.com" 
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input id="signupPassword" type="password" placeholder="••••••••" 
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500 transition">
+                    </div>
+
+                    <button onclick="signUpWithEmail()" 
+                            class="w-full bg-blue-600 hover:bg-blue-700 transition text-white font-semibold py-4 rounded-2xl text-lg">
+                        Create Account
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center text-sm text-gray-500 mt-6">
+                By continuing, you agree to our <a href="#" class="text-blue-600 hover:underline">Terms</a> and <a href="#" class="text-blue-600 hover:underline">Privacy Policy</a>.
             </div>
         </div>
     </div>
 </div>
 
-<!-- Main App (same as you provided) -->
+<!-- Main App -->
 <div id="mainApp" class="hidden max-w-5xl mx-auto p-4">
-    <!-- Your existing main app content remains unchanged -->
-    <!-- ... (Header, Tabs, Pay Rico, Dashboard, DTI/LTI) ... -->
-    <!-- I'll keep it short here for brevity, but you can paste your full main app content -->
-    
     <div class="flex justify-between items-center mb-8">
         <div class="flex items-center gap-3">
             <div class="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl">🌱</div>
@@ -116,18 +141,12 @@
         </div>
     </div>
 
-    <!-- Rest of your tabs and content here (unchanged) -->
-    <!-- Paste the rest of your original mainApp HTML here -->
+    <!-- Paste your full main app content (tabs, dashboard, etc.) here -->
+    <!-- ... -->
 </div>
 
 <script>
 // ==================== Firebase Config ====================
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAJpd9btTi5DEq5B7NsDLD4G_pddVQi43Q",
   authDomain: "rootdonate.firebaseapp.com",
@@ -137,11 +156,21 @@ const firebaseConfig = {
   appId: "1:838665513781:web:308983a5b2713f20977a7c"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+
+// ==================== Auth Mode Toggle ====================
+let currentMode = 'signin';
+
+function toggleAuthMode(mode) {
+    currentMode = mode;
+    
+    document.getElementById('signinForm').classList.toggle('hidden', mode === 'signup');
+    document.getElementById('signupForm').classList.toggle('hidden', mode === 'signin');
+    
+    document.getElementById('signinTab').classList.toggle('active', mode === 'signin');
+    document.getElementById('signupTab').classList.toggle('active', mode === 'signup');
+}
 
 // ==================== Auth Functions ====================
 async function signInWithEmail() {
@@ -162,12 +191,28 @@ async function signInWithEmail() {
     }
 }
 
-async function signInWithGoogle() {
-    const provider = new firebase.auth.GoogleAuthProvider();
+async function signUpWithEmail() {
+    const name = document.getElementById('fullName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+
+    if (!email || !password || !name) {
+        alert("Please fill in all fields");
+        return;
+    }
+
+    if (password.length < 6) {
+        alert("Password must be at least 6 characters");
+        return;
+    }
+
     try {
-        const result = await auth.signInWithPopup(provider);
-        showMainApp(result.user);
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        // Update profile with name
+        await userCredential.user.updateProfile({ displayName: name });
+        showMainApp(userCredential.user);
     } catch (error) {
+        console.error(error);
         alert(getErrorMessage(error.code));
     }
 }
@@ -188,22 +233,23 @@ function getErrorMessage(code) {
         case 'auth/user-not-found':
         case 'auth/wrong-password': return "Invalid email or password";
         case 'auth/invalid-email': return "Invalid email address";
+        case 'auth/email-already-in-use': return "This email is already registered";
+        case 'auth/weak-password': return "Password is too weak";
         case 'auth/too-many-requests': return "Too many attempts. Try again later";
-        default: return "Sign in failed. Please try again.";
+        default: return "Authentication failed. Please try again.";
     }
 }
 
 function showMainApp(user) {
-    document.getElementById('signinScreen').classList.add('hidden');
+    document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('mainApp').classList.remove('hidden');
 
-    // Show user info
     document.getElementById('userName').textContent = user.displayName || "User";
     document.getElementById('userEmail').textContent = user.email;
 
     // Initialize your app
-    renderBankAccounts();
-    calculate();
+    renderBankAccounts?.();
+    calculate?.();
 }
 
 // Logout
@@ -211,26 +257,22 @@ function logout() {
     if (confirm("Sign out of RootDonate?")) {
         auth.signOut().then(() => {
             document.getElementById('mainApp').classList.add('hidden');
-            document.getElementById('signinScreen').classList.remove('hidden');
+            document.getElementById('authScreen').classList.remove('hidden');
+            toggleAuthMode('signin'); // Reset to sign in
         });
     }
 }
 
-// ==================== Your existing JavaScript (tabs, payment, calculator, etc.) ====================
-function showTab(n) { /* your existing showTab function */ }
-function renderBankAccounts() { /* your code */ }
-function updateDashboard() { /* your code */ }
-function addBankAccount() { /* your code */ }
-function formatAmount(input) { /* your code */ }
-function makePayment() { /* your code */ }
-function calculate() { /* your code */ }
-
-// Auto check if already logged in
+// Auto-login check
 auth.onAuthStateChanged(user => {
     if (user) {
         showMainApp(user);
     }
 });
+
+// Placeholder functions (add your real ones here)
+function renderBankAccounts() { /* your code */ }
+function calculate() { /* your code */ }
 </script>
 
 </body>

@@ -7,23 +7,41 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK (Compat version) -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', system-ui, sans-serif; }
-        .card { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); }
-        .modal { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+        }
+        
+        .card { 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); 
+        }
+        
+        .modal { 
+            animation: fadeIn 0.3s ease-out; 
+        }
+        
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: scale(0.95); } 
+            to { opacity: 1; transform: scale(1); } 
+        }
+        
+        .tab-button.active {
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
 <!-- ====================== AUTH SCREEN ====================== -->
 <div id="authScreen" class="fixed inset-0 bg-white flex items-center justify-center z-50">
-    <div class="max-w-md w-full px-6">
+    <div class="max-w-md w-full px-6 py-8">
         <div class="text-center mb-10">
             <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-3xl text-white text-5xl mb-6">
                 🌱
@@ -33,11 +51,18 @@
         </div>
 
         <div class="bg-white border border-gray-200 rounded-3xl p-8 card">
+            <!-- Auth Tabs -->
             <div class="flex bg-gray-100 rounded-2xl p-1 mb-8">
-                <button onclick="toggleAuthMode('signin')" id="signinTab"
-                        class="flex-1 py-3 text-sm font-medium rounded-xl tab-button active">Sign In</button>
-                <button onclick="toggleAuthMode('signup')" id="signupTab"
-                        class="flex-1 py-3 text-sm font-medium rounded-xl">Sign Up</button>
+                <button onclick="toggleAuthMode('signin')" 
+                        id="signinTab"
+                        class="flex-1 py-3 text-sm font-medium rounded-xl tab-button active">
+                    Sign In
+                </button>
+                <button onclick="toggleAuthMode('signup')" 
+                        id="signupTab"
+                        class="flex-1 py-3 text-sm font-medium rounded-xl">
+                    Sign Up
+                </button>
             </div>
 
             <!-- Sign In Form -->
@@ -47,16 +72,16 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                         <input id="email" type="email" placeholder="you@example.com" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
                         <input id="password" type="password" placeholder="••••••••" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
                     </div>
 
                     <button onclick="signInWithFirebase()" id="signinBtn"
-                            class="w-full bg-emerald-600 hover:bg-emerald-700 transition text-white font-semibold py-4 rounded-2xl text-lg">
+                            class="w-full bg-emerald-600 hover:bg-emerald-700 transition-all text-white font-semibold py-4 rounded-2xl text-lg">
                         Sign In
                     </button>
                 </div>
@@ -69,79 +94,78 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                         <input id="fullName" type="text" placeholder="Alex Rivera" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                         <input id="signupEmail" type="email" placeholder="you@example.com" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
                         <input id="signupPassword" type="password" placeholder="••••••••" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
                     </div>
 
                     <button onclick="signUpWithFirebase()" id="signupBtn"
-                            class="w-full bg-emerald-600 hover:bg-emerald-700 transition text-white font-semibold py-4 rounded-2xl text-lg">
+                            class="w-full bg-emerald-600 hover:bg-emerald-700 transition-all text-white font-semibold py-4 rounded-2xl text-lg">
                         Create Account
                     </button>
                 </div>
             </div>
 
-            <div class="text-center text-sm text-gray-500 mt-6">
-                By continuing, you agree to our <a href="#" class="text-emerald-600 hover:underline">Terms</a> and <a href="#" class="text-emerald-600 hover:underline">Privacy Policy</a>.
+            <div class="text-center text-sm text-gray-500 mt-8">
+                By continuing, you agree to our 
+                <a href="#" class="text-emerald-600 hover:underline">Terms</a> and 
+                <a href="#" class="text-emerald-600 hover:underline">Privacy Policy</a>.
             </div>
         </div>
     </div>
 </div>
 
-<!-- Main App (same as before) -->
-<div id="mainApp" class="hidden">
-    <!-- ... Your main app content from previous version ... -->
-    <div class="flex justify-between items-center mb-8">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-3xl flex items-center justify-center text-white text-3xl">🌱</div>
-            <h1 class="text-4xl font-bold text-gray-900">Root</h1>
-        </div>
-        
-        <div class="flex items-center gap-4">
-            <div class="bg-white px-5 py-2 rounded-3xl border border-gray-100 flex items-center gap-3">
-                <div class="text-right">
-                    <p class="text-sm font-semibold" id="userName">Alex Rivera</p>
-                    <p class="text-xs text-gray-500" id="userEmail">alex@example.com</p>
-                </div>
-                <div class="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg">AR</div>
+<!-- ====================== MAIN APP ====================== -->
+<div id="mainApp" class="hidden min-h-screen p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-10">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-3xl flex items-center justify-center text-white text-3xl">🌱</div>
+                <h1 class="text-4xl font-bold text-gray-900">Root</h1>
             </div>
-            <button onclick="logout()" class="text-gray-400 hover:text-gray-600 transition">
-                <i class="fas fa-sign-out-alt text-2xl"></i>
-            </button>
+            
+            <div class="flex items-center gap-4">
+                <div class="bg-white px-5 py-2 rounded-3xl border border-gray-100 flex items-center gap-3">
+                    <div class="text-right">
+                        <p class="text-sm font-semibold" id="userName">Alex Rivera</p>
+                        <p class="text-xs text-gray-500" id="userEmail">alex@example.com</p>
+                    </div>
+                    <div class="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg">AR</div>
+                </div>
+                <button onclick="logout()" 
+                        class="text-gray-400 hover:text-gray-600 transition p-2">
+                    <i class="fas fa-sign-out-alt text-2xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Placeholder for your dashboard content -->
+        <div class="text-center py-20 text-gray-400">
+            <p>Your main dashboard content goes here...</p>
+            <p class="text-sm mt-2">Balance, Quick Send, Transactions, etc.</p>
         </div>
     </div>
-
-    <!-- Rest of your dashboard content here (balance, quick send, transactions, etc.) -->
-    <!-- You can paste the rest of the mainApp from my previous response -->
 </div>
 
 <script>
 // ==================== FIREBASE CONFIG ====================
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAJpd9btTi5DEq5B7NsDLD4G_pddVQi43Q",
-  authDomain: "rootdonate.firebaseapp.com",
-  projectId: "rootdonate",
-  storageBucket: "rootdonate.firebasestorage.app",
-  messagingSenderId: "838665513781",
-  appId: "1:838665513781:web:308983a5b2713f20977a7c"
+    apiKey: "AIzaSyAJpd9btTi5DEq5B7NsDLD4G_pddVQi43Q",
+    authDomain: "rootdonate.firebaseapp.com",
+    projectId: "rootdonate",
+    storageBucket: "rootdonate.firebasestorage.app",
+    messagingSenderId: "838665513781",
+    appId: "1:838665513781:web:308983a5b2713f20977a7c"
 };
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
@@ -149,22 +173,34 @@ const auth = firebase.auth();
 
 let currentUser = {};
 
-// Toggle Sign In / Sign Up
+// ====================== AUTH UI ======================
 function toggleAuthMode(mode) {
-    document.getElementById('signinForm').classList.toggle('hidden', mode === 'signup');
-    document.getElementById('signupForm').classList.toggle('hidden', mode === 'signin');
-    document.getElementById('signinTab').classList.toggle('active', mode === 'signin');
-    document.getElementById('signupTab').classList.toggle('active', mode === 'signup');
+    const signinForm = document.getElementById('signinForm');
+    const signupForm = document.getElementById('signupForm');
+    const signinTab = document.getElementById('signinTab');
+    const signupTab = document.getElementById('signupTab');
+
+    if (mode === 'signin') {
+        signinForm.classList.remove('hidden');
+        signupForm.classList.add('hidden');
+        signinTab.classList.add('active');
+        signupTab.classList.remove('active');
+    } else {
+        signinForm.classList.add('hidden');
+        signupForm.classList.remove('hidden');
+        signinTab.classList.remove('active');
+        signupTab.classList.add('active');
+    }
 }
 
-// Sign In
+// ====================== AUTH FUNCTIONS ======================
 async function signInWithFirebase() {
     const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
+    const password = document.getElementById('password').value.trim();
     const btn = document.getElementById('signinBtn');
 
     if (!email || !password) {
-        alert("Please enter email and password");
+        alert("Please enter both email and password");
         return;
     }
 
@@ -175,6 +211,7 @@ async function signInWithFirebase() {
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
         loginSuccess(userCredential.user);
     } catch (error) {
+        console.error(error);
         alert("Sign in failed: " + error.message);
     } finally {
         btn.innerHTML = 'Sign In';
@@ -182,15 +219,19 @@ async function signInWithFirebase() {
     }
 }
 
-// Sign Up
 async function signUpWithFirebase() {
     const name = document.getElementById('fullName').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
-    const password = document.getElementById('signupPassword').value;
+    const password = document.getElementById('signupPassword').value.trim();
     const btn = document.getElementById('signupBtn');
 
     if (!name || !email || !password) {
         alert("Please fill in all fields");
+        return;
+    }
+
+    if (password.length < 6) {
+        alert("Password should be at least 6 characters");
         return;
     }
 
@@ -199,10 +240,10 @@ async function signUpWithFirebase() {
 
     try {
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        // You can update profile with displayName
         await userCredential.user.updateProfile({ displayName: name });
         loginSuccess(userCredential.user);
     } catch (error) {
+        console.error(error);
         alert("Sign up failed: " + error.message);
     } finally {
         btn.innerHTML = 'Create Account';
@@ -212,7 +253,7 @@ async function signUpWithFirebase() {
 
 function loginSuccess(user) {
     currentUser = {
-        name: user.displayName || "User",
+        name: user.displayName || user.email?.split('@')[0] || "User",
         email: user.email
     };
 
@@ -223,16 +264,15 @@ function loginSuccess(user) {
     document.getElementById('userEmail').textContent = currentUser.email;
 }
 
-// Logout
 function logout() {
     if (confirm("Sign out of Root?")) {
         auth.signOut().then(() => {
             location.reload();
-        });
+        }).catch(err => console.error(err));
     }
 }
 
-// Listen for auth state changes (important for page refresh)
+// ====================== AUTH STATE LISTENER ======================
 auth.onAuthStateChanged(user => {
     if (user) {
         loginSuccess(user);

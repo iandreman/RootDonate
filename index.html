@@ -16,16 +16,91 @@
             color: rgb(29 78 216);
             font-weight: 600;
         }
+        .modal {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-<div class="max-w-5xl mx-auto p-4">
+<!-- Sign In Screen -->
+<div id="signinScreen" class="fixed inset-0 bg-white flex items-center justify-center z-50">
+    <div class="max-w-md w-full px-6">
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-3xl text-white text-5xl mb-6">
+                🌱
+            </div>
+            <h1 class="text-4xl font-bold text-gray-900">RootDonate</h1>
+            <p class="text-gray-500 mt-2">Send money • Track finances • Grow wealth</p>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-3xl p-8 shadow-xl">
+            <h2 class="text-2xl font-semibold text-center mb-8">Sign in to continue</h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email or Username</label>
+                    <input id="email" type="text" value="you@example.com" 
+                           class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input id="password" type="password" value="demo123" 
+                           class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div class="flex items-center justify-between text-sm">
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" checked class="w-4 h-4">
+                        <span class="text-gray-600">Remember me</span>
+                    </label>
+                    <a href="#" onclick="alert('Password reset flow would go here')" class="text-blue-600 hover:underline">Forgot password?</a>
+                </div>
+
+                <button onclick="signIn()" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 transition text-white font-semibold py-4 rounded-2xl text-lg">
+                    Sign In
+                </button>
+
+                <div class="text-center text-sm text-gray-500">
+                    Don't have an account? 
+                    <a href="#" onclick="alert('Sign up flow would go here')" class="text-blue-600 hover:underline">Sign up</a>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-center text-xs text-gray-400 mt-8">Demo credentials are pre-filled</p>
+    </div>
+</div>
+
+<!-- Main App -->
+<div id="mainApp" class="hidden max-w-5xl mx-auto p-4">
 
     <!-- Header -->
     <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">RootDonate</h1>
-        <div class="text-sm text-gray-500">Pay • Accounts • Finance</div>
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl">🌱</div>
+            <h1 class="text-3xl font-bold text-gray-900">RootDonate</h1>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <div onclick="showTab(1)" class="cursor-pointer flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-gray-100 hover:border-gray-200">
+                <div class="text-right">
+                    <p class="text-sm font-medium">Alex Rivera</p>
+                    <p class="text-xs text-gray-500">@arivera</p>
+                </div>
+                <div class="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white font-semibold">AR</div>
+            </div>
+            
+            <button onclick="logout()" 
+                    class="text-gray-400 hover:text-gray-600 transition">
+                <i class="fas fa-sign-out-alt text-xl"></i>
+            </button>
+        </div>
     </div>
 
     <!-- Tabs -->
@@ -80,20 +155,20 @@
         </div>
     </div>
 
-    <!-- Dashboard Tab (with Bank Accounts) -->
+    <!-- Dashboard Tab -->
     <div id="tabContent1" class="hidden">
         <div class="grid md:grid-cols-3 gap-6 mb-8">
             <div class="bg-white rounded-3xl p-8 card">
                 <p class="text-gray-500">Net Worth</p>
-                <p id="netWorth" class="text-4xl font-bold text-green-600 mt-2">$0</p>
+                <p id="netWorth" class="text-4xl font-bold text-green-600 mt-2">£2,840</p>
             </div>
             <div class="bg-white rounded-3xl p-8 card">
                 <p class="text-gray-500">Total Debt</p>
-                <p id="totalDebt" class="text-4xl font-bold text-red-600 mt-2">$0</p>
+                <p id="totalDebt" class="text-4xl font-bold text-red-600 mt-2">£0</p>
             </div>
             <div class="bg-white rounded-3xl p-8 card">
                 <p class="text-gray-500">Bank Balance</p>
-                <p id="bankBalance" class="text-4xl font-bold text-emerald-600 mt-2">$0</p>
+                <p id="bankBalance" class="text-4xl font-bold text-emerald-600 mt-2">£3,650</p>
             </div>
         </div>
 
@@ -118,17 +193,17 @@
                 <div class="space-y-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Gross Monthly Income (£)</label>
-                        <input type="number" id="income" oninput="calculate()" 
+                        <input type="number" id="income" value="4250" oninput="calculate()" 
                                class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Monthly Debt Payments (£)</label>
-                        <input type="number" id="debts" oninput="calculate()" 
+                        <input type="number" id="debts" value="850" oninput="calculate()" 
                                class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Total Outstanding Loans (£)</label>
-                        <input type="number" id="totalLoans" oninput="calculate()" 
+                        <input type="number" id="totalLoans" value="12400" oninput="calculate()" 
                                class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
                     </div>
                 </div>
@@ -153,26 +228,14 @@ function showTab(n) {
     document.getElementById('tab' + n).classList.add('active');
 }
 
-let bankAccounts = [];
+let bankAccounts = [
+    { name: "Monzo Everyday", balance: 1240 },
+    { name: "Starling Joint", balance: 2410 }
+];
 
-// Add Bank Account
-function addBankAccount() {
-    const name = prompt("Bank / Account Name:", "Monzo Account");
-    if (!name) return;
-    const balance = parseFloat(prompt("Current Balance (£):", "1250.00")) || 0;
-    
-    bankAccounts.push({ name, balance });
-    renderBankAccounts();
-    updateDashboard();
-}
-
+// Render bank accounts
 function renderBankAccounts() {
     const container = document.getElementById('bankAccounts');
-    if (bankAccounts.length === 0) {
-        container.innerHTML = `<p class="text-gray-400 italic">No accounts added yet.</p>`;
-        return;
-    }
-    
     container.innerHTML = bankAccounts.map(acc => `
         <div class="bg-gray-50 p-6 rounded-2xl flex justify-between items-center">
             <div><strong>${acc.name}</strong></div>
@@ -191,7 +254,18 @@ function updateDashboard() {
     document.getElementById('netWorth').textContent = '£' + netWorth.toLocaleString();
 }
 
-// Payment Functions
+// Bank Account
+function addBankAccount() {
+    const name = prompt("Bank / Account Name:", "Barclays Current");
+    if (!name) return;
+    const balance = parseFloat(prompt("Current Balance (£):", "850")) || 0;
+    
+    bankAccounts.push({ name, balance });
+    renderBankAccounts();
+    updateDashboard();
+}
+
+// Payment
 function formatAmount(input) {
     let value = input.value.replace(/[^0-9.]/g, '');
     const parts = value.split('.');
@@ -208,9 +282,9 @@ function makePayment() {
     }
     if (confirm(`Send £${parseFloat(amount).toFixed(2)} to Rico Morgan (@iandreme)?`)) {
         setTimeout(() => {
-            alert(`✅ £${parseFloat(amount).toFixed(2)} sent successfully!`);
+            alert(`✅ £${parseFloat(amount).toFixed(2)} sent successfully to Rico!`);
             document.getElementById('amount').value = '';
-        }, 600);
+        }, 500);
     }
 }
 
@@ -223,7 +297,6 @@ function calculate() {
     const resultsDiv = document.getElementById('results');
     if (income <= 0) {
         resultsDiv.innerHTML = `<p class="text-gray-400 text-center py-10">Enter income to calculate ratios</p>`;
-        updateDashboard();
         return;
     }
 
@@ -245,9 +318,41 @@ function calculate() {
     updateDashboard();
 }
 
+// Sign In
+function signIn() {
+    const email = document.getElementById('email').value;
+    if (email) {
+        document.getElementById('signinScreen').classList.add('hidden');
+        document.getElementById('mainApp').classList.remove('hidden');
+        
+        // Initialize everything
+        renderBankAccounts();
+        calculate();
+    }
+}
+
+function logout() {
+    if (confirm("Sign out of RootDonate?")) {
+        document.getElementById('mainApp').classList.add('hidden');
+        document.getElementById('signinScreen').classList.remove('hidden');
+    }
+}
+
 // Keyboard support
-document.getElementById('amount').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') makePayment();
+document.addEventListener('DOMContentLoaded', () => {
+    const amountInput = document.getElementById('amount');
+    if (amountInput) {
+        amountInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') makePayment();
+        });
+    }
+    
+    // Auto-calculate on load
+    setTimeout(() => {
+        if (!document.getElementById('mainApp').classList.contains('hidden')) {
+            calculate();
+        }
+    }, 800);
 });
 </script>
 

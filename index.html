@@ -3,41 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RootDonate • Pay Rico</title>
+    <title>Root • Finance</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     
-    <!-- Firebase SDK (Compat version) -->
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', system-ui, sans-serif; }
         .card { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .tab-button.active { 
-            background-color: rgb(219 234 254);
-            color: rgb(29 78 216);
-            font-weight: 600;
-        }
         .modal { animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-<!-- Auth Screen -->
+<!-- ====================== AUTH SCREEN ====================== -->
 <div id="authScreen" class="fixed inset-0 bg-white flex items-center justify-center z-50">
     <div class="max-w-md w-full px-6">
         <div class="text-center mb-10">
-            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-3xl text-white text-5xl mb-6">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-3xl text-white text-5xl mb-6">
                 🌱
             </div>
-            <h1 class="text-4xl font-bold text-gray-900">RootDonate</h1>
+            <h1 class="text-4xl font-bold text-gray-900">Root</h1>
             <p class="text-gray-500 mt-2">Send money • Track finances • Grow wealth</p>
         </div>
 
-        <div class="bg-white border border-gray-200 rounded-3xl p-8 shadow-xl">
+        <div class="bg-white border border-gray-200 rounded-3xl p-8 card">
             <!-- Toggle -->
             <div class="flex bg-gray-100 rounded-2xl p-1 mb-8">
                 <button onclick="toggleAuthMode('signin')" 
@@ -55,29 +46,20 @@
             <!-- Sign In Form -->
             <div id="signinForm">
                 <h2 class="text-2xl font-semibold text-center mb-8">Welcome back</h2>
-                
                 <div class="space-y-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                         <input id="email" type="email" placeholder="you@example.com" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500 transition">
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
                         <input id="password" type="password" placeholder="••••••••" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500 transition">
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
                     </div>
 
-                    <div class="flex items-center justify-between text-sm">
-                        <label class="flex items-center gap-2">
-                            <input type="checkbox" class="w-4 h-4 accent-blue-600">
-                            <span class="text-gray-600">Remember me</span>
-                        </label>
-                        <a href="#" onclick="forgotPassword()" class="text-blue-600 hover:underline">Forgot password?</a>
-                    </div>
-
-                    <button onclick="signInWithEmail()" 
-                            class="w-full bg-blue-600 hover:bg-blue-700 transition text-white font-semibold py-4 rounded-2xl text-lg">
+                    <button onclick="signIn()" 
+                            class="w-full bg-emerald-600 hover:bg-emerald-700 transition text-white font-semibold py-4 rounded-2xl text-lg">
                         Sign In
                     </button>
                 </div>
@@ -86,85 +68,108 @@
             <!-- Sign Up Form -->
             <div id="signupForm" class="hidden">
                 <h2 class="text-2xl font-semibold text-center mb-8">Create an account</h2>
-                
                 <div class="space-y-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                         <input id="fullName" type="text" placeholder="Alex Rivera" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500 transition">
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                         <input id="signupEmail" type="email" placeholder="you@example.com" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500 transition">
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
                         <input id="signupPassword" type="password" placeholder="••••••••" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500 transition">
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
                     </div>
 
-                    <button onclick="signUpWithEmail()" 
-                            class="w-full bg-blue-600 hover:bg-blue-700 transition text-white font-semibold py-4 rounded-2xl text-lg">
+                    <button onclick="signUp()" 
+                            class="w-full bg-emerald-600 hover:bg-emerald-700 transition text-white font-semibold py-4 rounded-2xl text-lg">
                         Create Account
                     </button>
                 </div>
             </div>
 
             <div class="text-center text-sm text-gray-500 mt-6">
-                By continuing, you agree to our <a href="#" class="text-blue-600 hover:underline">Terms</a> and <a href="#" class="text-blue-600 hover:underline">Privacy Policy</a>.
+                By continuing, you agree to our <a href="#" class="text-emerald-600 hover:underline">Terms</a> and <a href="#" class="text-emerald-600 hover:underline">Privacy Policy</a>.
             </div>
         </div>
     </div>
 </div>
 
-<!-- Main App -->
+<!-- ====================== MAIN APP ====================== -->
 <div id="mainApp" class="hidden max-w-5xl mx-auto p-4">
     <div class="flex justify-between items-center mb-8">
         <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl">🌱</div>
-            <h1 class="text-3xl font-bold text-gray-900">RootDonate</h1>
+            <div class="w-10 h-10 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-3xl flex items-center justify-center text-white text-3xl">🌱</div>
+            <h1 class="text-4xl font-bold text-gray-900">Root</h1>
         </div>
         
         <div class="flex items-center gap-4">
-            <div class="cursor-pointer flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-gray-100">
+            <div class="bg-white px-5 py-2 rounded-3xl border border-gray-100 flex items-center gap-3">
                 <div class="text-right">
-                    <p class="text-sm font-medium" id="userName">User</p>
-                    <p class="text-xs text-gray-500" id="userEmail"></p>
+                    <p class="text-sm font-semibold" id="userName">Alex Rivera</p>
+                    <p class="text-xs text-gray-500" id="userEmail">alex@example.com</p>
                 </div>
-                <div class="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white font-semibold">AR</div>
+                <div class="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg">AR</div>
             </div>
-            
             <button onclick="logout()" class="text-gray-400 hover:text-gray-600 transition">
-                <i class="fas fa-sign-out-alt text-xl"></i>
+                <i class="fas fa-sign-out-alt text-2xl"></i>
             </button>
         </div>
     </div>
 
-    <!-- Paste your full main app content (tabs, dashboard, etc.) here -->
-    <!-- ... -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Balance -->
+        <div class="lg:col-span-2 bg-white rounded-3xl p-8 card">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 text-sm">Available Balance</p>
+                    <p class="text-5xl font-bold text-gray-900 mt-2">£2,847.36</p>
+                </div>
+                <div class="text-emerald-600">
+                    <i class="fas fa-arrow-trend-up text-4xl"></i>
+                </div>
+            </div>
+            <div class="mt-6 text-sm text-emerald-600 flex items-center gap-2">
+                <i class="fas fa-check-circle"></i>
+                <span>Connected to Monzo •••• 4242</span>
+            </div>
+        </div>
+
+        <!-- Quick Send -->
+        <div class="bg-white rounded-3xl p-8 card">
+            <h3 class="font-semibold mb-4">Quick Send</h3>
+            <div onclick="sendToIan()" class="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-2xl cursor-pointer transition">
+                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl">👤</div>
+                <div class="flex-1">
+                    <p class="font-medium">Ian Dreme</p>
+                    <p class="text-sm text-gray-500">monzo.me/iandreme</p>
+                </div>
+                <button class="bg-emerald-600 text-white px-6 py-2 rounded-2xl text-sm font-medium">
+                    Send
+                </button>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="lg:col-span-3 bg-white rounded-3xl p-8 card">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-semibold text-lg">Recent Activity</h3>
+                <button class="text-emerald-600 text-sm font-medium">View all →</button>
+            </div>
+            <!-- Add more transactions as needed -->
+        </div>
+    </div>
 </div>
 
 <script>
-// ==================== Firebase Config ====================
-const firebaseConfig = {
-  apiKey: "AIzaSyAJpd9btTi5DEq5B7NsDLD4G_pddVQi43Q",
-  authDomain: "rootdonate.firebaseapp.com",
-  projectId: "rootdonate",
-  storageBucket: "rootdonate.firebasestorage.app",
-  messagingSenderId: "838665513781",
-  appId: "1:838665513781:web:308983a5b2713f20977a7c"
-};
+let currentUser = {};
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-
-// ==================== Auth Mode Toggle ====================
-let currentMode = 'signin';
-
+// Toggle between Sign In and Sign Up
 function toggleAuthMode(mode) {
-    currentMode = mode;
-    
     document.getElementById('signinForm').classList.toggle('hidden', mode === 'signup');
     document.getElementById('signupForm').classList.toggle('hidden', mode === 'signin');
     
@@ -172,107 +177,62 @@ function toggleAuthMode(mode) {
     document.getElementById('signupTab').classList.toggle('active', mode === 'signup');
 }
 
-// ==================== Auth Functions ====================
-async function signInWithEmail() {
+// Simple demo login
+function signIn() {
     const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-
-    if (!email || !password) {
-        alert("Please enter email and password");
+    if (!email) {
+        alert("Please enter your email");
         return;
     }
-
-    try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        showMainApp(userCredential.user);
-    } catch (error) {
-        console.error(error);
-        alert(getErrorMessage(error.code));
-    }
+    loginSuccess(email);
 }
 
-async function signUpWithEmail() {
+function signUp() {
     const name = document.getElementById('fullName').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
-    const password = document.getElementById('signupPassword').value;
-
-    if (!email || !password || !name) {
+    
+    if (!name || !email) {
         alert("Please fill in all fields");
         return;
     }
-
-    if (password.length < 6) {
-        alert("Password must be at least 6 characters");
-        return;
-    }
-
-    try {
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        // Update profile with name
-        await userCredential.user.updateProfile({ displayName: name });
-        showMainApp(userCredential.user);
-    } catch (error) {
-        console.error(error);
-        alert(getErrorMessage(error.code));
-    }
+    loginSuccess(email, name);
 }
 
-function forgotPassword() {
-    const email = document.getElementById('email').value.trim();
-    if (!email) {
-        alert("Enter your email first");
-        return;
-    }
-    auth.sendPasswordResetEmail(email)
-        .then(() => alert("Password reset link sent to your email!"))
-        .catch(err => alert(getErrorMessage(err.code)));
-}
-
-function getErrorMessage(code) {
-    switch(code) {
-        case 'auth/user-not-found':
-        case 'auth/wrong-password': return "Invalid email or password";
-        case 'auth/invalid-email': return "Invalid email address";
-        case 'auth/email-already-in-use': return "This email is already registered";
-        case 'auth/weak-password': return "Password is too weak";
-        case 'auth/too-many-requests': return "Too many attempts. Try again later";
-        default: return "Authentication failed. Please try again.";
-    }
-}
-
-function showMainApp(user) {
+function loginSuccess(email, name = "Alex Rivera") {
+    currentUser = { name, email };
+    
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('mainApp').classList.remove('hidden');
-
-    document.getElementById('userName').textContent = user.displayName || "User";
-    document.getElementById('userEmail').textContent = user.email;
-
-    // Initialize your app
-    renderBankAccounts?.();
-    calculate?.();
+    
+    document.getElementById('userName').textContent = name;
+    document.getElementById('userEmail').textContent = email;
 }
 
-// Logout
 function logout() {
-    if (confirm("Sign out of RootDonate?")) {
-        auth.signOut().then(() => {
-            document.getElementById('mainApp').classList.add('hidden');
-            document.getElementById('authScreen').classList.remove('hidden');
-            toggleAuthMode('signin'); // Reset to sign in
-        });
+    if (confirm("Sign out of Root?")) {
+        document.getElementById('mainApp').classList.add('hidden');
+        document.getElementById('authScreen').classList.remove('hidden');
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
     }
 }
 
-// Auto-login check
-auth.onAuthStateChanged(user => {
-    if (user) {
-        showMainApp(user);
+function sendToIan() {
+    const amount = prompt("How much would you like to send to Ian Dreme?");
+    if (amount && !isNaN(amount)) {
+        alert(`✅ £${parseFloat(amount).toFixed(2)} sent successfully to Ian via Monzo.me`);
     }
-});
+}
 
-// Placeholder functions (add your real ones here)
-function renderBankAccounts() { /* your code */ }
-function calculate() { /* your code */ }
+// Make tab buttons have the active class styling
+document.head.insertAdjacentHTML('beforeend', `
+<style>
+.tab-button.active { 
+    background-color: rgb(236 253 245);
+    color: rgb(16 185 129);
+    font-weight: 600;
+}
+</style>`);
 </script>
 
 </body>

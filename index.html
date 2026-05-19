@@ -3,142 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RootDonate - Personal Finance</title>
+    <title>RootDonate • Pay Rico</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', system-ui, sans-serif; }
         .card { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .tab-button.active { @apply bg-blue-100 text-blue-700 font-semibold; }
+        .tab-button.active { 
+            background-color: rgb(219 234 254);
+            color: rgb(29 78 216);
+            font-weight: 600;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-<div class="max-w-6xl mx-auto p-4 md:p-6">
+<div class="max-w-5xl mx-auto p-4">
 
-    <!-- Auth Screen -->
-    <div id="authScreen" class="min-h-screen flex items-center justify-center">
-        <div class="bg-white rounded-3xl shadow-2xl p-8 md:p-10 w-full max-w-md">
-            <div class="text-center mb-10">
-                <h1 class="text-4xl font-bold text-blue-600">RootDonate</h1>
-                <p class="text-gray-600 mt-2">Smart Finance • Banking • Debt Manager</p>
-            </div>
-
-            <div id="loginForm">
-                <input type="email" id="email" placeholder="Email address" class="w-full px-5 py-4 border border-gray-300 rounded-2xl mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="password" id="password" placeholder="Password" class="w-full px-5 py-4 border border-gray-300 rounded-2xl mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold text-lg">Login</button>
-                <p class="text-center mt-6 text-sm">
-                    Don't have an account? <span onclick="showRegister()" class="text-blue-600 cursor-pointer font-medium">Sign up free</span>
-                </p>
-            </div>
-
-            <div id="registerForm" class="hidden">
-                <input type="email" id="regEmail" placeholder="Email address" class="w-full px-5 py-4 border border-gray-300 rounded-2xl mb-4">
-                <input type="password" id="regPassword" placeholder="Create password (6+ characters)" class="w-full px-5 py-4 border border-gray-300 rounded-2xl mb-6">
-                <button onclick="register()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold text-lg">Create Account</button>
-                <p class="text-center mt-6 text-sm">
-                    Already have an account? <span onclick="showLogin()" class="text-blue-600 cursor-pointer font-medium">Login</span>
-                </p>
-            </div>
-        </div>
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">RootDonate</h1>
+        <div class="text-sm text-gray-500">Pay • Accounts • Finance</div>
     </div>
 
-    <!-- Main Application -->
-    <div id="mainApp" class="hidden">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">RootDonate</h1>
-            <div class="flex items-center gap-4">
-                <span id="userEmail" class="text-sm text-gray-600"></span>
-                <button onclick="logout()" class="text-red-600 hover:bg-red-50 px-4 py-2 rounded-xl">Logout</button>
+    <!-- Tabs -->
+    <div class="flex flex-wrap gap-2 mb-8 border-b pb-2">
+        <button onclick="showTab(0)" class="tab-button active px-6 py-3 rounded-2xl" id="tab0">💸 Pay Rico</button>
+        <button onclick="showTab(1)" class="tab-button px-6 py-3 rounded-2xl" id="tab1">🏠 Dashboard</button>
+        <button onclick="showTab(2)" class="tab-button px-6 py-3 rounded-2xl" id="tab2">📊 DTI / LTI</button>
+    </div>
+
+    <!-- Pay Rico Tab -->
+    <div id="tabContent0">
+        <div class="max-w-md mx-auto bg-white shadow-xl rounded-3xl overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8 text-center">
+                <h1 class="text-3xl font-bold">Pay Rico</h1>
+                <p class="mt-1 opacity-90">@iandreme</p>
             </div>
-        </div>
 
-        <!-- Tabs -->
-        <div class="flex flex-wrap gap-2 mb-8 border-b pb-2">
-            <button onclick="showTab(0)" class="tab-button active px-5 py-3 rounded-2xl" id="tab0">🏠 Dashboard</button>
-            <button onclick="showTab(2)" class="tab-button px-5 py-3 rounded-2xl" id="tab2">📊 DTI / LTI</button>
-        </div>
-
-        <!-- Dashboard -->
-        <div id="tabContent0">
-            <div class="grid md:grid-cols-3 gap-6">
-                <div class="bg-white rounded-3xl p-8 card">
-                    <p class="text-gray-500">Net Worth</p>
-                    <p id="netWorth" class="text-4xl font-bold text-green-600 mt-2">$0</p>
-                </div>
-                <div class="bg-white rounded-3xl p-8 card">
-                    <p class="text-gray-500">Total Debt</p>
-                    <p id="totalDebt" class="text-3xl font-semibold text-red-600 mt-2">$0</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- DTI Calculator -->
-        <div id="tabContent2" class="hidden">
-            <div class="grid lg:grid-cols-2 gap-8">
-                <div class="bg-white rounded-3xl p-8 card">
-                    <h2 class="text-2xl font-semibold mb-6">Financial Details</h2>
-                    <div class="space-y-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Gross Monthly Income ($)</label>
-                            <input type="number" id="income" oninput="calculate()" class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Monthly Debt Payments ($)</label>
-                            <input type="number" id="debts" oninput="calculate()" class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Total Outstanding Loans ($)</label>
-                            <input type="number" id="totalLoans" oninput="calculate()" class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
-                        </div>
+            <div class="p-8">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-3xl text-white">
+                        👤
                     </div>
-                    <button onclick="saveProfile()" class="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold">💾 Save to Cloud</button>
+                    <div>
+                        <p class="font-semibold text-xl">Rico Morgan</p>
+                        <p class="text-gray-500">@iandreme</p>
+                    </div>
                 </div>
 
-                <div class="bg-white rounded-3xl p-8 card">
-                    <h2 class="text-2xl font-semibold mb-6">Your Financial Ratios</h2>
-                    <div id="results" class="space-y-8 min-h-[300px]"></div>
+                <div class="mb-8">
+                    <p class="text-gray-600 text-sm mb-3">How much do you want to send?</p>
+                    <div class="relative">
+                        <span class="absolute left-6 top-1/2 -translate-y-1/2 text-5xl font-light text-gray-400">£</span>
+                        <input 
+                            type="text" 
+                            id="amount"
+                            placeholder="0.00"
+                            oninput="formatAmount(this)"
+                            class="w-full text-6xl font-semibold bg-gray-50 border border-gray-200 rounded-3xl px-16 py-6 focus:outline-none focus:border-blue-500 text-center">
+                    </div>
                 </div>
+
+                <button onclick="makePayment()" 
+                        class="w-full bg-emerald-600 hover:bg-emerald-700 transition text-white text-xl font-semibold py-6 rounded-3xl flex items-center justify-center gap-3">
+                    <i class="fas fa-paper-plane"></i>
+                    Pay Now
+                </button>
+
+                <p class="text-center text-gray-500 text-sm mt-6">
+                    Secure • Instant • Powered by RootDonate
+                </p>
             </div>
         </div>
     </div>
+
+    <!-- Dashboard Tab (with Bank Accounts) -->
+    <div id="tabContent1" class="hidden">
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-3xl p-8 card">
+                <p class="text-gray-500">Net Worth</p>
+                <p id="netWorth" class="text-4xl font-bold text-green-600 mt-2">$0</p>
+            </div>
+            <div class="bg-white rounded-3xl p-8 card">
+                <p class="text-gray-500">Total Debt</p>
+                <p id="totalDebt" class="text-4xl font-bold text-red-600 mt-2">$0</p>
+            </div>
+            <div class="bg-white rounded-3xl p-8 card">
+                <p class="text-gray-500">Bank Balance</p>
+                <p id="bankBalance" class="text-4xl font-bold text-emerald-600 mt-2">$0</p>
+            </div>
+        </div>
+
+        <!-- Bank Accounts -->
+        <div class="bg-white rounded-3xl p-8 card">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-semibold">Your Bank Accounts</h2>
+                <button onclick="addBankAccount()" 
+                        class="bg-blue-600 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-blue-700">
+                    <i class="fas fa-plus"></i> Add Account
+                </button>
+            </div>
+            <div id="bankAccounts" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <!-- DTI / LTI Tab -->
+    <div id="tabContent2" class="hidden">
+        <div class="grid lg:grid-cols-2 gap-8">
+            <div class="bg-white rounded-3xl p-8 card">
+                <h2 class="text-2xl font-semibold mb-6">Financial Details</h2>
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Gross Monthly Income (£)</label>
+                        <input type="number" id="income" oninput="calculate()" 
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Monthly Debt Payments (£)</label>
+                        <input type="number" id="debts" oninput="calculate()" 
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Total Outstanding Loans (£)</label>
+                        <input type="number" id="totalLoans" oninput="calculate()" 
+                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl text-lg">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-8 card">
+                <h2 class="text-2xl font-semibold mb-6">Your Financial Ratios</h2>
+                <div id="results" class="space-y-8 min-h-[300px]"></div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
-// ==================== FIREBASE CONFIG ====================
-const firebaseConfig = {
-  apiKey: "AIzaSyAJpd9btTi5DEq5B7NsDLD4G_pddVQi43Q",
-  authDomain: "rootdonate.firebaseapp.com",
-  projectId: "rootdonate",
-  storageBucket: "rootdonate.firebasestorage.app",
-  messagingSenderId: "838665513781",
-  appId: "1:838665513781:web:308983a5b2713f20977a7c"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-let bankAccounts = [];
-
 // Tab Navigation
 function showTab(n) {
     document.querySelectorAll('[id^="tabContent"]').forEach(el => el.classList.add('hidden'));
     document.getElementById('tabContent' + n).classList.remove('hidden');
+    
     document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
     document.getElementById('tab' + n).classList.add('active');
 }
 
-// Banking
+let bankAccounts = [];
+
+// Add Bank Account
 function addBankAccount() {
-    const name = prompt("Bank / Account Name:", "Chase Checking");
+    const name = prompt("Bank / Account Name:", "Monzo Account");
     if (!name) return;
-    const balance = parseFloat(prompt("Current Balance:", "5420.75")) || 0;
+    const balance = parseFloat(prompt("Current Balance (£):", "1250.00")) || 0;
     
     bankAccounts.push({ name, balance });
     renderBankAccounts();
@@ -147,10 +168,15 @@ function addBankAccount() {
 
 function renderBankAccounts() {
     const container = document.getElementById('bankAccounts');
+    if (bankAccounts.length === 0) {
+        container.innerHTML = `<p class="text-gray-400 italic">No accounts added yet.</p>`;
+        return;
+    }
+    
     container.innerHTML = bankAccounts.map(acc => `
         <div class="bg-gray-50 p-6 rounded-2xl flex justify-between items-center">
             <div><strong>${acc.name}</strong></div>
-            <div class="text-2xl font-bold text-green-600">$${acc.balance.toLocaleString()}</div>
+            <div class="text-2xl font-bold text-emerald-600">£${acc.balance.toLocaleString()}</div>
         </div>
     `).join('');
 }
@@ -160,12 +186,35 @@ function updateDashboard() {
     const totalLoans = parseFloat(document.getElementById('totalLoans').value) || 0;
     const netWorth = totalBalance - totalLoans;
 
-    document.getElementById('bankBalance').textContent = '$' + totalBalance.toLocaleString();
-    document.getElementById('totalDebt').textContent = '$' + totalLoans.toLocaleString();
-    document.getElementById('netWorth').textContent = '$' + netWorth.toLocaleString();
+    document.getElementById('bankBalance').textContent = '£' + totalBalance.toLocaleString();
+    document.getElementById('totalDebt').textContent = '£' + totalLoans.toLocaleString();
+    document.getElementById('netWorth').textContent = '£' + netWorth.toLocaleString();
 }
 
-// DTI Calculator
+// Payment Functions
+function formatAmount(input) {
+    let value = input.value.replace(/[^0-9.]/g, '');
+    const parts = value.split('.');
+    if (parts.length > 2) value = parts[0] + '.' + parts.slice(1).join('');
+    if (parts[1] && parts[1].length > 2) value = parseFloat(value).toFixed(2);
+    input.value = value;
+}
+
+function makePayment() {
+    const amount = document.getElementById('amount').value;
+    if (!amount || parseFloat(amount) <= 0) {
+        alert("Please enter a valid amount");
+        return;
+    }
+    if (confirm(`Send £${parseFloat(amount).toFixed(2)} to Rico Morgan (@iandreme)?`)) {
+        setTimeout(() => {
+            alert(`✅ £${parseFloat(amount).toFixed(2)} sent successfully!`);
+            document.getElementById('amount').value = '';
+        }, 600);
+    }
+}
+
+// DTI / LTI Calculator
 function calculate() {
     const income = parseFloat(document.getElementById('income').value) || 0;
     const debts = parseFloat(document.getElementById('debts').value) || 0;
@@ -173,7 +222,8 @@ function calculate() {
 
     const resultsDiv = document.getElementById('results');
     if (income <= 0) {
-        resultsDiv.innerHTML = `<p class="text-gray-400">Enter income to see ratios</p>`;
+        resultsDiv.innerHTML = `<p class="text-gray-400 text-center py-10">Enter income to calculate ratios</p>`;
+        updateDashboard();
         return;
     }
 
@@ -181,86 +231,25 @@ function calculate() {
     const lti = (loans / (income * 12)) * 100;
 
     resultsDiv.innerHTML = `
-        <div class="space-y-6">
+        <div class="space-y-8">
             <div class="flex justify-between items-center">
                 <span class="text-gray-600">Debt-to-Income (DTI)</span>
-                <span class="text-4xl font-bold ${dti <= 36 ? 'text-green-600' : dti <= 43 ? 'text-amber-600' : 'text-red-600'}">${dti.toFixed(1)}%</span>
+                <span class="text-5xl font-bold ${dti <= 36 ? 'text-green-600' : dti <= 43 ? 'text-amber-600' : 'text-red-600'}">${dti.toFixed(1)}%</span>
             </div>
             <div class="flex justify-between items-center">
                 <span class="text-gray-600">Loan-to-Income (LTI)</span>
-                <span class="text-4xl font-bold ${lti <= 400 ? 'text-green-600' : 'text-red-600'}">${lti.toFixed(1)}%</span>
+                <span class="text-5xl font-bold ${lti <= 400 ? 'text-green-600' : 'text-red-600'}">${lti.toFixed(1)}%</span>
             </div>
         </div>
     `;
     updateDashboard();
 }
 
-// Save / Load
-async function saveProfile() {
-    const user = auth.currentUser;
-    if (!user) return alert("Please log in");
-    try {
-        await db.collection('users').doc(user.uid).set({
-            income: parseFloat(document.getElementById('income').value) || 0,
-            debts: parseFloat(document.getElementById('debts').value) || 0,
-            totalLoans: parseFloat(document.getElementById('totalLoans').value) || 0,
-            bankAccounts: bankAccounts,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-        alert("✅ Saved successfully!");
-    } catch (e) { alert("Error saving: " + e.message); }
-}
-
-async function loadUserData(user) {
-    try {
-        const doc = await db.collection('users').doc(user.uid).get();
-        if (doc.exists) {
-            const data = doc.data();
-            document.getElementById('income').value = data.income || '';
-            document.getElementById('debts').value = data.debts || '';
-            document.getElementById('totalLoans').value = data.totalLoans || '';
-            bankAccounts = data.bankAccounts || [];
-            renderBankAccounts();
-            calculate();
-        }
-    } catch (e) { console.error(e); }
-}
-
-// Auth Functions
-function showRegister() {
-    document.getElementById('loginForm').classList.add('hidden');
-    document.getElementById('registerForm').classList.remove('hidden');
-}
-function showLogin() {
-    document.getElementById('loginForm').classList.remove('hidden');
-    document.getElementById('registerForm').classList.add('hidden');
-}
-async function register() {
-    const email = document.getElementById('regEmail').value;
-    const pass = document.getElementById('regPassword').value;
-    if (pass.length < 6) return alert("Password too short");
-    try { await auth.createUserWithEmailAndPassword(email, pass); } catch (e) { alert(e.message); }
-}
-async function login() {
-    const email = document.getElementById('email').value;
-    const pass = document.getElementById('password').value;
-    try { await auth.signInWithEmailAndPassword(email, pass); } catch (e) { alert(e.message); }
-}
-function logout() { auth.signOut(); }
-
-// Auth State
-auth.onAuthStateChanged(user => {
-    if (user) {
-        document.getElementById('authScreen').classList.add('hidden');
-        document.getElementById('mainApp').classList.remove('hidden');
-        document.getElementById('userEmail').textContent = user.email;
-        loadUserData(user);
-        showTab(0);
-    } else {
-        document.getElementById('authScreen').classList.remove('hidden');
-        document.getElementById('mainApp').classList.add('hidden');
-    }
+// Keyboard support
+document.getElementById('amount').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') makePayment();
 });
 </script>
+
 </body>
 </html>

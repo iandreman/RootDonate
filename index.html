@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Root — Modern personal finance app">
     <title>Root • Finance</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     
-    <!-- Firebase SDK -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -17,7 +20,7 @@
         body { font-family: 'Inter', system-ui, sans-serif; }
         
         .card { 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); 
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); 
         }
         
         .tab-button.active {
@@ -28,16 +31,17 @@
         .balance-amount {
             font-size: 2.75rem;
             line-height: 1;
+            font-weight: 700;
         }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-<!-- ====================== AUTH SCREEN ====================== -->
+<!-- AUTH SCREEN -->
 <div id="authScreen" class="fixed inset-0 bg-white flex items-center justify-center z-50">
     <div class="max-w-md w-full px-6 py-8">
         <div class="text-center mb-10">
-            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-3xl text-white text-5xl mb-6">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-3xl text-white text-5xl mb-6 shadow-xl">
                 🌱
             </div>
             <h1 class="text-4xl font-bold text-gray-900">Root</h1>
@@ -45,7 +49,6 @@
         </div>
 
         <div class="bg-white border border-gray-200 rounded-3xl p-8 card">
-            <!-- Tabs -->
             <div class="flex bg-gray-100 rounded-2xl p-1 mb-8">
                 <button onclick="toggleAuthMode('signin')" id="signinTab" 
                         class="flex-1 py-3 text-sm font-medium rounded-xl tab-button active">Sign In</button>
@@ -57,24 +60,17 @@
             <div id="signinForm">
                 <h2 class="text-2xl font-semibold text-center mb-8">Welcome back</h2>
                 <div class="space-y-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                        <input id="email" type="email" placeholder="you@example.com" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                        <input id="password" type="password" placeholder="••••••••" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
-                    </div>
-
-                    <button onclick="forgotPassword()" 
-                            class="text-emerald-600 hover:text-emerald-700 text-sm font-medium float-right">
+                    <input id="email" type="email" placeholder="you@example.com" 
+                           class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
+                    <input id="password" type="password" placeholder="••••••••" 
+                           class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
+                    
+                    <button onclick="forgotPassword()" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium float-right">
                         Forgot password?
                     </button>
 
-                    <button onclick="signInWithFirebase()" id="signinBtn"
-                            class="w-full bg-emerald-600 hover:bg-emerald-700 transition-all text-white font-semibold py-4 rounded-2xl text-lg mt-2">
+                    <button onclick="signIn()" id="signinBtn"
+                            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-4 rounded-2xl text-lg">
                         Sign In
                     </button>
                 </div>
@@ -84,39 +80,29 @@
             <div id="signupForm" class="hidden">
                 <h2 class="text-2xl font-semibold text-center mb-8">Create an account</h2>
                 <div class="space-y-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                        <input id="fullName" type="text" placeholder="Alex Rivera" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                        <input id="signupEmail" type="email" placeholder="you@example.com" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                        <input id="signupPassword" type="password" placeholder="••••••••" 
-                               class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500 transition">
-                    </div>
+                    <input id="fullName" type="text" placeholder="Alex Rivera" 
+                           class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
+                    <input id="signupEmail" type="email" placeholder="you@example.com" 
+                           class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
+                    <input id="signupPassword" type="password" placeholder="••••••••" 
+                           class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
 
-                    <button onclick="signUpWithFirebase()" id="signupBtn"
-                            class="w-full bg-emerald-600 hover:bg-emerald-700 transition-all text-white font-semibold py-4 rounded-2xl text-lg">
+                    <button onclick="signUp()" id="signupBtn"
+                            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-4 rounded-2xl text-lg">
                         Create Account
                     </button>
                 </div>
             </div>
 
             <div class="text-center text-sm text-gray-500 mt-8">
-                By continuing, you agree to our 
-                <a href="#" class="text-emerald-600 hover:underline">Terms</a> and 
-                <a href="#" class="text-emerald-600 hover:underline">Privacy Policy</a>.
+                By continuing, you agree to our <a href="#" class="text-emerald-600">Terms</a> and 
+                <a href="#" class="text-emerald-600">Privacy Policy</a>.
             </div>
         </div>
     </div>
 </div>
 
-<!-- ====================== MAIN APP ====================== -->
+<!-- MAIN APP -->
 <div id="mainApp" class="hidden min-h-screen bg-gray-50">
     <div class="max-w-7xl mx-auto p-6 lg:p-8">
         <!-- Header -->
@@ -127,88 +113,86 @@
             </div>
             
             <div class="flex items-center gap-4">
-                <div class="bg-white px-5 py-3 rounded-3xl border border-gray-100 flex items-center gap-3">
+                <div class="bg-white px-5 py-3 rounded-3xl border flex items-center gap-3">
                     <div class="text-right">
-                        <p class="text-sm font-semibold" id="userName">Alex Rivera</p>
-                        <p class="text-xs text-gray-500" id="userEmail">alex@example.com</p>
+                        <p class="text-sm font-semibold" id="userName"></p>
+                        <p class="text-xs text-gray-500" id="userEmail"></p>
                     </div>
-                    <div class="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg">AR</div>
+                    <div id="userAvatar" class="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg"></div>
                 </div>
-                <button onclick="logout()" class="text-gray-400 hover:text-red-500 transition p-2">
+                <button onclick="logout()" class="p-3 text-gray-400 hover:text-red-500">
                     <i class="fas fa-sign-out-alt text-2xl"></i>
                 </button>
             </div>
         </div>
 
-        <!-- Balance Card -->
+        <!-- Balance -->
         <div class="bg-gradient-to-br from-emerald-600 to-teal-600 text-white rounded-3xl p-8 mb-10 card">
-            <p class="text-emerald-100 text-lg">Total Balance</p>
-            <p id="balance" class="balance-amount font-bold mt-2 mb-6">$12,458.32</p>
+            <p class="text-emerald-100">Total Balance</p>
+            <p id="balance" class="balance-amount mt-2 mb-6">$0.00</p>
             <div class="flex gap-4">
-                <button onclick="showSendModal()" 
-                        class="flex-1 bg-white text-emerald-700 font-semibold py-4 rounded-2xl hover:bg-emerald-50 transition">
-                    <i class="fas fa-paper-plane mr-2"></i> Send
+                <button onclick="showSendModal()" class="flex-1 bg-white text-emerald-700 font-semibold py-4 rounded-2xl hover:bg-emerald-50 flex items-center justify-center gap-2">
+                    <i class="fas fa-paper-plane"></i> Send
                 </button>
-                <button class="flex-1 bg-white/20 backdrop-blur font-semibold py-4 rounded-2xl hover:bg-white/30 transition">
-                    <i class="fas fa-arrow-down mr-2"></i> Request
+                <button onclick="showRequestModal()" class="flex-1 bg-white/20 backdrop-blur font-semibold py-4 rounded-2xl hover:bg-white/30 flex items-center justify-center gap-2">
+                    <i class="fas fa-arrow-down"></i> Request
                 </button>
             </div>
         </div>
 
-        <!-- Quick Stats -->
+        <!-- Stats -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
             <div class="bg-white rounded-3xl p-6 card">
                 <p class="text-gray-500 text-sm">This Month</p>
-                <p class="text-3xl font-bold text-gray-900 mt-2">+$2,340</p>
+                <p id="monthlyIncome" class="text-3xl font-bold text-emerald-600 mt-2">+$0</p>
             </div>
             <div class="bg-white rounded-3xl p-6 card">
                 <p class="text-gray-500 text-sm">Spent</p>
-                <p class="text-3xl font-bold text-gray-900 mt-2">-$1,892</p>
+                <p id="monthlySpent" class="text-3xl font-bold text-gray-900 mt-2">-$0</p>
             </div>
             <div class="bg-white rounded-3xl p-6 card">
-                <p class="text-gray-500 text-sm">Savings</p>
-                <p class="text-3xl font-bold text-emerald-600 mt-2">18.4%</p>
+                <p class="text-gray-500 text-sm">Savings Rate</p>
+                <p id="savingsRate" class="text-3xl font-bold text-emerald-600 mt-2">0%</p>
             </div>
             <div class="bg-white rounded-3xl p-6 card">
                 <p class="text-gray-500 text-sm">Transactions</p>
-                <p class="text-3xl font-bold text-gray-900 mt-2">47</p>
+                <p id="txCount" class="text-3xl font-bold text-gray-900 mt-2">0</p>
             </div>
         </div>
 
-        <!-- Recent Transactions -->
+        <!-- Recent Activity -->
         <div class="bg-white rounded-3xl p-8 card">
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex justify-between mb-6">
                 <h2 class="text-xl font-semibold">Recent Activity</h2>
-                <button class="text-emerald-600 text-sm font-medium">View all →</button>
+                <button onclick="viewAll()" class="text-emerald-600 text-sm font-medium">View all →</button>
             </div>
-            <div id="transactions" class="space-y-4">
-                <!-- Populated by JS -->
-            </div>
+            <div id="transactions" class="space-y-4"></div>
         </div>
     </div>
 </div>
 
-<!-- Send Money Modal -->
-<div id="sendModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[100]">
+<!-- Send Modal -->
+<div id="sendModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[100]">
     <div class="bg-white rounded-3xl w-full max-w-md mx-4 p-8">
         <h3 class="text-2xl font-semibold mb-6">Send Money</h3>
         <div class="space-y-6">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">To (Email or @username)</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">To (Email or Username)</label>
                 <input id="sendTo" type="text" placeholder="friend@example.com" 
                        class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Amount</label>
-                <input id="sendAmount" type="number" placeholder="250.00" 
-                       class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
+                <div class="relative">
+                    <span class="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <input id="sendAmount" type="number" step="0.01" placeholder="0.00" 
+                           class="w-full pl-10 pr-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
+                </div>
             </div>
-            <button onclick="sendMoney()" 
-                    class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-4 rounded-2xl text-lg">
-                Send Now
+            <button onclick="sendMoney()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-4 rounded-2xl text-lg">
+                Send Securely
             </button>
-            <button onclick="hideSendModal()" 
-                    class="w-full text-gray-500 font-medium py-3">Cancel</button>
+            <button onclick="hideSendModal()" class="w-full py-3 text-gray-500">Cancel</button>
         </div>
     </div>
 </div>
@@ -226,10 +210,11 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+const db = firebase.firestore();
 
-let currentUser = {};
+let currentUser = null;
 
-// ====================== AUTH UI ======================
+// ====================== AUTH ======================
 function toggleAuthMode(mode) {
     document.getElementById('signinForm').classList.toggle('hidden', mode !== 'signin');
     document.getElementById('signupForm').classList.toggle('hidden', mode !== 'signup');
@@ -237,154 +222,190 @@ function toggleAuthMode(mode) {
     document.getElementById('signupTab').classList.toggle('active', mode === 'signup');
 }
 
-// ====================== AUTH FUNCTIONS ======================
-async function signInWithFirebase() {
+async function signIn() {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value.trim();
     const btn = document.getElementById('signinBtn');
 
-    if (!email || !password) return alert("Please enter email and password");
+    if (!email || !password) return alert("Email and password required");
 
-    btn.innerHTML = 'Signing in...';
     btn.disabled = true;
+    btn.innerHTML = 'Signing in...';
 
     try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        loginSuccess(userCredential.user);
-    } catch (error) {
-        alert("Sign in failed: " + error.message);
+        const cred = await auth.signInWithEmailAndPassword(email, password);
+        // User data will be loaded via onAuthStateChanged
+    } catch (e) {
+        alert("Sign in failed: " + e.message);
     } finally {
-        btn.innerHTML = 'Sign In';
         btn.disabled = false;
+        btn.innerHTML = 'Sign In';
     }
 }
 
-async function signUpWithFirebase() {
+async function signUp() {
     const name = document.getElementById('fullName').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
     const password = document.getElementById('signupPassword').value.trim();
     const btn = document.getElementById('signupBtn');
 
     if (!name || !email || !password) return alert("All fields are required");
-    if (password.length < 6) return alert("Password must be at least 6 characters");
 
-    btn.innerHTML = 'Creating account...';
     btn.disabled = true;
+    btn.innerHTML = 'Creating account...';
 
     try {
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        await userCredential.user.updateProfile({ displayName: name });
-        loginSuccess(userCredential.user);
-    } catch (error) {
-        alert("Sign up failed: " + error.message);
+        const cred = await auth.createUserWithEmailAndPassword(email, password);
+        await cred.user.updateProfile({ displayName: name });
+
+        // Create user document in Firestore
+        await db.collection('users').doc(cred.user.uid).set({
+            name: name,
+            email: email,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            balance: 5000 // Starting balance for demo
+        });
+    } catch (e) {
+        alert("Sign up failed: " + e.message);
     } finally {
-        btn.innerHTML = 'Create Account';
         btn.disabled = false;
+        btn.innerHTML = 'Create Account';
     }
 }
 
 async function forgotPassword() {
     const email = document.getElementById('email').value.trim();
-    if (!email) return alert("Please enter your email address first");
-
+    if (!email) return alert("Enter your email first");
     try {
         await auth.sendPasswordResetEmail(email);
-        alert("Password reset link sent to your email!");
-    } catch (error) {
-        alert("Error: " + error.message);
+        alert("Password reset link sent!");
+    } catch (e) {
+        alert(e.message);
     }
 }
 
-function loginSuccess(user) {
-    currentUser = {
-        name: user.displayName || user.email?.split('@')[0] || "User",
-        email: user.email
-    };
-
-    document.getElementById('authScreen').classList.add('hidden');
-    document.getElementById('mainApp').classList.remove('hidden');
-
-    document.getElementById('userName').textContent = currentUser.name;
-    document.getElementById('userEmail').textContent = currentUser.email;
-
-    loadDummyTransactions();
+// ====================== FIRESTORE HELPERS ======================
+async function getUserData(uid) {
+    const doc = await db.collection('users').doc(uid).get();
+    return doc.exists ? doc.data() : null;
 }
 
-function logout() {
-    if (confirm("Sign out of Root?")) {
-        auth.signOut().then(() => location.reload());
+async function loadBalance(uid) {
+    const userData = await getUserData(uid);
+    if (userData) {
+        document.getElementById('balance').textContent = '$' + parseFloat(userData.balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
     }
 }
 
-// ====================== DASHBOARD ======================
-function loadDummyTransactions() {
-    const transactionsHTML = `
-        <div class="flex justify-between items-center py-4 border-b">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center">🍕</div>
-                <div>
-                    <p class="font-medium">Pizza Palace</p>
-                    <p class="text-sm text-gray-500">Today • Debit</p>
+async function loadTransactions(uid) {
+    const snapshot = await db.collection('transactions')
+        .where('userId', '==', uid)
+        .orderBy('createdAt', 'desc')
+        .limit(10)
+        .get();
+
+    const container = document.getElementById('transactions');
+    let html = '';
+
+    snapshot.forEach(doc => {
+        const tx = doc.data();
+        const isCredit = tx.amount > 0;
+        html += `
+            <div class="flex justify-between items-center py-4 border-b last:border-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 ${isCredit ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'} rounded-2xl flex items-center justify-center text-xl">
+                        ${isCredit ? '↑' : '↓'}
+                    </div>
+                    <div>
+                        <p class="font-medium">${tx.to || tx.from || tx.merchant || 'Transaction'}</p>
+                        <p class="text-sm text-gray-500">${tx.date || 'Recent'}</p>
+                    </div>
                 </div>
+                <p class="font-semibold ${isCredit ? 'text-emerald-600' : 'text-red-600'}">
+                    ${isCredit ? '+' : ''}$${Math.abs(tx.amount).toFixed(2)}
+                </p>
             </div>
-            <p class="font-semibold text-red-600">-$24.80</p>
-        </div>
-        <div class="flex justify-between items-center py-4 border-b">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center">👤</div>
-                <div>
-                    <p class="font-medium">Sarah Chen</p>
-                    <p class="text-sm text-gray-500">Yesterday • Received</p>
-                </div>
-            </div>
-            <p class="font-semibold text-emerald-600">+$150.00</p>
-        </div>
-        <div class="flex justify-between items-center py-4">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">☕</div>
-                <div>
-                    <p class="font-medium">Starbucks</p>
-                    <p class="text-sm text-gray-500">May 17 • Debit</p>
-                </div>
-            </div>
-            <p class="font-semibold text-red-600">-$6.45</p>
-        </div>
-    `;
-    document.getElementById('transactions').innerHTML = transactionsHTML;
+        `;
+    });
+
+    container.innerHTML = html || '<p class="text-gray-500 py-8 text-center">No transactions yet</p>';
 }
 
-// ====================== SEND MODAL ======================
+// ====================== SEND MONEY ======================
+async function sendMoney() {
+    const to = document.getElementById('sendTo').value.trim();
+    const amount = parseFloat(document.getElementById('sendAmount').value);
+
+    if (!to || !amount || amount <= 0) return alert("Please enter valid details");
+
+    try {
+        const txRef = db.collection('transactions').doc();
+        await txRef.set({
+            userId: currentUser.uid,
+            type: 'send',
+            to: to,
+            amount: -amount,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            status: 'completed'
+        });
+
+        // Update user balance
+        await db.collection('users').doc(currentUser.uid).update({
+            balance: firebase.firestore.FieldValue.increment(-amount)
+        });
+
+        hideSendModal();
+        alert(`$${amount} sent successfully!`);
+        
+        // Refresh data
+        loadBalance(currentUser.uid);
+        loadTransactions(currentUser.uid);
+    } catch (e) {
+        alert("Transaction failed: " + e.message);
+    }
+}
+
+// ====================== UI ======================
 function showSendModal() {
     document.getElementById('sendModal').classList.remove('hidden');
 }
 
 function hideSendModal() {
     document.getElementById('sendModal').classList.add('hidden');
+    document.getElementById('sendTo').value = '';
+    document.getElementById('sendAmount').value = '';
 }
 
-function sendMoney() {
-    const to = document.getElementById('sendTo').value.trim();
-    const amount = document.getElementById('sendAmount').value;
+function showRequestModal() {
+    alert("Request money feature coming soon!");
+}
 
-    if (!to || !amount) return alert("Please fill all fields");
+function viewAll() {
+    alert("Full transaction history coming soon!");
+}
 
-    alert(`✅ $${amount} sent to ${to} successfully!`);
-    hideSendModal();
-    
-    // Refresh transactions (demo)
-    setTimeout(() => loadDummyTransactions(), 800);
+function logout() {
+    if (confirm("Sign out?")) auth.signOut();
 }
 
 // ====================== AUTH STATE ======================
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(async (user) => {
     if (user) {
-        loginSuccess(user);
+        currentUser = user;
+        document.getElementById('authScreen').classList.add('hidden');
+        document.getElementById('mainApp').classList.remove('hidden');
+
+        document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
+        document.getElementById('userEmail').textContent = user.email;
+        document.getElementById('userAvatar').textContent = (user.displayName || user.email[0]).slice(0,2).toUpperCase();
+
+        await loadBalance(user.uid);
+        await loadTransactions(user.uid);
     } else {
         document.getElementById('authScreen').classList.remove('hidden');
         document.getElementById('mainApp').classList.add('hidden');
     }
 });
 </script>
-
 </body>
 </html>

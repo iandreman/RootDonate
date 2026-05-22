@@ -71,7 +71,13 @@
                     <input id="password" type="password" placeholder="••••••••" 
                            class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
                     
-                    <button onclick="signIn()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-4 rounded-2xl text-lg">
+                    <button onclick="forgotPassword()" 
+                            class="text-emerald-600 hover:text-emerald-700 text-sm font-medium float-right">
+                        Forgot password?
+                    </button>
+
+                    <button onclick="signIn()" 
+                            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-4 rounded-2xl text-lg">
                         Sign In
                     </button>
                 </div>
@@ -88,7 +94,8 @@
                     <input id="signupPassword" type="password" placeholder="••••••••" 
                            class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-emerald-500">
 
-                    <button onclick="signUp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-4 rounded-2xl text-lg">
+                    <button onclick="signUp()" 
+                            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-4 rounded-2xl text-lg">
                         Create Account
                     </button>
                 </div>
@@ -257,6 +264,18 @@ async function signUp() {
     }
 }
 
+async function forgotPassword() {
+    const email = document.getElementById('email').value.trim();
+    if (!email) return alert("Please enter your email address first");
+
+    try {
+        await auth.sendPasswordResetEmail(email);
+        alert("Password reset link has been sent to your email!");
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
+}
+
 function logout() {
     if (confirm("Sign out?")) auth.signOut();
 }
@@ -264,17 +283,13 @@ function logout() {
 // ====================== WALKING & STEPS ======================
 function connectPedometer() {
     const btn = document.getElementById('connectBtn');
-    
     if (isSensorConnected) return;
 
     if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
         DeviceMotionEvent.requestPermission()
             .then(permission => {
-                if (permission === 'granted') {
-                    startSensor();
-                } else {
-                    alert("Motion permission denied. Try again.");
-                }
+                if (permission === 'granted') startSensor();
+                else alert("Motion permission denied.");
             })
             .catch(() => startSensor());
     } else {
@@ -286,7 +301,6 @@ function startSensor() {
     isSensorConnected = true;
     document.getElementById('connectBtn').innerHTML = '✅ Connected';
     document.getElementById('connectBtn').disabled = true;
-
     window.addEventListener('devicemotion', handleMotion);
 }
 
@@ -312,7 +326,6 @@ function updateWalkUI() {
     document.getElementById('stepsProgress').setAttribute('stroke-dashoffset', offset);
     document.getElementById('distance').textContent = (todaySteps / 1312).toFixed(1) + " km";
     document.getElementById('earnedToday').textContent = "$" + (todaySteps / 10000).toFixed(2);
-    
     document.getElementById('claimBtn').disabled = todaySteps < 3000;
 }
 
@@ -350,12 +363,11 @@ async function claimStepsReward() {
     }
 }
 
-// ====================== UI HELPERS ======================
 function viewAll() {
     alert("Full transaction history coming soon!");
 }
 
-// ====================== AUTH STATE LISTENER ======================
+// ====================== AUTH STATE ======================
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;

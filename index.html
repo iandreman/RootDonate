@@ -45,7 +45,7 @@
 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+            50% { opacity: 0.75; }
         }
     </style>
 </head>
@@ -144,7 +144,7 @@
 
         <!-- Life & AI Side-by-Side -->
         <div class="grid md:grid-cols-2 gap-8">
-            <!-- LIFE SIDE - Pedometer -->
+            <!-- LIFE SIDE -->
             <div class="bg-white/5 border border-white/10 rounded-3xl p-8 card">
                 <div class="flex justify-between items-center mb-8">
                     <h2 class="flex items-center gap-3 text-2xl font-semibold">
@@ -181,7 +181,7 @@
                     </div>
                 </div>
 
-                <p id="sensorStatus" class="text-center text-xs text-gray-500 mt-6"></p>
+                <p id="sensorStatus" class="text-center text-xs text-gray-400 mt-6 leading-relaxed"></p>
             </div>
 
             <!-- AI SIDE -->
@@ -208,7 +208,7 @@
 </div>
 
 <script>
-// Firebase Config
+// Firebase Config (for rootdonate)
 const firebaseConfig = {
     apiKey: "AIzaSyAJpd9btTi5DEq5B7NsDLD4G_pddVQi43Q",
     authDomain: "rootdonate.firebaseapp.com",
@@ -228,7 +228,7 @@ let totalLifetimeSteps = 0;
 let isSensorConnected = false;
 let lastAcceleration = 0;
 let motionListener = null;
-const stepThreshold = 13; // Slightly tuned for better detection
+const stepThreshold = 13;
 
 // ====================== AUTH ======================
 function toggleAuthMode(mode) {
@@ -272,13 +272,17 @@ async function signUp() {
     }
 }
 
+// Forgot Password - Configured for rootdonate.co.uk
 async function forgotPassword() {
     const email = document.getElementById('email').value.trim();
-    if (!email) return alert("Please enter your email address first");
+    if (!email) {
+        alert("Please enter your email address first (e.g., you@rootdonate.co.uk)");
+        return;
+    }
 
     try {
         await auth.sendPasswordResetEmail(email);
-        alert("Password reset link has been sent to your email!");
+        alert("✅ Password reset link sent! Please check your email (including spam folder).");
     } catch (e) {
         alert("Error: " + e.message);
     }
@@ -291,7 +295,7 @@ function logout() {
     }
 }
 
-// ====================== AUTOMATIC PEDOMETER ======================
+// ====================== PEDOMETER WITH BACKGROUND BEST EFFORT ======================
 function togglePedometer() {
     if (isSensorConnected) {
         stopPedometer();
@@ -302,7 +306,7 @@ function togglePedometer() {
 
 function startPedometer() {
     if (typeof DeviceMotionEvent === 'undefined') {
-        return alert("Step tracking is not supported on this device.");
+        return alert("Step tracking is not supported on this browser.");
     }
 
     const btn = document.getElementById('connectBtn');
@@ -310,11 +314,8 @@ function startPedometer() {
     if (typeof DeviceMotionEvent.requestPermission === 'function') {
         DeviceMotionEvent.requestPermission()
             .then(permission => {
-                if (permission === 'granted') {
-                    initSensor();
-                } else {
-                    alert("Motion permission was denied. Step tracking unavailable.");
-                }
+                if (permission === 'granted') initSensor();
+                else alert("Motion permission denied.");
             })
             .catch(() => initSensor());
     } else {
@@ -327,7 +328,12 @@ function initSensor() {
     const btn = document.getElementById('connectBtn');
     btn.classList.add('tracking-active', 'bg-teal-600');
     document.getElementById('connectText').textContent = 'Tracking Active';
-    document.getElementById('sensorStatus').textContent = '🟢 Sensor is now tracking your steps in real-time';
+
+    document.getElementById('sensorStatus').innerHTML = `
+        🟢 Tracking active<br>
+        <span class="text-amber-400">Keep this tab open for best results.</span><br>
+        <span class="text-xs">Tip: Install as PWA for better background performance</span>
+    `;
 
     motionListener = function(event) {
         const acc = event.accelerationIncludingGravity;
@@ -336,7 +342,7 @@ function initSensor() {
         const totalAcc = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
         const delta = Math.abs(totalAcc - lastAcceleration);
 
-        if (delta > stepThreshold && delta < 35) {  // Upper limit to avoid false positives
+        if (delta > stepThreshold && delta < 35) {
             todaySteps++;
             updateWalkUI();
         }
@@ -355,10 +361,10 @@ function stopPedometer() {
     const btn = document.getElementById('connectBtn');
     btn.classList.remove('tracking-active', 'bg-teal-600');
     document.getElementById('connectText').textContent = 'Start Tracking';
-    document.getElementById('sensorStatus').textContent = '';
+    document.getElementById('sensorStatus').textContent = 'Tracking stopped';
 }
 
-// ====================== UI UPDATES ======================
+// ====================== UI & DATA ======================
 function updateWalkUI() {
     const progress = Math.min(todaySteps / 10000, 1);
     const offset = 326.73 * (1 - progress);
@@ -375,9 +381,7 @@ async function loadUserData(uid) {
     const data = doc.exists ? doc.data() : { totalSteps: 0 };
 
     totalLifetimeSteps = data.totalSteps || 0;
-    const balance = (totalLifetimeSteps / 10000).toFixed(2);
-
-    document.getElementById('balance').textContent = '$' + balance;
+    document.getElementById('balance').textContent = '$' + (totalLifetimeSteps / 10000).toFixed(2);
     document.getElementById('totalStepsBig').textContent = totalLifetimeSteps.toLocaleString();
 }
 
@@ -394,7 +398,7 @@ async function claimStepsReward() {
         });
 
         totalLifetimeSteps = newTotalSteps;
-        alert(`🎉 $${reward.toFixed(2)} has been added to your balance!`);
+        alert(`🎉 $${reward.toFixed(2)} added to your balance!`);
 
         todaySteps = 0;
         updateWalkUI();
@@ -409,7 +413,7 @@ function getNewAIInsight() {
         "You're walking with purpose today. Keep going — your future self is already thanking you.",
         "At this pace, you'll grow a beautiful digital forest this year 🌳",
         "Every step strengthens both your body and your financial discipline.",
-        "AI predicts you'll hit a new personal record this week if you stay consistent."
+        "AI predicts you'll hit a new personal record this week."
     ];
     document.getElementById('aiInsight').textContent = `"${insights[Math.floor(Math.random() * insights.length)]}"`;
 }
@@ -429,12 +433,9 @@ auth.onAuthStateChanged(async (user) => {
         updateWalkUI();
         getNewAIInsight();
 
-        // Auto prompt for pedometer after login
         setTimeout(() => {
-            if (!isSensorConnected) {
-                document.getElementById('sensorStatus').textContent = 'Tap "Start Tracking" to begin earning while walking';
-            }
-        }, 1200);
+            document.getElementById('sensorStatus').innerHTML = `Tap <strong>Start Tracking</strong> to begin earning while walking.<br><small class="text-amber-400">For better background tracking, install Root as a PWA.</small>`;
+        }, 1000);
     } else {
         stopPedometer();
         document.getElementById('authScreen').classList.remove('hidden');

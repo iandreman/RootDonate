@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Root • Where Life Meets Intelligence</title>
+    <meta name="description" content="Root — Walk to Earn Real Money">
+    <title>Root • Walk & Earn</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -29,7 +33,6 @@
         }
         .card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
         }
 
         .living-ring {
@@ -49,25 +52,45 @@
         <h1 class="title-font text-5xl font-bold mb-2">Root</h1>
         <p class="text-emerald-300 text-xl">Life &amp; Intelligence, Walking Together</p>
 
-        <!-- Auth Tabs & Forms (same logic as before, slightly enhanced) -->
         <div class="mt-12 bg-white/10 backdrop-blur-xl border border-white/10 rounded-3xl p-8 card">
-            <!-- ... (I kept your auth logic but made it more elegant) -->
             <div class="flex bg-black/30 rounded-2xl p-1 mb-8">
-                <button onclick="toggleAuthMode('signin')" id="signinTab" class="flex-1 py-4 rounded-xl font-medium tab-button active">Sign In</button>
-                <button onclick="toggleAuthMode('signup')" id="signupTab" class="flex-1 py-4 rounded-xl font-medium">Join the Movement</button>
+                <button onclick="toggleAuthMode('signin')" id="signinTab" 
+                        class="flex-1 py-4 rounded-xl font-medium tab-button active">Sign In</button>
+                <button onclick="toggleAuthMode('signup')" id="signupTab" 
+                        class="flex-1 py-4 rounded-xl font-medium">Join the Movement</button>
             </div>
 
+            <!-- Sign In -->
             <div id="signinForm">
-                <input id="email" type="email" placeholder="you@root.com" class="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-5 focus:outline-none focus:border-emerald-400 mb-4">
-                <input id="password" type="password" placeholder="••••••••" class="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-5 focus:outline-none focus:border-emerald-400 mb-6">
-                <button onclick="signIn()" class="w-full nature-gradient py-5 rounded-2xl font-semibold text-lg">Enter the Root</button>
+                <input id="email" type="email" placeholder="you@rootdonate.co.uk" 
+                       class="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-5 focus:outline-none focus:border-emerald-400 mb-4">
+                <input id="password" type="password" placeholder="••••••••" 
+                       class="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-5 focus:outline-none focus:border-emerald-400 mb-6">
+                
+                <button onclick="forgotPassword()" 
+                        class="text-emerald-400 hover:text-emerald-300 text-sm font-medium mb-6 block">
+                    Forgot password?
+                </button>
+
+                <button onclick="signIn()" 
+                        class="w-full nature-gradient py-5 rounded-2xl font-semibold text-lg">
+                    Sign In
+                </button>
             </div>
 
+            <!-- Sign Up -->
             <div id="signupForm" class="hidden">
-                <input id="fullName" type="text" placeholder="Your Name" class="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-5 focus:outline-none focus:border-emerald-400 mb-4">
-                <input id="signupEmail" type="email" placeholder="you@root.com" class="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-5 focus:outline-none focus:border-emerald-400 mb-4">
-                <input id="signupPassword" type="password" placeholder="Create password" class="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-5 focus:outline-none focus:border-emerald-400 mb-6">
-                <button onclick="signUp()" class="w-full nature-gradient py-5 rounded-2xl font-semibold text-lg">Grow With Us</button>
+                <input id="fullName" type="text" placeholder="Your Full Name" 
+                       class="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-5 focus:outline-none focus:border-emerald-400 mb-4">
+                <input id="signupEmail" type="email" placeholder="you@rootdonate.co.uk" 
+                       class="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-5 focus:outline-none focus:border-emerald-400 mb-4">
+                <input id="signupPassword" type="password" placeholder="Create password" 
+                       class="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-5 focus:outline-none focus:border-emerald-400 mb-6">
+                
+                <button onclick="signUp()" 
+                        class="w-full nature-gradient py-5 rounded-2xl font-semibold text-lg">
+                    Create Account
+                </button>
             </div>
         </div>
     </div>
@@ -85,12 +108,12 @@
                 </div>
                 <div>
                     <h1 class="title-font text-4xl font-bold">Root</h1>
-                    <p class="text-emerald-400 text-sm -mt-1">Life × AI</p>
+                    <p class="text-emerald-400 text-sm -mt-1">rootdonate.co.uk</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-6">
-                <div id="userInfo" class="flex items-center gap-4 bg-white/5 border border-white/10 rounded-3xl px-6 py-3">
+                <div class="flex items-center gap-4 bg-white/5 border border-white/10 rounded-3xl px-6 py-3">
                     <div>
                         <p id="userName" class="font-semibold"></p>
                         <p id="userEmail" class="text-xs text-gray-400"></p>
@@ -110,7 +133,7 @@
             <p id="balance" class="text-7xl font-bold mt-2 mb-6">$0.00</p>
             <div class="flex justify-between text-emerald-100">
                 <p>Total Steps: <span id="totalStepsBig" class="font-bold text-white">0</span></p>
-                <p class="flex items-center gap-2"><span class="text-cyan-300">AI predicts:</span> +$12.40 this month</p>
+                <p class="flex items-center gap-2"><span class="text-cyan-300">AI predicts:</span> Strong growth this month</p>
             </div>
         </div>
 
@@ -151,11 +174,11 @@
                 <h2 class="flex items-center gap-3 text-2xl font-semibold mb-8">
                     <span class="text-3xl">🤖</span> AI Companion
                 </h2>
-                <div id="aiInsight" class="min-h-[220px] bg-black/30 rounded-2xl p-6 text-emerald-100 italic">
-                    "You're walking with purpose today. Keep going — your future self is already thanking you."
+                <div id="aiInsight" class="min-h-[220px] bg-black/30 rounded-2xl p-6 text-emerald-100 italic leading-relaxed">
+                    "Welcome back. Every step you take grows both your wealth and your future."
                 </div>
                 <button onclick="getNewAIInsight()" 
-                        class="mt-6 w-full py-4 border border-cyan-400/50 hover:bg-cyan-400/10 rounded-2xl transition-colors">
+                        class="mt-6 w-full py-4 border border-cyan-400/50 hover:bg-cyan-400/10 rounded-2xl transition-colors font-medium">
                     Ask AI for Guidance →
                 </button>
             </div>
@@ -163,15 +186,23 @@
 
         <!-- Claim Button -->
         <button onclick="claimStepsReward()" id="claimBtn"
-                class="mt-10 w-full nature-gradient py-6 rounded-3xl text-xl font-semibold disabled:opacity-50">
-            🌱 Claim &amp; Plant Earnings
+                class="mt-10 w-full nature-gradient py-6 rounded-3xl text-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+            <span>🌱</span> Claim &amp; Plant Earnings
         </button>
     </div>
 </div>
 
 <script>
-// Your Firebase config stays the same
-const firebaseConfig = { /* ... your config ... */ };
+// Firebase Config
+const firebaseConfig = {
+    apiKey: "AIzaSyAJpd9btTi5DEq5B7NsDLD4G_pddVQi43Q",
+    authDomain: "rootdonate.firebaseapp.com",
+    projectId: "rootdonate",
+    storageBucket: "rootdonate.firebasestorage.app",
+    messagingSenderId: "838665513781",
+    appId: "1:838665513781:web:308983a5b2713f20977a7c"
+};
+
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -179,8 +210,73 @@ const db = firebase.firestore();
 let currentUser = null;
 let todaySteps = 0;
 let totalLifetimeSteps = 0;
+let isSensorConnected = false;
+let lastAcceleration = 0;
+const stepThreshold = 12;
 
-// ... (Keep your existing auth, sensor, and claim functions)
+// ====================== AUTH ======================
+function toggleAuthMode(mode) {
+    document.getElementById('signinForm').classList.toggle('hidden', mode !== 'signin');
+    document.getElementById('signupForm').classList.toggle('hidden', mode !== 'signup');
+    document.getElementById('signinTab').classList.toggle('active', mode === 'signin');
+    document.getElementById('signupTab').classList.toggle('active', mode !== 'signin');
+}
+
+async function signIn() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
+    if (!email || !password) return alert("Email and password are required");
+
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+    } catch (e) {
+        alert("Sign in failed: " + e.message);
+    }
+}
+
+async function signUp() {
+    const name = document.getElementById('fullName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value.trim();
+    if (!name || !email || !password) return alert("All fields are required");
+
+    try {
+        const cred = await auth.createUserWithEmailAndPassword(email, password);
+        await cred.user.updateProfile({ displayName: name });
+
+        await db.collection('users').doc(cred.user.uid).set({
+            name: name,
+            email: email,
+            totalSteps: 0,
+            balance: 0,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (e) {
+        alert("Sign up failed: " + e.message);
+    }
+}
+
+async function forgotPassword() {
+    const email = document.getElementById('email').value.trim();
+    if (!email) return alert("Please enter your email address first");
+
+    try {
+        await auth.sendPasswordResetEmail(email);
+        alert("Password reset link has been sent to your email!");
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
+}
+
+function logout() {
+    if (confirm("Sign out?")) auth.signOut();
+}
+
+// ====================== WALKING SENSOR ======================
+function connectPedometer() {
+    // This can be re-added if needed in future
+    alert("Pedometer connection coming soon in full version.");
+}
 
 function updateWalkUI() {
     const progress = Math.min(todaySteps / 10000, 1);
@@ -193,24 +289,67 @@ function updateWalkUI() {
     document.getElementById('claimBtn').disabled = todaySteps < 3000;
 }
 
+async function loadUserData(uid) {
+    const doc = await db.collection('users').doc(uid).get();
+    const data = doc.exists ? doc.data() : { totalSteps: 0 };
+
+    totalLifetimeSteps = data.totalSteps || 0;
+    const balance = (totalLifetimeSteps / 10000).toFixed(2);
+
+    document.getElementById('balance').textContent = '$' + balance;
+    document.getElementById('totalStepsBig').textContent = totalLifetimeSteps.toLocaleString();
+}
+
+async function claimStepsReward() {
+    if (todaySteps < 3000 || !currentUser) return alert("You need at least 3,000 steps to claim.");
+
+    const reward = todaySteps / 10000;
+    const newTotalSteps = totalLifetimeSteps + todaySteps;
+
+    try {
+        await db.collection('users').doc(currentUser.uid).update({
+            totalSteps: newTotalSteps,
+            balance: firebase.firestore.FieldValue.increment(reward)
+        });
+
+        totalLifetimeSteps = newTotalSteps;
+        alert(`🎉 $${reward.toFixed(2)} has been added to your balance!`);
+
+        todaySteps = 0;
+        updateWalkUI();
+        await loadUserData(currentUser.uid);
+    } catch (e) {
+        alert("Claim failed: " + e.message);
+    }
+}
+
 function getNewAIInsight() {
     const insights = [
-        "Your pace suggests you're building real discipline. That's rarer than you think.",
-        "At this rate, you'll grow your forest by 47 trees this year 🌳",
-        "The body and mind are connected. Every step is also training your focus.",
-        "AI predicts you'll hit a personal record this week if you stay consistent."
+        "You're walking with purpose today. Keep going — your future self is already thanking you.",
+        "At this pace, you'll grow a beautiful digital forest this year 🌳",
+        "Every step strengthens both your body and your financial discipline.",
+        "AI predicts you'll hit a new personal record this week if you stay consistent."
     ];
     document.getElementById('aiInsight').textContent = `"${insights[Math.floor(Math.random() * insights.length)]}"`;
 }
 
-// Auth state listener (same as before, with minor UI updates)
-auth.onAuthStateChanged(user => {
+// ====================== AUTH STATE ======================
+auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
         document.getElementById('authScreen').classList.add('hidden');
         document.getElementById('mainApp').classList.remove('hidden');
-        // ... load user data
-        getNewAIInsight(); // Welcome insight
+
+        document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
+        document.getElementById('userEmail').textContent = user.email;
+        document.getElementById('userAvatar').textContent = (user.displayName || user.email[0]).slice(0, 2).toUpperCase();
+
+        await loadUserData(user.uid);
+        updateWalkUI();
+        getNewAIInsight();
+    } else {
+        document.getElementById('authScreen').classList.remove('hidden');
+        document.getElementById('mainApp').classList.add('hidden');
     }
 });
 </script>

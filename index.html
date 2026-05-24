@@ -38,6 +38,15 @@
         .living-ring {
             transition: stroke-dashoffset 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
+
+        .tracking-active {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
     </style>
 </head>
 <body class="bg-gray-950 text-white min-h-screen overflow-x-hidden">
@@ -106,10 +115,6 @@
                     <span class="text-4xl">🌱</span>
                     <span class="text-4xl ai-glow">🤖</span>
                 </div>
-                <div>
-                    <h1 class="title-font text-4xl font-bold">Root</h1>
-                    <p class="text-emerald-400 text-sm -mt-1">rootdonate.co.uk</p>
-                </div>
             </div>
 
             <div class="flex items-center gap-6">
@@ -139,11 +144,19 @@
 
         <!-- Life & AI Side-by-Side -->
         <div class="grid md:grid-cols-2 gap-8">
-            <!-- LIFE SIDE -->
+            <!-- LIFE SIDE - Pedometer -->
             <div class="bg-white/5 border border-white/10 rounded-3xl p-8 card">
-                <h2 class="flex items-center gap-3 text-2xl font-semibold mb-8">
-                    <span class="text-3xl">🌿</span> Life in Motion
-                </h2>
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="flex items-center gap-3 text-2xl font-semibold">
+                        <span class="text-3xl">🌿</span> Life in Motion
+                    </h2>
+                    <button onclick="togglePedometer()" id="connectBtn"
+                            class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl text-sm font-medium flex items-center gap-2 transition-all">
+                        <i class="fas fa-walking"></i>
+                        <span id="connectText">Start Tracking</span>
+                    </button>
+                </div>
+
                 <div class="relative w-56 h-56 mx-auto mb-8">
                     <svg class="w-full h-full -rotate-12" viewBox="0 0 120 120">
                         <circle cx="60" cy="60" r="52" fill="none" stroke="#1f2937" stroke-width="16"/>
@@ -167,6 +180,8 @@
                         <p id="earnedToday" class="text-4xl font-semibold text-cyan-400">$0.00</p>
                     </div>
                 </div>
+
+                <p id="sensorStatus" class="text-center text-xs text-gray-500 mt-6"></p>
             </div>
 
             <!-- AI SIDE -->
@@ -212,7 +227,8 @@ let todaySteps = 0;
 let totalLifetimeSteps = 0;
 let isSensorConnected = false;
 let lastAcceleration = 0;
-const stepThreshold = 12;
+let motionListener = null;
+const stepThreshold = 13; // Slightly tuned for better detection
 
 // ====================== AUTH ======================
 function toggleAuthMode(mode) {
@@ -269,15 +285,80 @@ async function forgotPassword() {
 }
 
 function logout() {
-    if (confirm("Sign out?")) auth.signOut();
+    if (confirm("Sign out?")) {
+        stopPedometer();
+        auth.signOut();
+    }
 }
 
-// ====================== WALKING SENSOR ======================
-function connectPedometer() {
-    // This can be re-added if needed in future
-    alert("Pedometer connection coming soon in full version.");
+// ====================== AUTOMATIC PEDOMETER ======================
+function togglePedometer() {
+    if (isSensorConnected) {
+        stopPedometer();
+    } else {
+        startPedometer();
+    }
 }
 
+function startPedometer() {
+    if (typeof DeviceMotionEvent === 'undefined') {
+        return alert("Step tracking is not supported on this device.");
+    }
+
+    const btn = document.getElementById('connectBtn');
+    
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission()
+            .then(permission => {
+                if (permission === 'granted') {
+                    initSensor();
+                } else {
+                    alert("Motion permission was denied. Step tracking unavailable.");
+                }
+            })
+            .catch(() => initSensor());
+    } else {
+        initSensor();
+    }
+}
+
+function initSensor() {
+    isSensorConnected = true;
+    const btn = document.getElementById('connectBtn');
+    btn.classList.add('tracking-active', 'bg-teal-600');
+    document.getElementById('connectText').textContent = 'Tracking Active';
+    document.getElementById('sensorStatus').textContent = '🟢 Sensor is now tracking your steps in real-time';
+
+    motionListener = function(event) {
+        const acc = event.accelerationIncludingGravity;
+        if (!acc) return;
+
+        const totalAcc = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
+        const delta = Math.abs(totalAcc - lastAcceleration);
+
+        if (delta > stepThreshold && delta < 35) {  // Upper limit to avoid false positives
+            todaySteps++;
+            updateWalkUI();
+        }
+        lastAcceleration = totalAcc;
+    };
+
+    window.addEventListener('devicemotion', motionListener, { passive: true });
+}
+
+function stopPedometer() {
+    if (motionListener) {
+        window.removeEventListener('devicemotion', motionListener);
+        motionListener = null;
+    }
+    isSensorConnected = false;
+    const btn = document.getElementById('connectBtn');
+    btn.classList.remove('tracking-active', 'bg-teal-600');
+    document.getElementById('connectText').textContent = 'Start Tracking';
+    document.getElementById('sensorStatus').textContent = '';
+}
+
+// ====================== UI UPDATES ======================
 function updateWalkUI() {
     const progress = Math.min(todaySteps / 10000, 1);
     const offset = 326.73 * (1 - progress);
@@ -347,7 +428,15 @@ auth.onAuthStateChanged(async (user) => {
         await loadUserData(user.uid);
         updateWalkUI();
         getNewAIInsight();
+
+        // Auto prompt for pedometer after login
+        setTimeout(() => {
+            if (!isSensorConnected) {
+                document.getElementById('sensorStatus').textContent = 'Tap "Start Tracking" to begin earning while walking';
+            }
+        }, 1200);
     } else {
+        stopPedometer();
         document.getElementById('authScreen').classList.remove('hidden');
         document.getElementById('mainApp').classList.add('hidden');
     }

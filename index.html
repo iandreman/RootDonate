@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Root — Walk to Earn Real Money">
-    <title>Root • Walk & Earn</title>
-    
+    <title>Root • Grow Time</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     
@@ -19,29 +17,15 @@
             background: linear-gradient(135deg, #10b981, #14b8a6, #22d3ee);
         }
         
-        .card {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .card:hover {
-            transform: translateY(-6px);
-        }
+        .card { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card:hover { transform: translateY(-6px); }
 
-        .living-ring {
-            transition: stroke-dashoffset 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .tracking-active {
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.75; }
-        }
+        .living-ring { transition: stroke-dashoffset 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
         .tab-btn.active {
-            background-color: rgba(255,255,255,0.1);
+            background-color: rgba(255,255,255,0.15);
             color: white;
+            border: 1px solid rgba(255,255,255,0.2);
         }
     </style>
 </head>
@@ -63,14 +47,14 @@
 
     <!-- WALK TAB -->
     <div id="tab-0" class="tab-content">
-        <!-- Balance Card -->
+        <!-- Balance -->
         <div class="nature-gradient rounded-3xl p-10 mb-12 relative overflow-hidden card">
             <div class="absolute -right-12 -top-12 text-[220px] opacity-10 pointer-events-none">🌱</div>
-            <p class="text-emerald-100 text-lg">Your Living Balance</p>
-            <p id="balance" class="text-7xl font-bold mt-1 mb-6">$0.00</p>
+            <p class="text-emerald-100 text-lg">Your Growth Time</p>
+            <p id="balance" class="text-7xl font-bold mt-1 mb-6">0.0h</p>
             <div class="flex justify-between text-emerald-100">
                 <p>Total Steps: <span id="totalStepsBig" class="font-bold text-white">0</span></p>
-                <p>Keep walking daily 🌿</p>
+                <p>Keep moving • Time grows 🌿</p>
             </div>
         </div>
 
@@ -106,16 +90,15 @@
                     <p id="distance" class="text-4xl font-semibold text-emerald-400">0.0 km</p>
                 </div>
                 <div class="bg-white/5 rounded-2xl p-6">
-                    <p class="text-gray-400 text-sm">Earned Today</p>
-                    <p id="earnedToday" class="text-4xl font-semibold text-cyan-400">$0.00</p>
+                    <p class="text-gray-400 text-sm">Time Earned Today</p>
+                    <p id="earnedToday" class="text-4xl font-semibold text-cyan-400">0.0h</p>
                 </div>
             </div>
         </div>
 
-        <!-- Claim Button -->
         <button onclick="claimStepsReward()" id="claimBtn"
                 class="mt-12 w-full nature-gradient py-7 rounded-3xl text-xl font-semibold flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed">
-            <span>🌱</span> Claim Earnings
+            <span>🌱</span> Claim Growth Time
         </button>
     </div>
 
@@ -130,52 +113,52 @@
             
             <button onclick="plantNode()" 
                     class="mt-10 w-full py-7 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-3xl text-xl font-semibold flex items-center justify-center gap-2 hover:brightness-110 transition">
-                🌱 Plant New Node <span class="text-sm opacity-75">— $50</span>
+                🌱 Plant New Node <span class="text-sm opacity-75">— 8.0h</span>
             </button>
         </div>
     </div>
 </div>
 
 <script>
-// ==================== DATA & STORAGE ====================
+// ==================== DATA ====================
 let todaySteps = 0;
 let totalLifetimeSteps = 0;
-let balance = 0;
+let growthTime = 0;           // in hours (decimal)
 let nodes = [];
 let isSensorConnected = false;
 let motionListener = null;
+let lastUpdateTime = Date.now();
 
-// Load from localStorage
+// Load data
 function loadData() {
-    const saved = localStorage.getItem('rootWalkData');
+    const saved = localStorage.getItem('rootTimeData');
     if (saved) {
         const data = JSON.parse(saved);
         totalLifetimeSteps = data.totalSteps || 0;
-        balance = data.balance || 0;
+        growthTime = data.growthTime || 0;
         nodes = data.nodes || [];
     }
     updateAllUI();
 }
 
 function saveData() {
-    localStorage.setItem('rootWalkData', JSON.stringify({
+    localStorage.setItem('rootTimeData', JSON.stringify({
         totalSteps: totalLifetimeSteps,
-        balance: balance,
+        growthTime: growthTime,
         nodes: nodes
     }));
 }
 
-// ==================== UI UPDATES ====================
+// ==================== UI ====================
 function updateAllUI() {
     const progress = Math.min(todaySteps / 10000, 1);
     const offset = 326.73 * (1 - progress);
 
-    // Walk Tab
     document.getElementById('stepsCount').textContent = todaySteps.toLocaleString();
     document.getElementById('stepsProgress').setAttribute('stroke-dashoffset', offset);
     document.getElementById('distance').textContent = (todaySteps / 1312).toFixed(1) + " km";
-    document.getElementById('earnedToday').textContent = "$" + (todaySteps / 10000).toFixed(2);
-    document.getElementById('balance').textContent = '$' + balance.toFixed(2);
+    document.getElementById('earnedToday').textContent = (todaySteps / 10000).toFixed(1) + "h";
+    document.getElementById('balance').textContent = growthTime.toFixed(1) + "h";
     document.getElementById('totalStepsBig').textContent = totalLifetimeSteps.toLocaleString();
     document.getElementById('claimBtn').disabled = todaySteps < 3000;
 
@@ -190,24 +173,24 @@ function renderNodes() {
         container.innerHTML = `
             <div class="text-center py-16 text-gray-400">
                 <p class="text-5xl mb-4">🌱</p>
-                <p class="text-lg">No nodes planted yet</p>
-                <p class="text-sm">Plant your first node to start earning passively</p>
+                <p class="text-lg">No living nodes yet</p>
+                <p class="text-sm">Plant nodes to grow time passively</p>
             </div>`;
         return;
     }
 
     nodes.forEach((node, i) => {
-        const hourly = (node.level * 0.85).toFixed(2);
+        const hourly = (node.level * 0.6).toFixed(2);
         const div = document.createElement('div');
         div.className = "bg-white/5 rounded-2xl p-6 flex justify-between items-center border border-white/5 hover:border-emerald-500/30 transition-colors";
         div.innerHTML = `
             <div>
                 <p class="font-semibold text-lg">Node #${i+1} <span class="text-emerald-400 text-base">(Level ${node.level})</span></p>
-                <p class="text-sm text-gray-400">≈ $${hourly}/hour passive</p>
+                <p class="text-sm text-gray-400">+${hourly} hours / hour</p>
             </div>
             <button onclick="upgradeNode(${i})" 
                     class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm font-medium transition">
-                Upgrade • $30
+                Upgrade • 4.0h
             </button>
         `;
         container.appendChild(div);
@@ -232,7 +215,7 @@ function togglePedometer() {
 
 function startPedometer() {
     if (typeof DeviceMotionEvent === 'undefined') {
-        alert("Step tracking not supported on this device/browser.");
+        alert("Step tracking not supported on this device.");
         return;
     }
 
@@ -247,7 +230,6 @@ function startPedometer() {
     motionListener = (event) => {
         const acc = event.accelerationIncludingGravity;
         if (!acc) return;
-
         const total = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
         const delta = Math.abs(total - lastAcc);
 
@@ -262,10 +244,7 @@ function startPedometer() {
 }
 
 function stopPedometer() {
-    if (motionListener) {
-        window.removeEventListener('devicemotion', motionListener);
-        motionListener = null;
-    }
+    if (motionListener) window.removeEventListener('devicemotion', motionListener);
     isSensorConnected = false;
     const btn = document.getElementById('connectBtn');
     btn.classList.remove('tracking-active', 'bg-teal-600');
@@ -275,15 +254,15 @@ function stopPedometer() {
 // ==================== ACTIONS ====================
 function claimStepsReward() {
     if (todaySteps < 3000) {
-        alert("You need at least 3,000 steps to claim.");
+        alert("Need at least 3,000 steps to claim time.");
         return;
     }
 
-    const reward = todaySteps / 10000;
-    balance += reward;
+    const earnedHours = todaySteps / 10000;
+    growthTime += earnedHours;
     totalLifetimeSteps += todaySteps;
 
-    alert(`🎉 $${reward.toFixed(2)} successfully added to your balance!`);
+    alert(`🌱 +${earnedHours.toFixed(1)} hours added to your Growth Time!`);
 
     todaySteps = 0;
     saveData();
@@ -291,34 +270,62 @@ function claimStepsReward() {
 }
 
 function plantNode() {
-    if (balance < 50) {
-        alert("Insufficient balance. You need $50 to plant a node.");
+    if (growthTime < 8) {
+        alert("You need 8.0 hours to plant a new node.");
         return;
     }
 
-    balance -= 50;
-    nodes.push({ level: 1 });
+    growthTime -= 8;
+    nodes.push({ level: 1, lastClaim: Date.now() });
     saveData();
     updateAllUI();
-    alert("🌳 New Node planted successfully!");
+    alert("🌳 New Living Node planted!");
 }
 
 function upgradeNode(index) {
-    if (balance < 30) {
-        alert("Insufficient balance. Need $30 to upgrade.");
+    if (growthTime < 4) {
+        alert("Need 4.0 hours to upgrade.");
         return;
     }
 
-    balance -= 30;
+    growthTime -= 4;
     nodes[index].level++;
     saveData();
     updateAllUI();
+}
+
+// Passive time from nodes
+function processPassiveTime() {
+    const now = Date.now();
+    let added = 0;
+
+    nodes.forEach(node => {
+        const hoursPassed = (now - (node.lastClaim || now)) / (1000 * 60 * 60);
+        if (hoursPassed > 0) {
+            added += hoursPassed * node.level * 0.6;
+            node.lastClaim = now;
+        }
+    });
+
+    if (added > 0) {
+        growthTime += added;
+        saveData();
+        updateAllUI();
+    }
 }
 
 // ==================== INIT ====================
 loadData();
 updateAllUI();
 showTab(0);
+
+// Passive growth every 10 seconds
+setInterval(() => {
+    processPassiveTime();
+}, 10000);
+
+// Initial passive check
+setTimeout(processPassiveTime, 1000);
 </script>
 </body>
 </html>

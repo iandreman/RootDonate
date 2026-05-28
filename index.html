@@ -10,25 +10,48 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
         
-        body { font-family: 'Inter', system-ui, sans-serif; }
-        .title-font { font-family: 'Space Grotesk', sans-serif; }
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+        }
+        .title-font { 
+            font-family: 'Space Grotesk', sans-serif; 
+        }
 
         .nature-gradient {
             background: linear-gradient(135deg, #10b981, #14b8a6, #22d3ee);
         }
         
-        .card { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .card:hover { transform: translateY(-6px); }
+        .card { 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .card:hover { 
+            transform: translateY(-6px); 
+        }
 
-        .living-ring { transition: stroke-dashoffset 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .living-ring { 
+            transition: stroke-dashoffset 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); 
+        }
 
-        .step-flash { animation: stepFlash 0.4s ease-out; }
-        @keyframes stepFlash { 0% { transform: scale(1.15); } 100% { transform: scale(1); } }
+        .step-flash { 
+            animation: stepFlash 0.4s ease-out; 
+        }
+        @keyframes stepFlash { 
+            0% { transform: scale(1.15); } 
+            100% { transform: scale(1); } 
+        }
 
         .tab-btn.active {
             background-color: rgba(255,255,255,0.15);
             color: white;
             border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .sensor-active {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
         }
     </style>
 </head>
@@ -43,9 +66,9 @@
             <h1 class="title-font text-4xl font-bold tracking-tight"></h1>
         </div>
         <div class="flex items-center gap-3 text-sm">
-            <div class="text-emerald-400" id="currentDate"></div>
-            <button onclick="showTab(0)" class="tab-btn active px-6 py-3 rounded-2xl transition-all">Walk</button>
-            <button onclick="showTab(1)" class="tab-btn px-6 py-3 rounded-2xl transition-all">Nodes</button>
+            <div class="text-emerald-400 font-medium" id="currentDate"></div>
+            <button onclick="showTab(0)" id="tabBtn0" class="tab-btn active px-6 py-3 rounded-2xl transition-all">Walk</button>
+            <button onclick="showTab(1)" id="tabBtn1" class="tab-btn px-6 py-3 rounded-2xl transition-all">Nodes</button>
         </div>
     </div>
 
@@ -58,7 +81,7 @@
             <p id="balance" class="text-7xl font-bold mt-1 mb-6">0.0h</p>
             <div class="flex justify-between items-center text-emerald-100">
                 <p>Streak: <span id="streak" class="font-bold text-white">0 days 🔥</span></p>
-                <p id="sensorStatus" class="text-sm">Sensor: Inactive</p>
+                <p id="sensorStatus" class="text-sm font-medium">Sensor: Inactive</p>
             </div>
         </div>
 
@@ -107,7 +130,8 @@
 
         <button onclick="claimStepsReward()" id="claimBtn"
                 class="mt-12 w-full nature-gradient py-7 rounded-3xl text-xl font-semibold flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed">
-            <span>🌱</span> <span id="claimText">Claim Today's Growth Time</span>
+            <span>🌱</span> 
+            <span id="claimText">Claim Today's Growth Time</span>
         </button>
     </div>
 
@@ -128,7 +152,7 @@
 </div>
 
 <script>
-// ==================== DATA ====================
+// ==================== DATA & STATE ====================
 let todaySteps = 0;
 let totalLifetimeSteps = 0;
 let growthTime = 0;
@@ -138,6 +162,8 @@ let lastClaimDate = null;
 let isSensorConnected = false;
 let motionListener = null;
 let lastStepTime = 0;
+let lastAccel = { x: 0, y: 0, z: 0 };
+let stepThreshold = 12; // sensitivity
 
 // Load data
 function loadData() {
@@ -164,7 +190,7 @@ function saveData() {
     }));
 }
 
-// Check if new day → reset steps
+// Daily reset
 function checkDailyReset() {
     const today = new Date().toISOString().split('T')[0];
     const lastDate = localStorage.getItem('rootLastDate');
@@ -175,7 +201,7 @@ function checkDailyReset() {
     }
 }
 
-// ==================== UI ====================
+// ==================== UI UPDATES ====================
 function updateAllUI() {
     const progress = Math.min(todaySteps / 10000, 1);
     const offset = 326.73 * (1 - progress);
@@ -189,7 +215,8 @@ function updateAllUI() {
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
 
     const canClaim = todaySteps >= 3000 && !isClaimedToday();
-    document.getElementById('claimBtn').disabled = !canClaim;
+    const claimBtn = document.getElementById('claimBtn');
+    claimBtn.disabled = !canClaim;
     document.getElementById('claimText').textContent = canClaim ? "Claim Today's Growth Time" : "Already Claimed Today";
 
     renderNodes();
@@ -206,19 +233,26 @@ function flashSteps() {
     setTimeout(() => container.classList.remove('step-flash'), 400);
 }
 
-// TABS
+// Tab system
 function showTab(n) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     document.getElementById(`tab-${n}`).classList.remove('hidden');
-    document.querySelectorAll('.tab-btn').forEach((btn, i) => btn.classList.toggle('active', i === n));
+    
+    document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i === n);
+    });
 }
 
-function renderNodes() { /* Same as previous version */ 
+function renderNodes() {
     const container = document.getElementById('nodesList');
     container.innerHTML = '';
 
     if (nodes.length === 0) {
-        container.innerHTML = `<div class="text-center py-16 text-gray-400"><p class="text-5xl mb-4">🌱</p><p>No living nodes yet</p></div>`;
+        container.innerHTML = `
+            <div class="text-center py-16 text-gray-400">
+                <p class="text-5xl mb-4">🌱</p>
+                <p>No living nodes yet</p>
+            </div>`;
         return;
     }
 
@@ -231,38 +265,107 @@ function renderNodes() { /* Same as previous version */
                 <p class="font-semibold">Node #${i+1} <span class="text-emerald-400">(Lv.${node.level})</span></p>
                 <p class="text-sm text-gray-400">+${hourly} h/hour</p>
             </div>
-            <button onclick="upgradeNode(${i})" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm">Upgrade • 4.0h</button>
+            <button onclick="upgradeNode(${i})" 
+                    class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm transition">
+                Upgrade • 4.0h
+            </button>
         `;
         container.appendChild(div);
     });
 }
 
-// ==================== PEDOMETER (same improved version) ====================
-async function togglePedometer() { /* ... same as last version ... */ }
-function startPedometer() { /* ... same ... */ }
-function stopPedometer() { /* ... same ... */ }
+// ==================== PEDOMETER (Full Production Ready) ====================
+async function togglePedometer() {
+    if (!isSensorConnected) {
+        await startPedometer();
+    } else {
+        stopPedometer();
+    }
+}
+
+async function startPedometer() {
+    if (typeof DeviceMotionEvent === 'undefined') {
+        alert("Your device doesn't support motion sensors.");
+        return;
+    }
+
+    // Request permission on iOS 13+
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        try {
+            const permission = await DeviceMotionEvent.requestPermission();
+            if (permission !== 'granted') {
+                alert("Motion permission denied.");
+                return;
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    motionListener = (event) => {
+        const acc = event.accelerationIncludingGravity;
+        if (!acc) return;
+
+        const deltaX = Math.abs(acc.x - lastAccel.x);
+        const deltaY = Math.abs(acc.y - lastAccel.y);
+        const deltaZ = Math.abs(acc.z - lastAccel.z);
+        const totalDelta = deltaX + deltaY + deltaZ;
+
+        const now = Date.now();
+        
+        if (totalDelta > stepThreshold && now - lastStepTime > 220) { // debounce
+            todaySteps++;
+            lastStepTime = now;
+            flashSteps();
+            updateAllUI();
+        }
+
+        lastAccel = { x: acc.x, y: acc.y, z: acc.z };
+    };
+
+    window.addEventListener('devicemotion', motionListener, true);
+    isSensorConnected = true;
+
+    // UI feedback
+    document.getElementById('connectText').textContent = "Stop Sensor";
+    document.getElementById('connectBtn').classList.add('bg-red-600', 'hover:bg-red-700', 'sensor-active');
+    document.getElementById('sensorStatus').textContent = "Sensor: Active";
+    document.getElementById('sensorStatus').classList.add('text-emerald-400');
+}
+
+function stopPedometer() {
+    if (motionListener) {
+        window.removeEventListener('devicemotion', motionListener, true);
+    }
+    isSensorConnected = false;
+
+    document.getElementById('connectText').textContent = "Start Sensor";
+    document.getElementById('connectBtn').classList.remove('bg-red-600', 'hover:bg-red-700', 'sensor-active');
+    document.getElementById('sensorStatus').textContent = "Sensor: Inactive";
+    document.getElementById('sensorStatus').classList.remove('text-emerald-400');
+}
+
 function manualStep() {
     todaySteps++;
-    updateAllUI();
     flashSteps();
+    updateAllUI();
 }
 
 // ==================== ACTIONS ====================
 function claimStepsReward() {
-    if (todaySteps < 3000) return;
-    if (isClaimedToday()) {
-        alert("You've already claimed today!");
+    if (todaySteps < 3000 || isClaimedToday()) {
+        alert("Not enough steps or already claimed today!");
         return;
     }
 
     const earned = todaySteps / 10000;
     growthTime += earned;
     totalLifetimeSteps += todaySteps;
+    streak = Math.max(streak + 1, 1); // prevent streak loss
 
-    streak++;
     lastClaimDate = new Date().toISOString().split('T')[0];
 
-    alert(`🌟 +${earned.toFixed(1)} hours claimed!\nStreak: ${streak} days 🔥`);
+    alert(`🌟 Claimed +${earned.toFixed(1)} hours!\nStreak: ${streak} days 🔥`);
 
     todaySteps = 0;
     saveData();
@@ -270,7 +373,10 @@ function claimStepsReward() {
 }
 
 function plantNode() {
-    if (growthTime < 8) return alert("Need 8.0h to plant a node.");
+    if (growthTime < 8) {
+        alert("Need at least 8.0h to plant a node.");
+        return;
+    }
     growthTime -= 8;
     nodes.push({ level: 1, lastClaim: Date.now() });
     saveData();
@@ -278,14 +384,17 @@ function plantNode() {
 }
 
 function upgradeNode(i) {
-    if (growthTime < 4) return alert("Need 4.0h to upgrade.");
+    if (growthTime < 4) {
+        alert("Need 4.0h to upgrade this node.");
+        return;
+    }
     growthTime -= 4;
     nodes[i].level++;
     saveData();
     updateAllUI();
 }
 
-// Passive Node Growth
+// Passive node income
 function processPassiveTime() {
     const now = Date.now();
     let added = 0;
@@ -308,8 +417,17 @@ loadData();
 updateAllUI();
 showTab(0);
 
-setInterval(processPassiveTime, 8000);   // Live updates
-setTimeout(processPassiveTime, 500);
+setInterval(processPassiveTime, 8000);
+setTimeout(processPassiveTime, 600);
+
+// Auto-save every 30s
+setInterval(saveData, 30000);
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (isSensorConnected) stopPedometer();
+    saveData();
+});
 </script>
 </body>
 </html>

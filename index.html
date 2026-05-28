@@ -71,16 +71,15 @@
     <div class="flex justify-between items-center mb-12">
         <div class="flex items-center gap-3">
             <span class="text-4xl">🌱</span>
-            <h1 class="title-font text-4xl font-bold tracking-tight"></h1>
+            <h1 class="title-font text-4xl font-bold tracking-tight">Root</h1>
         </div>
         
         <div class="flex items-center gap-4 text-sm">
-            <!-- Full Service Live Indicator -->
             <div class="flex items-center gap-2 bg-emerald-900/50 border border-emerald-500/30 px-4 py-2 rounded-2xl">
                 <div class="w-2 h-2 bg-emerald-400 rounded-full live-badge"></div>
                 <span class="text-emerald-400 font-medium">Full Service Live</span>
                 <span class="text-white/70 mx-1">•</span>
-                <div id="currentDate" class="text-emerald-400 font-medium underline decoration-emerald-500/50 underline-offset-4"></div>
+                <div id="currentDate" class="text-emerald-400 font-medium"></div>
             </div>
 
             <button onclick="showTab(0)" id="tabBtn0" class="tab-btn active px-6 py-3 rounded-2xl transition-all">Walk</button>
@@ -168,12 +167,12 @@
 </div>
 
 <script>
-// ==================== PRODUCTION-READY CONFIG ====================
-const APP_VERSION = "1.0.0 - Global Release";
+// ==================== CONFIG ====================
+const APP_VERSION = "1.0.1";
 const MIN_STEPS_FOR_CLAIM = 3000;
 const STEPS_PER_HOUR = 10000;
 
-// ==================== DATA & STATE ====================
+// ==================== STATE ====================
 let todaySteps = 0;
 let totalLifetimeSteps = 0;
 let growthTime = 0;
@@ -189,6 +188,8 @@ let stepThreshold = 12;
 // Load data
 function loadData() {
     const saved = localStorage.getItem('rootTimeData');
+    const today = new Date().toISOString().split('T')[0];
+    
     if (saved) {
         const data = JSON.parse(saved);
         totalLifetimeSteps = data.totalSteps || 0;
@@ -196,18 +197,27 @@ function loadData() {
         nodes = data.nodes || [];
         streak = data.streak || 0;
         lastClaimDate = data.lastClaimDate || null;
+        
+        // Restore today's steps if same day
+        if (data.lastDate === today) {
+            todaySteps = data.todaySteps || 0;
+        }
     }
+    
     checkDailyReset();
     updateAllUI();
 }
 
 function saveData() {
+    const today = new Date().toISOString().split('T')[0];
     localStorage.setItem('rootTimeData', JSON.stringify({
         totalSteps: totalLifetimeSteps,
         growthTime: growthTime,
         nodes: nodes,
         streak: streak,
         lastClaimDate: lastClaimDate,
+        todaySteps: todaySteps,
+        lastDate: today,
         version: APP_VERSION
     }));
 }
@@ -223,7 +233,7 @@ function checkDailyReset() {
     }
 }
 
-// ==================== UI UPDATES ====================
+// ==================== UI ====================
 function updateAllUI() {
     const progress = Math.min(todaySteps / STEPS_PER_HOUR, 1);
     const offset = 326.73 * (1 - progress);
@@ -235,21 +245,17 @@ function updateAllUI() {
     document.getElementById('balance').textContent = growthTime.toFixed(1) + "h";
     document.getElementById('streak').textContent = `${streak} days 🔥`;
 
-    // Underlined live date
-    const dateEl = document.getElementById('currentDate');
-    dateEl.textContent = new Date().toLocaleDateString('en-US', {
-        weekday: 'short', 
-        month: 'short', 
-        day: 'numeric',
-        year: 'numeric'
+    // Live date
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', {
+        weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
     });
 
     const canClaim = todaySteps >= MIN_STEPS_FOR_CLAIM && !isClaimedToday();
     const claimBtn = document.getElementById('claimBtn');
     claimBtn.disabled = !canClaim;
-    document.getElementById('claimText').textContent = canClaim 
-        ? "Claim Today's Growth Time" 
-        : (isClaimedToday() ? "Already Claimed Today" : "Need 3,000+ steps");
+    document.getElementById('claimText').textContent = 
+        canClaim ? "Claim Today's Growth Time" :
+        isClaimedToday() ? "Already Claimed Today" : "Need 3,000+ steps";
 
     renderNodes();
 }
@@ -349,6 +355,7 @@ async function startPedometer() {
             lastStepTime = now;
             flashSteps();
             updateAllUI();
+            saveData(); // Save on every step
         }
 
         lastAccel = { x: acc.x, y: acc.y, z: acc.z };
@@ -379,6 +386,7 @@ function manualStep() {
     todaySteps++;
     flashSteps();
     updateAllUI();
+    saveData();
 }
 
 // ==================== ACTIONS ====================
@@ -392,7 +400,6 @@ function claimStepsReward() {
     growthTime += earned;
     totalLifetimeSteps += todaySteps;
     streak = Math.max(streak + 1, 1);
-
     lastClaimDate = new Date().toISOString().split('T')[0];
 
     alert(`🌟 Claimed +${earned.toFixed(1)} hours!\nStreak: ${streak} days 🔥`);
@@ -456,7 +463,7 @@ window.addEventListener('beforeunload', () => {
     saveData();
 });
 
-console.log(`%cRoot • Grow Time v${APP_VERSION} — Full Service Live`, 'color:#10b981; font-weight:bold');
+console.log(`%cRoot • Grow Time v${APP_VERSION} — Ready 🌱`, 'color:#10b981; font-weight:bold');
 </script>
 </body>
 </html>

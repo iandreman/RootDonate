@@ -53,6 +53,14 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
         }
+
+        .live-badge {
+            animation: livePulse 2s infinite;
+        }
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
     </style>
 </head>
 <body class="bg-gray-950 text-white min-h-screen pb-12">
@@ -63,10 +71,18 @@
     <div class="flex justify-between items-center mb-12">
         <div class="flex items-center gap-3">
             <span class="text-4xl">🌱</span>
-            <h1 class="title-font text-4xl font-bold tracking-tight"></h1>
+            <h1 class="title-font text-4xl font-bold tracking-tight">Root • Grow Time</h1>
         </div>
-        <div class="flex items-center gap-3 text-sm">
-            <div class="text-emerald-400 font-medium" id="currentDate"></div>
+        
+        <div class="flex items-center gap-4 text-sm">
+            <!-- Full Service Live Indicator -->
+            <div class="flex items-center gap-2 bg-emerald-900/50 border border-emerald-500/30 px-4 py-2 rounded-2xl">
+                <div class="w-2 h-2 bg-emerald-400 rounded-full live-badge"></div>
+                <span class="text-emerald-400 font-medium">Full Service Live</span>
+                <span class="text-white/70 mx-1">•</span>
+                <div id="currentDate" class="text-emerald-400 font-medium underline decoration-emerald-500/50 underline-offset-4"></div>
+            </div>
+
             <button onclick="showTab(0)" id="tabBtn0" class="tab-btn active px-6 py-3 rounded-2xl transition-all">Walk</button>
             <button onclick="showTab(1)" id="tabBtn1" class="tab-btn px-6 py-3 rounded-2xl transition-all">Nodes</button>
         </div>
@@ -152,6 +168,11 @@
 </div>
 
 <script>
+// ==================== PRODUCTION-READY CONFIG ====================
+const APP_VERSION = "1.0.0 - Global Release";
+const MIN_STEPS_FOR_CLAIM = 3000;
+const STEPS_PER_HOUR = 10000;
+
 // ==================== DATA & STATE ====================
 let todaySteps = 0;
 let totalLifetimeSteps = 0;
@@ -163,7 +184,7 @@ let isSensorConnected = false;
 let motionListener = null;
 let lastStepTime = 0;
 let lastAccel = { x: 0, y: 0, z: 0 };
-let stepThreshold = 12; // sensitivity
+let stepThreshold = 12;
 
 // Load data
 function loadData() {
@@ -186,7 +207,8 @@ function saveData() {
         growthTime: growthTime,
         nodes: nodes,
         streak: streak,
-        lastClaimDate: lastClaimDate
+        lastClaimDate: lastClaimDate,
+        version: APP_VERSION
     }));
 }
 
@@ -203,21 +225,31 @@ function checkDailyReset() {
 
 // ==================== UI UPDATES ====================
 function updateAllUI() {
-    const progress = Math.min(todaySteps / 10000, 1);
+    const progress = Math.min(todaySteps / STEPS_PER_HOUR, 1);
     const offset = 326.73 * (1 - progress);
 
     document.getElementById('stepsCount').textContent = todaySteps.toLocaleString();
     document.getElementById('stepsProgress').setAttribute('stroke-dashoffset', offset);
     document.getElementById('distance').textContent = (todaySteps / 1312).toFixed(1) + " km";
-    document.getElementById('earnedToday').textContent = (todaySteps / 10000).toFixed(1) + "h";
+    document.getElementById('earnedToday').textContent = (todaySteps / STEPS_PER_HOUR).toFixed(1) + "h";
     document.getElementById('balance').textContent = growthTime.toFixed(1) + "h";
     document.getElementById('streak').textContent = `${streak} days 🔥`;
-    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
 
-    const canClaim = todaySteps >= 3000 && !isClaimedToday();
+    // Underlined live date
+    const dateEl = document.getElementById('currentDate');
+    dateEl.textContent = new Date().toLocaleDateString('en-US', {
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric'
+    });
+
+    const canClaim = todaySteps >= MIN_STEPS_FOR_CLAIM && !isClaimedToday();
     const claimBtn = document.getElementById('claimBtn');
     claimBtn.disabled = !canClaim;
-    document.getElementById('claimText').textContent = canClaim ? "Claim Today's Growth Time" : "Already Claimed Today";
+    document.getElementById('claimText').textContent = canClaim 
+        ? "Claim Today's Growth Time" 
+        : (isClaimedToday() ? "Already Claimed Today" : "Need 3,000+ steps");
 
     renderNodes();
 }
@@ -274,7 +306,7 @@ function renderNodes() {
     });
 }
 
-// ==================== PEDOMETER (Full Production Ready) ====================
+// ==================== PEDOMETER ====================
 async function togglePedometer() {
     if (!isSensorConnected) {
         await startPedometer();
@@ -285,11 +317,10 @@ async function togglePedometer() {
 
 async function startPedometer() {
     if (typeof DeviceMotionEvent === 'undefined') {
-        alert("Your device doesn't support motion sensors.");
+        alert("Motion sensors not supported on this device.");
         return;
     }
 
-    // Request permission on iOS 13+
     if (typeof DeviceMotionEvent.requestPermission === 'function') {
         try {
             const permission = await DeviceMotionEvent.requestPermission();
@@ -313,7 +344,7 @@ async function startPedometer() {
 
         const now = Date.now();
         
-        if (totalDelta > stepThreshold && now - lastStepTime > 220) { // debounce
+        if (totalDelta > stepThreshold && now - lastStepTime > 220) {
             todaySteps++;
             lastStepTime = now;
             flashSteps();
@@ -326,7 +357,6 @@ async function startPedometer() {
     window.addEventListener('devicemotion', motionListener, true);
     isSensorConnected = true;
 
-    // UI feedback
     document.getElementById('connectText').textContent = "Stop Sensor";
     document.getElementById('connectBtn').classList.add('bg-red-600', 'hover:bg-red-700', 'sensor-active');
     document.getElementById('sensorStatus').textContent = "Sensor: Active";
@@ -353,15 +383,15 @@ function manualStep() {
 
 // ==================== ACTIONS ====================
 function claimStepsReward() {
-    if (todaySteps < 3000 || isClaimedToday()) {
+    if (todaySteps < MIN_STEPS_FOR_CLAIM || isClaimedToday()) {
         alert("Not enough steps or already claimed today!");
         return;
     }
 
-    const earned = todaySteps / 10000;
+    const earned = todaySteps / STEPS_PER_HOUR;
     growthTime += earned;
     totalLifetimeSteps += todaySteps;
-    streak = Math.max(streak + 1, 1); // prevent streak loss
+    streak = Math.max(streak + 1, 1);
 
     lastClaimDate = new Date().toISOString().split('T')[0];
 
@@ -419,15 +449,14 @@ showTab(0);
 
 setInterval(processPassiveTime, 8000);
 setTimeout(processPassiveTime, 600);
-
-// Auto-save every 30s
 setInterval(saveData, 30000);
 
-// Cleanup on page unload
 window.addEventListener('beforeunload', () => {
     if (isSensorConnected) stopPedometer();
     saveData();
 });
+
+console.log(`%cRoot • Grow Time v${APP_VERSION} — Full Service Live`, 'color:#10b981; font-weight:bold');
 </script>
 </body>
 </html>

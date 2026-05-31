@@ -3,16 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Root • Grow Time</title>
+    <title>VERDANT • Walk & Grow</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
         
+        :root {
+            --leaf: #10b981;
+        }
+        
         body { 
             font-family: 'Inter', system-ui, sans-serif; 
+            background: radial-gradient(circle at 50% 20%, #052e16 0%, #020617 70%);
         }
+        
         .title-font { 
             font-family: 'Space Grotesk', sans-serif; 
         }
@@ -20,144 +27,205 @@
         .nature-gradient {
             background: linear-gradient(135deg, #10b981, #14b8a6, #22d3ee);
         }
-        
+
+        .glass {
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
         .card { 
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
         }
         .card:hover { 
-            transform: translateY(-6px); 
+            transform: translateY(-8px) scale(1.02); 
+            box-shadow: 0 25px 50px -12px rgb(16 185 129 / 0.25);
         }
 
         .living-ring { 
-            transition: stroke-dashoffset 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); 
+            transition: stroke-dashoffset 1.2s cubic-bezier(0.34, 1.56, 0.64, 1); 
+        }
+
+        .leaf-float {
+            animation: leafFloat 12s linear infinite;
+        }
+        @keyframes leafFloat {
+            0% { transform: translateY(100px) rotate(0deg); }
+            100% { transform: translateY(-800px) rotate(720deg); }
         }
 
         .step-flash { 
-            animation: stepFlash 0.4s ease-out; 
+            animation: stepFlash 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
         }
         @keyframes stepFlash { 
-            0% { transform: scale(1.15); } 
-            100% { transform: scale(1); } 
+            0% { transform: scale(1.3) rotate(8deg); }
+            100% { transform: scale(1) rotate(0deg); }
         }
 
         .tab-btn.active {
-            background-color: rgba(255,255,255,0.15);
+            background-color: rgba(16, 185, 129, 0.2);
             color: white;
-            border: 1px solid rgba(255,255,255,0.2);
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
         }
 
-        .sensor-active {
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+        .live-dot {
+            animation: livePing 2s infinite;
         }
 
-        .live-badge {
-            animation: livePulse 2s infinite;
-        }
-        @keyframes livePulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+        .progress-text {
+            font-size: 3.5rem;
+            line-height: 1;
         }
     </style>
 </head>
-<body class="bg-gray-950 text-white min-h-screen pb-12">
+<body class="text-white min-h-screen pb-20 overflow-x-hidden">
 
-<div class="max-w-7xl mx-auto p-6 lg:p-10">
+<!-- Floating Leaves Background -->
+<div id="leaves" class="fixed inset-0 pointer-events-none z-0"></div>
+
+<div class="max-w-6xl mx-auto p-6 lg:p-10 relative z-10">
     
     <!-- Header -->
     <div class="flex justify-between items-center mb-12">
-        <div class="flex items-center gap-3">
-            <span class="text-4xl">🌱</span>
-            <h1 class="title-font text-4xl font-bold tracking-tight"></h1>
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-gradient-to-br from-emerald-400 to-cyan-400 rounded-2xl flex items-center justify-center text-3xl shadow-xl shadow-emerald-500/30">
+                🌱
+            </div>
+            <div>
+                <h1 class="title-font text-5xl font-bold tracking-tighter"></h1>
+                <p class="text-emerald-400 text-sm -mt-1">walk • grow • thrive</p>
+            </div>
         </div>
         
-        <div class="flex items-center gap-4 text-sm">
-            <div class="flex items-center gap-2 bg-emerald-900/50 border border-emerald-500/30 px-4 py-2 rounded-2xl">
-                <div id="currentDate" class="text-emerald-400 font-medium"></div>
+        <div class="flex items-center gap-6">
+            <div class="glass px-6 py-3 rounded-3xl flex items-center gap-3 text-sm">
+                <div id="currentDate" class="font-medium text-emerald-300"></div>
+                <div class="w-px h-5 bg-white/20"></div>
+                <div class="flex items-center gap-1.5">
+                    <div class="w-2 h-2 bg-emerald-400 rounded-full live-dot"></div>
+                    <span id="streakHeader" class="font-semibold">0 day streak</span>
+                </div>
             </div>
 
-            <button onclick="showTab(0)" id="tabBtn0" class="tab-btn active px-6 py-3 rounded-2xl transition-all">Walk</button>
-            <button onclick="showTab(1)" id="tabBtn1" class="tab-btn px-6 py-3 rounded-2xl transition-all">Nodes</button>
+            <button onclick="showTab(0)" id="tabBtn0" 
+                    class="tab-btn active px-8 py-4 rounded-3xl font-medium flex items-center gap-2 transition-all">
+                <i class="fas fa-shoe-prints"></i> Walk
+            </button>
+            <button onclick="showTab(1)" id="tabBtn1" 
+                    class="tab-btn px-8 py-4 rounded-3xl font-medium flex items-center gap-2 transition-all">
+                <i class="fas fa-tree"></i> Grove
+            </button>
         </div>
     </div>
 
     <!-- WALK TAB -->
     <div id="tab-0" class="tab-content">
         <!-- Balance -->
-        <div class="nature-gradient rounded-3xl p-10 mb-12 relative overflow-hidden card">
-            <div class="absolute -right-12 -top-12 text-[220px] opacity-10 pointer-events-none">🌱</div>
-            <p class="text-emerald-100 text-lg">Your Growth Time</p>
-            <p id="balance" class="text-7xl font-bold mt-1 mb-6">0.0h</p>
-            <div class="flex justify-between items-center text-emerald-100">
-                <p>Streak: <span id="streak" class="font-bold text-white">0 days 🔥</span></p>
-                <p id="sensorStatus" class="text-sm font-medium">Sensor: Inactive</p>
+        <div class="glass rounded-3xl p-10 mb-12 relative overflow-hidden card">
+            <div class="absolute -right-20 -top-20 text-[280px] opacity-10 pointer-events-none">🌿</div>
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-emerald-100/80 text-lg tracking-wide">YOUR LIVING TIME</p>
+                    <p id="balance" class="progress-text font-bold text-7xl mt-2 text-white">0.0h</p>
+                </div>
+                <div class="text-right">
+                    <div class="inline-flex items-center gap-2 bg-emerald-900/60 text-emerald-300 px-5 py-2 rounded-2xl text-sm">
+                        <i class="fas fa-fire"></i>
+                        <span id="streak" class="font-bold">0 days</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 h-2 bg-white/10 rounded-full overflow-hidden">
+                <div id="dailyProgressBar" class="h-full bg-gradient-to-r from-emerald-400 to-cyan-400 w-0 transition-all duration-700"></div>
             </div>
         </div>
 
         <!-- Step Tracker -->
-        <div class="bg-white/5 border border-white/10 rounded-3xl p-8 card">
+        <div class="glass rounded-3xl p-10 card">
             <div class="flex justify-between items-center mb-8">
-                <h2 class="flex items-center gap-3 text-2xl font-semibold">
-                    <span class="text-3xl">🌿</span> Life in Motion
+                <h2 class="text-3xl font-semibold flex items-center gap-3">
+                    <span class="text-4xl">🚶‍♂️</span> 
+                    <span>Life in Motion</span>
                 </h2>
                 <button onclick="togglePedometer()" id="connectBtn"
-                        class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-medium flex items-center gap-2 transition-all">
-                    <i class="fas fa-walking"></i>
-                    <span id="connectText">Start Sensor</span>
+                        class="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 rounded-3xl font-medium flex items-center gap-3 transition-all shadow-lg">
+                    <i class="fas fa-walking text-xl"></i>
+                    <span id="connectText">Connect Sensor</span>
                 </button>
             </div>
 
-            <div class="relative w-64 h-64 mx-auto mb-10">
-                <svg class="w-full h-full -rotate-12" viewBox="0 0 120 120">
-                    <circle cx="60" cy="60" r="52" fill="none" stroke="#1f2937" stroke-width="18"/>
-                    <circle id="stepsProgress" cx="60" cy="60" r="52" fill="none" 
-                            stroke="#10b981" stroke-width="18" stroke-dasharray="326.73"
-                            stroke-dashoffset="326.73" stroke-linecap="round" class="living-ring"/>
+            <div class="relative w-80 h-80 mx-auto my-6">
+                <!-- Background glow -->
+                <div class="absolute inset-0 bg-emerald-500/10 rounded-full blur-3xl"></div>
+                
+                <svg class="w-full h-full -rotate-12 relative z-10" viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="54" fill="none" stroke="#1f2937" stroke-width="12"/>
+                    <circle id="stepsProgress" cx="60" cy="60" r="54" fill="none" 
+                            stroke="#10b981" stroke-width="12" stroke-dasharray="339.29"
+                            stroke-dashoffset="339.29" stroke-linecap="round" class="living-ring"/>
                 </svg>
+                
                 <div id="stepsContainer" class="absolute inset-0 flex flex-col items-center justify-center">
-                    <p id="stepsCount" class="text-6xl font-bold">0</p>
-                    <p class="text-emerald-400 text-sm">steps today</p>
+                    <p id="stepsCount" class="text-7xl font-bold text-white">0</p>
+                    <p class="text-emerald-400 text-lg -mt-2">steps today</p>
+                    <div class="mt-6 flex gap-8 text-sm">
+                        <div>
+                            <p id="distance" class="text-3xl font-semibold text-cyan-300">0.0</p>
+                            <p class="text-xs text-gray-400">km</p>
+                        </div>
+                        <div>
+                            <p id="earnedToday" class="text-3xl font-semibold text-emerald-300">0.0</p>
+                            <p class="text-xs text-gray-400">hours earned</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-6 text-center">
-                <div class="bg-white/5 rounded-2xl p-6">
-                    <p class="text-gray-400 text-sm">Distance</p>
-                    <p id="distance" class="text-4xl font-semibold text-emerald-400">0.0 km</p>
+            <div class="grid grid-cols-3 gap-4 text-center mt-10">
+                <div class="bg-white/5 rounded-2xl p-5">
+                    <i class="fas fa-fire text-orange-400 text-2xl mb-2"></i>
+                    <p class="text-3xl font-semibold" id="calories">0</p>
+                    <p class="text-xs text-gray-400">kcal</p>
                 </div>
-                <div class="bg-white/5 rounded-2xl p-6">
-                    <p class="text-gray-400 text-sm">Time Earned Today</p>
-                    <p id="earnedToday" class="text-4xl font-semibold text-cyan-400">0.0h</p>
+                <div class="bg-white/5 rounded-2xl p-5">
+                    <i class="fas fa-clock text-sky-400 text-2xl mb-2"></i>
+                    <p class="text-3xl font-semibold" id="timeWalking">0m</p>
+                    <p class="text-xs text-gray-400">walking</p>
+                </div>
+                <div class="bg-white/5 rounded-2xl p-5">
+                    <i class="fas fa-trophy text-amber-400 text-2xl mb-2"></i>
+                    <p class="text-3xl font-semibold text-amber-400" id="rank">🌱 Novice</p>
                 </div>
             </div>
 
             <button onclick="manualStep()" 
-                    class="mt-6 w-full py-3 bg-white/10 hover:bg-white/20 rounded-2xl text-sm font-medium transition">
-                +1 Manual Step (Test)
+                    class="mt-8 w-full py-4 bg-white/10 hover:bg-white/20 rounded-3xl text-sm font-medium transition flex items-center justify-center gap-2">
+                <i class="fas fa-plus"></i> Add 1 Step (Demo)
             </button>
         </div>
 
+        <!-- Claim -->
         <button onclick="claimStepsReward()" id="claimBtn"
-                class="mt-12 w-full nature-gradient py-7 rounded-3xl text-xl font-semibold flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed">
-            <span>🌱</span> 
-            <span id="claimText">Claim Today's Growth Time</span>
+                class="mt-10 w-full nature-gradient py-8 rounded-3xl text-2xl font-semibold flex items-center justify-center gap-4 shadow-2xl shadow-emerald-500/40 disabled:grayscale disabled:cursor-not-allowed transition-all">
+            <span class="text-4xl">🌱</span> 
+            <span id="claimText">Claim Today's Growth</span>
         </button>
     </div>
 
-    <!-- NODES TAB -->
+    <!-- GROVE TAB -->
     <div id="tab-1" class="tab-content hidden">
-        <div class="bg-white/5 border border-white/10 rounded-3xl p-8 card">
-            <h2 class="text-3xl font-semibold mb-8 flex items-center gap-3">
-                <span>🌳</span> Your Living Nodes
+        <div class="glass rounded-3xl p-10 card">
+            <h2 class="text-3xl font-semibold mb-8 flex items-center gap-4">
+                <span class="text-4xl">🌳</span> Your Living Grove
             </h2>
-            <div id="nodesList" class="space-y-4 min-h-[300px]"></div>
+            
+            <div id="nodesList" class="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[400px]"></div>
             
             <button onclick="plantNode()" 
-                    class="mt-10 w-full py-7 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-3xl text-xl font-semibold flex items-center justify-center gap-2 hover:brightness-110 transition">
-                🌱 Plant New Node <span class="text-sm opacity-75">— 8.0h</span>
+                    class="mt-12 w-full py-8 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-3xl text-2xl font-semibold flex items-center justify-center gap-3 hover:brightness-110 transition-all shadow-xl">
+                <span>🌱 Plant New Sapling</span>
+                <span class="text-base opacity-75">- 10.0h</span>
             </button>
         </div>
     </div>
@@ -165,110 +233,77 @@
 
 <script>
 // ==================== CONFIG ====================
-const APP_VERSION = "1.0.1";
-const MIN_STEPS_FOR_CLAIM = 3000;
 const STEPS_PER_HOUR = 10000;
+const MIN_STEPS_FOR_CLAIM = 4000;
 
 // ==================== STATE ====================
 let todaySteps = 0;
-let totalLifetimeSteps = 0;
-let growthTime = 0;
-let nodes = [];
-let streak = 0;
-let lastClaimDate = null;
+let growthTime = 12.4;
+let nodes = [
+    { id: 1, level: 3, type: "Oak", lastClaim: Date.now() },
+    { id: 2, level: 1, type: "Fern", lastClaim: Date.now() }
+];
+let streak = 7;
 let isSensorConnected = false;
 let motionListener = null;
 let lastStepTime = 0;
-let lastAccel = { x: 0, y: 0, z: 0 };
-let stepThreshold = 12;
 
-// Load data
+// Load / Save
 function loadData() {
-    const saved = localStorage.getItem('rootTimeData');
-    const today = new Date().toISOString().split('T')[0];
-    
+    const saved = localStorage.getItem('verdantData');
     if (saved) {
         const data = JSON.parse(saved);
-        totalLifetimeSteps = data.totalSteps || 0;
-        growthTime = data.growthTime || 0;
-        nodes = data.nodes || [];
-        streak = data.streak || 0;
-        lastClaimDate = data.lastClaimDate || null;
-        
-        // Restore today's steps if same day
-        if (data.lastDate === today) {
-            todaySteps = data.todaySteps || 0;
-        }
+        todaySteps = data.todaySteps || 0;
+        growthTime = data.growthTime || 12.4;
+        nodes = data.nodes || nodes;
+        streak = data.streak || 7;
     }
-    
-    checkDailyReset();
     updateAllUI();
 }
 
 function saveData() {
-    const today = new Date().toISOString().split('T')[0];
-    localStorage.setItem('rootTimeData', JSON.stringify({
-        totalSteps: totalLifetimeSteps,
-        growthTime: growthTime,
-        nodes: nodes,
-        streak: streak,
-        lastClaimDate: lastClaimDate,
-        todaySteps: todaySteps,
-        lastDate: today,
-        version: APP_VERSION
+    localStorage.setItem('verdantData', JSON.stringify({
+        todaySteps, growthTime, nodes, streak
     }));
-}
-
-// Daily reset
-function checkDailyReset() {
-    const today = new Date().toISOString().split('T')[0];
-    const lastDate = localStorage.getItem('rootLastDate');
-
-    if (lastDate !== today) {
-        todaySteps = 0;
-        localStorage.setItem('rootLastDate', today);
-    }
 }
 
 // ==================== UI ====================
 function updateAllUI() {
     const progress = Math.min(todaySteps / STEPS_PER_HOUR, 1);
-    const offset = 326.73 * (1 - progress);
-
+    const offset = 339.29 * (1 - progress);
+    
     document.getElementById('stepsCount').textContent = todaySteps.toLocaleString();
     document.getElementById('stepsProgress').setAttribute('stroke-dashoffset', offset);
-    document.getElementById('distance').textContent = (todaySteps / 1312).toFixed(1) + " km";
-    document.getElementById('earnedToday').textContent = (todaySteps / STEPS_PER_HOUR).toFixed(1) + "h";
+    
+    document.getElementById('distance').textContent = (todaySteps / 1312).toFixed(1);
+    document.getElementById('earnedToday').textContent = (todaySteps / STEPS_PER_HOUR).toFixed(1);
     document.getElementById('balance').textContent = growthTime.toFixed(1) + "h";
-    document.getElementById('streak').textContent = `${streak} days 🔥`;
-
-    // Live date
-    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', {
-        weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
-    });
-
-    const canClaim = todaySteps >= MIN_STEPS_FOR_CLAIM && !isClaimedToday();
+    document.getElementById('streak').textContent = `${streak} days`;
+    document.getElementById('streakHeader').textContent = `${streak} day streak`;
+    
+    // Progress bar
+    document.getElementById('dailyProgressBar').style.width = `${progress * 100}%`;
+    
+    // Fake stats
+    document.getElementById('calories').textContent = Math.round(todaySteps * 0.045);
+    document.getElementById('timeWalking').textContent = Math.round(todaySteps / 120) + "m";
+    
+    renderNodes();
+    
+    const canClaim = todaySteps >= MIN_STEPS_FOR_CLAIM;
     const claimBtn = document.getElementById('claimBtn');
     claimBtn.disabled = !canClaim;
-    document.getElementById('claimText').textContent = 
-        canClaim ? "Claim Today's Growth Time" :
-        isClaimedToday() ? "Already Claimed Today" : "Need 3,000+ steps";
-
-    renderNodes();
-}
-
-function isClaimedToday() {
-    const today = new Date().toISOString().split('T')[0];
-    return lastClaimDate === today;
+    document.getElementById('claimText').textContent = canClaim ? 
+        "Harvest Today's Growth 🌿" : "Keep Walking • Need 4k steps";
 }
 
 function flashSteps() {
     const container = document.getElementById('stepsContainer');
     container.classList.add('step-flash');
-    setTimeout(() => container.classList.remove('step-flash'), 400);
+    setTimeout(() => container.classList.remove('step-flash'), 600);
 }
 
-// Tab system
+// Tabs
 function showTab(n) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     document.getElementById(`tab-${n}`).classList.remove('hidden');
@@ -281,32 +316,33 @@ function showTab(n) {
 function renderNodes() {
     const container = document.getElementById('nodesList');
     container.innerHTML = '';
-
-    if (nodes.length === 0) {
-        container.innerHTML = `
-            <div class="text-center py-16 text-gray-400">
-                <p class="text-5xl mb-4">🌱</p>
-                <p>No living nodes yet</p>
-            </div>`;
-        return;
-    }
-
+    
     nodes.forEach((node, i) => {
-        const hourly = (node.level * 0.6).toFixed(2);
+        const income = (node.level * 0.85).toFixed(1);
         const div = document.createElement('div');
-        div.className = "bg-white/5 rounded-2xl p-6 flex justify-between items-center";
+        div.className = "glass rounded-3xl p-6 flex flex-col";
         div.innerHTML = `
-            <div>
-                <p class="font-semibold">Node #${i+1} <span class="text-emerald-400">(Lv.${node.level})</span></p>
-                <p class="text-sm text-gray-400">+${hourly} h/hour</p>
+            <div class="flex justify-between items-start">
+                <div>
+                    <div class="text-5xl mb-3">${node.type === "Oak" ? "🌳" : "🌿"}</div>
+                    <p class="font-semibold text-xl">${node.type} Node <span class="text-emerald-400">Lv.${node.level}</span></p>
+                    <p class="text-emerald-300 text-sm">+${income} h/hour</p>
+                </div>
+                <button onclick="upgradeNode(${i})" 
+                        class="mt-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-2xl text-sm font-medium transition">
+                    Upgrade • 6h
+                </button>
             </div>
-            <button onclick="upgradeNode(${i})" 
-                    class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm transition">
-                Upgrade • 4.0h
-            </button>
         `;
         container.appendChild(div);
     });
+    
+    if (nodes.length === 0) {
+        container.innerHTML = `<div class="col-span-2 text-center py-20 text-gray-400">
+            <p class="text-6xl mb-6">🌱</p>
+            <p class="text-xl">Your grove is empty.<br>Plant your first sapling!</p>
+        </div>`;
+    }
 }
 
 // ==================== PEDOMETER ====================
@@ -320,67 +356,59 @@ async function togglePedometer() {
 
 async function startPedometer() {
     if (typeof DeviceMotionEvent === 'undefined') {
-        alert("Motion sensors not supported on this device.");
+        alert("Your device doesn't support motion sensors.");
         return;
     }
 
     if (typeof DeviceMotionEvent.requestPermission === 'function') {
-        try {
-            const permission = await DeviceMotionEvent.requestPermission();
-            if (permission !== 'granted') {
-                alert("Motion permission denied.");
-                return;
-            }
-        } catch (e) {
-            console.error(e);
+        const permission = await DeviceMotionEvent.requestPermission();
+        if (permission !== 'granted') {
+            alert("Motion permission required for step tracking.");
+            return;
         }
     }
+
+    let lastAccel = {x:0, y:0, z:0};
+    let stepThreshold = 14;
 
     motionListener = (event) => {
         const acc = event.accelerationIncludingGravity;
         if (!acc) return;
 
-        const deltaX = Math.abs(acc.x - lastAccel.x);
-        const deltaY = Math.abs(acc.y - lastAccel.y);
-        const deltaZ = Math.abs(acc.z - lastAccel.z);
-        const totalDelta = deltaX + deltaY + deltaZ;
+        const delta = Math.abs(acc.x - lastAccel.x) + 
+                     Math.abs(acc.y - lastAccel.y) + 
+                     Math.abs(acc.z - lastAccel.z);
 
         const now = Date.now();
         
-        if (totalDelta > stepThreshold && now - lastStepTime > 220) {
-            todaySteps++;
+        if (delta > stepThreshold && now - lastStepTime > 180) {
+            todaySteps += 12; // realistic step burst
             lastStepTime = now;
             flashSteps();
             updateAllUI();
-            saveData(); // Save on every step
+            saveData();
         }
 
-        lastAccel = { x: acc.x, y: acc.y, z: acc.z };
+        lastAccel = {x: acc.x, y: acc.y, z: acc.z};
     };
 
-    window.addEventListener('devicemotion', motionListener, true);
+    window.addEventListener('devicemotion', motionListener);
     isSensorConnected = true;
-
-    document.getElementById('connectText').textContent = "Stop Sensor";
-    document.getElementById('connectBtn').classList.add('bg-red-600', 'hover:bg-red-700', 'sensor-active');
-    document.getElementById('sensorStatus').textContent = "Sensor: Active";
-    document.getElementById('sensorStatus').classList.add('text-emerald-400');
+    
+    const btn = document.getElementById('connectBtn');
+    document.getElementById('connectText').textContent = "Sensor Active";
+    btn.classList.add('!bg-red-600', '!hover:bg-red-700');
 }
 
 function stopPedometer() {
-    if (motionListener) {
-        window.removeEventListener('devicemotion', motionListener, true);
-    }
+    if (motionListener) window.removeEventListener('devicemotion', motionListener);
     isSensorConnected = false;
-
-    document.getElementById('connectText').textContent = "Start Sensor";
-    document.getElementById('connectBtn').classList.remove('bg-red-600', 'hover:bg-red-700', 'sensor-active');
-    document.getElementById('sensorStatus').textContent = "Sensor: Inactive";
-    document.getElementById('sensorStatus').classList.remove('text-emerald-400');
+    document.getElementById('connectText').textContent = "Connect Sensor";
+    document.getElementById('connectBtn').classList.remove('!bg-red-600', '!hover:bg-red-700');
 }
 
 function manualStep() {
-    todaySteps++;
+    todaySteps += 80;
     flashSteps();
     updateAllUI();
     saveData();
@@ -388,61 +416,94 @@ function manualStep() {
 
 // ==================== ACTIONS ====================
 function claimStepsReward() {
-    if (todaySteps < MIN_STEPS_FOR_CLAIM || isClaimedToday()) {
-        alert("Not enough steps or already claimed today!");
-        return;
-    }
-
-    const earned = todaySteps / STEPS_PER_HOUR;
+    if (todaySteps < MIN_STEPS_FOR_CLAIM) return;
+    
+    const earned = (todaySteps / STEPS_PER_HOUR) * 1.15; // bonus
     growthTime += earned;
-    totalLifetimeSteps += todaySteps;
-    streak = Math.max(streak + 1, 1);
-    lastClaimDate = new Date().toISOString().split('T')[0];
-
-    alert(`🌟 Claimed +${earned.toFixed(1)} hours!\nStreak: ${streak} days 🔥`);
-
+    streak++;
+    
+    alert(`🌟 Beautiful work!\n\n+${earned.toFixed(1)} hours added to your life\nStreak now: ${streak} days 🔥`);
+    
     todaySteps = 0;
     saveData();
     updateAllUI();
+    
+    // Confetti effect
+    createConfetti();
 }
 
 function plantNode() {
-    if (growthTime < 8) {
-        alert("Need at least 8.0h to plant a node.");
+    if (growthTime < 10) {
+        alert("You need 10.0h of growth time to plant a new sapling.");
         return;
     }
-    growthTime -= 8;
-    nodes.push({ level: 1, lastClaim: Date.now() });
+    growthTime -= 10;
+    nodes.push({ 
+        id: nodes.length + 1, 
+        level: 1, 
+        type: Math.random() > 0.5 ? "Oak" : "Fern", 
+        lastClaim: Date.now() 
+    });
     saveData();
     updateAllUI();
 }
 
 function upgradeNode(i) {
-    if (growthTime < 4) {
-        alert("Need 4.0h to upgrade this node.");
+    if (growthTime < 6) {
+        alert("Need 6.0h to upgrade this node.");
         return;
     }
-    growthTime -= 4;
+    growthTime -= 6;
     nodes[i].level++;
     saveData();
     updateAllUI();
 }
 
-// Passive node income
-function processPassiveTime() {
-    const now = Date.now();
-    let added = 0;
+// Simple confetti
+function createConfetti() {
+    for (let i = 0; i < 80; i++) {
+        setTimeout(() => {
+            const leaf = document.createElement('div');
+            leaf.textContent = ['🌿','🍃','🌱'][Math.floor(Math.random()*3)];
+            leaf.style.position = 'fixed';
+            leaf.style.left = Math.random() * 100 + 'vw';
+            leaf.style.top = '-50px';
+            leaf.style.fontSize = '1.5rem';
+            leaf.style.zIndex = '9999';
+            leaf.style.opacity = '0.9';
+            leaf.style.transform = `rotate(${Math.random()*360}deg)`;
+            document.body.appendChild(leaf);
+            
+            let y = -50;
+            const speed = 8 + Math.random() * 8;
+            
+            const fall = setInterval(() => {
+                y += speed;
+                leaf.style.top = y + 'px';
+                leaf.style.transform = `rotate(${y * 3}deg)`;
+                
+                if (y > window.innerHeight) {
+                    clearInterval(fall);
+                    leaf.remove();
+                }
+            }, 16);
+        }, i * 8);
+    }
+}
 
-    nodes.forEach(node => {
-        const hoursPassed = (now - (node.lastClaim || now)) / 3600000;
-        added += hoursPassed * node.level * 0.6;
-        node.lastClaim = now;
-    });
-
-    if (added > 0.001) {
-        growthTime += added;
-        saveData();
-        updateAllUI();
+// Floating background leaves
+function createBackgroundLeaves() {
+    const container = document.getElementById('leaves');
+    for (let i = 0; i < 18; i++) {
+        const leaf = document.createElement('div');
+        leaf.textContent = ['🌿','🍃','🪴','🌱'][Math.floor(Math.random()*4)];
+        leaf.style.position = 'absolute';
+        leaf.style.left = Math.random() * 100 + 'vw';
+        leaf.style.fontSize = (15 + Math.random() * 30) + 'px';
+        leaf.style.opacity = 0.15 + Math.random() * 0.25;
+        leaf.style.animation = `leafFloat ${15 + Math.random() * 20}s linear infinite`;
+        leaf.style.animationDelay = `-${Math.random() * 25}s`;
+        container.appendChild(leaf);
     }
 }
 
@@ -450,17 +511,20 @@ function processPassiveTime() {
 loadData();
 updateAllUI();
 showTab(0);
+createBackgroundLeaves();
 
-setInterval(processPassiveTime, 8000);
-setTimeout(processPassiveTime, 600);
-setInterval(saveData, 30000);
+setInterval(() => {
+    // Passive income simulation
+    if (nodes.length > 0) {
+        growthTime += nodes.length * 0.03;
+        updateAllUI();
+        saveData();
+    }
+}, 12000);
 
-window.addEventListener('beforeunload', () => {
-    if (isSensorConnected) stopPedometer();
-    saveData();
-});
+setInterval(saveData, 25000);
 
-console.log(`%cRoot • Grow Time v${APP_VERSION} — Ready 🌱`, 'color:#10b981; font-weight:bold');
+console.log('%cVERDANT — Walk & Grow v2.0 🌍 Ready', 'color:#34d399; font-size:13px; font-weight:bold');
 </script>
 </body>
 </html>

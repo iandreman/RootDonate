@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Time Sender for AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+            background: #0a0a0a;
+            color: #00ffaa;
+        }
+        #time {
+            font-size: 5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            letter-spacing: 4px;
+        }
+        #status {
+            margin-top: 30px;
+            font-size: 1.1rem;
+            min-height: 50px;
+        }
+        .log {
+            margin: 20px auto;
+            max-width: 600px;
+            text-align: left;
+            background: #111;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>🕒 Live Time → AI Sender</h1>
+    <div id="time">00:00:00</div>
+    <p>Automatically sending current time to AI every 5 seconds</p>
+    
+    <div id="status">Initializing...</div>
+    
+    <div class="log" id="log"></div>
+
+    <script>
+        let sendInterval;
+        const LOG_LIMIT = 20;
+
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            document.getElementById('time').textContent = timeStr;
+        }
+
+        function logMessage(msg, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            let color = type === 'success' ? '#00ffaa' : type === 'error' ? '#ff4444' : '#aaaaaa';
+            entry.style.color = color;
+            entry.textContent = `[${timestamp}] ${msg}`;
+            
+            logDiv.appendChild(entry);
+            
+            // Keep only last LOG_LIMIT messages
+            if (logDiv.children.length > LOG_LIMIT) {
+                logDiv.removeChild(logDiv.children[0]);
+            }
+            
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // Replace this with your actual AI endpoint
+        async function sendTimeToAI() {
+            const now = new Date();
+            const payload = {
+                timestamp: now.toISOString(),
+                local_time: now.toLocaleString(),
+                unix: Math.floor(now.getTime() / 1000)
+            };
+
+            try {
+                const response = await fetch('www.cleverbot.com', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+                });
+
+                console.log("Sending to AI:", payload);
+                
+                document.getElementById('status').innerHTML = 
+                    `✅ Sent to AI at <strong>${now.toLocaleTimeString()}</strong>`;
+                
+                logMessage(`Time sent → ${payload.timestamp}`, 'success');
+
+            } catch (err) {
+                document.getElementById('status').innerHTML = 
+                    `❌ Failed to send: ${err.message}`;
+                logMessage(`Send failed: ${err.message}`, 'error');
+            }
+        }
+
+        // Start everything
+        function startAutoSender() {
+            updateClock();
+            setInterval(updateClock, 1000);           // Live clock update
+
+            // First send immediately
+            sendTimeToAI();
+
+            // Then send every 5 seconds
+            sendInterval = setInterval(sendTimeToAI, 5000);
+            
+            logMessage("Auto time sender started (every 5 seconds)", 'success');
+        }
+
+        // Run on page load
+        window.onload = startAutoSender;
+    </script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto Time Sender for AI</title>
+    <title>Root Donate</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -38,7 +38,7 @@
     </style>
 </head>
 <body>
-    <h1>🕒 Live Time → AI Sender</h1>
+    <h1>🕒 Live Time</h1>
     <div id="time">00:00:00</div>
     <p>Automatically sending current time to AI every 5 seconds</p>
     
@@ -90,7 +90,7 @@
             };
 
             try {
-                const response = await fetch('www.cleverbot.com', {
+                const response = await fetch('www.rootdonate.co.uk', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -113,13 +113,13 @@
         // Start everything
         function startAutoSender() {
             updateClock();
-            setInterval(updateClock, 1000);           // Live clock update
+            setInterval(sendTimeToAI, 5000);           // Live clock update
 
             // First send immediately
             sendTimeToAI();
 
             // Then send every 5 seconds
-            sendInterval = setInterval(sendTimeToAI, 5000);
+            sendInterval = setInterval(updateClock, 1000);
             
             logMessage("Auto time sender started (every 5 seconds)", 'success');
         }

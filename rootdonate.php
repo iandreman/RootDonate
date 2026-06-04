@@ -13,30 +13,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo json_encode(['status' => 'error', 'message' => 'Method not allowed']);
+    echo json_encode(['status' => 'error', 'message' => 'Only POST allowed']);
     exit;
 }
 
-try {
-    require_once __DIR__ . '/../../vendor/autoload.php';
+// Read JSON from frontend
+$data = json_decode(file_get_contents('php://input'), true);
 
-    use App\RootDonate;
-
-    $input = json_decode(file_get_contents('php://input'), true);
-
-    if (!$input || !isset($input['amount']) || $input['amount'] < 1) {
-        throw new Exception('Invalid donation amount');
-    }
-
-    $rootDonate = new RootDonate();
-    $result = $rootDonate->handle($input);   // ← pass data instead of reading inside
-
-    echo json_encode($result);
-
-} catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode([
-        'status' => 'error',
-        'message' => $e->getMessage()
-    ]);
-}
+echo json_encode([
+    'status' => 'success',
+    'message' => 'Test donation received!',
+    'donation' => [
+        'id' => 'TEST-' . rand(10000, 99999),
+        'amount' => $data['amount'] ?? 0,
+        'name' => $data['name'] ?? 'Anonymous'
+    ]
+]);

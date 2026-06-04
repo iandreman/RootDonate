@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Us • Make a Donation</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+        .donation-card {
+            background: white;
+            max-width: 520px;
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0 0 8px 0;
+            font-size: 2.2em;
+        }
+        .header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .amounts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 12px;
+            margin: 25px 0;
+        }
+        .amount-btn {
+            padding: 18px 10px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 12px;
+            font-size: 1.3em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .amount-btn:hover {
+            border-color: #6366f1;
+            transform: translateY(-3px);
+        }
+        .amount-btn.active {
+            background: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+        }
+        .custom-amount {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.4em;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .donate-btn {
+            width: 100%;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            padding: 18px;
+            font-size: 1.3em;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        .donate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+            color: #6b7280;
+        }
+        .token-info {
+            font-size: 0.8em;
+            color: #9ca3af;
+            margin-top: 25px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="donation-card">
+        <div class="header">
+            <h1>💙 Thank You!</h1>
+            <p>Your support makes a big difference</p>
+        </div>
+        
+        <div class="content">
+            <h3 style="margin: 0 0 20px 0; text-align:center;">Choose donation amount</h3>
+            
+            <div class="amounts">
+                <div class="amount-btn active" data-amount="5">$5</div>
+                <div class="amount-btn" data-amount="10">$10</div>
+                <div class="amount-btn" data-amount="25">$25</div>
+                <div class="amount-btn" data-amount="50">$50</div>
+                <div class="amount-btn" data-amount="100">$100</div>
+                <div class="amount-btn" data-amount="250">$250</div>
+            </div>
+
+            <input type="number" id="customAmount" class="custom-amount" placeholder="Custom amount" min="1">
+
+            <button onclick="processDonation()" class="donate-btn">
+                Donate Now • <span id="selectedAmount">$25</span>
+            </button>
+
+            <div class="token-info">
+                Token: <span style="font-family:monospace;">mk_1TeUTNAYd3hJ6fUD0o6WiiZM</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            Secure donation powered by PHP + Stripe-ready backend<br>
+            All donations are tax-deductible where applicable
+        </div>
+    </div>
+
+    <!-- PHP Backend -->
+    <?php
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $amount = $_POST['amount'] ?? 0;
+        $token = "mk_1TeUTNAYd3hJ6fUD0o6WiiZM";
+        
+        // Here you would normally integrate with Stripe, PayPal, etc.
+        $response = [
+            'success' => true,
+            'message' => "Thank you! Donation of $$amount received.",
+            'transaction_id' => 'TXN_' . strtoupper(substr(md5(time()), 0, 10)),
+            'token_used' => $token
+        ];
+        
+        header('Content-Type: application/json');
+        echo json_encode($response);
+        exit;
+    }
+    ?>
+
+    <script>
+        let selectedAmount = 25;
+
+        // Amount button clicks
+        document.querySelectorAll('.amount-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedAmount = parseFloat(btn.dataset.amount);
+                document.getElementById('selectedAmount').textContent = '$' + selectedAmount;
+            });
+        });
+
+        // Custom amount input
+        document.getElementById('customAmount').addEventListener('input', function() {
+            if (this.value) {
+                selectedAmount = parseFloat(this.value);
+                document.getElementById('selectedAmount').textContent = '$' + selectedAmount;
+                document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
+            }
+        });
+
+        async function processDonation() {
+            const btn = document.querySelector('.donate-btn');
+            const originalText = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = 'Processing...';
+
+            const formData = new FormData();
+            formData.append('amount', selectedAmount);
+
+            try {
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`🎉 Thank you!\n\n${result.message}\nTransaction ID: ${result.transaction_id}`);
+                }
+            } catch (err) {
+                alert('Payment processing failed. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+    </script>
+</body>
+</html>

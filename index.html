@@ -17,7 +17,7 @@ document.getElementById('donateForm').addEventListener('submit', async function(
     };
 
     try {
-        const res = await fetch('/api/rootdonate.php', {
+        const res = await fetch('rootdonate.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)

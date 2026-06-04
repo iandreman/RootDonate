@@ -70,7 +70,7 @@
             <input type="email" id="email" required>
 
             <label>Message (optional)</label>
-            <textarea id="message" rows="3" placeholder="Thank you for making a difference!"></textarea>
+            <textarea id="message" rows="3"></textarea>
 
             <label>Steps Walked (optional)</label>
             <input type="number" id="steps" value="0">
@@ -82,7 +82,6 @@
     </div>
 
     <script>
-        // === YOUR PUBLISHABLE KEY ===
         const stripe = Stripe('pk_live_51TeUTKAYd3hJ6fUDdNumw6y435NBguXNZRNkqM2d4Te1kKOYLn25XceMG9qr1M6z0GzARRs2L7SJ8ZqmHW39c5Qe00clIRkuCL');
 
         document.getElementById('donateForm').addEventListener('submit', async function(e) {
@@ -90,47 +89,38 @@
 
             const btn = this.querySelector('button');
             btn.disabled = true;
-            btn.textContent = 'Redirecting to secure payment...';
+            btn.textContent = 'Redirecting to secure checkout...';
 
             const amount = parseFloat(document.getElementById('amount').value) * 100;
-            const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
 
             try {
-                // This uses your publishable key to redirect to Stripe Checkout
+                // This opens Stripe Checkout using only your publishable key
                 const { error } = await stripe.redirectToCheckout({
                     lineItems: [{
-                        price: 'price_xxxxxxxxxxxxxxxxxxxxxxxx',   // ← Change this to your Price ID
+                        price: 'price_1xxxxxxxxxxxxxxx',   // ← REPLACE with your real Price ID
                         quantity: 1,
                     }],
                     mode: 'payment',
-                    successUrl: window.location.href + '?success=true',
-                    cancelUrl: window.location.href + '?canceled=true',
-                    customerEmail: email,
-                    metadata: {
-                        name: name,
-                        steps: document.getElementById('steps').value,
-                        message: document.getElementById('message').value
-                    }
+                    successUrl: window.location.origin + '?success=true',
+                    cancelUrl: window.location.origin + '?canceled=true',
+                    customerEmail: email || undefined,
                 });
 
                 if (error) {
-                    showMessage('error', error.message);
+                    document.getElementById('response').style.display = 'block';
+                    document.getElementById('response').className = 'error';
+                    document.getElementById('response').textContent = error.message;
                 }
             } catch (err) {
-                showMessage('error', 'Something went wrong. Please try again.');
+                document.getElementById('response').style.display = 'block';
+                document.getElementById('response').className = 'error';
+                document.getElementById('response').textContent = 'Something went wrong. Please try again.';
             }
 
             btn.disabled = false;
             btn.textContent = 'Donate Now • Secure';
         });
-
-        function showMessage(type, text) {
-            const div = document.getElementById('response');
-            div.style.display = 'block';
-            div.className = type;
-            div.textContent = text;
-        }
     </script>
 </body>
 </html>

@@ -4,9 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RootDonate - Step. Donate. Change Lives.</title>
+    
     <script src="https://js.stripe.com/v3/"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary: #22d3ee;
+        }
 
         body {
             font-family: 'Inter', system-ui, sans-serif;
@@ -19,26 +25,30 @@
             align-items: center;
             justify-content: center;
         }
+
         .container {
             max-width: 480px;
             width: 100%;
             padding: 40px 30px;
             background: rgba(15, 23, 42, 0.98);
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
             border: 1px solid #334155;
             text-align: center;
         }
+
         h1 {
-            color: #22d3ee;
+            color: var(--primary);
             margin: 0 0 8px 0;
             font-size: 2.4rem;
         }
+
         .tagline {
             color: #94a3b8;
             font-size: 1.2rem;
             margin-bottom: 35px;
         }
+
         label {
             display: block;
             margin: 18px 0 8px;
@@ -46,7 +56,9 @@
             color: #cbd5e1;
             text-align: left;
         }
-        input, textarea {
+
+        input,
+        textarea {
             width: 100%;
             padding: 14px 16px;
             border: 1px solid #334155;
@@ -54,12 +66,16 @@
             color: #e2e8f0;
             border-radius: 10px;
             font-size: 1rem;
+            transition: all 0.2s;
         }
-        input:focus, textarea:focus {
-            border-color: #22d3ee;
+
+        input:focus,
+        textarea:focus {
+            border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2);
             outline: none;
         }
+
         button {
             margin-top: 30px;
             width: 100%;
@@ -74,14 +90,17 @@
             box-shadow: 0 8px 20px rgba(34, 211, 238, 0.3);
             transition: all 0.2s;
         }
+
         button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 12px 25px rgba(34, 211, 238, 0.4);
         }
+
         button:disabled {
             opacity: 0.7;
             cursor: not-allowed;
         }
+
         #response {
             margin-top: 25px;
             padding: 16px;
@@ -89,8 +108,17 @@
             font-weight: 500;
             display: none;
         }
-        .success { background: #166534; color: #86efac; }
-        .error { background: #7f1d1d; color: #fda4af; }
+
+        .success {
+            background: #166534;
+            color: #86efac;
+        }
+
+        .error {
+            background: #7f1d1d;
+            color: #fda4af;
+        }
+
         .footer {
             margin-top: 30px;
             font-size: 0.85rem;
@@ -104,19 +132,19 @@
         <p class="tagline">Turn your steps into real impact</p>
 
         <form id="donateForm">
-            <label>Donation Amount (£)</label>
+            <label for="amount">Donation Amount (£)</label>
             <input type="number" id="amount" step="0.01" min="1" value="10" required>
 
-            <label>Your Name (optional)</label>
+            <label for="name">Your Name (optional)</label>
             <input type="text" id="name" value="Anonymous">
 
-            <label>Email (for receipt)</label>
+            <label for="email">Email (for receipt)</label>
             <input type="email" id="email" placeholder="you@example.com" required>
 
-            <label>Message (optional)</label>
+            <label for="message">Message (optional)</label>
             <textarea id="message" rows="3" placeholder="Your message of support..."></textarea>
 
-            <label>Steps Walked (optional)</label>
+            <label for="steps">Steps Walked (optional)</label>
             <input type="number" id="steps" value="0" min="0">
 
             <button type="submit" id="submitBtn">Donate Now • Secure Checkout</button>
@@ -130,12 +158,18 @@
     </div>
 
     <script>
-        // === YOUR STRIPE KEY ===
+        // === STRIPE PUBLIC KEY ===
         const stripe = Stripe('pk_live_51TeUTKAYd3hJ6fUDdNumw6y435NBguXNZRNkqM2d4Te1kKOYLn25XceMG9qr1M6z0GzARRs2L7SJ8ZqmHW39c5Qe00clIRkuCL');
 
         const form = document.getElementById('donateForm');
-        const btn = document.getElementById('submitBtn');
+        const submitBtn = document.getElementById('submitBtn');
         const responseDiv = document.getElementById('response');
+
+        function showMessage(text, type) {
+            responseDiv.textContent = text;
+            responseDiv.className = type;
+            responseDiv.style.display = 'block';
+        }
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -151,9 +185,10 @@
                 return;
             }
 
-            // Disable button + loading state
-            btn.disabled = true;
-            btn.textContent = 'Redirecting to secure checkout...';
+            // Loading state
+            const originalBtnText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Redirecting to secure checkout...';
 
             try {
                 const { error } = await stripe.redirectToCheckout({
@@ -164,7 +199,7 @@
                                 name: 'RootDonate Donation',
                                 description: 'Thank you for making an impact 🌱',
                             },
-                            unit_amount: Math.round(amount * 100), // pence
+                            unit_amount: Math.round(amount * 100), // in pence
                         },
                         quantity: 1,
                     }],
@@ -180,23 +215,18 @@
                 }
             } catch (err) {
                 console.error('Unexpected error:', err);
-                showMessage('Something went wrong. Please check the console and try again.', 'error');
+                showMessage('Something went wrong. Please try again.', 'error');
             } finally {
-                // Only reset button if we didn't redirect
-                btn.disabled = false;
-                btn.textContent = 'Donate Now • Secure Checkout';
+                // Reset button only if we didn't redirect
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
             }
         });
-
-        function showMessage(text, type) {
-            responseDiv.textContent = text;
-            responseDiv.className = type;
-            responseDiv.style.display = 'block';
-        }
 
         // Handle success/canceled URL parameters
         window.addEventListener('load', () => {
             const params = new URLSearchParams(window.location.search);
+            
             if (params.has('success')) {
                 showMessage('🎉 Thank you! Your donation was successful.', 'success');
             } else if (params.has('canceled')) {

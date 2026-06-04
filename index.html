@@ -64,12 +64,6 @@
             border: 1px solid rgba(0, 255, 170, 0.15);
         }
         
-        .log div {
-            margin: 4px 0;
-            opacity: 0.9;
-            white-space: pre-wrap;
-        }
-        
         .success { color: #00ffaa; }
         .error   { color: #ff4444; }
         
@@ -95,18 +89,17 @@
         const LOG_LIMIT = 30;
         let sendInterval = null;
         
-        // ← Change this to your actual working endpoint
-        const AI_ENDPOINT = "https://www.rootdonate.co.uk/index.php"; 
+        // ← CHANGE THIS to your real backend!
+        const AI_ENDPOINT = "https://rootdonate.co.uk/index.php"; 
 
         function updateClock() {
             const now = new Date();
-            const timeStr = now.toLocaleTimeString('en-US', { 
-                hour12: false, 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit' 
+            document.getElementById('time').textContent = now.toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
             });
-            document.getElementById('time').textContent = timeStr;
         }
 
         function logMessage(msg, type = 'info') {
@@ -118,11 +111,7 @@
             entry.textContent = `[${ts}] ${msg}`;
             
             logDiv.appendChild(entry);
-            
-            if (logDiv.children.length > LOG_LIMIT) {
-                logDiv.removeChild(logDiv.children[0]);
-            }
-            
+            if (logDiv.children.length > LOG_LIMIT) logDiv.removeChild(logDiv.children[0]);
             logDiv.scrollTop = logDiv.scrollHeight;
         }
 
@@ -139,7 +128,7 @@
             try {
                 const response = await fetch(AI_ENDPOINT, {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
@@ -147,22 +136,21 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status} ${response.statusText}`);
+                    throw new Error(`HTTP ${response.status} - ${response.statusText}`);
                 }
 
                 document.getElementById('status').innerHTML = 
-                    `✅ Synced successfully <strong>${now.toLocaleTimeString()}</strong>`;
+                    `✅ Synced <strong>${now.toLocaleTimeString()}</strong>`;
                 document.getElementById('status').classList.add('pulse');
                 
-                logMessage(`✓ Sent → ${payload.timestamp}`, 'success');
+                logMessage(`✓ Sent successfully → ${payload.timestamp}`, 'success');
 
             } catch (err) {
                 document.getElementById('status').innerHTML = 
-                    `❌ Connection failed: ${err.message}`;
+                    `❌ ${err.message}`;
                 document.getElementById('status').classList.remove('pulse');
-                logMessage(`Send failed: ${err.message}`, 'error');
-                
-                console.error("Sync error:", err);
+                logMessage(`Failed: ${err.message}`, 'error');
+                console.error(err);
             }
         }
 
@@ -170,16 +158,12 @@
             updateClock();
             setInterval(updateClock, 1000);
 
-            logMessage("🌐 Root Live Sync initialized", 'success');
+            logMessage("🌐 Root Live Sync started", 'success');
             
-            // First send immediately
-            sendToAI();
-            
-            // Then every 5 seconds
+            sendToAI();                    // immediate send
             sendInterval = setInterval(sendToAI, 5000);
         }
 
-        // Auto-start
         window.onload = startSync;
     </script>
 </body>

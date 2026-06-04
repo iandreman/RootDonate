@@ -29,24 +29,24 @@
         }
         
         h1 {
-            font-size: 2.2rem;
-            margin: 20px 0;
-            letter-spacing: 3px;
+            font-size: 2.1rem;
+            margin: 20px 0 8px;
+            letter-spacing: 4px;
             text-transform: uppercase;
         }
         
         #time {
-            font-size: 6.5rem;
+            font-size: 6.8rem;
             font-weight: 700;
-            letter-spacing: 8px;
+            letter-spacing: 6px;
             margin: 10px 0 20px;
-            text-shadow: 0 0 30px rgba(0, 255, 170, 0.6);
+            text-shadow: 0 0 40px rgba(0, 255, 170, 0.5);
         }
         
         .status {
             margin: 15px 0;
-            font-size: 1.1rem;
-            min-height: 28px;
+            font-size: 1.05rem;
+            min-height: 32px;
         }
         
         .log {
@@ -58,19 +58,20 @@
             margin-top: 20px;
             text-align: left;
             font-family: 'SF Mono', Monaco, monospace;
-            font-size: 0.95rem;
-            max-height: 380px;
+            font-size: 0.9rem;
+            max-height: 420px;
             overflow-y: auto;
-            border: 1px solid rgba(0, 255, 170, 0.1);
+            border: 1px solid rgba(0, 255, 170, 0.15);
         }
         
         .log div {
             margin: 4px 0;
             opacity: 0.9;
+            white-space: pre-wrap;
         }
         
         .success { color: #00ffaa; }
-        .error { color: #ff4444; }
+        .error   { color: #ff4444; }
         
         .pulse {
             animation: pulse 2s infinite;
@@ -78,24 +79,24 @@
         
         @keyframes pulse {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+            50% { opacity: 0.65; }
         }
     </style>
 </head>
 <body>
-    <h1>🌐 ROOTDONATELIVE TIME
-    </h1>
+    <h1>🌐 ROOT LIVE SYNC</h1>
     <div id="time">00:00:00</div>
-    <p>Syncing real-time data to AI • Every 5 seconds</p>
+    <p>Syncing real-time data • Every 5 seconds</p>
     
     <div class="status" id="status">Initializing connection...</div>
-    
     <div class="log" id="log"></div>
 
     <script>
-        let sendInterval;
-        const LOG_LIMIT = 25;
-        const AI_ENDPOINT = "https://www.rootdonate.co.uk"; // ← Change this to your real endpoint
+        const LOG_LIMIT = 30;
+        let sendInterval = null;
+        
+        // ← Change this to your actual working endpoint
+        const AI_ENDPOINT = "https://www.rootdonate.co.uk"; 
 
         function updateClock() {
             const now = new Date();
@@ -111,10 +112,10 @@
         function logMessage(msg, type = 'info') {
             const logDiv = document.getElementById('log');
             const entry = document.createElement('div');
-            const timestamp = new Date().toLocaleTimeString('en-GB', { hour12: false });
+            const ts = new Date().toLocaleTimeString('en-GB', { hour12: false });
             
             entry.className = type;
-            entry.textContent = `[${timestamp}] ${msg}`;
+            entry.textContent = `[${ts}] ${msg}`;
             
             logDiv.appendChild(entry);
             
@@ -145,10 +146,12 @@
                     body: JSON.stringify(payload)
                 });
 
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} ${response.statusText}`);
+                }
 
                 document.getElementById('status').innerHTML = 
-                    `✅ Synced to AI <strong>${now.toLocaleTimeString()}</strong>`;
+                    `✅ Synced successfully <strong>${now.toLocaleTimeString()}</strong>`;
                 document.getElementById('status').classList.add('pulse');
                 
                 logMessage(`✓ Sent → ${payload.timestamp}`, 'success');
@@ -156,24 +159,27 @@
             } catch (err) {
                 document.getElementById('status').innerHTML = 
                     `❌ Connection failed: ${err.message}`;
+                document.getElementById('status').classList.remove('pulse');
                 logMessage(`Send failed: ${err.message}`, 'error');
+                
+                console.error("Sync error:", err);
             }
         }
 
         function startSync() {
             updateClock();
-            
-            // Update clock every second
             setInterval(updateClock, 1000);
+
+            logMessage("🌐 Root Live Sync initialized", 'success');
             
-            // Send to AI every 5 seconds
-            sendToAI(); // immediate first send
+            // First send immediately
+            sendToAI();
+            
+            // Then every 5 seconds
             sendInterval = setInterval(sendToAI, 5000);
-            
-            logMessage("🌐 Root Live Sync started (iOS + Web2.0 ready)", 'success');
         }
 
-        // Auto start
+        // Auto-start
         window.onload = startSync;
     </script>
 </body>

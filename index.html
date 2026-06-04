@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RootDonate - Step. Donate. Change Lives.</title>
-    <script src="https://js.stripe.com/v3/"></script>
     <style>
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: linear-gradient(135deg, #0f172a, #1e2937); color: #e2e8f0; margin: 0; padding: 0; min-height: 100vh; }
         .container { max-width: 600px; margin: 40px auto; padding: 30px; background: rgba(15, 23, 42, 0.95); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
@@ -12,12 +11,11 @@
         .tagline { color: #94a3b8; font-size: 1.1rem; margin-bottom: 30px; }
         form { text-align: left; }
         label { display: block; margin: 15px 0 8px; font-weight: 600; color: #cbd5e1; }
-        input, textarea { width: 100%; padding: 12px; border: 1px solid #334155; background: #1e2937; color: #e2e8f0; border-radius: 8px; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #334155; background: #1e2937; color: #e2e8f0; border-radius: 8px; font-size: 1rem; }
         button { margin-top: 25px; width: 100%; padding: 16px; font-size: 1.2rem; font-weight: bold; background: #22d3ee; color: #0f172a; border: none; border-radius: 12px; cursor: pointer; }
-        button:hover { background: #67e8f9; }
+        button:hover { background: #67e8f9; transform: translateY(-2px); }
         #response { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; }
         .success { background: #166534; color: #86efac; }
-        .error { background: #7f1d1d; color: #fda4af; }
     </style>
 </head>
 <body>
@@ -26,17 +24,17 @@
         <p class="tagline">Turn your steps into real impact</p>
 
         <form id="donateForm">
-            <label>Donation Amount (£)</label>
+            <label>Donation Amount (£) — you can change this on the next page</label>
             <input type="number" id="amount" step="0.01" min="1" value="10" required>
 
             <label>Your Name</label>
             <input type="text" id="name" value="Anonymous">
 
-            <label>Email</label>
+            <label>Email (for receipt)</label>
             <input type="email" id="email" required>
 
             <label>Message (optional)</label>
-            <textarea id="message" rows="3"></textarea>
+            <textarea id="message" rows="3" placeholder="Thank you for making a difference!"></textarea>
 
             <label>Steps Walked (optional)</label>
             <input type="number" id="steps" value="0">
@@ -48,55 +46,38 @@
     </div>
 
     <script>
-        const stripe = Stripe('pk_live_51TeUTKAYd3hJ6fUDdNumw6y435NBguXNZRNkqM2d4Te1kKOYLn25XceMG9qr1M6z0GzARRs2L7SJ8ZqmHW39c5Qe00clIRkuCL'); // ← Use your real Publishable Key
+        const PAYMENT_LINK = "https://buy.stripe.com/YOUR_PAYMENT_LINK_HERE";   // ← Paste your Stripe link here
 
-        document.getElementById('donateForm').addEventListener('submit', async function(e) {
+        document.getElementById('donateForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const btn = this.querySelector('button');
-            btn.disabled = true;
-            btn.textContent = 'Connecting to secure payment...';
 
-            try {
-                const response = await fetch('https://www.rootdonate.co.uk/create-payment', {   // ← This endpoint you will create
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        amount: parseFloat(document.getElementById('amount').value) * 100,
-                        name: document.getElementById('name').value,
-                        email: document.getElementById('email').value,
-                        message: document.getElementById('message').value,
-                        steps: document.getElementById('steps').value
-                    })
-                });
+            const amount = document.getElementById('amount').value;
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+            const steps = document.getElementById('steps').value;
 
-                const { clientSecret, error } = await response.json();
+            // Build reference with donor info
+            const reference = `Name:${name}|Steps:${steps}|Msg:${message.substring(0, 100)}`;
 
-                if (error) throw new Error(error);
+            let finalUrl = PAYMENT_LINK;
 
-                const { error: stripeError } = await stripe.confirmPayment({
-                    clientSecret,
-                    confirmParams: {
-                        return_url: window.location.href + '?success=true',
-                    }
-                });
-
-                if (stripeError) {
-                    showMessage('error', stripeError.message);
-                }
-            } catch (err) {
-                showMessage('error', 'Something went wrong. Please try again.');
+            // Append email if possible
+            if (email) {
+                finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'prefilled_email=' + encodeURIComponent(email);
             }
 
-            btn.disabled = false;
-            btn.textContent = 'Donate Now • Secure';
-        });
+            // Show success message and redirect
+            const responseDiv = document.getElementById('response');
+            responseDiv.style.display = 'block';
+            responseDiv.className = 'success';
+            responseDiv.innerHTML = `✅ Redirecting to secure payment...<br>Thank you, ${name}!`;
 
-        function showMessage(type, text) {
-            const div = document.getElementById('response');
-            div.style.display = 'block';
-            div.className = type;
-            div.textContent = text;
-        }
+            // Redirect to Stripe
+            setTimeout(() => {
+                window.location.href = finalUrl;
+            }, 1200);
+        });
     </script>
 </body>
 </html>

@@ -72,8 +72,9 @@
             border-radius: 12px;
             cursor: pointer;
             box-shadow: 0 8px 20px rgba(34, 211, 238, 0.3);
+            transition: all 0.2s;
         }
-        button:hover {
+        button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 12px 25px rgba(34, 211, 238, 0.4);
         }
@@ -129,26 +130,30 @@
     </div>
 
     <script>
+        // === YOUR STRIPE KEY ===
         const stripe = Stripe('pk_live_51TeUTKAYd3hJ6fUDdNumw6y435NBguXNZRNkqM2d4Te1kKOYLn25XceMG9qr1M6z0GzARRs2L7SJ8ZqmHW39c5Qe00clIRkuCL');
 
-        document.getElementById('donateForm').addEventListener('submit', async (e) => {
+        const form = document.getElementById('donateForm');
+        const btn = document.getElementById('submitBtn');
+        const responseDiv = document.getElementById('response');
+
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const btn = document.getElementById('submitBtn');
-            const responseDiv = document.getElementById('response');
-
-            btn.disabled = true;
-            btn.textContent = 'Redirecting to secure checkout...';
+            // Reset previous messages
             responseDiv.style.display = 'none';
 
             const amount = parseFloat(document.getElementById('amount').value);
             const email = document.getElementById('email').value.trim();
 
             if (!amount || amount < 1) {
-                showMessage('Please enter a valid donation amount.', 'error');
-                resetButton();
+                showMessage('Please enter a valid donation amount (minimum £1).', 'error');
                 return;
             }
+
+            // Disable button + loading state
+            btn.disabled = true;
+            btn.textContent = 'Redirecting to secure checkout...';
 
             try {
                 const { error } = await stripe.redirectToCheckout({
@@ -159,7 +164,7 @@
                                 name: 'RootDonate Donation',
                                 description: 'Thank you for making an impact 🌱',
                             },
-                            unit_amount: Math.round(amount * 100), // Convert to pence
+                            unit_amount: Math.round(amount * 100), // pence
                         },
                         quantity: 1,
                     }],
@@ -170,30 +175,26 @@
                 });
 
                 if (error) {
-                    showMessage(error.message, 'error');
+                    console.error('Stripe error:', error);
+                    showMessage(error.message || 'Payment failed. Please try again.', 'error');
                 }
             } catch (err) {
-                console.error(err);
-                showMessage('Something went wrong. Please try again.', 'error');
+                console.error('Unexpected error:', err);
+                showMessage('Something went wrong. Please check the console and try again.', 'error');
+            } finally {
+                // Only reset button if we didn't redirect
+                btn.disabled = false;
+                btn.textContent = 'Donate Now • Secure Checkout';
             }
-
-            resetButton();
         });
 
         function showMessage(text, type) {
-            const div = document.getElementById('response');
-            div.textContent = text;
-            div.className = type;
-            div.style.display = 'block';
+            responseDiv.textContent = text;
+            responseDiv.className = type;
+            responseDiv.style.display = 'block';
         }
 
-        function resetButton() {
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = false;
-            btn.textContent = 'Donate Now • Secure Checkout';
-        }
-
-        // Handle success/canceled messages
+        // Handle success/canceled URL parameters
         window.addEventListener('load', () => {
             const params = new URLSearchParams(window.location.search);
             if (params.has('success')) {

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>What If: Share URL = File • Video = Node</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #0f0f0f; color: #0f0; }
+    .container { max-width: 900px; margin: auto; }
+    h1 { color: #0f0; }
+    .file { 
+      background: #222; padding: 15px; margin: 10px; border: 2px solid #0f0; 
+      border-radius: 8px; display: inline-block; width: 280px; 
+    }
+    .node { 
+      background: #112; padding: 15px; margin: 10px; border: 2px solid #00f; 
+      border-radius: 50%; width: 180px; text-align: center; display: inline-block;
+    }
+    .edge { font-size: 1.4em; color: #ff0; margin: 0 20px; }
+    button { padding: 8px 16px; background: #0f0; color: #000; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>What If Scenario</h1>
+    <p><strong>Share URL = File</strong>  |  <strong>Video Upload = Node</strong></p>
+
+    <div style="margin: 30px 0;">
+      <!-- Share URL as File -->
+      <div class="file">
+        <strong>📄 File: share_url.txt</strong><br>
+        Content:<br>
+        <code>https://x.com/user/status/1845123456789012345</code><br><br>
+        <small>Size: 68 bytes • Saved locally</small>
+      </div>
+
+      <span class="edge">→ SHARES →</span>
+
+      <!-- Video as Node -->
+      <div class="node">
+        <strong>🟦 NODE: Video_Upload</strong><br>
+        ID: vid_98765<br>
+        Title: "My Demo Reel"<br>
+        Duration: 3:45<br>
+        <small>Connected to: Channel, Topics, X_Posts</small>
+      </div>
+    </div>
+
+    <button onclick="simulateConnection()">Simulate Full Flow</button>
+    <p id="log" style="margin-top:20px; font-family: monospace;"></p>
+  </div>
+
+  <script>
+    function simulateConnection() {
+      const log = document.getElementById('log');
+      log.innerHTML = `
+        1. Video uploaded → becomes <strong>Node</strong> in graph DB<br>
+        2. Share URL generated → saved as <strong>.txt file</strong><br>
+        3. X Post created with that URL → saved as <strong>post_18451.json file</strong><br>
+        4. Graph edge created: X_Post_File → references → Video_Node
+      `;
+    }
+  </script>
+</body>
+</html>

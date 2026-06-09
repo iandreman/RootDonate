@@ -3,281 +3,287 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LinkNode • Media Knowledge Service</title>
+  <title>LinkNode • Professional Media Workspace</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.2/dist/vis-network.min.js"></script>
   <style>
-    body { font-family: 'Inter', system-ui, sans-serif; }
-    .glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); }
-    .node-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    .node-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600&display=swap');
+    
+    body { 
+      font-family: 'Inter', system-ui, sans-serif; 
+    }
+    .title-font {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .card-hover {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .card-hover:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    }
   </style>
 </head>
-<body class="bg-zinc-950 text-zinc-100 min-h-screen">
-  <div class="max-w-7xl mx-auto p-6">
+<body class="bg-zinc-950 text-zinc-200 min-h-screen">
+  <div class="max-w-7xl mx-auto p-8">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-emerald-500 rounded-2xl flex items-center justify-center text-2xl">🔗</div>
+    <div class="flex justify-between items-center mb-12">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-3xl flex items-center justify-center text-3xl shadow-inner">🔗</div>
         <div>
-          <h1 class="text-3xl font-bold tracking-tight">LinkNode</h1>
-          <p class="text-zinc-400 text-sm">Share URLs as Files • Videos as Nodes</p>
+          <h1 class="title-font text-4xl font-semibold tracking-tighter text-white">LinkNode</h1>
+          <p class="text-teal-400 text-sm font-medium tracking-[0.5px]">Professional • Public • Local-first</p>
         </div>
       </div>
-      <div class="flex items-center gap-4 text-sm">
-        <div class="px-4 py-2 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center gap-2">
-          <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-          LIVE SERVICE
-        </div>
-        <button onclick="resetDemo()" 
-                class="px-5 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex items-center gap-2">
-          <i class="fas fa-redo"></i> Reset
-        </button>
+      <div class="px-6 py-3 bg-zinc-900/70 rounded-3xl text-sm border border-white/10 flex items-center gap-2">
+        <div class="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></div>
+        Fully Public • Runs in Browser
       </div>
     </div>
 
-    <div class="grid grid-cols-12 gap-6">
-      <!-- Sidebar: Actions -->
-      <div class="col-span-12 lg:col-span-3 space-y-6">
-        <!-- Upload Video (as Node) -->
-        <div class="glass border border-zinc-700 rounded-3xl p-6">
-          <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-            <i class="fas fa-video text-sky-400"></i> Upload Video → Node
-          </h2>
-          <input id="videoTitle" type="text" placeholder="Video Title" 
-                 class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:border-sky-500">
-          <button onclick="uploadVideo()" 
-                  class="w-full bg-sky-500 hover:bg-sky-600 py-4 rounded-2xl font-medium flex items-center justify-center gap-2">
-            <i class="fas fa-cloud-upload-alt"></i> Create Video Node
-          </button>
-        </div>
+    <div class="grid grid-cols-12 gap-8">
+      <!-- Left Panel: Actions -->
+      <div class="col-span-12 lg:col-span-3 space-y-8">
 
-        <!-- Create Share URL (as File) -->
-        <div class="glass border border-zinc-700 rounded-3xl p-6">
-          <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-            <i class="fas fa-link text-emerald-400"></i> Generate Share URL → File
-          </h2>
-          <button onclick="createShareFile()" 
-                  class="w-full bg-emerald-500 hover:bg-emerald-600 py-4 rounded-2xl font-medium flex items-center justify-center gap-2">
-            <i class="fas fa-file-alt"></i> Save Share URL as File
-          </button>
-        </div>
-
-        <!-- X Post as JSON File -->
-        <div class="glass border border-zinc-700 rounded-3xl p-6">
-          <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-            <i class="fab fa-x-twitter"></i> X Post → JSON File
-          </h2>
-          <textarea id="postText" rows="3" placeholder="Write your X post here..." 
-                    class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 focus:outline-none focus:border-amber-500"></textarea>
-          <button onclick="saveXPost()" 
-                  class="w-full mt-3 bg-amber-500 hover:bg-amber-600 py-4 rounded-2xl font-medium">
-            Save as post_[id].json
-          </button>
-        </div>
-      </div>
-
-      <!-- Main Area: Live Graph + Library -->
-      <div class="col-span-12 lg:col-span-6">
-        <div class="glass border border-zinc-700 rounded-3xl p-6 h-full">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold">Live Knowledge Graph</h2>
-            <div class="text-xs px-3 py-1 bg-zinc-800 rounded-full">4 nodes • 3 edges</div>
+        <!-- Video Upload -->
+        <div class="glass rounded-3xl p-8 card-hover">
+          <div class="flex items-center gap-3 mb-6">
+            <i class="fas fa-video text-teal-400 text-2xl"></i>
+            <h2 class="text-xl font-semibold text-white">Upload Video as Node</h2>
           </div>
-          <div id="graph" class="border border-zinc-800 rounded-2xl" style="height: 460px;"></div>
+          <input id="videoTitle" 
+                 type="text" 
+                 placeholder="Video title or topic..." 
+                 class="w-full bg-zinc-900 border border-zinc-700 focus:border-teal-500 rounded-2xl px-6 py-5 text-base outline-none placeholder-zinc-500">
+          <button onclick="uploadVideoAsNode()" 
+                  class="mt-6 w-full bg-teal-600 hover:bg-teal-500 transition-all py-5 rounded-2xl font-semibold text-lg flex items-center justify-center gap-3 shadow-lg shadow-teal-500/20">
+            <i class="fas fa-cloud-upload-alt"></i>
+            CREATE NODE
+          </button>
+        </div>
+
+        <!-- Share URL -->
+        <div class="glass rounded-3xl p-8 card-hover">
+          <div class="flex items-center gap-3 mb-6">
+            <i class="fas fa-link text-cyan-400 text-2xl"></i>
+            <h2 class="text-xl font-semibold text-white">Share URL as File</h2>
+          </div>
+          <input id="shareUrl" 
+                 type="text" 
+                 value="https://x.com/example/status/1845123456789012345"
+                 class="w-full bg-zinc-900 border border-zinc-700 focus:border-cyan-500 rounded-2xl px-6 py-5 text-sm outline-none">
+          <button onclick="downloadShareUrlFile()" 
+                  class="mt-6 w-full bg-cyan-600 hover:bg-cyan-500 transition-all py-5 rounded-2xl font-semibold text-lg flex items-center justify-center gap-3">
+            <i class="fas fa-download"></i>
+            DOWNLOAD .TXT FILE
+          </button>
+        </div>
+
+        <!-- X Post -->
+        <div class="glass rounded-3xl p-8 card-hover">
+          <div class="flex items-center gap-3 mb-6">
+            <i class="fab fa-x-twitter text-amber-400 text-2xl"></i>
+            <h2 class="text-xl font-semibold text-white">X Post as JSON File</h2>
+          </div>
+          <textarea id="postText" rows="4" 
+                    placeholder="Write your post content here..."
+                    class="w-full bg-zinc-900 border border-zinc-700 focus:border-amber-500 rounded-2xl px-6 py-5 outline-none resize-none text-base"></textarea>
+          <button onclick="saveXPostAsJson()" 
+                  class="mt-6 w-full bg-amber-600 hover:bg-amber-500 transition-all py-5 rounded-2xl font-semibold text-lg">
+            SAVE AS JSON FILE
+          </button>
         </div>
       </div>
 
-      <!-- Library -->
-      <div class="col-span-12 lg:col-span-3 space-y-6">
-        <div class="glass border border-zinc-700 rounded-3xl p-6">
-          <h2 class="text-lg font-semibold mb-4">📚 Library</h2>
-          <div id="library" class="space-y-3 text-sm"></div>
+      <!-- Center: Graph -->
+      <div class="col-span-12 lg:col-span-6">
+        <div class="glass rounded-3xl p-8 h-full flex flex-col">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-semibold text-white">Knowledge Graph</h2>
+            <button onclick="clearGraph()" 
+                    class="px-6 py-3 text-sm font-medium text-zinc-400 hover:text-red-400 hover:bg-zinc-900 rounded-2xl transition flex items-center gap-2">
+              <i class="fas fa-trash"></i> CLEAR
+            </button>
+          </div>
+          <div id="graph" class="flex-1 border border-zinc-800 rounded-3xl" style="height: 520px;"></div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Library -->
+      <div class="col-span-12 lg:col-span-3 space-y-8">
+        <div class="glass rounded-3xl p-8">
+          <h2 class="text-lg font-semibold mb-6 flex items-center gap-2">
+            <i class="fas fa-layer-group text-teal-400"></i> Video Nodes
+          </h2>
+          <div id="videoLibrary" class="space-y-4 max-h-[420px] overflow-auto pr-2"></div>
         </div>
 
-        <div class="glass border border-zinc-700 rounded-3xl p-6">
-          <h2 class="text-lg font-semibold mb-4">Recent Files</h2>
-          <div id="filesList" class="space-y-2 text-xs"></div>
+        <div class="glass rounded-3xl p-8">
+          <h2 class="text-lg font-semibold mb-6 flex items-center gap-2">
+            <i class="fas fa-folder-open text-cyan-400"></i> Downloaded Files
+          </h2>
+          <div id="filesList" class="space-y-3"></div>
         </div>
       </div>
     </div>
 
-    <!-- Status Bar -->
-    <div class="mt-8 text-center text-zinc-500 text-xs flex items-center justify-center gap-8">
-      <div>✅ Share URLs saved as files</div>
-      <div>✅ Videos stored as graph nodes</div>
-      <div>✅ X Posts exported as JSON</div>
-      <div class="text-emerald-400">Ready for production • Local-first</div>
+    <div class="text-center mt-12 text-zinc-500 text-sm">
+      Professional • Readable • 100% Private &amp; Public-ready • No sign-up required
     </div>
   </div>
 
   <script>
-    // Data Store
-    let nodes = [];
-    let edges = [];
-    let library = [];
-    let files = [];
+    let network, nodesData = new vis.DataSet(), edgesData = new vis.DataSet();
+    let videoNodes = [];
+    let downloadedFiles = [];
 
-    // Initialize Graph
-    let network;
     function initGraph() {
       const container = document.getElementById('graph');
-      const data = { nodes: new vis.DataSet(), edges: new vis.DataSet() };
-      const options = {
-        nodes: { shape: 'dot', size: 28, font: { size: 14, color: '#e4e4e7' } },
-        edges: { color: { color: '#4b5563' }, smooth: true },
-        physics: { stabilization: true }
-      };
-      network = new vis.Network(container, data, options);
+      network = new vis.Network(container, { 
+        nodes: nodesData, 
+        edges: edgesData 
+      }, {
+        nodes: { 
+          shape: 'dot', 
+          size: 34, 
+          font: { size: 15, color: '#e4e4e7', face: 'Inter', bold: true } 
+        },
+        edges: { 
+          color: { color: '#3f3f46' }, 
+          arrows: 'to', 
+          smooth: { type: 'cubicBezier' } 
+        },
+        physics: { enabled: true }
+      });
     }
 
-    function addToGraph(id, label, type) {
-      const color = type === 'video' ? '#0ea5e9' : type === 'file' ? '#10b981' : '#f59e0b';
-      nodes.push({ id, label, color });
-      
-      // Add to Vis.js
-      network.body.data.nodes.add({
+    function addNode(id, label, type) {
+      const colors = { video: '#14b8a6', file: '#22d3ee', post: '#fbbf24' };
+      nodesData.add({
         id: id,
-        label: label.length > 18 ? label.substring(0,15)+'...' : label,
-        color: { background: color, border: '#27272a' }
+        label: label.length > 24 ? label.substring(0, 21) + '...' : label,
+        color: { background: colors[type], border: '#27272a' }
       });
 
-      // Auto-connect to previous nodes
-      if (nodes.length > 1) {
-        const last = nodes[nodes.length-2].id;
-        network.body.data.edges.add({
-          from: last,
-          to: id,
-          arrows: 'to'
-        });
+      if (nodesData.length > 1) {
+        const all = nodesData.get();
+        edgesData.add({ from: all[all.length-2].id, to: id });
       }
     }
 
-    // Upload Video as Node
-    function uploadVideo() {
-      const title = document.getElementById('videoTitle').value.trim() || "Untitled Video " + Date.now();
-      const id = 'vid_' + Date.now().toString().slice(-6);
+    window.uploadVideoAsNode = function() {
+      const title = document.getElementById('videoTitle').value.trim() || `Professional Video ${Date.now().toString().slice(-4)}`;
+      const id = 'vid_' + Date.now().toString().slice(-8);
       
-      library.unshift({
-        type: 'video',
-        id: id,
-        title: title,
-        icon: '🎥'
-      });
-      
-      addToGraph(id, title, 'video');
-      renderLibrary();
-      showToast(`Video Node created: ${title}`);
-    }
+      videoNodes.unshift({ id, title });
+      addNode(id, title, 'video');
+      renderVideoLibrary();
+      document.getElementById('videoTitle').value = '';
+      showToast('Video node added successfully');
+    };
 
-    // Create Share URL as File
-    function createShareFile() {
-      const url = `https://x.com/demo/status/${Date.now().toString().slice(-12)}`;
-      const id = 'url_' + Date.now().toString().slice(-6);
+    window.downloadShareUrlFile = function() {
+      const url = document.getElementById('shareUrl').value.trim() || "https://x.com/example/status/1845123456789012345";
+      const id = 'url_' + Date.now().toString().slice(-8);
+      const filename = `share_link_${id}.txt`;
       
-      files.unshift({
-        type: 'url',
-        id: id,
-        name: `share_${id}.txt`,
-        content: url
-      });
+      const blob = new Blob([url], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
       
-      addToGraph(id, 'Share URL', 'file');
+      downloadedFiles.unshift({ id, name: filename, content: url, type: 'url' });
+      addNode(id, 'Share URL', 'file');
       renderFiles();
-      showToast('Share URL saved as file');
-    }
+      showToast('Share URL file downloaded');
+    };
 
-    // Save X Post as JSON File
-    function saveXPost() {
-      const text = document.getElementById('postText').value.trim() || "Demo post from LinkNode service";
+    window.saveXPostAsJson = function() {
+      const text = document.getElementById('postText').value.trim() || "Professional update from LinkNode workspace";
       const id = 'post_' + Date.now().toString().slice(-8);
+      const filename = `${id}.json`;
       
-      const postData = {
-        id: id,
-        text: text,
-        timestamp: new Date().toISOString(),
-        likes: Math.floor(Math.random()*1200),
-        shares: Math.floor(Math.random()*89)
-      };
+      const postObj = { id, content: text, created: new Date().toISOString(), source: "X" };
+      const blob = new Blob([JSON.stringify(postObj, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
       
-      files.unshift({
-        type: 'json',
-        id: id,
-        name: `${id}.json`,
-        content: JSON.stringify(postData, null, 2)
-      });
-      
-      addToGraph(id, 'X Post', 'post');
+      downloadedFiles.unshift({ id, name: filename, content: JSON.stringify(postObj, null, 2), type: 'json' });
+      addNode(id, 'X Post', 'post');
       renderFiles();
       document.getElementById('postText').value = '';
-      showToast('X Post saved as JSON file');
-    }
+      showToast('X Post saved as JSON');
+    };
 
-    function renderLibrary() {
-      const el = document.getElementById('library');
-      el.innerHTML = library.map(item => `
-        <div class="node-card bg-zinc-900 border border-zinc-700 rounded-2xl p-4 flex items-center gap-3">
-          <div class="text-2xl">${item.icon}</div>
+    function renderVideoLibrary() {
+      const container = document.getElementById('videoLibrary');
+      container.innerHTML = videoNodes.map(v => `
+        <div class="flex items-center gap-4 bg-zinc-900/70 border border-zinc-700 rounded-2xl p-5 card-hover">
+          <div class="w-11 h-11 bg-teal-500/10 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0">🎥</div>
           <div class="flex-1 min-w-0">
-            <div class="font-medium truncate">${item.title}</div>
-            <div class="text-zinc-500 text-xs">${item.id}</div>
+            <div class="font-medium text-white leading-tight">${v.title}</div>
+            <div class="text-xs text-zinc-500 mt-1">${v.id}</div>
           </div>
         </div>
       `).join('');
     }
 
     function renderFiles() {
-      const el = document.getElementById('filesList');
-      el.innerHTML = files.map(f => `
-        <div onclick="downloadFile('${f.id}')" 
-             class="flex items-center gap-3 bg-zinc-900 hover:bg-zinc-800 p-3 rounded-2xl cursor-pointer">
-          <i class="fas ${f.type==='json'?'fa-file-code':'fa-file-lines'} text-zinc-400"></i>
-          <div class="flex-1 truncate text-xs">${f.name}</div>
+      const container = document.getElementById('filesList');
+      container.innerHTML = downloadedFiles.map(f => `
+        <div onclick="downloadAgain('${f.id}')" 
+             class="flex items-center gap-4 bg-zinc-900/70 hover:bg-zinc-800 border border-zinc-700 rounded-2xl p-5 cursor-pointer card-hover">
+          <i class="fas ${f.type==='json' ? 'fa-file-code text-amber-400' : 'fa-file-lines text-cyan-400'} text-2xl"></i>
+          <div class="flex-1 truncate text-sm font-medium">${f.name}</div>
         </div>
       `).join('');
     }
 
-    function downloadFile(id) {
-      const file = files.find(f => f.id === id);
+    window.downloadAgain = function(id) {
+      const file = downloadedFiles.find(f => f.id === id);
       if (!file) return;
-      
-      const blob = new Blob([file.content], { type: 'text/plain' });
+      const blob = new Blob([file.content], { 
+        type: file.type === 'json' ? 'application/json' : 'text/plain' 
+      });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = file.name;
       a.click();
-      showToast(`Downloaded ${file.name}`);
-    }
+    };
 
     function showToast(msg) {
       const toast = document.createElement('div');
-      toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-zinc-800 border border-zinc-700 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-2 z-50';
-      toast.innerHTML = `<i class="fas fa-check-circle text-emerald-400"></i> ${msg}`;
+      toast.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 bg-zinc-900 border border-teal-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-3 z-50';
+      toast.innerHTML = `<i class="fas fa-check-circle text-teal-400"></i> ${msg}`;
       document.body.appendChild(toast);
       setTimeout(() => toast.remove(), 2800);
     }
 
-    function resetDemo() {
-      if (confirm('Reset entire demo?')) {
-        nodes = []; edges = []; library = []; files = [];
-        network.body.data.nodes.clear();
-        network.body.data.edges.clear();
-        document.getElementById('library').innerHTML = '';
-        document.getElementById('filesList').innerHTML = '';
-        showToast('Demo reset — ready for new data');
+    function clearGraph() {
+      if (confirm('Clear the knowledge graph?')) {
+        nodesData.clear();
+        edgesData.clear();
+        videoNodes = [];
+        renderVideoLibrary();
       }
     }
 
-    // Boot the service
     window.onload = () => {
       initGraph();
-      
-      // Seed some initial data
+      // Seed data
       setTimeout(() => {
-        addToGraph('seed_vid', 'Intro to LinkNode', 'video');
-        library.push({type:'video', id:'seed_vid', title:'Intro to LinkNode', icon:'🎥'});
-        renderLibrary();
+        addNode('demo_vid', 'Welcome to LinkNode', 'video');
+        videoNodes.push({id: 'demo_vid', title: 'Welcome to LinkNode'});
+        renderVideoLibrary();
       }, 600);
     };
   </script>

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="X Cosmos • Live Internet Pulse Visualizer • June 10, 2026">
-    <title>Root Donate</title>
+    <meta name="description" content="Root Donate • Live Internet Pulse Visualizer • June 10, 2026">
+    <title>Root Donate • Live Pulse</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <style>
@@ -74,8 +74,8 @@
         <header class="sticky top-0 z-50 bg-black/95 backdrop-blur-2xl border-b border-white/10">
             <div class="px-8 py-5 flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 via-cyan-400 to-purple-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-blue-500/50">
-                        𝕏
+                    <div class="w-10 h-10 bg-gradient-to-br from-emerald-500 via-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-emerald-500/50">
+                        🌱
                     </div>
                     <div>
                         <h1 class="logo-font text-4xl font-bold tracking-tighter neon-text">Root Donate</h1>
@@ -84,6 +84,7 @@
                                 <span class="pulse-dot absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                 <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
                             </span>
+                            LIVE INTERNET PULSE • JUNE 10 2026
                         </p>
                     </div>
                 </div>
@@ -105,7 +106,7 @@
                         <input id="search" 
                                onkeyup="if(event.key==='Enter') searchUniverse()"
                                type="text" 
-                               placeholder="Search the live internet pulse..." 
+                               placeholder="Search the live pulse..." 
                                class="bg-zinc-900 border border-white/10 focus:border-emerald-500 w-96 pl-12 py-4 rounded-3xl text-lg placeholder:text-gray-500 focus:outline-none transition-all">
                         <i class="fa-solid fa-magnifying-glass absolute left-5 top-5 text-gray-400"></i>
                     </div>
@@ -113,6 +114,11 @@
                     <button onclick="refreshPulse()" 
                             class="w-12 h-12 bg-white/10 hover:bg-white/20 rounded-2xl flex items-center justify-center text-xl transition-all active:scale-95">
                         <i class="fa-solid fa-arrows-rotate"></i>
+                    </button>
+
+                    <button onclick="shareLink()" 
+                            class="w-12 h-12 bg-white/10 hover:bg-white/20 rounded-2xl flex items-center justify-center text-xl transition-all active:scale-95">
+                        <i class="fa-solid fa-share-nodes"></i>
                     </button>
                 </div>
             </div>
@@ -142,7 +148,7 @@
                     <div>
                         <div class="flex items-center justify-between mb-4">
                             <div class="text-xs uppercase tracking-widest text-gray-500">HOT RIGHT NOW</div>
-                            <span onclick="refreshHotTopics()" class="text-emerald-400 text-xs cursor-pointer hover:underline">REFRESH PULSE</span>
+                            <span onclick="refreshHotTopics()" class="text-emerald-400 text-xs cursor-pointer hover:underline">REFRESH</span>
                         </div>
                         <div id="hot-topics" class="space-y-2"></div>
                     </div>
@@ -165,7 +171,7 @@
 
                     <div class="bg-zinc-900/70 border border-white/10 rounded-3xl p-6">
                         <h3 class="font-semibold mb-4 flex items-center gap-2">
-                            <span class="text-yellow-400">🌐</span> GLOBAL INTERNET PULSE
+                            <span class="text-yellow-400">🌐</span> GLOBAL PULSE
                         </h3>
                         <div id="pulse-list" class="space-y-6 text-sm"></div>
                     </div>
@@ -176,77 +182,37 @@
 
     <!-- Floating Post Button -->
     <button onclick="composePost()" 
-            class="fixed bottom-10 right-10 w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-3xl flex items-center justify-center text-4xl shadow-2xl hover:scale-110 active:scale-95 transition-all z-50">
+            class="fixed bottom-10 right-10 w-16 h-16 bg-gradient-to-br from-emerald-500 to-cyan-400 rounded-3xl flex items-center justify-center text-4xl shadow-2xl hover:scale-110 active:scale-95 transition-all z-50">
         <i class="fa-solid fa-feather-pointed"></i>
     </button>
 
     <script>
-        // Up-to-date sample posts reflecting June 10, 2026 internet pulse
+        // Sample posts (June 10, 2026)
         let posts = [
             {
-                id: 1,
-                user: "NASA",
-                handle: "@NASA",
-                avatar: "https://picsum.photos/id/1015/128/128",
-                time: "now",
-                content: "Crew-10 astronauts sharing stunning views of Earth on this Good Wednesday from the ISS",
-                media: "https://www.youtube.com/embed/9fJ4oW4X9oE",
-                likes: "231K",
-                reposts: "48K",
-                comments: "21K",
-                type: "video"
+                id: 1, user: "NASA", handle: "@NASA", avatar: "https://picsum.photos/id/1015/128/128",
+                time: "now", content: "Crew-10 astronauts sharing stunning views of Earth on this Good Wednesday from the ISS",
+                media: "https://www.youtube.com/embed/9fJ4oW4X9oE", likes: "231K", reposts: "48K", comments: "21K", type: "video"
             },
             {
-                id: 2,
-                user: "MrBeast",
-                handle: "@MrBeast",
-                avatar: "https://picsum.photos/id/64/128/128",
-                time: "11m",
-                content: "Hump Day challenge: I gave $500,000 to random people on the street",
-                media: "https://www.youtube.com/embed/dQw4w9wgxcq",
-                likes: "4.1M",
-                reposts: "156K",
-                comments: "312K",
-                type: "video"
+                id: 2, user: "MrBeast", handle: "@MrBeast", avatar: "https://picsum.photos/id/64/128/128",
+                time: "11m", content: "Hump Day challenge: I gave $500,000 to random people on the street",
+                media: "https://www.youtube.com/embed/dQw4w9wgxcq", likes: "4.1M", reposts: "156K", comments: "312K", type: "video"
             },
             {
-                id: 3,
-                user: "Elon Musk",
-                handle: "@elonmusk",
-                avatar: "https://picsum.photos/id/201/128/128",
-                time: "27m",
-                content: "Starship progress looking strong. Mars feels closer every week.",
-                media: "https://www.youtube.com/embed/6zY5z3X9X0A",
-                likes: "2.3M",
-                reposts: "245K",
-                comments: "112K",
-                type: "video"
+                id: 3, user: "Elon Musk", handle: "@elonmusk", avatar: "https://picsum.photos/id/201/128/128",
+                time: "27m", content: "Starship progress looking strong. Mars feels closer every week.",
+                media: "https://www.youtube.com/embed/6zY5z3X9X0A", likes: "2.3M", reposts: "245K", comments: "112K", type: "video"
             },
             {
-                id: 4,
-                user: "xAI",
-                handle: "@xai",
-                avatar: "https://picsum.photos/id/870/128/128",
-                time: "1h",
-                content: "Grok 4.5 continues to push the frontier of truthful and maximally curious AI",
-                media: null,
-                likes: "456K",
-                reposts: "67K",
-                comments: "28K",
-                type: "text"
+                id: 4, user: "xAI", handle: "@xai", avatar: "https://picsum.photos/id/870/128/128",
+                time: "1h", content: "Grok 4.5 continues to push the frontier of truthful and maximally curious AI",
+                media: null, likes: "456K", reposts: "67K", comments: "28K", type: "text"
             },
             {
-                id: 5,
-                user: "Love Island USA",
-                handle: "@loveislandusa",
-                avatar: "https://picsum.photos/id/1005/128/128",
-                time: "2h",
-                content: "The drama is heating up tonight! Who are you voting for? #LoveIslandUSA",
-                media: "https://www.youtube.com/embed/VIDEO_ID_5",
-                likes: "892K",
-                reposts: "134K",
-                comments: "201K",
-                type: "video"
+                id: 5, user: "Love Island USA", handle: "@loveislandusa", avatar: "https://picsum.photos/id/1005/128/128",
+                time: "2h", content: "The drama is heating up tonight! Who are you voting for? #LoveIslandUSA",
+                media: "https://www.youtube.com/embed/VIDEO_ID_5", likes: "892K", reposts: "134K", comments: "201K", type: "video"
             }
         ];
 
@@ -254,11 +220,10 @@
             const div = document.createElement('div');
             div.className = `post-card mx-4 my-6 bg-zinc-900 border border-white/10 rounded-3xl p-6`;
             
-            let mediaHTML = post.media ? `
+            const mediaHTML = post.media ? `
                 <div class="video-container mt-4">
                     <iframe src="${post.media}" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>
-                </div>
-            ` : '';
+                </div>` : '';
 
             div.innerHTML = `
                 <div class="flex gap-4">
@@ -273,23 +238,17 @@
                             </div>
                             <i class="fa-solid fa-ellipsis text-gray-400 cursor-pointer"></i>
                         </div>
-                        
                         <p class="mt-3 text-[17px] leading-relaxed">${post.content}</p>
-                        
                         ${mediaHTML}
-                        
                         <div class="flex justify-between mt-6 text-gray-400">
                             <div onclick="interact(this, 'comment')" class="flex items-center gap-3 hover:text-blue-400 cursor-pointer transition">
-                                <i class="fa-regular fa-comment text-xl"></i>
-                                <span>${post.comments}</span>
+                                <i class="fa-regular fa-comment text-xl"></i><span>${post.comments}</span>
                             </div>
                             <div onclick="interact(this, 'repost')" class="flex items-center gap-3 hover:text-green-400 cursor-pointer transition">
-                                <i class="fa-solid fa-retweet text-xl"></i>
-                                <span>${post.reposts}</span>
+                                <i class="fa-solid fa-retweet text-xl"></i><span>${post.reposts}</span>
                             </div>
                             <div onclick="interact(this, 'like')" class="flex items-center gap-3 hover:text-pink-400 cursor-pointer transition">
-                                <i class="fa-regular fa-heart text-xl"></i>
-                                <span>${post.likes}</span>
+                                <i class="fa-regular fa-heart text-xl"></i><span>${post.likes}</span>
                             </div>
                             <div class="hover:text-blue-400 cursor-pointer transition">
                                 <i class="fa-solid fa-arrow-up-from-bracket text-xl"></i>
@@ -304,11 +263,7 @@
         function loadFeed(filter = 'all') {
             const feed = document.getElementById('main-feed');
             feed.innerHTML = '';
-            
-            const filtered = filter === 'video' 
-                ? posts.filter(p => p.type === 'video')
-                : posts;
-
+            const filtered = filter === 'video' ? posts.filter(p => p.type === 'video') : posts;
             filtered.forEach(post => feed.appendChild(createPost(post)));
 
             const hint = document.createElement('div');
@@ -322,7 +277,6 @@
             if (mode === 0) document.getElementById('btn-all').classList.add('active');
             else if (mode === 1) document.getElementById('btn-video').classList.add('active');
             else document.getElementById('btn-trend').classList.add('active');
-            
             loadFeed(mode === 1 ? 'video' : 'all');
         }
 
@@ -342,7 +296,6 @@
         function searchUniverse() {
             const q = document.getElementById('search').value.trim();
             if (!q) return loadFeed();
-            
             const feed = document.getElementById('main-feed');
             feed.innerHTML = `<div class="text-center py-32 text-2xl">🔍 Scanning live pulse for <span class="text-emerald-400">"${q}"</span>...</div>`;
             setTimeout(() => loadFeed(), 1100);
@@ -351,27 +304,15 @@
         function refreshPulse() {
             const feed = document.getElementById('main-feed');
             feed.style.opacity = '0.3';
-            setTimeout(() => {
-                loadFeed();
-                feed.style.opacity = '1';
-            }, 480);
+            setTimeout(() => { loadFeed(); feed.style.opacity = '1'; }, 480);
         }
 
         function composePost() {
             const text = prompt("What's happening in your corner of the internet?");
             if (text && text.trim()) {
                 const newPost = {
-                    id: Date.now(),
-                    user: "You",
-                    handle: "@you",
-                    avatar: "https://picsum.photos/id/64/128/128",
-                    time: "now",
-                    content: text,
-                    media: null,
-                    likes: "0",
-                    reposts: "0",
-                    comments: "0",
-                    type: "text"
+                    id: Date.now(), user: "You", handle: "@you", avatar: "https://picsum.photos/id/64/128/128",
+                    time: "now", content: text, media: null, likes: "0", reposts: "0", comments: "0", type: "text"
                 };
                 posts.unshift(newPost);
                 loadFeed();
@@ -404,7 +345,7 @@
         }
 
         function refreshHotTopics() {
-            const topics = ["#GoodWednesday", "#HumpDay", "#LoveIslandUSA", "#Starship", "#Grok4_5", "Belfast", "#Mars"];
+            const topics = ["#GoodWednesday", "#HumpDay", "#LoveIslandUSA", "#Starship", "#Grok4_5", "#Mars"];
             const container = document.getElementById('hot-topics');
             container.innerHTML = '';
             topics.forEach(t => {
@@ -432,6 +373,13 @@
             });
         }
 
+        function shareLink() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                alert("✅ Link copied! Share this HTML file or URL with anyone.");
+            });
+        }
+
         // Initialize
         window.onload = () => {
             createParticles();
@@ -439,7 +387,6 @@
             initPulse();
             loadFeed();
 
-            // Keyboard shortcut
             document.addEventListener('keydown', e => {
                 if (e.key === '/' && document.getElementById('search') !== document.activeElement) {
                     e.preventDefault();

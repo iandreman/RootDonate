@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X • Cosmos • All Posts • All Videos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        
+        .logo-font {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .post-card {
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .post-card:hover {
+            transform: scale(1.02) translateY(-8px);
+            box-shadow: 0 0 60px -10px rgb(29 155 240 / 0.3);
+        }
+
+        .neon-text {
+            text-shadow: 0 0 20px rgb(29 155 240);
+        }
+
+        .video-container {
+            position: relative;
+            padding-top: 56.25%;
+            background: #000;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+        
+        .video-container iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+
+        .feed {
+            scrollbar-width: none;
+        }
+        
+        .feed::-webkit-scrollbar {
+            display: none;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: floatParticle 25s linear infinite;
+        }
+
+        @keyframes floatParticle {
+            0% { transform: translateY(100vh) scale(0.5); opacity: 0.3; }
+            100% { transform: translateY(-100vh) scale(1.2); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-black text-white overflow-hidden">
+    <!-- Background Particles -->
+    <div id="particles" class="fixed inset-0 z-0 pointer-events-none"></div>
+
+    <div class="relative z-10 max-w-7xl mx-auto">
+        <!-- Top Navigation -->
+        <header class="sticky top-0 z-50 bg-black/95 backdrop-blur-2xl border-b border-white/10">
+            <div class="px-8 py-5 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 via-cyan-400 to-purple-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-blue-500/50">
+                        𝕏
+                    </div>
+                    <div>
+                        <h1 class="logo-font text-4xl font-bold tracking-tighter neon-text">COSMOS</h1>
+                        <p class="text-[10px] text-blue-400 -mt-1 tracking-[3px]">X VISUALIZER</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 bg-zinc-900 rounded-3xl p-1">
+                    <button onclick="switchView(0)" id="btn-all" class="tab-btn active px-8 py-3 rounded-3xl font-medium flex items-center gap-2">
+                        <i class="fa-solid fa-globe"></i> ALL
+                    </button>
+                    <button onclick="switchView(1)" id="btn-video" class="tab-btn px-8 py-3 rounded-3xl font-medium flex items-center gap-2">
+                        <i class="fa-solid fa-film"></i> VIDEOS
+                    </button>
+                    <button onclick="switchView(2)" id="btn-trend" class="tab-btn px-8 py-3 rounded-3xl font-medium flex items-center gap-2">
+                        <i class="fa-solid fa-fire"></i> TRENDING
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-6">
+                    <div class="relative group">
+                        <input id="search" 
+                               onkeyup="if(event.key==='Enter') searchUniverse()"
+                               type="text" 
+                               placeholder="Search the entire X cosmos..." 
+                               class="bg-zinc-900 border border-white/10 focus:border-blue-500 w-96 pl-12 py-4 rounded-3xl text-lg placeholder:text-gray-500 focus:outline-none transition-all">
+                        <i class="fa-solid fa-magnifying-glass absolute left-5 top-5 text-gray-400"></i>
+                    </div>
+                    
+                    <button onclick="refreshCosmos()" 
+                            class="w-12 h-12 bg-white/10 hover:bg-white/20 rounded-2xl flex items-center justify-center text-xl transition">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex">
+            <!-- Left Sidebar -->
+            <div class="w-80 hidden xl:block border-r border-white/10 p-8 h-screen overflow-auto">
+                <div class="sticky top-8 space-y-10">
+                    <div>
+                        <div class="text-xs uppercase tracking-widest text-gray-500 mb-4">LIVE UNIVERSE</div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-gradient-to-br from-blue-950 to-black border border-blue-500/30 rounded-3xl p-6">
+                                <div class="text-5xl font-bold text-blue-400">∞</div>
+                                <div class="text-sm mt-1">Posts</div>
+                                <div class="h-1.5 bg-blue-500/30 rounded mt-6">
+                                    <div class="h-1.5 w-[87%] bg-blue-500 rounded"></div>
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-br from-red-950 to-black border border-red-500/30 rounded-3xl p-6">
+                                <div class="text-5xl font-bold text-red-400">248k</div>
+                                <div class="text-sm mt-1">Videos</div>
+                                <div class="h-1.5 bg-red-500/30 rounded mt-6">
+                                    <div class="h-1.5 w-[64%] bg-red-500 rounded"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="text-xs uppercase tracking-widest text-gray-500">HOT TOPICS</div>
+                            <span onclick="randomTopic()" class="text-blue-400 text-xs cursor-pointer hover:underline">NEW</span>
+                        </div>
+                        <div id="hot-topics" class="space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Feed -->
+            <main id="main-feed" class="flex-1 max-w-2xl border-r border-white/10 h-screen overflow-auto feed pb-32"></main>
+
+            <!-- Right Panel -->
+            <div class="w-96 hidden 2xl:block border-l border-white/10 p-8 h-screen overflow-auto">
+                <div class="sticky top-8">
+                    <div class="text-center mb-8">
+                        <div onclick="playRandomEpicVideo()" 
+                             class="cursor-pointer mx-auto w-40 h-40 rounded-full bg-gradient-to-br from-purple-600 via-pink-500 to-rose-500 flex items-center justify-center text-6xl shadow-2xl shadow-purple-500/50 hover:scale-110 transition-all">
+                            ▶
+                        </div>
+                        <p class="mt-4 text-sm text-gray-400">Watch a random viral moment</p>
+                    </div>
+
+                    <div class="bg-zinc-900/70 border border-white/10 rounded-3xl p-6">
+                        <h3 class="font-semibold mb-4 flex items-center gap-2">
+                            <span class="text-yellow-400">🌍</span> GLOBAL PULSE
+                        </h3>
+                        <div id="pulse-list" class="space-y-6 text-sm"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Post Button -->
+    <button onclick="composePost()" 
+            class="fixed bottom-10 right-10 w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-3xl flex items-center justify-center text-4xl shadow-2xl hover:scale-110 active:scale-95 transition-all z-50">
+        <i class="fa-solid fa-feather-pointed"></i>
+    </button>
+
+    <script>
+        // Enhanced sample data
+        let posts = [
+            {
+                id: 1,
+                user: "NASA",
+                handle: "@NASA",
+                avatar: "https://picsum.photos/id/1015/128/128",
+                time: "now",
+                content: "Live: Crew-9 approaching the International Space Station right now",
+                media: "https://www.youtube.com/embed/9fJ4oW4X9oE",
+                likes: "184K",
+                reposts: "31K",
+                comments: "12K",
+                type: "video"
+            },
+            {
+                id: 2,
+                user: "MrBeast",
+                handle: "@MrBeast",
+                avatar: "https://picsum.photos/id/64/128/128",
+                time: "3m",
+                content: "I gave away $1,000,000 in 24 hours",
+                media: "https://www.youtube.com/embed/dQw4w9wgxcq",
+                likes: "2.1M",
+                reposts: "89K",
+                comments: "142K",
+                type: "video"
+            },
+            {
+                id: 3,
+                user: "Elon Musk",
+                handle: "@elonmusk",
+                avatar: "https://picsum.photos/id/201/128/128",
+                time: "12m",
+                content: "Starship is the key to making life multiplanetary",
+                media: "https://www.youtube.com/embed/VIDEO_ID_3",
+                likes: "987K",
+                reposts: "112K",
+                comments: "67K",
+                type: "video"
+            },
+            {
+                id: 4,
+                user: "xAI",
+                handle: "@xai",
+                avatar: "https://picsum.photos/id/870/128/128",
+                time: "41m",
+                content: "Grok 4 just got significantly better at reasoning",
+                media: null,
+                likes: "245K",
+                reposts: "28K",
+                comments: "9K",
+                type: "text"
+            }
+        ];
+
+        function createPost(post) {
+            const div = document.createElement('div');
+            div.className = `post-card mx-4 my-6 bg-zinc-900 border border-white/10 rounded-3xl p-6`;
+            
+            let mediaHTML = '';
+            if (post.media) {
+                mediaHTML = `
+                    <div class="video-container mt-4">
+                        <iframe src="${post.media}" frameborder="0" allowfullscreen allow="autoplay"></iframe>
+                    </div>
+                `;
+            }
+
+            div.innerHTML = `
+                <div class="flex gap-4">
+                    <img src="${post.avatar}" class="w-12 h-12 rounded-2xl ring-2 ring-white/20">
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="font-bold">${post.user}</span>
+                                <span class="text-gray-500 ml-2">${post.handle}</span>
+                                <span class="text-gray-500 mx-2">·</span>
+                                <span class="text-gray-500">${post.time}</span>
+                            </div>
+                            <i class="fa-solid fa-ellipsis text-gray-400"></i>
+                        </div>
+                        
+                        <p class="mt-3 text-[17px] leading-relaxed">${post.content}</p>
+                        
+                        ${mediaHTML}
+                        
+                        <div class="flex justify-between mt-6 text-gray-400">
+                            <div onclick="interact(this, 'comment')" class="flex items-center gap-3 hover:text-blue-400 cursor-pointer transition">
+                                <i class="fa-regular fa-comment text-xl"></i>
+                                <span>${post.comments}</span>
+                            </div>
+                            <div onclick="interact(this, 'repost')" class="flex items-center gap-3 hover:text-green-400 cursor-pointer transition">
+                                <i class="fa-solid fa-retweet text-xl"></i>
+                                <span>${post.reposts}</span>
+                            </div>
+                            <div onclick="interact(this, 'like')" class="flex items-center gap-3 hover:text-pink-400 cursor-pointer transition">
+                                <i class="fa-regular fa-heart text-xl"></i>
+                                <span>${post.likes}</span>
+                            </div>
+                            <div class="hover:text-blue-400 cursor-pointer transition">
+                                <i class="fa-solid fa-arrow-up-from-bracket text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        function loadFeed(filter = 'all') {
+            const feed = document.getElementById('main-feed');
+            feed.innerHTML = '';
+            
+            const filtered = filter === 'video' 
+                ? posts.filter(p => p.type === 'video')
+                : posts;
+
+            filtered.forEach(post => {
+                feed.appendChild(createPost(post));
+            });
+
+            // Infinite scroll hint
+            const hint = document.createElement('div');
+            hint.className = "text-center py-12 text-gray-500 flex items-center justify-center gap-3";
+            hint.innerHTML = `
+                <div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                SCROLL FOR MORE FROM THE COSMOS
+            `;
+            feed.appendChild(hint);
+        }
+
+        function switchView(mode) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active', 'bg-white/10'));
+            
+            if (mode === 0) {
+                document.getElementById('btn-all').classList.add('active', 'bg-white/10');
+                loadFeed('all');
+            } else if (mode === 1) {
+                document.getElementById('btn-video').classList.add('active', 'bg-white/10');
+                loadFeed('video');
+            } else {
+                document.getElementById('btn-trend').classList.add('active', 'bg-white/10');
+                loadFeed('all');
+            }
+        }
+
+        function interact(el, type) {
+            if (type === 'like') {
+                el.classList.add('!text-pink-500');
+                const count = el.querySelector('span');
+                count.textContent = (parseInt(count.textContent.replace('K','')) + 1) + 'K';
+            } else if (type === 'repost') {
+                el.classList.add('!text-green-400');
+            }
+            el.style.transform = 'scale(1.3)';
+            setTimeout(() => el.style.transform = '', 200);
+        }
+
+        function searchUniverse() {
+            const q = document.getElementById('search').value.trim();
+            if (!q) return loadFeed();
+            
+            const feed = document.getElementById('main-feed');
+            feed.innerHTML = `<div class="text-center py-32">
+                <div class="text-6xl mb-6">🔍</div>
+                <div class="text-2xl">Searching the entire X cosmos for</div>
+                <div class="text-blue-400 text-3xl mt-3">"${q}"</div>
+            </div>`;
+            
+            setTimeout(() => loadFeed(), 1200);
+        }
+
+        function refreshCosmos() {
+            const feed = document.getElementById('main-feed');
+            feed.style.transition = 'opacity 0.4s';
+            feed.style.opacity = '0.4';
+            
+            setTimeout(() => {
+                loadFeed();
+                feed.style.opacity = '1';
+            }, 600);
+        }
+
+        function composePost() {
+            const text = prompt("What are you thinking right now?");
+            if (text && text.trim()) {
+                const newPost = {
+                    id: Date.now(),
+                    user: "You",
+                    handle: "@user",
+                    avatar: "https://picsum.photos/id/64/128/128",
+                    time: "now",
+                    content: text,
+                    media: null,
+                    likes: "0",
+                    reposts: "0",
+                    comments: "0",
+                    type: "text"
+                };
+                posts.unshift(newPost);
+                loadFeed();
+            }
+        }
+
+        function playRandomEpicVideo() {
+            const videos = [
+                "https://www.youtube.com/embed/9fJ4oW4X9oE",
+                "https://www.youtube.com/embed/dQw4w9wgxcq",
+                "https://www.youtube.com/embed/VIDEO_ID_3"
+            ];
+            window.open(videos[Math.floor(Math.random() * videos.length)], '_blank');
+        }
+
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 60; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = Math.random() * 100 + 'vw';
+                p.style.width = p.style.height = (Math.random() * 4 + 1) + 'px';
+                p.style.background = `hsl(${Math.random()*60 + 190}, 80%, 70%)`;
+                p.style.animationDuration = (Math.random() * 30 + 20) + 's';
+                p.style.animationDelay = '-' + Math.random() * 40 + 's';
+                container.appendChild(p);
+            }
+        }
+
+        function initHotTopics() {
+            const topics = ["#Grok4", "#Starship", "#AI", "#Olympics2026", "#Mars", "#Neuralink"];
+            const container = document.getElementById('hot-topics');
+            topics.forEach(t => {
+                const div = document.createElement('div');
+                div.className = "bg-white/5 hover:bg-white/10 px-6 py-4 rounded-2xl cursor-pointer transition text-sm";
+                div.textContent = t;
+                container.appendChild(div);
+            });
+        }
+
+        function initPulse() {
+            const items = [
+                "🌍 142k people talking about climate right now",
+                "🚀 Starship IFT-8 trending in 47 countries",
+                "🤖 Grok just answered 1.2M questions"
+            ];
+            const container = document.getElementById('pulse-list');
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "text-sm";
+                div.innerHTML = item;
+                container.appendChild(div);
+            });
+        }
+
+        // Boot the masterpiece
+        window.onload = () => {
+            createParticles();
+            initHotTopics();
+            initPulse();
+            loadFeed();
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', e => {
+                if (e.key === '/' && document.getElementById('search') !== document.activeElement) {
+                    e.preventDefault();
+                    document.getElementById('search').focus();
+                }
+            });
+        };
+    </script>
+</body>
+</html>

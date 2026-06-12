@@ -33,15 +33,15 @@
           <span class="text-4xl">💰</span>
         </div>
         
-        <h1 class="text-3xl font-semibold text-zinc-900 mb-2">Support with Monzo</h1>
-        <p class="text-zinc-600">Instant • Fee-free • Secure</p>
+        <h1 class="text-3xl font-semibold text-zinc-900 mb-2">Donate with Monzo</h1>
+        <p class="text-zinc-600">Instant • Secure • Works with any bank card</p>
       </div>
 
       <!-- Form -->
       <div class="px-8 pb-10 space-y-6">
         <div>
           <label for="username" class="block text-sm font-medium text-zinc-700 mb-2">
-            Monzo Username
+            Recipient Monzo Username
           </label>
           <div class="relative">
             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">monzo.me/</span>
@@ -59,9 +59,19 @@
 
         <!-- Fixed Amount -->
         <div class="bg-zinc-50 rounded-2xl p-5 text-center">
-          <p class="text-sm text-zinc-500 mb-1">You are donating</p>
+          <p class="text-sm text-zinc-500 mb-1">Donation amount</p>
           <p class="text-5xl font-semibold text-zinc-900">£10</p>
-          <p class="text-xs text-emerald-600 mt-1">✓ Instant transfer</p>
+          <div class="flex items-center justify-center gap-4 mt-3 text-xs">
+            <span class="flex items-center gap-1 text-emerald-600">
+              <span>✓</span> Debit Card
+            </span>
+            <span class="flex items-center gap-1 text-emerald-600">
+              <span>✓</span> Apple Pay / Google Pay
+            </span>
+            <span class="flex items-center gap-1 text-emerald-600">
+              <span>✓</span> Monzo
+            </span>
+          </div>
         </div>
 
         <button 
@@ -70,6 +80,13 @@
           <span>Donate £10 Now</span>
           <span class="text-xl">→</span>
         </button>
+
+        <div class="text-center">
+          <p class="text-xs text-zinc-500">
+            Opens Monzo.me payment page<br>
+            <span class="text-emerald-600">Debit cards &amp; digital wallets accepted • Credit cards not supported</span>
+          </p>
+        </div>
       </div>
 
       <!-- Footer -->
@@ -83,21 +100,21 @@
           <div>Powered by Monzo</div>
         </div>
         <p class="text-[10px] text-zinc-400 mt-4">
-          This page opens Monzo.me directly. No data is stored.
+          No data stored • Direct to official Monzo.me
         </p>
       </div>
     </div>
 
     <!-- Trust bar -->
     <p class="text-center text-zinc-400 text-xs mt-8">
-      Works with any Monzo account • No fees for the sender
+      Works with any Monzo account • Debit card payments from any bank
     </p>
   </div>
 
   <script>
     function donate() {
       const usernameInput = document.getElementById('username');
-      const username = usernameInput.value.trim();
+      let username = usernameInput.value.trim();
       
       if (!username) {
         usernameInput.classList.add('!border-red-500');
@@ -106,14 +123,14 @@
         return;
       }
 
-      // Clean username (remove any accidental monzo.me/ prefix)
-      const cleanUsername = username.replace(/https?:\/\/monzo\.me\//i, '').replace(/\/.*/g, '');
+      // Clean username
+      username = username.replace(/https?:\/\/monzo\.me\//i, '').replace(/\/.*/g, '').trim();
       
-      const url = `https://monzo.me/${cleanUsername}/10`;
+      const url = `https://monzo.me/${username}/10`;
       window.open(url, '_blank');
     }
 
-    // Allow pressing Enter to donate
+    // Enter key support
     document.getElementById('username').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         donate();

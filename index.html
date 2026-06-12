@@ -36,7 +36,6 @@
     <div id="main-app">
       <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-zinc-100">
         
-        <!-- Header -->
         <div class="h-2 monzo-pink"></div>
         
         <div class="px-8 pt-8 pb-6 text-center">
@@ -56,6 +55,7 @@
         <div class="p-8">
           <!-- SEARCH TAB -->
           <div id="search-tab">
+            <!-- ... your existing search UI ... -->
             <div class="relative mb-6">
               <span class="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400">
                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -83,6 +83,7 @@
 
           <!-- REPORT TAB -->
           <div id="add-tab" class="hidden">
+            <!-- ... your existing report form ... -->
             <div class="space-y-6">
               <div>
                 <label class="block text-sm font-semibold text-zinc-700 mb-2">Type</label>
@@ -108,8 +109,8 @@
               </div>
 
               <div>
-                <label class="block text-sm font-semibold text-zinc-700 mb-2">Your Contact</label>
-                <input type="text" id="item-contact" placeholder="Phone or Email" class="w-full px-5 py-4 border border-zinc-200 rounded-2xl focus:outline-none focus:border-pink-500">
+                <label class="block text-sm font-semibold text-zinc-700 mb-2">Contact Email</label>
+                <input type="email" id="item-contact" placeholder="your@email.com" class="w-full px-5 py-4 border border-zinc-200 rounded-2xl focus:outline-none focus:border-pink-500">
               </div>
 
               <button onclick="addReport()" class="monzo-pink w-full py-5 rounded-2xl text-white font-semibold text-lg">Submit Report</button>
@@ -203,6 +204,7 @@
       saveData();
       alert("✅ Report submitted successfully!");
       
+      // Clear form
       document.getElementById('item-name').value = '';
       document.getElementById('item-location').value = '';
       document.getElementById('item-desc').value = '';
@@ -235,12 +237,14 @@
         </div>
 
         <div class="mt-8 p-6 border border-zinc-100 rounded-2xl">
-          <p class="text-sm text-zinc-500">Contact:</p>
-          <p class="text-xl font-semibold text-zinc-800 mt-1">${report.contact}</p>
+          <p class="text-sm text-zinc-500 mb-2">Contact the owner/finder:</p>
+          <a href="mailto:${report.contact}" class="inline-flex items-center gap-2 text-xl font-semibold text-pink-600 hover:text-pink-700">
+            ✉️ ${report.contact}
+          </a>
         </div>
 
         <div class="mt-10 flex gap-4">
-          <button onclick="contactOwner(${report.id})" class="monzo-pink flex-1 py-5 rounded-2xl text-white font-semibold text-lg">Contact Owner / Finder</button>
+          <button onclick="shareReport(${report.id})" class="flex-1 py-5 border border-zinc-300 rounded-2xl font-semibold hover:bg-zinc-50">Share Link</button>
           <button onclick="backToMain()" class="flex-1 py-5 border border-zinc-300 rounded-2xl font-semibold hover:bg-zinc-50">Close</button>
         </div>
       `;
@@ -252,13 +256,11 @@
       filterResults();
     }
 
-    function contactOwner(id) {
-      alert("✅ Contact request sent! (Demo mode)");
-    }
-
     function shareReport(id) {
       const url = `${window.location.origin}${window.location.pathname}?report=${id}`;
-      navigator.clipboard.writeText(url).then(() => alert(`✅ Link copied!\n${url}`));
+      navigator.clipboard.writeText(url).then(() => {
+        alert(`✅ Shareable link copied!\n\n${url}`);
+      });
     }
 
     function deleteReport(id) {
@@ -294,7 +296,9 @@
             </div>
           </div>
           <div class="mt-6 pt-5 border-t flex justify-between items-center">
-            <span class="text-sm text-zinc-500">Contact: <span class="font-medium">${item.contact}</span></span>
+            <a href="mailto:${item.contact}" onclick="event.stopImmediatePropagation()" class="text-sm text-pink-600 hover:underline">
+              ✉️ ${item.contact}
+            </a>
             <div class="flex gap-3">
               <button onclick="event.stopImmediatePropagation(); shareReport(${item.id});" class="px-5 py-2.5 border border-zinc-300 hover:border-pink-300 text-sm font-semibold rounded-2xl">Share</button>
               <button onclick="event.stopImmediatePropagation(); deleteReport(${item.id});" class="px-5 py-2.5 border border-red-200 text-red-600 text-sm font-semibold rounded-2xl hover:bg-red-50">Remove</button>
@@ -306,8 +310,9 @@
       });
     }
 
+    // ... (handleSearchInput, selectSuggestion, filterResults remain the same) ...
+
     function handleSearchInput() {
-      // ... (same as before - working)
       const query = document.getElementById('search-input').value.toLowerCase().trim();
       const suggestionsBox = document.getElementById('suggestions');
       
@@ -374,8 +379,11 @@
       const params = new URLSearchParams(window.location.search);
       const reportId = params.get('report');
       if (reportId) {
-        const report = itemsDB.find(r => r.id == reportId);
-        if (report) showDetail(parseInt(reportId));
+        const id = parseInt(reportId);
+        const report = itemsDB.find(r => r.id === id);
+        if (report) {
+          showDetail(id);
+        }
       }
     }
 
@@ -384,7 +392,7 @@
       switchTab(0);
       setType('lost');
       filterResults();
-      handleSharedLink();
+      handleSharedLink();        // This now properly opens detail page from share link
     };
   </script>
 </body>

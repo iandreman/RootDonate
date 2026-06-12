@@ -151,7 +151,7 @@
           { id: 2, type: "found", item: "iPhone 14 Pro", location: "King's Cross Station", date: "2025-06-11", description: "Blue case, locked. Found near platform 4.", contact: "found@ex.com" },
           { id: 3, type: "lost", item: "Car keys with keychain", location: "Westfield Mall", date: "2025-06-09", description: "Toyota fob with red keychain", contact: "lost@ex.com" }
         ];
-        saveData(newReport);
+        saveData();
       }
     }
 
@@ -200,7 +200,7 @@
         contact: contact
       };
 
-      itemsDB.unshift(newReport);
+      itemsDB.unshift(newReport(saved));
       saveData();
       alert("✅ Report submitted successfully!");
       

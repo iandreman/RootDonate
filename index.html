@@ -156,7 +156,7 @@
     }
 
     function saveData() {
-      localStorage.setItem('lostFoundReports', JSON.stringify(itemsDB.unshift(newReport)));
+      localStorage.setItem('lostFoundReports', JSON.stringify(itemsDB));
     }
 
     function switchTab(tab) {
@@ -388,7 +388,7 @@
     }
 
     window.onload = () => {
-      saveData();
+      saveData(newReport);
       loadData();
       switchTab(0);
       setType('lost');

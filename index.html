@@ -388,8 +388,7 @@
     }
 
     window.onload = () => {
-      saveData(newReport);
-      loadData();
+      loadData(itemsDB);
       switchTab(0);
       setType('lost');
       filterResults();

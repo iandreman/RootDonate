@@ -10,7 +10,9 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', system-ui, sans-serif; }
     
-    .monzo-pink { background: linear-gradient(135deg, #FF4E6C, #FF6B85); }
+    .monzo-pink { 
+      background: linear-gradient(135deg, #FF4E6C, #FF6B85); 
+    }
     
     .tab-active {
       border-bottom: 3px solid #FF4E6C;
@@ -24,6 +26,13 @@
     .result-card:hover {
       transform: translateY(-4px);
       box-shadow: 0 20px 25px -5px rgb(255 78 108 / 0.15);
+    }
+
+    .suggestion-item {
+      transition: all 0.2s;
+    }
+    .suggestion-item:hover {
+      background-color: #f8fafc;
     }
   </style>
 </head>
@@ -54,7 +63,6 @@
         <div class="p-8">
           <!-- SEARCH TAB -->
           <div id="search-tab">
-            <!-- ... your existing search UI (unchanged) ... -->
             <div class="relative mb-6">
               <span class="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400">
                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -66,8 +74,9 @@
             </div>
 
             <div class="grid grid-cols-3 gap-4 mb-8">
-              <select id="type-filter" onchange="filterResults()" class="px-4 py-3 border border-zinc-200 rounded-2xl focus:outline-none focus:border-pink-500">
-                <option value="">All</option>
+              <select id="type-filter" onchange="filterResults()" 
+                      class="px-4 py-3 border border-zinc-200 rounded-2xl focus:outline-none focus:border-pink-500">
+                <option value="">All Types</option>
                 <option value="lost">Lost</option>
                 <option value="found">Found</option>
               </select>
@@ -80,20 +89,25 @@
             <div class="space-y-4" id="results-container"></div>
           </div>
 
-          <!-- ADD REPORT TAB (unchanged) -->
+          <!-- REPORT TAB -->
           <div id="add-tab" class="hidden">
-            <!-- ... your existing report form ... -->
             <div class="space-y-6">
               <div>
                 <label class="block text-sm font-semibold text-zinc-700 mb-2">Type</label>
                 <div class="flex gap-3">
-                  <button onclick="setType('lost')" id="btn-lost" class="flex-1 py-4 rounded-2xl border-2 border-red-500 text-red-600 font-semibold">Lost</button>
-                  <button onclick="setType('found')" id="btn-found" class="flex-1 py-4 rounded-2xl border-2 border-emerald-500 text-emerald-600 font-semibold">Found</button>
+                  <button onclick="setType('lost')" id="btn-lost" 
+                          class="flex-1 py-4 rounded-2xl border-2 border-red-500 text-red-600 font-semibold active:scale-95 transition-all">
+                    Lost
+                  </button>
+                  <button onclick="setType('found')" id="btn-found" 
+                          class="flex-1 py-4 rounded-2xl border-2 border-emerald-500 text-emerald-600 font-semibold active:scale-95 transition-all">
+                    Found
+                  </button>
                 </div>
               </div>
 
               <div>
-                <label class="block text-sm font-semibold text-zinc-700 mb-2">Item</label>
+                <label class="block text-sm font-semibold text-zinc-700 mb-2">Item Name</label>
                 <input type="text" id="item-name" placeholder="e.g. Black leather wallet" 
                        class="w-full px-5 py-4 border border-zinc-200 rounded-2xl focus:outline-none focus:border-pink-500">
               </div>
@@ -116,7 +130,8 @@
                        class="w-full px-5 py-4 border border-zinc-200 rounded-2xl focus:outline-none focus:border-pink-500">
               </div>
 
-              <button onclick="addReport()" class="monzo-pink w-full py-5 rounded-2xl text-white font-semibold text-lg active:scale-95 transition-all">
+              <button onclick="addReport()" 
+                      class="monzo-pink w-full py-5 rounded-2xl text-white font-semibold text-lg active:scale-95 transition-all">
                 Submit Report
               </button>
             </div>
@@ -129,7 +144,7 @@
       </div>
     </div>
 
-    <!-- SINGLE ITEM DETAIL PAGE -->
+    <!-- DETAIL PAGE -->
     <div id="detail-page" class="hidden">
       <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-zinc-100 max-w-2xl mx-auto">
         <div class="h-2 monzo-pink"></div>
@@ -148,6 +163,7 @@
 
   <script>
     let itemsDB = [];
+    let currentType = 'lost';
 
     function loadData() {
       const saved = localStorage.getItem('lostFoundReports');
@@ -155,9 +171,33 @@
         itemsDB = JSON.parse(saved);
       } else {
         itemsDB = [
-          { id: 1, type: "lost", item: "Black leather wallet", location: "Oxford Street", date: "2025-06-10", description: "Contains cards and ID", contact: "lost@ex.com" },
-          { id: 2, type: "found", item: "iPhone 14 Pro", location: "King's Cross Station", date: "2025-06-11", description: "Blue case, locked", contact: "found@ex.com" },
-          { id: 3, type: "lost", item: "Car keys with keychain", location: "Westfield Mall", date: "2025-06-09", description: "Toyota fob", contact: "lost@ex.com" }
+          { 
+            id: 1, 
+            type: "lost", 
+            item: "Black leather wallet", 
+            location: "Oxford Street", 
+            date: "2025-06-10", 
+            description: "Contains cards and ID. Monzo card visible.", 
+            contact: "lost@ex.com" 
+          },
+          { 
+            id: 2, 
+            type: "found", 
+            item: "iPhone 14 Pro", 
+            location: "King's Cross Station", 
+            date: "2025-06-11", 
+            description: "Blue case, locked. Found near platform 4.", 
+            contact: "found@ex.com" 
+          },
+          { 
+            id: 3, 
+            type: "lost", 
+            item: "Car keys with keychain", 
+            location: "Westfield Mall", 
+            date: "2025-06-09", 
+            description: "Toyota fob with red keychain", 
+            contact: "lost@ex.com" 
+          }
         ];
         saveData();
       }
@@ -170,24 +210,36 @@
     function switchTab(tab) {
       document.getElementById('search-tab').classList.toggle('hidden', tab === 1);
       document.getElementById('add-tab').classList.toggle('hidden', tab === 0);
+      
       document.getElementById('tab-0').classList.toggle('tab-active', tab === 0);
       document.getElementById('tab-1').classList.toggle('tab-active', tab === 1);
     }
 
     function setType(type) {
       currentType = type;
-      document.getElementById('btn-lost').classList.toggle('border-red-500', type === 'lost');
-      document.getElementById('btn-found').classList.toggle('border-emerald-500', type === 'found');
+      
+      const lostBtn = document.getElementById('btn-lost');
+      const foundBtn = document.getElementById('btn-found');
+      
+      if (type === 'lost') {
+        lostBtn.classList.add('border-red-500', 'text-red-600');
+        foundBtn.classList.remove('border-emerald-500', 'text-emerald-600');
+      } else {
+        foundBtn.classList.add('border-emerald-500', 'text-emerald-600');
+        lostBtn.classList.remove('border-red-500', 'text-red-600');
+      }
     }
 
-    function addReport() { /* unchanged - same as your original */ 
-      // ... (your existing addReport code)
+    function addReport() {
       const item = document.getElementById('item-name').value.trim();
       const location = document.getElementById('item-location').value.trim();
       const desc = document.getElementById('item-desc').value.trim();
       const contact = document.getElementById('item-contact').value.trim();
 
-      if (!item || !location || !contact) return alert("Please fill required fields.");
+      if (!item || !location || !contact) {
+        alert("Please fill in all required fields.");
+        return;
+      }
 
       const newReport = {
         id: Date.now(),
@@ -195,17 +247,21 @@
         item: item,
         location: location,
         date: new Date().toISOString().split('T')[0],
-        description: desc || "No additional description",
+        description: desc || "No additional description provided.",
         contact: contact
       };
 
       itemsDB.unshift(newReport);
       saveData();
-      alert("✅ Report added!");
+      
+      alert("✅ Report submitted successfully!");
+      
+      // Clear form
       document.getElementById('item-name').value = '';
       document.getElementById('item-location').value = '';
       document.getElementById('item-desc').value = '';
       document.getElementById('item-contact').value = '';
+      
       switchTab(0);
       filterResults();
     }
@@ -218,7 +274,7 @@
     }
 
     function showDetail(id) {
-      const report = itemsDB.find(r => r.id == id);
+      const report = itemsDB.find(r => r.id === id);
       if (!report) return;
 
       document.getElementById('main-app').classList.add('hidden');
@@ -241,17 +297,17 @@
         </div>
 
         <div class="mt-8 p-6 border border-zinc-100 rounded-2xl">
-          <p class="text-sm text-zinc-500">Contact the owner:</p>
+          <p class="text-sm text-zinc-500">Contact the owner / finder:</p>
           <p class="text-xl font-semibold text-zinc-800 mt-1">${report.contact}</p>
         </div>
 
         <div class="mt-10 flex gap-4">
           <button onclick="contactOwner(${report.id})" 
-                  class="monzo-pink flex-1 py-5 rounded-2xl text-white font-semibold text-lg">
-            Contact Owner
+                  class="monzo-pink flex-1 py-5 rounded-2xl text-white font-semibold text-lg active:scale-95 transition-all">
+            Contact Owner / Finder
           </button>
           <button onclick="backToMain()" 
-                  class="flex-1 py-5 border border-zinc-300 rounded-2xl font-semibold">
+                  class="flex-1 py-5 border border-zinc-300 rounded-2xl font-semibold hover:bg-zinc-50">
             Close
           </button>
         </div>
@@ -273,16 +329,19 @@
     }
 
     function contactOwner(id) {
-      alert("✅ Contact request sent!");
+      alert("✅ Contact request sent! (Demo)");
     }
 
-    // Render results (with share button)
     function renderResults(filteredItems) {
       const container = document.getElementById('results-container');
       container.innerHTML = '';
 
       if (filteredItems.length === 0) {
-        container.innerHTML = `<div class="text-center py-16 text-zinc-500"><span class="text-5xl mb-4 block">😕</span><p>No matching reports</p></div>`;
+        container.innerHTML = `
+          <div class="text-center py-16 text-zinc-500">
+            <span class="text-5xl mb-4 block">😕</span>
+            <p class="text-lg">No matching reports found</p>
+          </div>`;
         return;
       }
 
@@ -291,14 +350,14 @@
         card.className = `result-card bg-white border border-zinc-100 rounded-2xl p-6 cursor-pointer`;
         card.innerHTML = `
           <div class="flex justify-between">
-            <div>
+            <div class="flex-1">
               <span class="inline-block px-3.5 py-1 text-xs font-semibold rounded-full ${item.type === 'lost' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}">
                 ${item.type.toUpperCase()}
               </span>
               <h3 class="text-2xl font-semibold mt-3">${item.item}</h3>
-              <p class="text-zinc-600 mt-1">${item.description}</p>
+              <p class="text-zinc-600 mt-1 line-clamp-2">${item.description}</p>
             </div>
-            <div class="text-right text-sm">
+            <div class="text-right text-sm ml-4">
               <p class="font-medium">${item.location}</p>
               <p class="text-zinc-500">${item.date}</p>
             </div>
@@ -306,8 +365,10 @@
           <div class="mt-6 pt-5 border-t flex justify-between items-center">
             <span class="text-sm text-zinc-500">Contact: <span class="font-medium">${item.contact}</span></span>
             <div class="flex gap-3">
-              <button onclick="event.stopImmediatePropagation(); shareReport(${item.id})" class="px-5 py-2.5 border border-zinc-300 hover:border-pink-300 text-zinc-700 text-sm font-semibold rounded-2xl">Share</button>
-              <button onclick="event.stopImmediatePropagation(); deleteReport(${item.id})" class="px-5 py-2.5 border border-red-200 text-red-600 text-sm font-semibold rounded-2xl hover:bg-red-50">Remove</button>
+              <button onclick="event.stopImmediatePropagation(); shareReport(${item.id});" 
+                      class="px-5 py-2.5 border border-zinc-300 hover:border-pink-300 text-zinc-700 text-sm font-semibold rounded-2xl">Share</button>
+              <button onclick="event.stopImmediatePropagation(); deleteReport(${item.id});" 
+                      class="px-5 py-2.5 border border-red-200 text-red-600 text-sm font-semibold rounded-2xl hover:bg-red-50">Remove</button>
             </div>
           </div>
         `;
@@ -316,12 +377,72 @@
       });
     }
 
-    // Search & Filter functions (unchanged)
-    function handleSearchInput() { /* your original code */ }
-    function selectSuggestion(item) { /* your original code */ }
-    function filterResults() { /* your original code */ }
+    function handleSearchInput() {
+      const query = document.getElementById('search-input').value.toLowerCase().trim();
+      const suggestionsBox = document.getElementById('suggestions');
+      
+      if (query.length < 2) {
+        suggestionsBox.classList.add('hidden');
+        return;
+      }
 
-    // Handle direct link access
+      const matches = itemsDB.filter(item => 
+        item.item.toLowerCase().includes(query) || 
+        item.description.toLowerCase().includes(query) ||
+        item.location.toLowerCase().includes(query)
+      ).slice(0, 6);
+
+      if (matches.length === 0) {
+        suggestionsBox.classList.add('hidden');
+        return;
+      }
+
+      let html = '';
+      matches.forEach(item => {
+        html += `
+          <div onclick="selectSuggestion(${item.id})" 
+               class="suggestion-item px-5 py-3 hover:bg-zinc-50 cursor-pointer flex gap-3 items-center border-b last:border-0">
+            <span class="text-xl">${item.type === 'lost' ? '🔴' : '🟢'}</span>
+            <div>
+              <div class="font-medium">${item.item}</div>
+              <div class="text-sm text-zinc-500">${item.location}</div>
+            </div>
+          </div>
+        `;
+      });
+      
+      suggestionsBox.innerHTML = html;
+      suggestionsBox.classList.remove('hidden');
+    }
+
+    function selectSuggestion(id) {
+      document.getElementById('suggestions').classList.add('hidden');
+      document.getElementById('search-input').value = '';
+      showDetail(id);
+    }
+
+    function filterResults() {
+      const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+      const typeFilter = document.getElementById('type-filter').value;
+      const locationFilter = document.getElementById('location-filter').value.toLowerCase().trim();
+      const dateFilter = document.getElementById('date-filter').value;
+
+      let filtered = itemsDB.filter(item => {
+        const matchesSearch = !searchTerm || 
+          item.item.toLowerCase().includes(searchTerm) ||
+          item.description.toLowerCase().includes(searchTerm) ||
+          item.location.toLowerCase().includes(searchTerm);
+
+        const matchesType = !typeFilter || item.type === typeFilter;
+        const matchesLocation = !locationFilter || item.location.toLowerCase().includes(locationFilter);
+        const matchesDate = !dateFilter || item.date === dateFilter;
+
+        return matchesSearch && matchesType && matchesLocation && matchesDate;
+      });
+
+      renderResults(filtered);
+    }
+
     function handleSharedLink() {
       const params = new URLSearchParams(window.location.search);
       const reportId = params.get('report');
@@ -329,20 +450,21 @@
       if (reportId) {
         const report = itemsDB.find(r => r.id == reportId);
         if (report) {
-          showDetail(reportId);
+          showDetail(parseInt(reportId));
         } else {
           alert("Report not found.");
         }
       }
     }
 
-    let currentType = 'lost';
-
-    // Initialize
-    loadData();
-    switchTab(0);
-    filterResults();
-    handleSharedLink();
+    // Initialize App
+    window.onload = function() {
+      loadData();
+      switchTab(0);
+      setType('lost');
+      filterResults();
+      handleSharedLink();
+    };
   </script>
 </body>
 </html>
